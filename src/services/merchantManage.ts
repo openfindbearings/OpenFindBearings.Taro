@@ -8,9 +8,10 @@ export interface ApplyMerchantParams {
   licenseUrl?: string
 }
 
-/** 申请入驻（BFF /api/mobile/merchants/apply） */
+/** 申请入驻（BFF /mobile/merchants/apply） */
 export async function applyMerchant(params: ApplyMerchantParams): Promise<void> {
-  await request({ url: '/api/mobile/merchants/apply', method: 'POST', data: params as Record<string, unknown> })
+  // TODO: Implement when BFF supports merchant application
+  throw new Error('商家入驻申请功能暂未实现')
 }
 
 /** 获取我的商家信息 */
@@ -26,7 +27,9 @@ export interface MyMerchantProfile {
 
 export async function getMyMerchantProfile(): Promise<MyMerchantProfile | null> {
   try {
-    return await request<MyMerchantProfile>({ url: '/api/mobile/profile' })
+    // TODO: Implement when BFF supports merchant profile
+    // Currently, we can only get user profile via /mobile/profile
+    return null
   } catch {
     return null
   }
@@ -34,7 +37,8 @@ export async function getMyMerchantProfile(): Promise<MyMerchantProfile | null> 
 
 /** 更新店铺信息 */
 export async function updateMerchantProfile(data: { name?: string; contact?: string; phone?: string; description?: string }): Promise<void> {
-  await request({ url: '/api/mobile/profile', method: 'PUT', data })
+  // TODO: Implement when BFF supports merchant profile update
+  throw new Error('商家信息更新功能暂未实现')
 }
 
 /** 在售商品管理 */
@@ -49,17 +53,20 @@ export interface MerchantBearingItem {
 }
 
 export async function getMyBearings(page = 1, pageSize = 20): Promise<{ items: MerchantBearingItem[]; totalCount: number }> {
-  return request({ url: '/api/mobile/merchant/bearings', data: { page, pageSize } })
+  // TODO: Implement when BFF supports merchant bearings
+  return { items: [], totalCount: 0 }
 }
 
 /** 添加在售商品 */
 export async function addMyBearing(bearingId: string, price?: string): Promise<void> {
-  await request({ url: '/api/mobile/merchant/bearings', method: 'POST', data: { bearingId, price } })
+  // TODO: Implement when BFF supports merchant bearings
+  throw new Error('添加在售商品功能暂未实现')
 }
 
 /** 移除在售商品 */
 export async function removeMyBearing(bearingId: string): Promise<void> {
-  await request({ url: `/api/mobile/merchant/bearings/${bearingId}`, method: 'DELETE' })
+  // TODO: Implement when BFF supports merchant bearings
+  throw new Error('移除在售商品功能暂未实现')
 }
 
 /** 员工管理 */
@@ -70,13 +77,16 @@ export interface StaffMember {
 }
 
 export async function getStaffList(): Promise<StaffMember[]> {
-  return request({ url: '/api/mobile/merchant/staff' })
+  // TODO: Implement when BFF supports staff management
+  return []
 }
 
 export async function inviteStaff(userName: string): Promise<void> {
-  await request({ url: '/api/mobile/merchant/staff', method: 'POST', data: { userName } })
+  // TODO: Implement when BFF supports staff management
+  throw new Error('邀请员工功能暂未实现')
 }
 
 export async function removeStaff(userId: string): Promise<void> {
-  await request({ url: `/api/mobile/merchant/staff/${userId}`, method: 'DELETE' })
+  // TODO: Implement when BFF supports staff management
+  throw new Error('移除员工功能暂未实现')
 }

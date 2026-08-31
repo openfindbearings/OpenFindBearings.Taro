@@ -1,4 +1,4 @@
-import { requestPublic, request, type PagedData } from './request'
+import { requestPublic, type PagedData } from './request'
 
 /** 商家信息 */
 export interface Merchant {
@@ -20,17 +20,17 @@ export interface MerchantSearchParams {
   pageSize?: number
 }
 
-/** 搜索商家（BFF /api/mobile/merchants/search） */
+/** 搜索商家 */
 export async function searchMerchants(params: MerchantSearchParams): Promise<PagedData<Merchant>> {
-  return requestPublic<PagedData<Merchant>>('/api/mobile/merchants/search', params as Record<string, unknown>)
+  return requestPublic<PagedData<Merchant>>('/mobile/merchants/search', params as Record<string, unknown>)
 }
 
-/** 商家详情（BFF /api/mobile/merchants/{id}） */
+/** 商家详情 */
 export async function getMerchantDetail(id: string): Promise<Merchant> {
-  return requestPublic<Merchant>(`/api/mobile/merchants/${id}`)
+  return requestPublic<Merchant>(`/mobile/merchants/${id}`)
 }
 
-/** 商家在售商品（BFF /api/mobile/merchants/{id}/bearings） */
+/** 商家在售商品 */
 export interface MerchantBearing {
   bearingId: string
   bearingPartNumber: string
@@ -46,14 +46,14 @@ export interface MerchantBearing {
 
 export async function getMerchantBearings(merchantId: string, page = 1, pageSize = 20): Promise<PagedData<MerchantBearing>> {
   return requestPublic<PagedData<MerchantBearing>>(
-    `/api/mobile/merchants/${merchantId}/bearings`,
+    `/mobile/merchants/${merchantId}/bearings`,
     { page, pageSize } as Record<string, unknown>
   )
 }
 
 /** 推荐商家（从首页聚合数据获取） */
 export async function getRecommendedMerchants(page = 1, pageSize = 6): Promise<PagedData<Merchant>> {
-  const res = await requestPublic<{ merchants: Merchant[] }>('/api/mobile/home')
+  const res = await requestPublic<{ merchants: Merchant[] }>('/mobile/home')
   const all = res?.merchants ?? []
   const start = (page - 1) * pageSize
   return {

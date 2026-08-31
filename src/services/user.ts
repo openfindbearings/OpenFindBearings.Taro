@@ -17,7 +17,7 @@ export interface UserProfile {
 
 /** 获取当前用户信息 */
 export async function getCurrentUser(): Promise<UserProfile> {
-  return request<UserProfile>({ url: '/api/account/me' })
+  return request<UserProfile>({ url: '/mobile/profile' })
 }
 
 /** 收藏轴承 */

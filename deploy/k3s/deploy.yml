@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openfindbearings-taro
+  namespace: openfindbearings
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: openfindbearings-taro
+  template:
+    metadata:
+      labels:
+        app: openfindbearings-taro
+    spec:
+      containers:
+      - name: openfindbearings-taro
+        image: ghcr.io/openfindbearings/openfindbearings-taro:latest
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openfindbearings-taro
+  namespace: openfindbearings
+spec:
+  selector:
+    app: openfindbearings-taro
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openfindbearings-taro-ingress
+  namespace: openfindbearings
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - mobile.515813.xyz
+    secretName: mobile-tls-secret
+  rules:
+  - host: mobile.515813.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openfindbearings-taro
+            port:
+              number: 80
