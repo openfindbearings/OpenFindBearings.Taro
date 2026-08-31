@@ -1,11 +1,12 @@
-// babel-preset-taro 更多选项和默认值：
-// https://github.com/NervJS/taro/blob/next/packages/babel-preset-taro/README.md
+// eslint-disable-next-line no-undef
 module.exports = {
   presets: [
-    ['taro', {
-      framework: 'react',
-      ts: true,
-      compiler: 'webpack5',
-    }]
-  ]
+    [
+      'taro',
+      {
+        framework: 'react',
+        ts: true,
+      },
+    ],
+  ],
 }
