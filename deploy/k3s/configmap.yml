@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openfindbearings-mobile-config
+  namespace: openfindbearings
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8080"
+  Api__BaseUrl: "http://openfindbearings-api:80"
+  Identity__Authority: "http://openfindbearings-identity:80"
+  Identity__Audience: "api:mobile"
+  Identity__ClientId: "maui-client"
+  Identity__ClientSecret: "maui-secret"
