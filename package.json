@@ -2,6 +2,7 @@
   "name": "openfindbearings-taro",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@11.23.0",
   "description": "OpenFindBearings 移动端 - Taro 多端应用",
   "templateInfo": {
     "name": "default",
@@ -68,16 +69,5 @@
     "sass": "^1.63.4",
     "typescript": "^5.1.0",
     "webpack": "5.88.1"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "@swc/core",
-      "@tarojs/binding",
-      "@tarojs/cli",
-      "core-js-pure",
-      "core-js",
-      "esbuild"
-    ]
   }
 }
