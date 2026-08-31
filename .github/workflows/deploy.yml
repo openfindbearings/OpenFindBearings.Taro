@@ -71,6 +71,10 @@ jobs:
 
     - name: Configure kubeconfig
       run: |
+        if [ -z "${{ secrets.KUBECONFIG_CONTENT }}" ]; then
+          echo "Error: KUBECONFIG_CONTENT secret is not set"
+          exit 1
+        fi
         mkdir -p $HOME/.kube
         echo "${{ secrets.KUBECONFIG_CONTENT }}" > $HOME/.kube/config
         chmod 600 $HOME/.kube/config
