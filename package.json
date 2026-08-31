@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@11.23.0",
-  "description": "OpenFindBearings 移动端 - Taro 多端应用",
+  "description": "OpenFindBearings 移动端",
   "templateInfo": {
     "name": "default",
     "typescript": true,
