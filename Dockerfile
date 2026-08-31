@@ -2,7 +2,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile --allow-builds
+RUN corepack enable && pnpm install --frozen-lockfile --dangerously-allow-all-builds
 COPY . .
 RUN pnpm run build:h5
 
