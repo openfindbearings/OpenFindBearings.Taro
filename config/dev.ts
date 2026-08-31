@@ -11,11 +11,10 @@ export default {
       host: '0.0.0.0',
       port: 10087,
       proxy: {
-        // API 请求代理到后端服务器（解决 H5 跨域问题）
-        '/api': {
-          target: 'https://api.515813.xyz',
+        // BFF 代理（H5 跨域）
+        '/mobile': {
+          target: 'http://localhost:8080',
           changeOrigin: true,
-          secure: false,
         },
         // Identity OAuth 端点代理
         '/connect': {

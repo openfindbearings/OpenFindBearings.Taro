@@ -1,4 +1,4 @@
-import { requestPublic, request, type PagedData } from './request'
+import { requestPublic, type PagedData } from './request'
 
 /** 轴承信息 */
 export interface Bearing {
@@ -28,14 +28,14 @@ export interface BearingSearchParams {
   pageSize?: number
 }
 
-/** 搜索轴承（BFF /api/mobile/bearings/search） */
+/** 搜索轴承 */
 export async function searchBearings(params: BearingSearchParams): Promise<PagedData<Bearing>> {
-  return requestPublic<PagedData<Bearing>>('/api/mobile/bearings/search', params as Record<string, unknown>)
+  return requestPublic<PagedData<Bearing>>('/mobile/bearings/search', params as Record<string, unknown>)
 }
 
-/** 轴承详情（BFF /api/mobile/bearings/{id}） */
+/** 轴承详情 */
 export async function getBearingDetail(id: string): Promise<Bearing> {
-  return requestPublic<Bearing>(`/api/mobile/bearings/${id}`)
+  return requestPublic<Bearing>(`/mobile/bearings/${id}`)
 }
 
 /** 轴承在售商家 */
@@ -48,13 +48,13 @@ export interface BearingMerchant {
 
 export async function getBearingMerchants(bearingId: string, page = 1, pageSize = 20): Promise<PagedData<BearingMerchant>> {
   return requestPublic<PagedData<BearingMerchant>>(
-    `/api/mobile/bearings/${bearingId}/merchants`,
+    `/mobile/bearings/${bearingId}/merchants`,
     { page, pageSize, onlyOnSale: true } as Record<string, unknown>
   )
 }
 
-/** 热门轴承（BFF /api/mobile/home 返回聚合数据） */
+/** 热门轴承（从首页聚合接口获取） */
 export async function getHotBearings(count = 10): Promise<Bearing[]> {
-  const res = await requestPublic<{ hotBearings: Bearing[] }>('/api/mobile/home')
+  const res = await requestPublic<{ hotBearings: Bearing[] }>('/mobile/home')
   return res?.hotBearings ?? []
 }

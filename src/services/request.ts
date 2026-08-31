@@ -1,11 +1,13 @@
 import Taro from '@tarojs/taro'
 import { getAccessToken, isTokenValid, saveTokens, clearTokens, getRefreshToken, getDeviceId } from '../utils/token'
 
+/** BFF API 前缀 */
+const API_PREFIX = '/mobile'
+
 /** BFF 基础地址（H5 用相对路径，小程序用完整地址） */
 function getBaseUrl(): string {
   if (Taro.getEnv() === Taro.ENV_TYPE.WEB) return ''
-  // 小程序/APP 需配置 BFF 实际地址
-  return process.env.TARO_APP_BFF_BASE_URL || 'https://mobile.515813.xyz'
+  return process.env.TARO_APP_BFF_BASE_URL || 'https://bff.515813.xyz'
 }
 
 /** 通用 API 响应结构 */
@@ -44,7 +46,7 @@ async function tryRefreshToken(): Promise<string | null> {
   try {
     const baseUrl = getBaseUrl()
     const res = await Taro.request({
-      url: `${baseUrl}/api/mobile/auth/refresh`,
+      url: `${baseUrl}${API_PREFIX}/auth/refresh`,
       method: 'POST',
       header: { 'Content-Type': 'application/json' },
       data: {
@@ -122,14 +124,12 @@ export async function request<T = unknown>(options: RequestOptions): Promise<T> 
 function parseResponse<T>(res: Taro.request.Response): T {
   if (res.statusCode >= 200 && res.statusCode < 300) {
     const body = res.data as ApiResponse<T>
-    // 如果后端返回标准 ApiResponse 结构
     if (body && typeof body === 'object' && 'success' in body) {
       if (!body.success) {
         throw new Error(body.message || '请求失败')
       }
       return body.data as T
     }
-    // 非标准结构直接返回
     return res.data as T
   }
   throw new Error(`请求失败 (${res.statusCode})`)

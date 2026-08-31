@@ -4,7 +4,7 @@ import { saveTokens, clearTokens, getDeviceId } from '../utils/token'
 /** BFF 基础地址 */
 function getBaseUrl(): string {
   if (Taro.getEnv() === Taro.ENV_TYPE.WEB) return ''
-  return process.env.TARO_APP_BFF_BASE_URL || 'https://mobile.515813.xyz'
+  return process.env.TARO_APP_BFF_BASE_URL || 'https://bff.515813.xyz'
 }
 
 /** 登录请求参数 */
@@ -26,11 +26,11 @@ export interface LoginResult {
   }
 }
 
-/** 密码登录（BFF /api/mobile/auth/login） */
+/** 密码登录（BFF /mobile/auth/login） */
 export async function loginWithPassword(phone: string, password: string): Promise<LoginResult> {
   const baseUrl = getBaseUrl()
   const res = await Taro.request({
-    url: `${baseUrl}/api/mobile/auth/login`,
+    url: `${baseUrl}/mobile/auth/login`,
     method: 'POST',
     header: { 'Content-Type': 'application/json' },
     data: { username: phone, password, deviceId: getDeviceId() },
@@ -55,11 +55,11 @@ export async function loginWithPassword(phone: string, password: string): Promis
   }
 }
 
-/** 短信验证码登录/注册（BFF /api/mobile/auth/login-sms） */
+/** 短信验证码登录/注册（BFF /mobile/auth/login-sms） */
 export async function loginWithSms(phone: string, code: string): Promise<LoginResult> {
   const baseUrl = getBaseUrl()
   const res = await Taro.request({
-    url: `${baseUrl}/api/mobile/auth/login-sms`,
+    url: `${baseUrl}/mobile/auth/login-sms`,
     method: 'POST',
     header: { 'Content-Type': 'application/json' },
     data: { phone, code, deviceId: getDeviceId() },
@@ -84,11 +84,11 @@ export async function loginWithSms(phone: string, code: string): Promise<LoginRe
   }
 }
 
-/** 发送短信验证码（BFF /api/mobile/auth/send-code） */
+/** 发送短信验证码（BFF /mobile/auth/send-code） */
 export async function sendSmsCode(phone: string): Promise<void> {
   const baseUrl = getBaseUrl()
   const res = await Taro.request({
-    url: `${baseUrl}/api/mobile/auth/send-code`,
+    url: `${baseUrl}/mobile/auth/send-sms`,
     method: 'POST',
     header: { 'Content-Type': 'application/json' },
     data: { phone },
