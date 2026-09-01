@@ -1,11 +1,14 @@
 import { View, Text } from '@tarojs/components'
+import { Clock } from 'lucide-react-taro'
 import type { MyMerchantProfile } from '../../../services/merchantManage'
 
 /** 审核中状态 */
 export default function PendingStatus({ profile }: { profile: MyMerchantProfile }) {
   return (
     <View className='pending-status'>
-      <View className='pending-status__icon'>⏳</View>
+      <View className='pending-status__icon'>
+        <Clock size={64} color='#faad14' strokeWidth={1.5} />
+      </View>
       <Text className='pending-status__title'>入驻审核中</Text>
       <Text className='pending-status__desc'>
         您的入驻申请已提交，正在等待审核。

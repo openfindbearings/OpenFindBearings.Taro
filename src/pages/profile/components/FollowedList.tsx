@@ -1,6 +1,7 @@
 import { View, Text } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
+import { Users } from 'lucide-react-taro'
 import { getFollowedMerchants } from '../../../services/user'
 import EmptyState from '../../../components/EmptyState'
 
@@ -17,7 +18,7 @@ export default function FollowedList() {
   }, [])
 
   if (loading) return <View className='list-loading'><Text>加载中...</Text></View>
-  if (items.length === 0) return <EmptyState text='暂无关注' icon='👥' />
+  if (items.length === 0) return <EmptyState text='暂无关注' icon={Users} />
 
   return (
     <View className='followed-list'>

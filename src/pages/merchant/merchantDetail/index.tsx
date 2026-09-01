@@ -1,6 +1,7 @@
 import { View, Text, Image } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro, { useRouter } from '@tarojs/taro'
+import { Store, Package } from 'lucide-react-taro'
 import { getMerchantDetail, getMerchantBearings, type Merchant, type MerchantBearing } from '../../../services/merchant'
 import EmptyState from '../../../components/EmptyState'
 import MerchantBadge from '../../../components/MerchantBadge'
@@ -33,7 +34,7 @@ export default function MerchantDetailPage() {
   }
 
   if (!merchant) {
-    return <EmptyState text='商家不存在' icon='🏪' />
+    return <EmptyState text='商家不存在' icon={Store} />
   }
 
   return (
@@ -59,7 +60,7 @@ export default function MerchantDetailPage() {
       <View className='detail-section'>
         <Text className='detail-section__title'>在售商品 ({bearings.length})</Text>
         {bearings.length === 0 ? (
-          <EmptyState text='暂无在售商品' icon='📦' />
+          <EmptyState text='暂无在售商品' icon={Package} />
         ) : (
           <View className='bearing-list'>
             {bearings.map((b) => (

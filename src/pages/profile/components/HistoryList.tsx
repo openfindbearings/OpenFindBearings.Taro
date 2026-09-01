@@ -1,6 +1,7 @@
 import { View, Text } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
+import { BookOpen } from 'lucide-react-taro'
 import { getBrowseHistory } from '../../../services/user'
 import EmptyState from '../../../components/EmptyState'
 
@@ -17,7 +18,7 @@ export default function HistoryList() {
   }, [])
 
   if (loading) return <View className='list-loading'><Text>加载中...</Text></View>
-  if (items.length === 0) return <EmptyState text='暂无浏览记录' icon='📖' />
+  if (items.length === 0) return <EmptyState text='暂无浏览记录' icon={BookOpen} />
 
   return (
     <View className='history-list'>
