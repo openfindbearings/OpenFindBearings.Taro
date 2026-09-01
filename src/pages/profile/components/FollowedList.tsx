@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Users } from 'lucide-react-taro'
 import { getFollowedMerchants } from '../../../services/user'
+import { formatTime } from '../../../utils/format'
 import EmptyState from '../../../components/EmptyState'
 
 /** 关注商家列表 */
@@ -29,7 +30,7 @@ export default function FollowedList() {
           onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail/index?id=${item.merchantId}` })}
         >
           <Text className='followed-list__id'>{item.merchantId.slice(0, 8)}...</Text>
-          <Text className='followed-list__time'>关注于 {new Date(item.createdAt).toLocaleDateString()}</Text>
+          <Text className='followed-list__time'>关注于 {formatTime(item.createdAt)}</Text>
         </View>
       ))}
     </View>

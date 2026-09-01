@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Heart } from 'lucide-react-taro'
 import { getFavoriteBearings } from '../../../services/user'
+import { formatTime } from '../../../utils/format'
 import EmptyState from '../../../components/EmptyState'
 
 /** 收藏轴承列表 */
@@ -29,7 +30,7 @@ export default function FavoriteList() {
           onClick={() => Taro.navigateTo({ url: `/pages/home/bearingDetail/index?id=${item.bearingId}` })}
         >
           <Text className='favorite-list__id'>{item.bearingId.slice(0, 8)}...</Text>
-          <Text className='favorite-list__time'>收藏于 {new Date(item.createdAt).toLocaleDateString()}</Text>
+          <Text className='favorite-list__time'>收藏于 {formatTime(item.createdAt)}</Text>
         </View>
       ))}
     </View>
