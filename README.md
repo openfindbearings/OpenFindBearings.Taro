@@ -6,6 +6,7 @@
 
 - Taro 4.x + React 18 + TypeScript
 - NutUI (React 版) UI 组件库
+- lucide-react-taro 图标库（1500+ 图标，tree-shaking）
 - Zustand 状态管理
 - Sass 样式预处理器
 
@@ -96,5 +97,16 @@ src/
 
 ## 相关文档
 
+### 设计文档
+
 - [Taro 移动端设计](./doc/OpenFindBearings.Taro移动端设计-v1.1.0.md)
-- [BFF 设计文档](../OpenFindBearings.Mobile/doc/OpenFindBearings.Mobile-BFF设计-v1.0.0.md)
+
+### 接口与规范
+
+- [API 对接说明](./doc/01-API对接说明/API对接说明-v1.0.0.md) — 前端调用 BFF 的完整接口清单、请求/响应结构
+- [UI 组件规范](./doc/02-UI组件规范/UI组件规范-v1.0.0.md) — 图标使用、组件选型、样式变量
+- [跨端适配说明](./doc/03-跨端适配说明/跨端适配说明-v1.0.0.md) — H5/小程序/RN 差异、条件编译
+
+### 关联项目
+
+- [Mobile BFF 设计](../OpenFindBearings.Mobile/doc/OpenFindBearings.Mobile-BFF设计-v1.0.0.md)
