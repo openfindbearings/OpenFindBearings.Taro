@@ -9,5 +9,6 @@ data:
   Api__BaseUrl: "http://openfindbearings-api:80"
   Identity__Authority: "http://openfindbearings-identity:80"
   Identity__Audience: "api:mobile"
-  Identity__ClientId: "maui-client"
-  Identity__ClientSecret: "maui-secret"
+  # 改动说明：maui-client 统一重命名为 mobile-client
+  Identity__ClientId: "mobile-client"
+  Identity__ClientSecret: "mobile-secret"
