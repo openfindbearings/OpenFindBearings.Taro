@@ -1,6 +1,7 @@
 import { View, Text, Input, Textarea, Button } from '@tarojs/components'
 import { useState } from 'react'
 import Taro from '@tarojs/taro'
+import { Package } from 'lucide-react-taro'
 import { updateMerchantProfile, getMyBearings, type MyMerchantProfile, type MerchantBearingItem } from '../../../services/merchantManage'
 import EmptyState from '../../../components/EmptyState'
 import { useEffect } from 'react'
@@ -98,7 +99,7 @@ export default function ManagePanel({ profile, onUpdate }: { profile: MyMerchant
           <Text className='manage-section__title'>在售商品 ({bearings.length})</Text>
         </View>
         {bearings.length === 0 ? (
-          <EmptyState text='暂无在售商品' icon='📦' />
+          <EmptyState text='暂无在售商品' icon={Package} />
         ) : (
           <View className='bearing-list'>
             {bearings.map((b) => (

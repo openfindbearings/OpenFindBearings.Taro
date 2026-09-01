@@ -1,5 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { User } from 'lucide-react-taro'
 import { useAuthStore } from '../../../stores/authStore'
 import { loginWithPassword } from '../../../services/auth'
 
@@ -43,7 +44,9 @@ export default function UserHeader() {
   return (
     <View className='user-header'>
       <View className='user-header__avatar'>
-        <Text className='user-header__avatar-text'>👤</Text>
+        <View className='user-header__avatar-text'>
+          <User size={32} color='#fff' strokeWidth={1.5} />
+        </View>
       </View>
       {isLoggedIn ? (
         <View className='user-header__info'>

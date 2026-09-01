@@ -1,4 +1,5 @@
 import { View, Text } from '@tarojs/components'
+import { Search } from 'lucide-react-taro'
 import EmptyState from '../../../components/EmptyState'
 import type { Bearing } from '../../../services/bearing'
 import type { Merchant } from '../../../services/merchant'
@@ -24,7 +25,7 @@ export default function SearchResultList({
   }
 
   if (items.length === 0) {
-    return <EmptyState text='未找到相关结果' icon='🔍' />
+    return <EmptyState text='未找到相关结果' icon={Search} />
   }
 
   return (

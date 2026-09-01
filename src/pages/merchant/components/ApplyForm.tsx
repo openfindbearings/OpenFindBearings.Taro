@@ -1,6 +1,7 @@
 import { View, Text, Input, Textarea, Button } from '@tarojs/components'
 import { useState } from 'react'
 import Taro from '@tarojs/taro'
+import { Store } from 'lucide-react-taro'
 import { applyMerchant } from '../../../services/merchantManage'
 
 /** 入驻申请表单 */
@@ -34,7 +35,9 @@ export default function ApplyForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <View className='apply-form'>
       <View className='apply-form__header'>
-        <Text className='apply-form__icon'>🏪</Text>
+        <View className='apply-form__icon'>
+          <Store size={48} color='#1890ff' strokeWidth={1.5} />
+        </View>
         <Text className='apply-form__title'>申请入驻</Text>
         <Text className='apply-form__desc'>成为认证商家，展示和销售您的轴承产品</Text>
       </View>

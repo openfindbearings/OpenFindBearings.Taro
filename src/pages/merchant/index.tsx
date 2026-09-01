@@ -1,6 +1,7 @@
 import { View, Text } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
+import { Store } from 'lucide-react-taro'
 import { useAuthStore } from '../../stores/authStore'
 import { getMyMerchantProfile, type MyMerchantProfile } from '../../services/merchantManage'
 import ApplyForm from './components/ApplyForm'
@@ -34,7 +35,9 @@ export default function MerchantPage() {
     return (
       <View className='merchant-page'>
         <View className='merchant-page__empty'>
-          <Text className='merchant-page__empty-icon'>🏪</Text>
+          <View className='merchant-page__empty-icon'>
+            <Store size={64} color='#ccc' strokeWidth={1.5} />
+          </View>
           <Text className='merchant-page__empty-text'>登录后可申请入驻</Text>
         </View>
       </View>
