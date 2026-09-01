@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { BookOpen } from 'lucide-react-taro'
 import { getBrowseHistory } from '../../../services/user'
+import { formatTime } from '../../../utils/format'
 import EmptyState from '../../../components/EmptyState'
 
 /** 浏览记录列表 */
@@ -29,7 +30,7 @@ export default function HistoryList() {
           onClick={() => Taro.navigateTo({ url: `/pages/home/bearingDetail/index?id=${item.bearingId}` })}
         >
           <Text className='history-list__id'>{item.bearingId.slice(0, 8)}...</Text>
-          <Text className='history-list__time'>浏览于 {new Date(item.viewedAt).toLocaleDateString()}</Text>
+          <Text className='history-list__time'>浏览于 {formatTime(item.viewedAt)}</Text>
         </View>
       ))}
     </View>
