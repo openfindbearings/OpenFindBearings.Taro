@@ -3,7 +3,8 @@ export default defineAppConfig({
     'pages/home/index',
     'pages/merchant/index',
     'pages/my/index',
-    'pages/home/search'
+    'pages/home/search',
+    'pages/my/settings'
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -12,6 +13,7 @@ export default defineAppConfig({
     navigationBarTextStyle: 'black'
   },
   tabBar: {
+    custom: true,
     color: '#999999',
     selectedColor: '#2563EB',
     backgroundColor: '#ffffff',
@@ -19,21 +21,15 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/home/index',
-        text: '首页',
-        iconPath: 'assets/tabbar/home.png',
-        selectedIconPath: 'assets/tabbar/home-active.png'
+        text: '首页'
       },
       {
         pagePath: 'pages/merchant/index',
-        text: '入驻',
-        iconPath: 'assets/tabbar/merchant.png',
-        selectedIconPath: 'assets/tabbar/merchant-active.png'
+        text: '入驻'
       },
       {
         pagePath: 'pages/my/index',
-        text: '我的',
-        iconPath: 'assets/tabbar/my.png',
-        selectedIconPath: 'assets/tabbar/my-active.png'
+        text: '我的'
       }
     ]
   }

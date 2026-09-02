@@ -1,26 +1,35 @@
 import { useState, useCallback } from 'react'
 import { View, Input, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { Search, Mic, Camera, Scan, ChevronRight, Clock, Trash2 } from 'lucide-react-taro'
+import { Search, Mic, Camera, Scan, Clock, Trash2 } from 'lucide-react-taro'
+import CustomTabBar from '../../custom-tab-bar'
 import './index.scss'
 
-const STORAGE_KEY = 'search_history'
+const HISTORY_KEY = 'search_history'
+const SETTINGS_KEY = 'app_settings'
 const MAX_HISTORY = 10
+
+interface AppSettings {
+  simpleHome?: boolean
+}
 
 export default function HomePage() {
   const [keyword, setKeyword] = useState('')
   const [history, setHistory] = useState<string[]>([])
+  const [simpleMode, setSimpleMode] = useState(false)
 
   useDidShow(() => {
-    const saved = Taro.getStorageSync(STORAGE_KEY)
+    const saved = Taro.getStorageSync(HISTORY_KEY)
     if (saved) setHistory(JSON.parse(saved))
+    const settings: AppSettings = Taro.getStorageSync(SETTINGS_KEY) || {}
+    setSimpleMode(!!settings.simpleHome)
   })
 
   const saveHistory = useCallback((kw: string) => {
     if (!kw.trim()) return
     const updated = [kw, ...history.filter(h => h !== kw)].slice(0, MAX_HISTORY)
     setHistory(updated)
-    Taro.setStorageSync(STORAGE_KEY, JSON.stringify(updated))
+    Taro.setStorageSync(HISTORY_KEY, JSON.stringify(updated))
   }, [history])
 
   const handleSearch = useCallback(() => {
@@ -42,18 +51,18 @@ export default function HomePage() {
       success: (res) => {
         if (res.confirm) {
           setHistory([])
-          Taro.removeStorageSync(STORAGE_KEY)
+          Taro.removeStorageSync(HISTORY_KEY)
         }
       }
     })
   }, [])
 
   return (
-    <View className='home'>
+    <View className={`home ${simpleMode ? 'simple' : ''}`}>
       {/* 搜索栏 */}
       <View className='search-bar'>
         <View className='search-input-wrap'>
-          <Search size={18} color='#94A3B8' />
+          <Search size={18} className='icon-tertiary' />
           <Input
             className='search-input'
             type='text'
@@ -64,11 +73,11 @@ export default function HomePage() {
             confirmType='search'
           />
           <View className='search-actions'>
-            <View className='action-icon' onClick={() => Taro.showToast({ title: '语音搜索（开发中）', icon: 'none' })}>
-              <Mic size={18} color='#64748B' />
+            <View className='action-icon' onClick={() => Taro.showToast({ title: '语音输入（开发中）', icon: 'none' })}>
+              <Mic size={18} className='icon-secondary' />
             </View>
-            <View className='action-icon' onClick={() => Taro.showToast({ title: '拍照搜索（开发中）', icon: 'none' })}>
-              <Camera size={18} color='#64748B' />
+            <View className='action-icon' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
+              <Camera size={18} className='icon-secondary' />
             </View>
           </View>
         </View>
@@ -76,67 +85,70 @@ export default function HomePage() {
 
       {/* 快捷入口 */}
       <View className='quick-actions'>
-        <View className='quick-item' onClick={() => Taro.showToast({ title: '语音搜索（开发中）', icon: 'none' })}>
+        <View className='quick-item' onClick={() => Taro.showToast({ title: '语音输入（开发中）', icon: 'none' })}>
           <View className='quick-icon voice'>
-            <Mic size={24} color='#2563EB' />
+            <Mic size={24} className='icon-voice' />
           </View>
-          <Text className='quick-label'>语音搜索</Text>
+          <Text className='quick-label'>语音输入</Text>
         </View>
-        <View className='quick-item' onClick={() => Taro.showToast({ title: '拍照识物（开发中）', icon: 'none' })}>
+        <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
           <View className='quick-icon camera'>
-            <Camera size={24} color='#16A34A' />
+            <Camera size={24} className='icon-camera' />
           </View>
-          <Text className='quick-label'>拍照识物</Text>
+          <Text className='quick-label'>拍轴承</Text>
         </View>
-        <View className='quick-item' onClick={() => Taro.showToast({ title: '扫一扫（开发中）', icon: 'none' })}>
+        <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
           <View className='quick-icon scan'>
-            <Scan size={24} color='#EA580C' />
+            <Scan size={24} className='icon-scan' />
           </View>
-          <Text className='quick-label'>扫一扫</Text>
+          <Text className='quick-label'>扫条码</Text>
         </View>
       </View>
 
-      {/* 搜索历史 */}
-      {history.length > 0 && (
-        <View className='history-section'>
-          <View className='section-header'>
-            <View className='section-title'>
-              <Clock size={16} color='#94A3B8' />
-              <Text>搜索历史</Text>
-            </View>
-            <View className='clear-btn' onClick={clearHistory}>
-              <Trash2 size={14} color='#94A3B8' />
-              <Text>清空</Text>
-            </View>
-          </View>
-          <View className='history-tags'>
-            {history.map((item, idx) => (
-              <View key={idx} className='history-tag' onClick={() => handleHistoryClick(item)}>
-                <Text>{item}</Text>
+      {/* 以下内容在简洁模式下隐藏 */}
+      {!simpleMode && (
+        <>
+          {/* 搜索历史 */}
+          {history.length > 0 && (
+            <View className='history-section'>
+              <View className='section-header'>
+                <View className='section-title'>
+                  <Clock size={16} className='icon-tertiary' />
+                  <Text>搜索历史</Text>
+                </View>
+                <View className='clear-btn' onClick={clearHistory}>
+                  <Trash2 size={14} className='icon-tertiary' />
+                  <Text>清空</Text>
+                </View>
               </View>
-            ))}
+              <View className='history-tags'>
+                {history.map((item, idx) => (
+                  <View key={idx} className='history-tag' onClick={() => handleHistoryClick(item)}>
+                    <Text>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* 热门搜索 */}
+          <View className='hot-section'>
+            <View className='section-header'>
+              <Text className='section-title'>热门搜索</Text>
+            </View>
+            <View className='history-tags'>
+              {['SKF', 'NSK', '6205', '6308', '轴承型号查询', '深沟球轴承'].map((item, idx) => (
+                <View key={idx} className='history-tag' onClick={() => handleHistoryClick(item)}>
+                  <Text>{item}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        </>
       )}
 
-      {/* 热门搜索 */}
-      <View className='hot-section'>
-        <View className='section-header'>
-          <Text className='section-title'>热门搜索</Text>
-        </View>
-        <View className='history-tags'>
-          {['SKF', 'NSK', '6205', '6308', '轴承型号查询', '深沟球轴承'].map((item, idx) => (
-            <View key={idx} className='history-tag' onClick={() => handleHistoryClick(item)}>
-              <Text>{item}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* 底部提示 */}
-      <View className='footer-tip'>
-        <Text>输入轴承型号或品牌开始搜索</Text>
-      </View>
+      {/* 自定义 TabBar */}
+      <CustomTabBar />
     </View>
   )
 }

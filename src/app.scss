@@ -1,18 +1,8 @@
-// 全局样式变量
-$primary: #2563EB;
-$primary-light: #EFF6FF;
-$bg: #F8FAFC;
-$text: #1E293B;
-$text-secondary: #64748B;
-$text-light: #94A3B8;
-$border: #E2E8F0;
-$white: #FFFFFF;
-$radius: 12px;
-$radius-sm: 8px;
+@use './styles/theme';
 
 page {
-  background-color: $bg;
+  background-color: var(--bg-page);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  color: $text;
+  color: var(--text-primary);
   font-size: 28px;
 }

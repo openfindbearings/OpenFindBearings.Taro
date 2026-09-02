@@ -1,0 +1,126 @@
+// ==========================================
+// 主题变量定义
+// ==========================================
+
+// 亮色主题（默认）
+:root,
+.theme-light {
+  --bg-page: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-input: #F1F5F9;
+  --bg-hover: #F8FAFC;
+  --bg-badge: #F1F5F9;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-tertiary: #94A3B8;
+  --text-on-primary: #FFFFFF;
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --primary: #2563EB;
+  --primary-light: #EFF6FF;
+  --primary-hover: #1D4ED8;
+  --danger: #EF4444;
+  --danger-bg: #FEF2F2;
+  --success: #16A34A;
+  --success-bg: #F0FDF4;
+  --warning: #EA580C;
+  --warning-bg: #FFF7ED;
+  --gradient-primary: linear-gradient(135deg, #2563EB, #1D4ED8);
+  --gradient-voice: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+  --gradient-camera: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+  --gradient-scan: linear-gradient(135deg, #FFF7ED, #FED7AA);
+  --tabbar-bg: #FFFFFF;
+  --tabbar-border: #E2E8F0;
+  --overlay: rgba(0, 0, 0, 0.5);
+  // 图标颜色
+  --icon-primary: #2563EB;
+  --icon-voice: #2563EB;
+  --icon-camera: #16A34A;
+  --icon-scan: #EA580C;
+  --icon-default: #64748B;
+  --icon-on-card: #2563EB;
+}
+
+// 暗色主题
+.theme-dark {
+  --bg-page: #0F172A;
+  --bg-card: #1E293B;
+  --bg-input: #334155;
+  --bg-hover: #1E293B;
+  --bg-badge: #334155;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --text-on-primary: #FFFFFF;
+  --border: #334155;
+  --border-light: #1E293B;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --primary: #3B82F6;
+  --primary-light: #1E3A5F;
+  --primary-hover: #60A5FA;
+  --danger: #F87171;
+  --danger-bg: #3B1111;
+  --success: #4ADE80;
+  --success-bg: #14332A;
+  --warning: #FB923C;
+  --warning-bg: #3B2111;
+  --gradient-primary: linear-gradient(135deg, #1E3A5F, #1E293B);
+  --gradient-voice: linear-gradient(135deg, #1E3A5F, #1E293B);
+  --gradient-camera: linear-gradient(135deg, #14332A, #1E293B);
+  --gradient-scan: linear-gradient(135deg, #3B2111, #1E293B);
+  --tabbar-bg: #1E293B;
+  --tabbar-border: #334155;
+  --overlay: rgba(0, 0, 0, 0.7);
+  // 图标颜色
+  --icon-primary: #60A5FA;
+  --icon-voice: #60A5FA;
+  --icon-camera: #4ADE80;
+  --icon-scan: #FB923C;
+  --icon-default: #94A3B8;
+  --icon-on-card: #60A5FA;
+}
+
+// 跟随系统
+@media (prefers-color-scheme: dark) {
+  .theme-system {
+    --bg-page: #0F172A;
+    --bg-card: #1E293B;
+    --bg-input: #334155;
+    --bg-hover: #1E293B;
+    --bg-badge: #334155;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-tertiary: #64748B;
+    --text-on-primary: #FFFFFF;
+    --border: #334155;
+    --border-light: #1E293B;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --primary: #3B82F6;
+    --primary-light: #1E3A5F;
+    --primary-hover: #60A5FA;
+    --danger: #F87171;
+    --danger-bg: #3B1111;
+    --success: #4ADE80;
+    --success-bg: #14332A;
+    --warning: #FB923C;
+    --warning-bg: #3B2111;
+    --gradient-primary: linear-gradient(135deg, #1E3A5F, #1E293B);
+    --gradient-voice: linear-gradient(135deg, #1E3A5F, #1E293B);
+    --gradient-camera: linear-gradient(135deg, #14332A, #1E293B);
+    --gradient-scan: linear-gradient(135deg, #3B2111, #1E293B);
+    --tabbar-bg: #1E293B;
+    --tabbar-border: #334155;
+    --overlay: rgba(0, 0, 0, 0.7);
+    // 图标颜色
+    --icon-primary: #60A5FA;
+    --icon-voice: #60A5FA;
+    --icon-camera: #4ADE80;
+    --icon-scan: #FB923C;
+    --icon-default: #94A3B8;
+    --icon-on-card: #60A5FA;
+  }
+}

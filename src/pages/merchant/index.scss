@@ -1,9 +1,10 @@
 .merchant-page {
   min-height: 100vh;
-  background: #F8FAFC;
+  background: var(--bg-page);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-bottom: 80px;
 }
 
 .placeholder {
@@ -17,7 +18,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #EFF6FF;
+  background: var(--primary-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,11 +28,11 @@
 .placeholder-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1E293B;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .placeholder-desc {
   font-size: 14px;
-  color: #94A3B8;
+  color: var(--text-tertiary);
 }
