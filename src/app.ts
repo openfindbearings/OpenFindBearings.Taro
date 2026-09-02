@@ -1,16 +1,18 @@
-import { PropsWithChildren } from 'react'
-import { useLaunch } from '@tarojs/taro'
-import { useAuthStore } from './stores/authStore'
+import { Component, PropsWithChildren } from 'react'
+
 import './app.scss'
 
-function App({ children }: PropsWithChildren) {
-  const init = useAuthStore((s) => s.init)
+class App extends Component<PropsWithChildren> {
 
-  useLaunch(() => {
-    init()
-  })
+  componentDidMount () {}
 
-  return children
+  componentDidShow () {}
+
+  componentDidHide () {}
+
+  // this.props.children 是将要会渲染的页面
+  render () {
+    return this.props.children
+  }
 }
-
 export default App
