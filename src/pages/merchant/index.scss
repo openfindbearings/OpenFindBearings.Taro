@@ -1,0 +1,37 @@
+.merchant-page {
+  min-height: 100vh;
+  background: #F8FAFC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+}
+
+.placeholder-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #EFF6FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.placeholder-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+  margin-bottom: 8px;
+}
+
+.placeholder-desc {
+  font-size: 14px;
+  color: #94A3B8;
+}

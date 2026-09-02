@@ -1,0 +1,135 @@
+.search-page {
+  min-height: 100vh;
+  background: #F8FAFC;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.back-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #F1F5F9;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.search-input {
+  flex: 1;
+  margin-left: 8px;
+  font-size: 14px;
+  color: #1E293B;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+.result-list {
+  padding: 16px;
+}
+
+.result-count {
+  font-size: 12px;
+  color: #94A3B8;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.result-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 14px;
+  background: #FFFFFF;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.result-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E293B;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.result-brand {
+  font-size: 13px;
+  color: #64748B;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.result-specs {
+  display: flex;
+  gap: 12px;
+}
+
+.spec {
+  font-size: 12px;
+  color: #94A3B8;
+  background: #F8FAFC;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.empty-text {
+  font-size: 15px;
+  color: #64748B;
+  margin-top: 16px;
+}
+
+.empty-hint {
+  font-size: 13px;
+  color: #94A3B8;
+  margin-top: 8px;
+}
