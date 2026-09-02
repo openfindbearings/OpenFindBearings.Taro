@@ -17,6 +17,9 @@ importers:
       '@react-native/gradle-plugin':
         specifier: ^0.73.0
         version: 0.73.5
+      '@tarojs/binding-linux-x64-musl':
+        specifier: 4.2.1
+        version: 4.2.1
       '@tarojs/components':
         specifier: 4.2.1
         version: 4.2.1(@tarojs/helper@4.2.1(supports-color@8.1.1))(@types/react@18.3.31)(html-webpack-plugin@5.6.8(webpack@5.88.1(@swc/core@1.3.96)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.26))(csso@5.0.5)(esbuild@0.21.5)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.5.26)(uglify-js@3.19.3)))(postcss@8.5.26)(rollup@3.30.0)(webpack-chain@6.5.1)(webpack-dev-server@4.15.2(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(webpack@5.88.1(@swc/core@1.3.96)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.26))(csso@5.0.5)(esbuild@0.21.5)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.5.26)(uglify-js@3.19.3)))(webpack@5.88.1(@swc/core@1.3.96)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.26))(csso@5.0.5)(esbuild@0.21.5)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.5.26)(uglify-js@3.19.3))
@@ -2167,6 +2170,13 @@ packages:
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+
+  '@tarojs/binding-linux-x64-musl@4.2.1':
+    resolution: {integrity: sha512-fsInbvJie89BEM2AvLlXkOolsG0QqI/pTWnbX0iAAU71DbUedU5XVCAlzT1fG0stkQzujM8ABh1qoklh9A3EsA==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
 
   '@tarojs/binding-win32-x64-msvc@4.2.1':
     resolution: {integrity: sha512-dWJnwfKSXgcERKOQ5KUGbQTyw7ZOZ738p88vQC8ZBiOpJHNlNX+bFuHMAxM9ncUjUdk6SF+rz5vVPB0+LzfmWg==}
@@ -11359,6 +11369,8 @@ snapshots:
 
   '@tarojs/binding-linux-x64-gnu@4.2.1':
     optional: true
+
+  '@tarojs/binding-linux-x64-musl@4.2.1': {}
 
   '@tarojs/binding-win32-x64-msvc@4.2.1':
     optional: true
