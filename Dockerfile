@@ -2,14 +2,11 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# 安装 Taro binding 平台特定包
-RUN npm install -g @tarojs/binding-linux-x64-musl
+# pnpm v11 默认禁用构建脚本，需显式允许
+ENV PNPM_ALLOW_ALL_BUILDS=1
 
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile --dangerously-allow-all-builds
-
-# 确保 Taro binding 正确链接
-RUN pnpm add @tarojs/binding-linux-x64-musl
+RUN corepack enable && pnpm install --frozen-lockfile
 
 COPY . .
 RUN pnpm run build:h5
