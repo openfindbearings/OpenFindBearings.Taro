@@ -68,7 +68,8 @@
     "react-native": "^0.73.1",
     "tsconfig-paths-webpack-plugin": "^4.0.1",
     "lucide-react-taro": "^1.5.2",
-    "zustand": "^4.5.0"
+    "zustand": "^4.5.0",
+    "@tarojs/binding-linux-x64-musl": "4.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
