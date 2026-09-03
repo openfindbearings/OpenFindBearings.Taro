@@ -4,10 +4,48 @@
   padding-bottom: 80px;
 }
 
+// NavBar
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.nav-bar-left {
+  flex: 1;
+}
+
+.nav-bar-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.nav-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 // 用户信息区
 .user-section {
   background: var(--gradient-primary);
-  padding: 32px 24px 40px;
+  padding: 24px;
   border-radius: 0 0 24px 24px;
 }
 
@@ -51,48 +89,71 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-// 功能菜单
-.menu-section {
+// 积分卡片
+.points-card {
+  display: flex;
+  align-items: center;
   background: var(--bg-card);
   border-radius: 12px;
-  margin: -20px 16px 16px;
+  margin: -16px 16px 16px;
+  padding: 20px;
   box-shadow: var(--shadow-md);
-  overflow: hidden;
   position: relative;
   z-index: 1;
 }
 
-.menu-item {
+.points-item {
+  flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-light);
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:active {
-    background: var(--bg-hover);
-  }
 }
 
-.menu-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.points-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
 }
 
-.menu-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+.points-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.points-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+}
+
+// 功能菜单 - 横向大图标
+.menu-grid {
+  display: flex;
+  background: var(--bg-card);
+  border-radius: 12px;
+  margin: 0 16px 16px;
+  padding: 24px 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.grid-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.grid-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  // 图标背景色（深色模式自动调暗）
   &.icon-danger {
     background: var(--danger-bg);
     color: var(--danger);
@@ -111,8 +172,8 @@
   }
 }
 
-.menu-label {
-  font-size: 15px;
+.grid-label {
+  font-size: 13px;
   color: var(--text-primary);
 }
 

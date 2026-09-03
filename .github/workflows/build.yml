@@ -15,28 +15,18 @@ jobs:
     steps:
     - uses: actions/checkout@v6.0.2
 
-    # 改动说明：pnpm-workspace.yaml 仅含 allowBuilds（pnpm v10+ 才识别），v9 及更早版本会报
-    # ERR_PNPM_INVALID_WORKSPACE_CONFIGURATION packages field missing or empty。
-    # pnpm 版本由 package.json 的 packageManager 字段统一声明（corepack 与 action-setup 均自动读取）；
-    # 先装 pnpm 再 setup-node（cache:'pnpm' 需要 pnpm 在 PATH 上才能定位 store 目录），实现依赖缓存免重复下载
     - name: Setup pnpm
       uses: pnpm/action-setup@v3
+      with:
+        version: 9
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
     - name: Build H5
-      run: pnpm build:h5
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: taro-h5-build
-        path: dist/
-        retention-days: 7
+      run: pnpm run build:h5

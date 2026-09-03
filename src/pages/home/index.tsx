@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
 import { View, Input, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { Search, Mic, Camera, Scan, Clock, Trash2 } from 'lucide-react-taro'
-import CustomTabBar from '../../custom-tab-bar'
+import { Mic, Camera, ScanBarcode, Clock, Trash2 } from 'lucide-react-taro'
+import CustomTabBar from '../../components/CustomTabBar'
 import './index.scss'
 
 const HISTORY_KEY = 'search_history'
@@ -62,7 +62,7 @@ export default function HomePage() {
       {/* 搜索栏 */}
       <View className='search-bar'>
         <View className='search-input-wrap'>
-          <Search size={18} className='icon-tertiary' />
+          <ScanBarcode size={18} className='icon-tertiary' />
           <Input
             className='search-input'
             type='text'
@@ -73,7 +73,7 @@ export default function HomePage() {
             confirmType='search'
           />
           <View className='search-actions'>
-            <View className='action-icon' onClick={() => Taro.showToast({ title: '语音输入（开发中）', icon: 'none' })}>
+            <View className='action-icon' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
               <Mic size={18} className='icon-secondary' />
             </View>
             <View className='action-icon' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
@@ -85,11 +85,11 @@ export default function HomePage() {
 
       {/* 快捷入口 */}
       <View className='quick-actions'>
-        <View className='quick-item' onClick={() => Taro.showToast({ title: '语音输入（开发中）', icon: 'none' })}>
+        <View className='quick-item' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
           <View className='quick-icon voice'>
             <Mic size={24} className='icon-voice' />
           </View>
-          <Text className='quick-label'>语音输入</Text>
+          <Text className='quick-label'>讲语音</Text>
         </View>
         <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
           <View className='quick-icon camera'>
@@ -99,7 +99,7 @@ export default function HomePage() {
         </View>
         <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
           <View className='quick-icon scan'>
-            <Scan size={24} className='icon-scan' />
+            <ScanBarcode size={24} className='icon-scan' />
           </View>
           <Text className='quick-label'>扫条码</Text>
         </View>

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { User, Heart, Users, Clock, Settings, ChevronRight, LogIn } from 'lucide-react-taro'
-import CustomTabBar from '../../custom-tab-bar'
+import { User, Heart, Users, Clock, Settings, ChevronRight, LogIn, Bell } from 'lucide-react-taro'
+import CustomTabBar from '../../components/CustomTabBar'
 import './index.scss'
 
 interface UserInfo {
@@ -16,7 +16,7 @@ const menuItems = [
   { key: 'favorites', label: '收藏轴承', icon: Heart, iconClass: 'icon-danger' },
   { key: 'followed', label: '关注商家', icon: Users, iconClass: 'icon-primary' },
   { key: 'history', label: '浏览历史', icon: Clock, iconClass: 'icon-success' },
-  { key: 'settings', label: '设置', icon: Settings, iconClass: 'icon-secondary' }
+  { key: 'more', label: '更多', icon: Settings, iconClass: 'icon-secondary' }
 ]
 
 export default function MyPage() {
@@ -41,7 +41,7 @@ export default function MyPage() {
   })
 
   const handleMenuClick = (key: string) => {
-    if (!user.isLoggedIn && key !== 'settings') {
+    if (!user.isLoggedIn && key !== 'settings' && key !== 'more') {
       Taro.showModal({
         title: '提示',
         content: '请先登录',
@@ -56,6 +56,7 @@ export default function MyPage() {
     }
     switch (key) {
       case 'settings':
+      case 'more':
         Taro.navigateTo({ url: '/pages/my/settings' })
         break
       default:
@@ -65,6 +66,21 @@ export default function MyPage() {
 
   return (
     <View className='my-page'>
+      {/* NavBar */}
+      <View className='nav-bar'>
+        <View className='nav-bar-left'>
+          <Text className='nav-bar-title'>我的</Text>
+        </View>
+        <View className='nav-bar-right'>
+          <View className='nav-icon' onClick={() => Taro.showToast({ title: '消息功能开发中', icon: 'none' })}>
+            <Bell size={20} color='#1E293B' />
+          </View>
+          <View className='nav-icon' onClick={() => Taro.navigateTo({ url: '/pages/my/settings' })}>
+            <Settings size={20} color='#1E293B' />
+          </View>
+        </View>
+      </View>
+
       {/* 用户信息区 */}
       <View className='user-section'>
         {user.isLoggedIn ? (
@@ -94,21 +110,31 @@ export default function MyPage() {
         )}
       </View>
 
-      {/* 功能菜单 */}
-      <View className='menu-section'>
+      {/* 积分/金币卡片（预留） */}
+      <View className='points-card'>
+        <View className='points-item'>
+          <Text className='points-label'>我的积分</Text>
+          <Text className='points-value'>--</Text>
+        </View>
+        <View className='points-divider' />
+        <View className='points-item'>
+          <Text className='points-label'>收支明细</Text>
+          <Text className='points-value'>--</Text>
+        </View>
+      </View>
+
+      {/* 功能菜单 - 横向大图标 */}
+      <View className='menu-grid'>
         {menuItems.map((item) => (
           <View
             key={item.key}
-            className='menu-item'
+            className='grid-item'
             onClick={() => handleMenuClick(item.key)}
           >
-            <View className='menu-left'>
-              <View className={`menu-icon ${item.iconClass}`}>
-                <item.icon size={20} />
-              </View>
-              <Text className='menu-label'>{item.label}</Text>
+            <View className={`grid-icon ${item.iconClass}`}>
+              <item.icon size={22} />
             </View>
-            <ChevronRight size={16} className='icon-tertiary' />
+            <Text className='grid-label'>{item.label}</Text>
           </View>
         ))}
       </View>

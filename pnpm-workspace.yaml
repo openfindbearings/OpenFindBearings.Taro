@@ -1,10 +1,18 @@
-packages:
-  - '.'
+packages: []
 allowBuilds:
-  '@parcel/watcher': true
-  '@swc/core': true
-  '@tarojs/binding': true
-  '@tarojs/cli': true
-  core-js: true
-  core-js-pure: true
-  esbuild: true
+  '0': '@parcel/watcher'
+  '1': '@swc/core'
+  '2': '@tarojs/binding'
+  '3': '@tarojs/cli'
+  '4': core-js
+  '5': core-js-pure
+  '6': esbuild
+  '7': swiper
+  '@parcel/watcher': set this to true or false
+  '@swc/core': set this to true or false
+  '@tarojs/binding': set this to true or false
+  '@tarojs/cli': set this to true or false
+  core-js: set this to true or false
+  core-js-pure: set this to true or false
+  esbuild: set this to true or false
+  swiper: set this to true or false

@@ -2,7 +2,7 @@
 
 ## 概述
 
-OpenFindBearings.Taro 是统一的移动端入口，基于 Taro 4.x + React 18 + TypeScript 构建，一套代码编译到 H5（浏览器）、微信小程序、Android/iOS 原生 APP（React Native），替代原 MAUI + 微信小程序分开做的方案。
+OpenFindBearings.Taro 是统一的移动端入口，基于 Taro 3.6.40 + React 18 + TypeScript 构建，一套代码编译到 H5（浏览器）、微信小程序、Android/iOS 原生 APP（React Native），替代原 MAUI + 微信小程序分开做的方案。
 
 ## 变更日志
 
@@ -14,8 +14,8 @@ OpenFindBearings.Taro 是统一的移动端入口，基于 Taro 4.x + React 18 +
 
 | 层面 | 选型 | 理由 |
 |---|---|---|
-| 框架 | Taro 4.x + React 18 + TypeScript | Taro 生态成熟，多端编译 |
-| UI 组件 | NutUI (React 版) | 京东出品，与 Taro 深度集成，移动端组件丰富 |
+| 框架 | Taro 3.6.40 + React 18 + TypeScript | Taro 生态成熟，多端编译；3.6.x RN 支持稳定 |
+| UI 组件 | lucide-react-taro | 轻量图标库，tree-shaking，H5/小程序/RN 全端兼容 |
 | 状态管理 | Zustand | 轻量、支持持久化、无 Provider 包裹 |
 | HTTP | Taro.request 封装 | 统一拦截器、JWT 自动附加、错误处理 |
 | Token 存储 | 跨端适配层 | 小程序用 `Taro.setStorageSync`，H5 用 `localStorage` |
@@ -253,7 +253,7 @@ src/
 | 决策项 | 选择 | 理由 |
 |---|---|---|
 | 为什么不用 MAUI | Taro | MAUI 无法编译微信小程序；Taro 一套代码覆盖 H5/小程序/RN |
-| UI 库选 NutUI | NutUI | 京东出品，与 Taro 同生态，组件丰富且风格统一 |
+| UI 库选 lucide-react-taro | lucide-react-taro | 轻量图标库，tree-shaking，H5/小程序/RN 全端兼容 |
 | 状态管理用 Zustand | Zustand | 轻量无模板代码，支持 persist 中间件实现跨端持久化 |
 | Token 不持久化 access_token | 安全 | access_token 有效期短（10 分钟），内存存储防泄露；refresh_token 持久化用于自动续期 |
 | 认证走 Identity OAuth | 复用 | 与 Admin/Web 共用同一 Identity 认证中心，用户数据统一 |

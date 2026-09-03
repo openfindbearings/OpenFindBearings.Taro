@@ -1,0 +1,834 @@
+- 开始获取 taro 全局配置文件： C:\Users\abcsxl\.taro-global-config\index.json
+⚠ 获取 taro 全局配置文件失败，不存在全局配置文件：C:\Users\abcsxl\.taro-global-config\index.json
+TypeError: options.roots.map is not a function
+    at createOptions (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\enhanced-resolve@5.24.5\node_modules\enhanced-resolve\lib\ResolverFactory.js:360:48)
+    at Object.createResolver (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\enhanced-resolve@5.24.5\node_modules\enhanced-resolve\lib\ResolverFactory.js:378:28)
+    at resolve.create (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\enhanced-resolve@5.24.5\node_modules\enhanced-resolve\lib\index.js:167:40)
+    at createResolve (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\@tarojs+webpack5-prebundle@_ebd0f2c7d90de8ec4e988f62c66496d9\node_modules\@tarojs\webpack5-prebundle\src\utils\index.ts:28:36)
+    at new BasePrebundle (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\@tarojs+webpack5-prebundle@_ebd0f2c7d90de8ec4e988f62c66496d9\node_modules\@tarojs\webpack5-prebundle\src\prebundle\index.ts:93:18)
+    at new WebPrebundle (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\@tarojs+webpack5-prebundle@_ebd0f2c7d90de8ec4e988f62c66496d9\node_modules\@tarojs\webpack5-prebundle\src\web.ts:54:5)
+    at TaroPrebundle.<anonymous> (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\@tarojs+webpack5-prebundle@_ebd0f2c7d90de8ec4e988f62c66496d9\node_modules\@tarojs\webpack5-prebundle\src\index.ts:114:27)
+    at Generator.next (<anonymous>)
+    at fulfilled (D:\workspace\OpenFindBearings\OpenFindBearings.Taro\node_modules\.pnpm\@tarojs+webpack5-prebundle@_ebd0f2c7d90de8ec4e988f62c66496d9\node_modules\@tarojs\webpack5-prebundle\dist\index.js:31:58)
+依赖预编译失败，已经为您跳过预编译步骤，但是编译速度可能会受到影响。
+<i> [webpack-dev-server] [HPM] Proxy created: /mobile  -> https://bff.515813.xyz
+
+● Webpack █████████████████████████ setup (3%)  
+ watch run
+
+- 即将开始启动编译，请稍等~
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ setup (9%) compilation 
+ JsonModulesPlugin
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 2/4 dependencie
+s 0/2 modules 1 active 
+ ...2\node_modules\@pmmmwh\react-refresh-webpack-plugin\client\ReactRefreshEnt
+ry.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 6/18 dependenci
+es 0/6 modules 4 active 
+ babel-loader › src\app.config.ts
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%)  
+ ...25a04b4dbbec2\node_modules\@pmmmwh\react-refresh-webpack-plugin\loader\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%)  
+ ...babel+c_297efded5afe29adfe7f79575e319090\node_modules\babel-loader\lib\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%)  
+ ...40__ec521f6491e41c29a11c1d97efe97a92\node_modules\@tarojs\taro-loader\lib\
+h5.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 15/18 dependenc
+ies 0/15 modules 8 active 
+ ...._c4be0be9a2aea5a7f1ab223988543ef8\node_modules\webpack\hot\log-apply-resu
+lt.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 16/32 dependenc
+ies 3/15 modules 12 active 
+ ...bbe5355a4e34168a0397e\node_modules\webpack-dev-server\client\utils\reloadA
+pp.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 22/32 dependenc
+ies 5/15 modules 10 active 
+ ...bbe5355a4e34168a0397e\node_modules\webpack-dev-server\client\utils\reloadA
+pp.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 33/40 dependenc
+ies 12/21 modules 9 active 
+ babel-loader › src\app.boot.ts
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 39/58 dependenc
+ies 12/24 modules 12 active 
+ ...2\node_modules\@pmmmwh\react-refresh-webpack-plugin\lib\runtime\RefreshUti
+ls.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 54/77 dependenc
+ies 14/34 modules 13 active 
+ ...5a04b4dbbec2\node_modules\@pmmmwh\react-refresh-webpack-plugin\overlay\the
+me.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/4 entries 64/100 dependen
+cies 18/39 modules 21 active 
+ node_modules\.pnpm\events@3.3.0\node_modules\events\events.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%) 1/4 entries 111/156 depende
+ncies 21/53 modules 31 active 
+ babel-loader › src\custom-tab-bar\index.tsx
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%) 1/4 entries 150/181 depende
+ncies 25/69 modules 39 active 
+ ...› css-loader › postcss-loader › resolve-url-loader › sass-loader › src\app
+.scss
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%)  
+ ...postcs_16ad4431f207ef5db5d0b557dd34c24d\node_modules\postcss-loader\dist\c
+js.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%)  
+ ..._sass@1.5_db7296219395531a4bfb69d6e5eee7c7\node_modules\sass-loader\dist\c
+js.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%) 1/4 entries 150/181 depende
+ncies 25/69 modules 40 active 
+ ... postcss-loader › resolve-url-loader › sass-loader › src\pages\my\settings
+.scss
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%) 1/4 entries 151/229 depende
+ncies 25/70 modules 45 active 
+ ...cc036733ccabab43b\node_modules\@tarojs\plugin-platform-h5\dist\runtime\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%) 1/4 entries 195/278 depende
+ncies 27/100 modules 48 active 
+ ...› postcss-loader › resolve-url-loader › sass-loader › src\pages\home\index
+.scss
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%) 1/4 entries 243/289 depende
+ncies 27/112 modules 54 active 
+ ...ro_4be63be53af858555b28209cda5ccd01\node_modules\@tarojs\router\dist\histo
+ry.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (23%) 1/4 entries 253/297 depende
+ncies 27/115 modules 86 active 
+ ...stcss-loader › resolve-url-loader › sass-loader › src\custom-tab-bar\index
+.scss
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 266/348 depende
+ncies 45/116 modules 70 active 
+ ...3ccabab43b\node_modules\@tarojs\plugin-platform-h5\dist\runtime\apis\taro-
+h5.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 379/450 depende
+ncies 54/188 modules 62 active 
+ ...3ccabab43b\node_modules\@tarojs\plugin-platform-h5\dist\dist\definition.js
+on.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 500/588 depende
+ncies 77/242 modules 102 active 
+ ...c343eb54559f13\node_modules\@tarojs\components\dist\components\taro-map-co
+re.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 544/626 depende
+ncies 77/257 modules 132 active 
+ ...343eb54559f13\node_modules\@tarojs\components\dist\components\taro-slot-co
+re.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 573/657 depende
+ncies 82/265 modules 141 active 
+ ...b54559f13\node_modules\@tarojs\components\dist\components\taro-video-contr
+ol.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 590/682 depende
+ncies 82/268 modules 143 active 
+ ...3760ab903c648b8875d34c6ec7f893\node_modules\lucide-react-taro\dist\esm\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 690/700 depende
+ncies 82/273 modules 190 active 
+ node_modules\.pnpm\swiper@6.8.0\node_modules\swiper\swiper-bundle.esm.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 731/800 depende
+ncies 103/274 modules 171 active 
+ ...\@babel+runtime@7.29.7\node_modules\@babel\runtime\helpers\esm\superPropBa
+se.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 749/804 depende
+ncies 103/288 modules 172 active 
+ ...core-js-pure@3.50.0\node_modules\core-js-pure\internals\function-bind-nati
+ve.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 888/982 depende
+ncies 122/400 modules 165 active 
+ ...ules\@tarojs\components\lib\react\react-component-lib\createOverlayCompone
+nt.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 969/1001 depend
+encies 127/459 modules 228 active 
+ ...c70a77c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\framework\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 989/1030 depend
+encies 140/469 modules 219 active 
+ ...c8c70a77c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\network\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1006/1051 depen
+dencies 147/470 modules 221 active 
+ ...4c8c70a77c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\worker\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1023/1100 depen
+dencies 148/472 modules 226 active 
+ ...ules\.pnpm\swiper@6.8.0\node_modules\swiper\esm\components\keyboard\keyboa
+rd.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1074/1141 depen
+dencies 148/474 modules 227 active 
+ ...\.pnpm\swiper@6.8.0\node_modules\swiper\esm\components\mousewheel\mousewhe
+el.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1127/1191 depen
+dencies 148/491 modules 236 active 
+ ...odules\.pnpm\swiper@6.8.0\node_modules\swiper\esm\components\history\histo
+ry.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1177/1230 depen
+dencies 149/491 modules 247 active 
+ ...b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\location\locationChan
+ge.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1194/1300 depen
+dencies 149/497 modules 268 active 
+ ...7c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\open-api\device-vo
+ip.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1200/1300 depen
+dencies 149/497 modules 268 active 
+ ...7c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\open-api\device-vo
+ip.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1300/1384 depen
+dencies 150/519 modules 330 active 
+ ...arings.Taro\node_modules\.pnpm\lodash-es@4.17.21\node_modules\lodash-es\ke
+ys.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1315/1400 depen
+dencies 154/521 modules 326 active 
+ ...arings.Taro\node_modules\.pnpm\lodash-es@4.17.21\node_modules\lodash-es\ke
+ys.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1372/1451 depen
+dencies 173/521 modules 308 active 
+ ...e-js-pure@3.50.0\node_modules\core-js-pure\internals\v8-prototype-define-b
+ug.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1395/1462 depen
+dencies 189/523 modules 301 active 
+ ...7c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\canvas\CanvasConte
+xt.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1426/1477 depen
+dencies 196/545 modules 315 active 
+ ...les\.pnpm\swiper@6.8.0\node_modules\swiper\esm\components\core\classes\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1461/1528 depen
+dencies 212/548 modules 315 active 
+ ...7c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\ui\interaction\mod
+al.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1488/1583 depen
+dencies 224/560 modules 306 active 
+ ...7c9b287fbc8568780\node_modules\@tarojs\taro-h5\dist\api\ui\interaction\toa
+st.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1584/1635 depen
+dencies 334/605 modules 252 active 
+ ...iper@6.8.0\node_modules\swiper\esm\components\core\manipulation\prependSli
+de.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1634/1653 depen
+dencies 370/627 modules 237 active 
+ ...aro\node_modules\.pnpm\lodash-es@4.17.21\node_modules\lodash-es\_equalArra
+ys.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1667/1707 depen
+dencies 413/635 modules 222 active 
+ ....npmjs.org_style-inject@0.3.0\node_modules\style-inject\dist\style-inject.
+es.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1713/1728 depen
+dencies 416/665 modules 222 active 
+ ...s.Taro\node_modules\.pnpm\lodash-es@4.17.21\node_modules\lodash-es\_SetCac
+he.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1754/1769 depen
+dencies 560/674 modules 113 active 
+ ...s.Taro\node_modules\.pnpm\lodash-es@4.17.21\node_modules\lodash-es\_baseTr
+im.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (37%) 2/4 entries 1786/1787 depen
+dencies 587/696 modules 99 active 
+ ....Taro\node_modules\.pnpm\lodash-es@4.17.21\node_modules\lodash-es\_arrayPu
+sh.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (51%) 3/4 entries 1796/1797 depen
+dencies 626/701 modules 74 active 
+ node_modules\.pnpm\ics@3.12.0\node_modules\ics\dist\pipeline\validate.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (51%) 3/4 entries 1813/1819 depen
+dencies 672/712 modules 39 active 
+ ....js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (51%) 3/4 entries 1828/1830 depen
+dencies 684/718 modules 34 active 
+ ...ings.Taro\node_modules\.pnpm\nanoid@3.3.18\node_modules\nanoid\index.brows
+er.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (51%) 3/4 entries 1840/1844 depen
+dencies 694/720 modules 26 active 
+ ...Taro\node_modules\.pnpm\nanoid@3.3.18\node_modules\nanoid\url-alphabet\ind
+ex.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (54%) 4/5 entries 1866/1869 depen
+dencies 729/734 modules 4 active 
+ ...es\.pnpm\core-js-pure@3.50.0\node_modules\core-js-pure\web\url-search-para
+ms.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (54%) 4/5 entries 1951/1962 depen
+dencies 740/763 modules 12 active 
+ ...pnpm\core-js-pure@3.50.0\node_modules\core-js-pure\internals\define-built-
+in.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (54%) 4/5 entries 2066/2074 depen
+dencies 749/791 modules 40 active 
+ ...es\.pnpm\core-js-pure@3.50.0\node_modules\core-js-pure\internals\hidden-ke
+ys.js
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (70%)  
+ finish module graph
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (73%)  
+ after chunk graph
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (87%)  
+ code generation
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (88%)  
+ runtime requirements
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (89%)  
+ after hashing
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (92%)  
+ asset processing
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (92%) asset processing 
+ HotModuleReplacementPlugin
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (92%)  
+ asset processing
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ emitting (98%)  
+ after emit
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+✔ Webpack
+  Compiled successfully in 20.75s
+
+- 即将开始启动编译，请稍等~
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: [36mhttp://localhost:10086/[39m
+<i> [webpack-dev-server] Content not from webpack is served from '[36mD:\workspace\OpenFindBearings\OpenFindBearings.Taro\dist[39m' directory
+<i> [webpack-dev-server] 404s will fallback to '[36m/index.html[39m'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+✅  编译成功 2026/9/3 16:41:24
+
