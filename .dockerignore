@@ -1,62 +1,8 @@
-# 忽略所有内容
-*
-
-# ============ 必须保留 ============
-# 项目配置
-!package.json
-!pnpm-lock.yaml
-!babel.config.js
-!tsconfig.json
-!config/
-!src/
-!types/
-
-# 部署相关
-!nginx.conf
-!Dockerfile
-!deploy/
-
-# 项目信息
-!README.md
-!LICENSE
-
-# ============ 明确排除 ============
-# 文档和示例
-doc/
-examples/
-demo/
-
-# 开发工具
-node_modules/
-dist/
-.git/
-.vscode/
-.idea/
-*.log
-.env
-.env.*
-.DS_Store
-Thumbs.db
-
-# 测试相关
-test/
-coverage/
-__tests__/
-*.test.ts
-*.test.js
-*.spec.ts
-*.spec.js
-
-# 临时文件
-tmp/
-temp/
-*.swp
-*.swo
-*~
-
-# 构建缓存
-.cache/
-.parcel-cache/
-.next/
-.nuxt/
-.output/
+node_modules
+dist
+.git
+.github
+doc
+deploy
+*.md
+.vscode
