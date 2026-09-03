@@ -16,11 +16,20 @@ class App extends Component<PropsWithChildren> {
   }
 
   applyTheme() {
-    const mode: ThemeMode = Taro.getStorageSync(THEME_KEY) || 'light'
+    let mode: ThemeMode = Taro.getStorageSync(THEME_KEY)
+    if (!mode) mode = 'light'
+
     // #ifdef H5
     const root = document.documentElement
     root.classList.remove('theme-light', 'theme-dark', 'theme-system')
     root.classList.add(`theme-${mode}`)
+
+    // 跟随系统时，检测系统主题并应用对应 class
+    if (mode === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      root.classList.remove('theme-light', 'theme-dark')
+      root.classList.add(prefersDark ? 'theme-dark' : 'theme-light')
+    }
     // #endif
   }
 

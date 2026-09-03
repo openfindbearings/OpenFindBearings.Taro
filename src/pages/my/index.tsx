@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { User, Heart, Users, Clock, Settings, ChevronRight, LogIn, Bell } from 'lucide-react-taro'
+import { User, Heart, Users, Clock, LogIn, Bell, Settings, LayoutGrid } from 'lucide-react-taro'
 import CustomTabBar from '../../components/CustomTabBar'
 import './index.scss'
 
@@ -16,7 +16,7 @@ const menuItems = [
   { key: 'favorites', label: '收藏轴承', icon: Heart, iconClass: 'icon-danger' },
   { key: 'followed', label: '关注商家', icon: Users, iconClass: 'icon-primary' },
   { key: 'history', label: '浏览历史', icon: Clock, iconClass: 'icon-success' },
-  { key: 'more', label: '更多', icon: Settings, iconClass: 'icon-secondary' }
+  { key: 'more', label: '更多', icon: LayoutGrid, iconClass: 'icon-secondary' }
 ]
 
 export default function MyPage() {
@@ -41,7 +41,7 @@ export default function MyPage() {
   })
 
   const handleMenuClick = (key: string) => {
-    if (!user.isLoggedIn && key !== 'settings' && key !== 'more') {
+    if (!user.isLoggedIn) {
       Taro.showModal({
         title: '提示',
         content: '请先登录',
@@ -56,7 +56,6 @@ export default function MyPage() {
     }
     switch (key) {
       case 'settings':
-      case 'more':
         Taro.navigateTo({ url: '/pages/my/settings' })
         break
       default:
@@ -73,10 +72,10 @@ export default function MyPage() {
         </View>
         <View className='nav-bar-right'>
           <View className='nav-icon' onClick={() => Taro.showToast({ title: '消息功能开发中', icon: 'none' })}>
-            <Bell size={20} color='#1E293B' />
+            <Bell size={22} />
           </View>
           <View className='nav-icon' onClick={() => Taro.navigateTo({ url: '/pages/my/settings' })}>
-            <Settings size={20} color='#1E293B' />
+            <Settings size={22} />
           </View>
         </View>
       </View>
@@ -89,7 +88,7 @@ export default function MyPage() {
               {user.avatar ? (
                 <Image className='avatar-img' src={user.avatar} mode='aspectFill' />
               ) : (
-                <User size={28} color='#FFFFFF' />
+                <User size={32} color='#FFFFFF' />
               )}
             </View>
             <View className='user-detail'>
@@ -100,7 +99,7 @@ export default function MyPage() {
         ) : (
           <View className='user-info' onClick={() => Taro.showToast({ title: '登录功能开发中', icon: 'none' })}>
             <View className='avatar'>
-              <LogIn size={24} color='#FFFFFF' />
+              <LogIn size={28} color='#FFFFFF' />
             </View>
             <View className='user-detail'>
               <Text className='nickname'>点击登录</Text>
@@ -132,7 +131,7 @@ export default function MyPage() {
             onClick={() => handleMenuClick(item.key)}
           >
             <View className={`grid-icon ${item.iconClass}`}>
-              <item.icon size={22} />
+              <item.icon size={28} />
             </View>
             <Text className='grid-label'>{item.label}</Text>
           </View>

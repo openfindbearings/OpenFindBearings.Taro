@@ -62,7 +62,7 @@ export default function HomePage() {
       {/* 搜索栏 */}
       <View className='search-bar'>
         <View className='search-input-wrap'>
-          <ScanBarcode size={18} className='icon-tertiary' />
+          <ScanBarcode size={18} className='icon-tertiary scan-barcode-icon' />
           <Input
             className='search-input'
             type='text'
@@ -85,24 +85,24 @@ export default function HomePage() {
 
       {/* 快捷入口 */}
       <View className='quick-actions'>
-        <View className='quick-item' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
-          <View className='quick-icon voice'>
-            <Mic size={24} className='icon-voice' />
+          <View className='quick-item' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
+            <View className='quick-icon voice'>
+              <Mic size={32} className='icon-voice' />
+            </View>
+            <Text className='quick-label'>讲语音</Text>
           </View>
-          <Text className='quick-label'>讲语音</Text>
-        </View>
-        <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
-          <View className='quick-icon camera'>
-            <Camera size={24} className='icon-camera' />
+          <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
+            <View className='quick-icon camera'>
+              <Camera size={32} className='icon-camera' />
+            </View>
+            <Text className='quick-label'>拍轴承</Text>
           </View>
-          <Text className='quick-label'>拍轴承</Text>
-        </View>
-        <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
-          <View className='quick-icon scan'>
-            <ScanBarcode size={24} className='icon-scan' />
+          <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
+            <View className='quick-icon scan'>
+              <ScanBarcode size={32} className='icon-scan' />
+            </View>
+            <Text className='quick-label'>扫条码</Text>
           </View>
-          <Text className='quick-label'>扫条码</Text>
-        </View>
       </View>
 
       {/* 以下内容在简洁模式下隐藏 */}
