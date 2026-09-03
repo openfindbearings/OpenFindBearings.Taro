@@ -1,38 +1,20 @@
 .merchant-page {
   min-height: 100vh;
-  background: var(--bg-page);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-bottom: 80px;
+  background: var(--color-bg);
+  padding: var(--spacing-md);
 }
-
-.placeholder {
+.merchant-page__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px;
-}
-
-.placeholder-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  padding: 120px 0;
 }
-
-.placeholder-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.placeholder-desc {
-  font-size: 14px;
-  color: var(--text-tertiary);
+.merchant-page__empty-icon { font-size: 80px; margin-bottom: var(--spacing-md); }
+.merchant-page__empty-text { font-size: 28px; color: var(--color-text-hint); }
+.merchant-page__loading {
+  display: block;
+  text-align: center;
+  padding: 120px 0;
+  color: var(--color-text-hint);
 }
