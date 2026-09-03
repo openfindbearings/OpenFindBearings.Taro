@@ -43,7 +43,12 @@ export default function SettingsPage() {
     // #ifdef H5
     const root = document.documentElement
     root.classList.remove('theme-light', 'theme-dark', 'theme-system')
-    root.classList.add(`theme-${mode}`)
+    if (mode === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      root.classList.add(prefersDark ? 'theme-dark' : 'theme-light')
+    } else {
+      root.classList.add(`theme-${mode}`)
+    }
     // #endif
   }
 
