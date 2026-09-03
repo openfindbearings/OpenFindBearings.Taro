@@ -1,16 +1,21 @@
-.custom-tab-bar {
+// CustomTabBar 组件样式（H5 + RN + 小程序三端通用）
+// H5 端：var(--xxx) 引用 CSS 变量；RN 端：$xxx 引用 _rn.scss 编译期变量
+// 设计：图标加大（未选 26/选中 30/文字 11），商家大圆 52
+
+@import '../../styles/_rn';
+
+.tab-bar {
   display: flex;
   align-items: flex-end;
   justify-content: space-around;
-  height: 56px;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  height: 60px;
+  background: var(--tabbar-bg, $tabbar-bg);
+  border-top: 1px solid var(--border, $border);
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 999;
-  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
 }
 
 .tab-item {
@@ -24,40 +29,43 @@
   gap: 2px;
 }
 
+// 普通 tab 图标容器（未选中 26 / 选中 30）
 .icon-wrap {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/** 入驻商家大圆突出样式 */
+// 商家大圆突出样式（已入驻时显示）
 .highlight-circle {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  width: 52px;
+  height: 52px;
+  background: var(--primary, $primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform: translateY(-12px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  transform: translateY(-14px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
 }
 
 .merchant-logo {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  object-fit: cover;
+  background-size: cover;
+  background-position: center;
 }
 
+// tab 文字
 .tab-text {
-  font-size: 10px;
-  line-height: 1.2;
-  color: #999999;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--text-tertiary, $tabbar-text);
 
   &.active {
-    color: #2563EB;
+    color: var(--primary, $tabbar-text-active);
   }
 }

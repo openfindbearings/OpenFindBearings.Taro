@@ -1,7 +1,10 @@
+// 首页：公开查询（轴承 + 商家），普通模式用 NavBar，简洁模式无 NavBar
+// 第二阶段第一优先级页面
 import { useState, useCallback } from 'react'
 import { View, Input, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { Mic, Camera, ScanBarcode, Clock, Trash2 } from 'lucide-react-taro'
+import { Mic, Camera, ScanLine, Clock, Trash2 } from 'lucide-react-taro'
+import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import './index.scss'
 
@@ -59,10 +62,13 @@ export default function HomePage() {
 
   return (
     <View className={`home ${simpleMode ? 'simple' : ''}`}>
+      {/* 普通模式：NavBar 居中"首页"；简洁模式：无 NavBar */}
+      {!simpleMode && <NavBar title="首页" />}
+
       {/* 搜索栏 */}
       <View className='search-bar'>
         <View className='search-input-wrap'>
-          <ScanBarcode size={18} className='icon-tertiary scan-barcode-icon' />
+          <ScanLine size={18} color='#94A3B8' />
           <Input
             className='search-input'
             type='text'
@@ -74,10 +80,10 @@ export default function HomePage() {
           />
           <View className='search-actions'>
             <View className='action-icon' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
-              <Mic size={18} className='icon-secondary' />
+              <Mic size={18} color='#475569' />
             </View>
             <View className='action-icon' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
-              <Camera size={18} className='icon-secondary' />
+              <Camera size={18} color='#475569' />
             </View>
           </View>
         </View>
@@ -85,39 +91,38 @@ export default function HomePage() {
 
       {/* 快捷入口 */}
       <View className='quick-actions'>
-          <View className='quick-item' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
-            <View className='quick-icon voice'>
-              <Mic size={32} className='icon-voice' />
-            </View>
-            <Text className='quick-label'>讲语音</Text>
+        <View className='quick-item' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
+          <View className='quick-icon voice'>
+            <Mic size={32} color='#0EA5E9' />
           </View>
-          <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
-            <View className='quick-icon camera'>
-              <Camera size={32} className='icon-camera' />
-            </View>
-            <Text className='quick-label'>拍轴承</Text>
+          <Text className='quick-label'>讲语音</Text>
+        </View>
+        <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
+          <View className='quick-icon camera'>
+            <Camera size={32} color='#10B981' />
           </View>
-          <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
-            <View className='quick-icon scan'>
-              <ScanBarcode size={32} className='icon-scan' />
-            </View>
-            <Text className='quick-label'>扫条码</Text>
+          <Text className='quick-label'>拍轴承</Text>
+        </View>
+        <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
+          <View className='quick-icon scan'>
+            <ScanLine size={32} color='#F59E0B' />
           </View>
+          <Text className='quick-label'>扫条码</Text>
+        </View>
       </View>
 
-      {/* 以下内容在简洁模式下隐藏 */}
+      {/* 简洁模式下隐藏历史和热门 */}
       {!simpleMode && (
         <>
-          {/* 搜索历史 */}
           {history.length > 0 && (
             <View className='history-section'>
               <View className='section-header'>
                 <View className='section-title'>
-                  <Clock size={16} className='icon-tertiary' />
+                  <Clock size={16} color='#94A3B8' />
                   <Text>搜索历史</Text>
                 </View>
                 <View className='clear-btn' onClick={clearHistory}>
-                  <Trash2 size={14} className='icon-tertiary' />
+                  <Trash2 size={14} color='#94A3B8' />
                   <Text>清空</Text>
                 </View>
               </View>
@@ -131,7 +136,6 @@ export default function HomePage() {
             </View>
           )}
 
-          {/* 热门搜索 */}
           <View className='hot-section'>
             <View className='section-header'>
               <Text className='section-title'>热门搜索</Text>
@@ -147,7 +151,6 @@ export default function HomePage() {
         </>
       )}
 
-      {/* 自定义 TabBar */}
       <CustomTabBar />
     </View>
   )

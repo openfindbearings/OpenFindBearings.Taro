@@ -1,7 +1,11 @@
+// 我的页（Tab 根页）
+// NavBar：标题居中"我的"，右侧保留 Bell（消息中心）+ Settings（设置入口）
+// 内容：用户信息区 + 功能菜单（收藏/关注/历史）
 import { useState } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { User, Heart, Users, Clock, LogIn, Bell, Settings, LayoutGrid } from 'lucide-react-taro'
+import { User, Heart, Users, Clock, LogIn, Bell, Settings } from 'lucide-react-taro'
+import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import './index.scss'
 
@@ -12,11 +16,12 @@ interface UserInfo {
   isLoggedIn: boolean
 }
 
+// 功能菜单配置（图标颜色用 prop 传入，不依赖 className）
 const menuItems = [
-  { key: 'favorites', label: '收藏轴承', icon: Heart, iconClass: 'icon-danger' },
-  { key: 'followed', label: '关注商家', icon: Users, iconClass: 'icon-primary' },
-  { key: 'history', label: '浏览历史', icon: Clock, iconClass: 'icon-success' },
-  { key: 'more', label: '更多', icon: LayoutGrid, iconClass: 'icon-secondary' }
+  { key: 'favorites', label: '收藏轴承', icon: Heart, color: '#EF4444' },
+  { key: 'followed', label: '关注商家', icon: Users, color: '#0EA5E9' },
+  { key: 'history', label: '浏览历史', icon: Clock, color: '#10B981' },
+  { key: 'settings', label: '设置', icon: Settings, color: '#64748B' }
 ]
 
 export default function MyPage() {
@@ -41,6 +46,10 @@ export default function MyPage() {
   })
 
   const handleMenuClick = (key: string) => {
+    if (key === 'settings') {
+      Taro.navigateTo({ url: '/pages/my/settings' })
+      return
+    }
     if (!user.isLoggedIn) {
       Taro.showModal({
         title: '提示',
@@ -54,31 +63,32 @@ export default function MyPage() {
       })
       return
     }
-    switch (key) {
-      case 'settings':
-        Taro.navigateTo({ url: '/pages/my/settings' })
-        break
-      default:
-        Taro.showToast({ title: '功能开发中', icon: 'none' })
-    }
+    Taro.showToast({ title: '功能开发中', icon: 'none' })
   }
+
+  const handleBellClick = () => {
+    Taro.showToast({ title: '消息中心开发中', icon: 'none' })
+  }
+
+  const handleSettingsClick = () => {
+    Taro.navigateTo({ url: '/pages/my/settings' })
+  }
+
+  // NavBar 右侧：Bell + Settings
+  const rightSlot = (
+    <>
+      <View className='navbar-icon' onClick={handleBellClick}>
+        <Bell size={22} />
+      </View>
+      <View className='navbar-icon' onClick={handleSettingsClick} style={{ marginLeft: 4 }}>
+        <Settings size={22} />
+      </View>
+    </>
+  )
 
   return (
     <View className='my-page'>
-      {/* NavBar */}
-      <View className='nav-bar'>
-        <View className='nav-bar-left'>
-          <Text className='nav-bar-title'>我的</Text>
-        </View>
-        <View className='nav-bar-right'>
-          <View className='nav-icon' onClick={() => Taro.showToast({ title: '消息功能开发中', icon: 'none' })}>
-            <Bell size={22} />
-          </View>
-          <View className='nav-icon' onClick={() => Taro.navigateTo({ url: '/pages/my/settings' })}>
-            <Settings size={22} />
-          </View>
-        </View>
-      </View>
+      <NavBar title="我的" rightSlot={rightSlot} />
 
       {/* 用户信息区 */}
       <View className='user-section'>
@@ -109,20 +119,7 @@ export default function MyPage() {
         )}
       </View>
 
-      {/* 积分/金币卡片（预留） */}
-      <View className='points-card'>
-        <View className='points-item'>
-          <Text className='points-label'>我的积分</Text>
-          <Text className='points-value'>--</Text>
-        </View>
-        <View className='points-divider' />
-        <View className='points-item'>
-          <Text className='points-label'>收支明细</Text>
-          <Text className='points-value'>--</Text>
-        </View>
-      </View>
-
-      {/* 功能菜单 - 横向大图标 */}
+      {/* 功能菜单 - 横向四宫格 */}
       <View className='menu-grid'>
         {menuItems.map((item) => (
           <View
@@ -130,17 +127,12 @@ export default function MyPage() {
             className='grid-item'
             onClick={() => handleMenuClick(item.key)}
           >
-            <View className={`grid-icon ${item.iconClass}`}>
-              <item.icon size={28} />
+            <View className='grid-icon'>
+              <item.icon size={28} color={item.color} />
             </View>
             <Text className='grid-label'>{item.label}</Text>
           </View>
         ))}
-      </View>
-
-      {/* 版本信息 */}
-      <View className='version-info'>
-        <Text>OpenFindBearings v1.0.0</Text>
       </View>
 
       <CustomTabBar />

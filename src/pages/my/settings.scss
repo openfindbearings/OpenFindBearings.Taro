@@ -1,133 +1,100 @@
+// 设置页样式（H5 + RN 通用）
+@import '../../styles/_rn';
+
 .settings-page {
   min-height: 100vh;
-  background: var(--bg-page);
+  background: var(--bg-page, $bg-page);
+  padding-bottom: 30px;
 }
 
-// 导航栏
-.nav-bar {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+// 分组
+.section {
+  margin: 16px 16px 0;
 }
 
-.nav-back {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-}
-
-.nav-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-// 设置分组
-.settings-group {
-  margin: 16px;
-}
-
-.group-title {
+.section-title {
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--text-tertiary, $text-tertiary);
   margin-bottom: 8px;
-  display: block;
   padding-left: 4px;
+  display: block;
 }
 
-// 设置项
-.setting-item {
+// 列表
+.list {
+  background: var(--bg-card, $bg-card);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.list-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border, $border);
+  min-height: 50px;
 
-  &:first-of-type {
-    border-radius: 10px 10px 0 0;
-  }
-
-  &:last-of-type {
-    border-radius: 0 0 10px 10px;
+  &:last-child {
     border-bottom: none;
   }
 
-  &:only-of-type {
-    border-radius: 10px;
-  }
-
-  &:active {
-    background: var(--bg-hover);
+  &.indent {
+    padding-left: 52px;
   }
 }
 
-.setting-left {
+.list-left {
   display: flex;
   align-items: center;
   gap: 12px;
   flex: 1;
+
+  &.center {
+    justify-content: center;
+  }
 }
 
-.setting-icon {
+.list-icon {
   width: 32px;
   height: 32px;
   border-radius: 8px;
+  background: var(--primary-light, $primary-light);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+
+  &.sm {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+  }
+
+  &.danger {
+    background: #FEE2E2;
+  }
 }
 
-// 图标背景色
-.icon-bg-primary {
-  background: var(--primary-light);
-}
-.icon-bg-success {
-  background: var(--success-bg);
-}
-.icon-bg-warning {
-  background: var(--warning-bg);
-}
-.icon-bg-secondary {
-  background: var(--bg-badge);
-}
-
-.setting-text {
-  flex: 1;
-}
-
-.setting-label {
+.list-label {
   font-size: 15px;
-  color: var(--text-primary);
-  display: block;
+  color: var(--text-primary, $text-primary);
+
+  &.danger {
+    color: #EF4444;
+  }
 }
 
-.setting-desc {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  display: block;
-}
-
-.setting-right {
+.list-right {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+  gap: 4px;
+  color: var(--text-tertiary, $text-tertiary);
 }
 
-.setting-value {
+.list-value {
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--text-tertiary, $text-tertiary);
 }
 
 // 选中圆点
@@ -135,22 +102,21 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--primary, $primary);
   flex-shrink: 0;
 }
 
-// Toggle 开关
+// Toggle
 .toggle {
-  width: 48px;
-  height: 28px;
-  border-radius: 14px;
-  background: var(--bg-input);
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--bg-input, $bg-input);
   position: relative;
-  transition: background 0.2s;
   flex-shrink: 0;
 
   &.on {
-    background: var(--primary);
+    background: var(--primary, $primary);
   }
 }
 
@@ -160,32 +126,45 @@
   border-radius: 50%;
   background: #FFFFFF;
   position: absolute;
-  top: 3px;
-  left: 3px;
-  transition: transform 0.2s;
+  top: 2px;
+  left: 2px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 
   .on & {
-    transform: translateX(20px);
+    transform: translateX(18px);
   }
 }
 
-// 图标颜色（继承自 theme.scss）
-.icon-primary {
-  color: var(--icon-primary);
+// 字体大小选择器
+.font-size-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
-.icon-on-card {
-  color: var(--icon-on-card);
+
+.font-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: var(--bg-input, $bg-input);
+  color: var(--text-secondary, $text-secondary);
+  font-size: 13px;
+
+  &.active {
+    background: var(--primary, $primary);
+    color: #FFFFFF;
+  }
 }
-.icon-warning {
-  color: var(--warning);
+
+// 底部
+.footer {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary, $text-tertiary);
+  padding: 20px 16px;
+  line-height: 1.8;
 }
-.icon-success {
-  color: var(--success);
-}
-.icon-secondary {
-  color: var(--text-secondary);
-}
-.icon-tertiary {
-  color: var(--text-tertiary);
+
+.link {
+  color: var(--primary, $primary);
 }

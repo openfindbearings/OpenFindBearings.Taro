@@ -1,7 +1,11 @@
+// 搜索结果页
+// NavBar：标题居中"搜索"，左侧返回箭头（showBack）
+// 调用 BFF `/api/mobile/bearings` 公开端点
 import { useState, useCallback } from 'react'
 import { View, Input, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
-import { Search, ArrowLeft, Package } from 'lucide-react-taro'
+import { Search, Package } from 'lucide-react-taro'
+import NavBar from '../../components/NavBar'
 import './search.scss'
 
 const BFF_BASE = '/mobile'
@@ -52,34 +56,29 @@ export default function SearchPage() {
 
   return (
     <View className='search-page'>
-      {/* 搜索栏 */}
-      <View className='search-bar'>
-        <View className='back-btn' onClick={() => Taro.navigateBack()}>
-          <ArrowLeft size={20} color='#1E293B' />
-        </View>
-        <View className='search-input-wrap'>
-          <Search size={16} color='#94A3B8' />
-          <Input
-            className='search-input'
-            type='text'
-            placeholder='搜索轴承型号、品牌...'
-            value={keyword}
-            onInput={(e) => setKeyword(e.detail.value)}
-            onConfirm={() => doSearch(keyword)}
-            confirmType='search'
-            focus
-          />
-        </View>
+      <NavBar title="搜索" showBack />
+
+      {/* 搜索输入 */}
+      <View className='search-input-wrap'>
+        <Search size={16} color='#94A3B8' />
+        <Input
+          className='search-input'
+          type='text'
+          placeholder='搜索轴承型号、品牌...'
+          value={keyword}
+          onInput={(e) => setKeyword(e.detail.value)}
+          onConfirm={() => doSearch(keyword)}
+          confirmType='search'
+          focus
+        />
       </View>
 
-      {/* 加载中 */}
       {loading && (
         <View className='loading'>
           <Text>搜索中...</Text>
         </View>
       )}
 
-      {/* 搜索结果 */}
       {!loading && searched && results.length > 0 && (
         <View className='result-list'>
           <Text className='result-count'>共找到 {results.length} 个结果</Text>
@@ -90,7 +89,7 @@ export default function SearchPage() {
               onClick={() => Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(item.bearingPartNumber)}` })}
             >
               <View className='result-icon'>
-                <Package size={20} color='#2563EB' />
+                <Package size={20} color='#0EA5E9' />
               </View>
               <View className='result-info'>
                 <Text className='result-name'>{item.bearingPartNumber}</Text>
@@ -105,7 +104,6 @@ export default function SearchPage() {
         </View>
       )}
 
-      {/* 无结果 */}
       {!loading && searched && results.length === 0 && (
         <View className='empty-state'>
           <Package size={48} color='#CBD5E1' />
@@ -114,7 +112,6 @@ export default function SearchPage() {
         </View>
       )}
 
-      {/* 初始状态 */}
       {!searched && (
         <View className='empty-state'>
           <Search size={48} color='#CBD5E1' />

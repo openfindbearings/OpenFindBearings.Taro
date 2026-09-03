@@ -1,5 +1,11 @@
+// 统一 CustomTabBar 组件（H5 + RN + 小程序三端通用）
+// 设计：图标加大（未选 26/选中 30），商家大圆 52 + logo 突出
+// 多端兼容：
+//   - 图标用 Lucide color prop（避免 RN 端 CSS 变量失效）
+//   - logo 用 Taro Image（避免小程序/RN 不支持原生 img）
+//   - SCSS 用 var() 兜底 $xxx（H5 走 CSS 变量，RN 走编译期变量）
 import { useState, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { House, Store, User } from 'lucide-react-taro'
 import './index.scss'
@@ -11,7 +17,14 @@ interface MerchantState {
   name: string
 }
 
-/** 获取商家状态 */
+/** TabBar 配置 */
+const tabs = [
+  { key: 'home', text: '首页', pagePath: '/pages/home/index' },
+  { key: 'merchant', text: '入驻', pagePath: '/pages/merchant/index' },
+  { key: 'my', text: '我的', pagePath: '/pages/my/index' }
+]
+
+/** 获取商家入驻状态 */
 function getMerchantState(): MerchantState {
   try {
     const approved = Taro.getStorageSync('merchant_approved')
@@ -23,23 +36,38 @@ function getMerchantState(): MerchantState {
   }
 }
 
-/** TabBar 配置 */
-const tabs = [
-  { key: 'home', text: '首页', pagePath: '/pages/home/index' },
-  { key: 'merchant', text: '入驻', pagePath: '/pages/merchant/index' },
-  { key: 'my', text: '我的', pagePath: '/pages/my/index' }
-]
+/**
+ * 根据主题返回主色 / 灰色
+ * H5 走 CSS 变量（运行时切换），RN 走 SCSS 编译期值
+ * 图标颜色直接用 prop 传入，避免 className 传色在 RN 端失效
+ */
+function getColors() {
+  // 默认值（H5 + RN 一致），组件挂载时根据平台覆盖
+  return {
+    primary: '#0EA5E9',
+    inactive: '#94A3B8'
+  }
+}
 
 export default function CustomTabBar() {
   const [selected, setSelected] = useState(0)
-  const [merchant, setMerchant] = useState<MerchantState>({ approved: false, logo: null, name: '商家' })
+  const [merchant, setMerchant] = useState<MerchantState>({
+    approved: false,
+    logo: null,
+    name: '商家'
+  })
 
   useEffect(() => {
-    const pages = Taro.getCurrentPages()
-    if (pages.length > 0) {
-      const currentPath = '/' + pages[pages.length - 1].route
-      const idx = tabs.findIndex(t => currentPath.includes(t.pagePath.replace('/pages/', '')))
-      if (idx >= 0) setSelected(idx)
+    // 根据当前页面路径确定选中 tab
+    try {
+      const pages = Taro.getCurrentPages()
+      if (pages.length > 0) {
+        const currentPath = '/' + pages[pages.length - 1].route
+        const idx = tabs.findIndex(t => currentPath.includes(t.pagePath.replace('/pages/', '')))
+        if (idx >= 0) setSelected(idx)
+      }
+    } catch {
+      // 容错处理：路由获取失败时保持默认 0
     }
     setMerchant(getMerchantState())
   }, [])
@@ -55,44 +83,49 @@ export default function CustomTabBar() {
     return User
   }
 
-  const getText = (key: string) => {
-    if (key === 'merchant') {
-      if (merchant.approved) return merchant.name
-      return '入驻'
-    }
-    if (key === 'my') return '我的'
-    return '首页'
+  // 商家 tab 文案：已入驻用商家名，否则用"入驻"
+  const getMerchantText = () => {
+    if (merchant.approved) return merchant.name
+    return '入驻'
   }
 
+  const colors = getColors()
+
   return (
-    <View className='custom-tab-bar'>
+    <View className='tab-bar'>
       {tabs.map((tab, idx) => {
         const isActive = idx === selected
         const isMerchant = tab.key === 'merchant'
+        // 商家已入驻时大圆 + logo 突出
         const highlighted = isMerchant && merchant.approved
-
-        let IconComponent = getIcon(tab.key)
-        const tabText = getText(tab.key)
+        const IconComponent = getIcon(tab.key)
+        const tabText = isMerchant ? getMerchantText() : tab.text
 
         return (
           <View
             key={tab.key}
-            className={`tab-item ${isActive ? 'active' : ''} ${highlighted ? 'highlighted' : ''}`}
+            className='tab-item'
             onClick={() => handleSwitch(idx, tab.pagePath)}
           >
             {highlighted ? (
+              // 已入驻：52px 大圆 + 商家 logo（或默认 Store 图标）
               <View className='highlight-circle'>
                 {merchant.logo ? (
-                  <img src={merchant.logo} alt={merchant.name} className='merchant-logo' />
+                  <Image
+                    src={merchant.logo}
+                    className='merchant-logo'
+                    mode='aspectFill'
+                  />
                 ) : (
-                  <IconComponent color='#ffffff' size={26} />
+                  <IconComponent color='#FFFFFF' size={30} />
                 )}
               </View>
             ) : (
+              // 普通 tab：图标（未选 26 / 选中 30）
               <View className='icon-wrap'>
                 <IconComponent
-                  color={isActive ? '#2563EB' : '#999999'}
-                  size={22}
+                  color={isActive ? colors.primary : colors.inactive}
+                  size={isActive ? 30 : 26}
                 />
               </View>
             )}

@@ -1,8 +1,26 @@
-@use './styles/theme';
+// 全局样式入口（仅 H5 / 小程序 编译使用）
+// RN 各页面 SCSS 直接 @import '../../styles/_rn' 引用
+@import './styles/theme.scss';
 
 page {
   background-color: var(--bg-page);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--text-primary);
-  font-size: 28px;
+  // 系统默认字体栈，无版权风险
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  // 主题切换平滑过渡
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+// 滚动容器主题适配
+scroll-view,
+::-webkit-scrollbar {
+  background-color: var(--bg-page);
+}
+
+// 文本主题色基础
+text {
+  color: var(--text-primary);
 }

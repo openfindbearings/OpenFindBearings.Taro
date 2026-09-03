@@ -1,0 +1,66 @@
+// NavBar 组件样式（H5 + RN 通用）
+// H5 端：使用 var(--xxx) 引用主题变量
+// RN 端：使用 $xxx 引用 _rn.scss 编译期变量（@import 已通过 _rn.scss 提供）
+
+@import '../../styles/_rn';
+
+.navbar {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--bg-card, $bg-card);
+  border-bottom: 1px solid var(--border, $border);
+  z-index: 100;
+}
+
+.navbar-fixed {
+  position: sticky;
+  top: 0;
+}
+
+// 左侧栏：固定 60px 宽
+.navbar-left {
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+// 中间栏：flex 1，标题居中
+.navbar-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.navbar-title {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--text-primary, $text-primary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+// 右侧栏：固定 60px 宽，与左侧对称
+.navbar-right {
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+// 返回按钮图标
+.navbar-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary, $text-primary);
+}

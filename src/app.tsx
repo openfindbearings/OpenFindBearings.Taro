@@ -1,40 +1,40 @@
+// 全局入口组件
+// 启动时初始化主题（H5 端根据 localStorage 设置 <html data-theme>）
+// 用 LucideTaroProvider 包裹全局，统一默认图标颜色和尺寸
 import { Component, PropsWithChildren } from 'react'
-import Taro from '@tarojs/taro'
-
+import { LucideTaroProvider } from 'lucide-react-taro'
+import { initTheme, useThemeStore } from './stores/theme'
 import './app.scss'
-
-const THEME_KEY = 'app_theme'
-type ThemeMode = 'light' | 'dark' | 'system'
 
 class App extends Component<PropsWithChildren> {
   componentDidMount() {
-    this.applyTheme()
+    // 启动时一次性应用主题
+    initTheme()
   }
 
   componentDidShow() {
-    this.applyTheme()
-  }
-
-  applyTheme() {
-    let mode: ThemeMode = Taro.getStorageSync(THEME_KEY)
-    if (!mode) mode = 'light'
-
-    // #ifdef H5
-    const root = document.documentElement
-    root.classList.remove('theme-light', 'theme-dark', 'theme-system')
-    root.classList.add(`theme-${mode}`)
-
-    // 跟随系统时，检测系统主题并应用对应 class
-    if (mode === 'system') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      root.classList.remove('theme-light', 'theme-dark')
-      root.classList.add(prefersDark ? 'theme-dark' : 'theme-light')
-    }
-    // #endif
+    // 页面切换时重新应用（防止某些场景下主题丢失）
+    initTheme()
   }
 
   render() {
-    return this.props.children
+    // 根据当前主题设置 Lucide 图标默认色
+    // 浅色主题：图标线条深色 #0F172A
+    // 深色主题：图标线条浅色 #F1F5F9
+    // 跟随系统：根据当前 data-theme 判断
+    const mode = useThemeStore.getState().mode
+    const isDark = mode === 'dark' || (mode === 'system' &&
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+    const defaultIconColor = isDark ? '#F1F5F9' : '#0F172A'
+
+    return (
+      <LucideTaroProvider defaultColor={defaultIconColor} defaultSize={22}>
+        {this.props.children}
+      </LucideTaroProvider>
+    )
   }
 }
 export default App
