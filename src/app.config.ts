@@ -4,12 +4,13 @@ export default defineAppConfig({
     'pages/merchant/index',
     'pages/my/index',
     'pages/home/search',
-    'pages/my/settings'
+    'pages/my/settings',
+    'pages/my/all-features'
   ],
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#ffffff',
-    navigationBarTitleText: 'OpenFindBearings',
+    navigationBarTitleText: '轴承查询',
     navigationBarTextStyle: 'black'
   }
 })

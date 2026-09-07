@@ -1,0 +1,51 @@
+// 全部功能页样式（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：删 .all-features-page/.features-scroll（骨架由 PageLayout 提供）；
+// border-bottom 简写拆三属性（RN 不认 shorthand）；尺寸 dp token + 行高落 dp；
+// 列表项改卡片分组观感（首尾圆角由列表容器承担，行间用细分割线）。
+@import '../../styles/_rn';
+
+.feature-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  padding-left: $space-4;
+  padding-right: $space-4;
+  background: $bg-card;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: $border;
+}
+
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-lg;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+}
+
+.feature-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-label {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
+  font-weight: bold;
+}
+
+.feature-desc {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $text-tertiary;
+  margin-top: 2px;
+}

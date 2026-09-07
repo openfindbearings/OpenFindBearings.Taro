@@ -1,71 +1,81 @@
-// CustomTabBar 组件样式（H5 + RN + 小程序三端通用）
-// H5 端：var(--xxx) 引用 CSS 变量；RN 端：$xxx 引用 _rn.scss 编译期变量
-// 设计：图标加大（未选 26/选中 30/文字 11），商家大圆 52
-
+﻿// CustomTabBar 组件样式（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：
+//   1. 删除 position:absolute 底部定位——TabBar 改为 PageLayout flex column 的普通末子项，
+//      位置由骨架保证（RN 不支持 fixed，absolute 与 flex 混用在不同页面表现不稳）；
+//   2. 栏高 64→56dp（Material Bottom Navigation 标准）；
+//   3. 图标容器 32→28dp 见方（图标 24dp；触控由整个 tab-item 承担，无需容器凑 44）；
+//   4. 大圆 52→56dp、logo 44→48dp、上移保持 14dp；box-shadow 保留（iOS），
+//      Android elevation 在 tsx inline 补（Taro 不自动转）；
+//   5. border-top 简写拆为 width/style/color 三属性（RN 不认 shorthand）；
+//   6. 高度预算修正：图标 28 + 文字行 16 + 间距 4 = 48 ≤ 56，不再溢出裁剪；
+//      商家大圆 56 + 上移 14 + 文字 16 = 86 > 56，大圆用负 margin 上凸而非 transform，
+//      并靠 tab-item 顶部留白消化（批次 B 真机验证裁剪）。
 @import '../../styles/_rn';
 
 .tab-bar {
   display: flex;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: stretch;
   justify-content: space-around;
-  height: 60px;
-  background: var(--tabbar-bg, $tabbar-bg);
-  border-top: 1px solid var(--border, $border);
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  height: $tabbar-height;
+  background: $tabbar-bg;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: $tabbar-border;
 }
 
+// 单个 tab：整格可点（触控目标 ≈93×56dp，满足 ≥44 要求）
 .tab-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   flex: 1;
   height: 100%;
-  padding-bottom: 6px;
-  gap: 2px;
 }
 
-// 普通 tab 图标容器（未选中 26 / 选中 30）
+// 普通 tab 图标容器（28dp 见方，图标 24dp 居中）
 .icon-wrap {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
 }
 
 // 商家大圆突出样式（已入驻时显示）
+// 上凸用 marginTop 负值（RN 对 transform 在 flex 内不脱离布局，负 margin 才真正凸出）
 .highlight-circle {
-  width: 52px;
-  height: 52px;
-  background: var(--primary, $primary);
-  border-radius: 50%;
+  width: $tabbar-highlight-size;
+  height: $tabbar-highlight-size;
+  background: $primary;
+  border-radius: 999px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  transform: translateY(-14px);
+  margin-top: -$tabbar-highlight-offset;
   box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
 }
 
+// 大圆内 logo（48dp 圆形）
 .merchant-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background-size: cover;
-  background-position: center;
+  width: $tabbar-logo-size;
+  height: $tabbar-logo-size;
+  border-radius: 999px;
 }
 
-// tab 文字
+// tab 文字（12dp/16dp 行高）
 .tab-text {
-  font-size: 11px;
-  line-height: 14px;
-  color: var(--text-tertiary, $tabbar-text);
+  font-size: $tabbar-text-size;
+  line-height: 16px;
+  color: $tabbar-text;
+  margin-top: 2px;
+  max-width: 88px;
+}
 
-  &.active {
-    color: var(--primary, $tabbar-text-active);
-  }
+// 选中态文字：独立类而非 .tab-text.active 组合选择器（RN 忽略组合选择器，多类名叠加）
+.tab-text-active {
+  color: $tabbar-text-active;
 }

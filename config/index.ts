@@ -81,6 +81,16 @@ const config = {
       // androidSourcemapSourcesRoot: '',
     },
     postcss: {
+      // v1.7.0 度量重构双开关之一：px→PX→纯数值，RN 端不再运行时缩放（scalePx2dp）
+      scalable: false,
+      // v1.7.0 度量重构双开关之二：rootValue=(1/deviceRatio[750])×2=1，
+      // 抵消 postcss-pxtransform 在 rn 平台的默认 px 减半，使 SCSS 写 Npx = RN N dp
+      pxtransform: {
+        enable: true,
+        config: {
+          deviceRatio: { 750: 2 }
+        }
+      },
       cssModules: {
         enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
       }

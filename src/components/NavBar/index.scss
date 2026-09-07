@@ -1,28 +1,44 @@
-// NavBar 组件样式（H5 + RN 通用）
-// H5 端：使用 var(--xxx) 引用主题变量
-// RN 端：使用 $xxx 引用 _rn.scss 编译期变量（@import 已通过 _rn.scss 提供）
-
+// NavBar 组件样式（v1.7.0 安全区标准重构）
+// 标准 RN 结构：.navbar 外层仅 paddingTop=insets.top 承让状态栏（背景色在此层铺满，
+// 状态栏区域同色无缝）；.navbar-inner 内层固定基准高（44，搜索态 48）、内容垂直居中。
+// 度量：44/48dp 高、左右栏 96dp（容纳双图标且标题居中）、border 拆分。
 @import '../../styles/_rn';
 
 .navbar {
   display: flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 12px;
-  background: var(--bg-card, $bg-card);
-  border-bottom: 1px solid var(--border, $border);
-  z-index: 100;
+  flex-direction: column;
+  background: $bg-card;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: $border;
 }
 
-.navbar-fixed {
-  position: sticky;
-  top: 0;
-}
-
-// 左侧栏：固定 60px 宽
-.navbar-left {
-  width: 60px;
+// 内层内容行：固定基准高，垂直居中
+.navbar-inner {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: $navbar-height;
+  padding-left: $space-4;
+  padding-right: $space-4;
+}
+
+// 搜索态：内层增高到 48dp，贴近京东/淘宝顶栏搜索观感
+// 独立类而非 .navbar-search .navbar-inner 组合选择器（RN 忽略组合/后代选择器）
+.navbar-inner-search {
+  height: $navbar-height-search;
+}
+
+// 搜索态：增高到 48dp，贴近京东/淘宝顶栏搜索观感
+.navbar-search {
+  height: $navbar-height-search;
+}
+
+// 左侧栏：96dp，内容左对齐
+.navbar-left {
+  width: $navbar-side-width;
+  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-start;
 }
@@ -31,36 +47,52 @@
 .navbar-center {
   flex: 1;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   min-width: 0;
 }
 
 .navbar-title {
-  font-size: 17px;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
   font-weight: bold;
-  color: var(--text-primary, $text-primary);
+  color: $text-primary;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
 }
 
-// 右侧栏：固定 60px 宽，与左侧对称
+// 右侧栏：96dp，内容右对齐
 .navbar-right {
-  width: 60px;
+  width: $navbar-side-width;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-end;
 }
 
-// 返回按钮图标
+// 图标触控区：44dp 见方（Material 最小触控目标），图标本身 24dp 由 Icon size 传入
 .navbar-icon {
+  width: $navbar-icon-touch;
+  height: $navbar-icon-touch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 右侧图标紧凑触控区：32dp 见方，与搜索框内 action-icon 同几何，
+// 相邻无 margin → glyph 间距约 8dp，贴近主流 App 顶栏右侧双图标紧排观感。
+// 真机反馈：44dp+28dp 间距过大（48dp），收窄到此尺寸。
+.navbar-right-icon {
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary, $text-primary);
+}
+
+// 右侧多图标间隔：RN 不支持 gap 也无组合选择器，用显式类（调用方给第二个图标加此类）
+// 真机反馈：24dp 仍偏近，调到 28dp（glyph 间距约 48dp），与主流 App 顶栏双图标留白一致
+.navbar-icon-gap {
+  margin-left: $space-7;
 }

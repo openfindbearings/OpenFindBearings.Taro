@@ -1,7 +1,11 @@
 // 主题状态管理（Zustand）
 // H5 端：data-theme 属性运行时切换深浅色
-// RN 端：provider 切换 + 重新渲染（第三阶段实现）
+// RN 端：v1.7.0 本轮锁定浅色（深色需全页配色令牌化，属第二阶段），非浅色选择
+//   在 setMode 单点拦截并 toast 提示，避免"设置页能变暗别页不变"的分裂体验。
+//   第二步放开时删除 IS_RN 守卫即可。
 import { create } from 'zustand'
+import Taro from '@tarojs/taro'
+import { IS_RN } from '../utils/platform'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 
@@ -44,6 +48,11 @@ function applyThemeToDom(mode: ThemeMode) {
 export const useThemeStore = create<ThemeState>((set) => ({
   mode: getInitialMode(),
   setMode: (mode: ThemeMode) => {
+    // RN 锁浅色守卫：非 light 选择直接提示并返回，不落 storage 不改状态
+    if (IS_RN && mode !== 'light') {
+      Taro.showToast({ title: '深色模式将在后续版本支持', icon: 'none' })
+      return
+    }
     try {
       window.localStorage.setItem(STORAGE_KEY, mode)
     } catch {

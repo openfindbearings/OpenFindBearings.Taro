@@ -1,21 +1,25 @@
-// RN 编译期 SCSS 变量（仅 RN 平台编译）
-// 配色：天空蓝主色（与 H5 一致）
-// 深色模式：通过 Provider 重新渲染切换（第三阶段实现）
-// 设计：自给自足，单文件即可被所有 RN 页面 @import 引用
+// RN 编译期 SCSS 变量（仅 RN 平台引用）
+// v1.7.0 度量重构：配合 config 双开关（scalable:false + deviceRatio{750:2}），
+// 本文件内所有 px 数值 = RN 实际 dp（1:1，无减半无缩放），取值对齐 Material/HIG。
+// 主题：清新/现代/简洁/明快，全纯色（RN 不支持渐变），文字级颜色满足 WCAG AA。
+// 设计：自给自足，单文件即可被所有 RN 页面 @import 引用。
 
-// ============ 主色：天空蓝 ============
-$primary:        #0EA5E9;
-$primary-light:  #E0F2FE;
-$primary-hover:  #0284C7;
+// ============ 主色：天空蓝（图标/大色块用亮档，文字用深档保对比度） ============
+$primary:         #0EA5E9;   // 图标、色块、装饰（对白 2.77:1，禁止做文字色）
+$primary-text:    #0284C7;   // 文字级主色：tab 选中/链接/强调（对白 4.09:1 过 AA）
+$primary-deep:    #0369A1;   // 主色深档：会员卡底/按压态（对白 5.96:1 AA 全过）
+$primary-light:   #E0F2FE;
+$primary-hover:   #0284C7;
 
-// ============ 中性色（亮色主题） ============
-$bg-page:        #F8FAFC;
+// ============ 中性色（浅色主题，本轮 RN 锁定浅色） ============
+$bg-page:        #F5F7FA;    // 页面底（全项目统一，弃 #F8FAFC）
 $bg-card:        #FFFFFF;
 $bg-input:       #F1F5F9;
 $bg-badge:       #F1F5F9;
 $text-primary:   #0F172A;
 $text-secondary: #475569;
-$text-tertiary:  #94A3B8;
+$text-tertiary:  #64748B;    // 辅助文字升档保 AA（4.76:1，弃 #94A3B8 做正文）
+$text-placeholder: #94A3B8;  // 仅占位符（占位符豁免 AA）
 $text-on-primary: #FFFFFF;
 $border:         #E2E8F0;
 $border-light:   #F1F5F9;
@@ -32,58 +36,77 @@ $warning-bg:     #FEF3C7;
 $danger-bg:      #FEE2E2;
 
 // ============ TabBar 文本色 ============
-$tabbar-text:        #94A3B8;
-$tabbar-text-active: #0EA5E9;
+$tabbar-text:        #64748B;
+$tabbar-text-active: #0284C7;   // 选中文字用文字级主色（保对比度）
 
-// ============ 渐变（RN 不支持 linear-gradient，纯色替代） ============
+// ============ 快捷入口（实心圆 + 白图标，v1.7.0 由浅底彩图标改实心） ============
 $gradient-primary: #0EA5E9;
-$gradient-voice:   #E0F2FE;
-$gradient-camera:  #D1FAE5;
-$gradient-scan:    #FEF3C7;
+$gradient-voice:   #0EA5E9;     // 语音：实心蓝
+$gradient-camera:  #10B981;     // 拍照：实心绿
+$gradient-scan:    #F59E0B;     // 扫码：实心橙
 
 // ============ 图标语义色 ============
 $icon-primary:  #0EA5E9;
 $icon-voice:    #0EA5E9;
 $icon-camera:   #10B981;
 $icon-scan:     #F59E0B;
-$icon-default:  #94A3B8;
+$icon-default:  #64748B;
 $icon-on-card:  #0EA5E9;
 
-// ============ TabBar ============
-$tabbar-bg:           #FFFFFF;
-$tabbar-border:       #E2E8F0;
-$tabbar-height:       60px;
-$tabbar-icon-size:        26px;
-$tabbar-icon-size-active: 30px;
-$tabbar-text-size:        11px;
-$tabbar-highlight-size:   52px;
+// ============ TabBar 度量（dp） ============
+$tabbar-bg:               #FFFFFF;
+$tabbar-border:           #E2E8F0;
+$tabbar-height:           56px;   // 旧 60→56（Material Bottom Navigation 标准）
+$tabbar-icon-size:        24px;   // 图标视觉尺寸（触控由整个 tab-item 承担）
+$tabbar-icon-size-active: 24px;
+$tabbar-text-size:        12px;   // 旧 11→12
+$tabbar-highlight-size:   56px;   // 商家大圆（旧 52→56）
+$tabbar-logo-size:        48px;   // 大圆内 logo
+$tabbar-highlight-offset: 14px;   // 大圆上移量
 
-// ============ NavBar ============
-$navbar-height:    44px;
-$navbar-icon-size: 22px;
+// ============ NavBar 度量（dp） ============
+$navbar-height:       44px;   // iOS HIG 标准
+$navbar-height-search: 48px;  // 搜索态增高，贴近京东/淘宝观感
+$navbar-side-width:   72px;   // 左右栏宽：右侧双 32dp 紧凑图标=64，留 8dp 富余；返回按钮 44dp 亦容纳
+$navbar-icon-size:    24px;   // 导航图标（Icon size 同值直传）
+$navbar-icon-touch:   44px;   // 图标触控区边长
+
+// ============ 通用组件度量（dp） ============
+$quick-entry-size:    56px;   // 首页快捷入口实心圆
+$quick-entry-icon:    28px;   // 快捷入口白图标
+$search-box-height:   36px;   // 搜索框高
+$card-padding:        16px;   // 卡片内边距
 
 // ============ 阴影 ============
-$shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
-$shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+// 注意：Taro RN 只把 box-shadow 转 iOS shadow 四件套，不生成 Android elevation。
+// 需要阴影的组件必须在 style 对象里手动补 elevation（卡片 2、商家大圆 4）。
+// 另实测：taro-css-to-react-native 不支持多段逗号阴影（报 Unexpected token type: div），只能单层。
+$shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+$shadow-md: 0 2px 8px rgba(15, 23, 42, 0.08);
 $shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.12);
 
-// ============ 字号 ============
-$font-size-xs:   11px;
-$font-size-sm:   12px;
+// ============ 字号（dp，v1.7.0 映射：11→12、13→13、14→14、15→15、17→17、20→20） ============
+$font-size-xs:   12px;
+$font-size-sm:   13px;
 $font-size-base: 14px;
 $font-size-md:   15px;
 $font-size-lg:   17px;
 $font-size-xl:   20px;
 $font-size-2xl:  24px;
-$font-size-3xl:  28px;
 $font-size-4xl:  32px;
 
-// ============ 行高 ============
-$line-height-tight:   1.2;
-$line-height-base:    1.5;
-$line-height-relaxed: 1.7;
+// ============ 行高（dp 数值，RN 禁止无单位行高：会被当作 dp 直接裁字） ============
+// 与字号配对：12→16、13→18、14→20、15→21、17→24、20→28、24→32、32→40
+$line-height-xs:   16px;
+$line-height-sm:   18px;
+$line-height-base: 20px;
+$line-height-md:   21px;
+$line-height-lg:   24px;
+$line-height-xl:   28px;
+$line-height-2xl:  32px;
+$line-height-4xl:  40px;
 
-// ============ 间距 ============
+// ============ 间距（4pt 基准网格，优先 8 的倍数） ============
 $space-1: 4px;
 $space-2: 8px;
 $space-3: 12px;
@@ -104,7 +127,7 @@ $radius-xl:   16px;
 $radius-2xl:  20px;
 $radius-full: 9999px;
 
-// ============ 字体 ============
+// ============ 字重（RN 仅认 400/700） ============
 $font-weight-normal: 400;
 $font-weight-bold:   700;
 

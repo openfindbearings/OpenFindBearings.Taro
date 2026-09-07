@@ -1,37 +1,35 @@
-// 我的页样式（H5 + RN 通用）
+﻿// 我的页样式（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：删 .my-page/.my-scroll（骨架由 PageLayout 提供，100vh 与 padding-bottom:74px
+// hack 一并移除）；补会员信息卡与版本信息行（审核 P2-8）；尺寸全部 dp token + 行高落 dp。
 @import '../../styles/_rn';
 
-.my-page {
-  min-height: 100vh;
-  background: var(--bg-page, $bg-page);
-  padding-bottom: 80px;
-  box-sizing: border-box;
-}
-
-// 用户信息区
+// ============ 用户信息区 ============
 .user-section {
-  padding: 16px;
+  padding: $space-4 $space-4 0 $space-4;
 }
 
 .user-info {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  background: var(--primary, $primary);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--shadow-md, $shadow-md);
+  background: $primary;
+  border-radius: $radius-lg;
+  padding: $space-5;
+  box-shadow: $shadow-md;
 }
 
 .avatar {
   width: 56px;
   height: 56px;
-  border-radius: 50%;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-right: 14px;
+  margin-right: $space-4;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .avatar-img {
@@ -41,30 +39,136 @@
 
 .user-detail {
   flex: 1;
+  min-width: 0;
 }
 
 .nickname {
-  display: block;
-  font-size: 17px;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
   font-weight: bold;
   color: #FFFFFF;
-  margin-bottom: 4px;
+  margin-bottom: $space-1;
 }
 
 .phone {
-  display: block;
-  font-size: 12px;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
   color: rgba(255, 255, 255, 0.85);
 }
 
-// 功能菜单
+// ============ 会员卡（美团风格：积分大数字 + 收支明细入口 + 兑换按钮） ============
+// 背景渐变由 <LinearGradient> 组件（react-native-linear-gradient）在 tsx 里提供，
+// 此处只负责圆角/内边距/外边距/纵向布局；不再写 background（LinearGradient 用 colors prop 自绘，CSS background 无效）。
+.member-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: $radius-lg;
+  padding: $space-4;
+  margin: $space-3 $space-4 0 $space-4;
+  overflow: hidden;   // 裁掉超出圆角的装饰圆
+}
+
+// 右上装饰半透明圆（美团式氛围），绝对定位
+.member-overlay {
+  position: absolute;
+  top: -30px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+// 头部行：左标题，右"收支明细 >"
+.member-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.member-head-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.member-detail {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.member-detail-text {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: rgba(255, 255, 255, 0.85);
+  margin-right: 2px;
+}
+
+// 中部：大数字 + 单位
+.member-main {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  margin-top: $space-2;
+}
+
+.member-points {
+  font-size: $font-size-4xl;
+  line-height: $line-height-4xl;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.member-points-label {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: rgba(255, 255, 255, 0.85);
+  margin-left: $space-2;
+  margin-bottom: $space-2;
+}
+
+// 底部行：左提示文字，右"去兑换"胶囊按钮
+.member-foot {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: $space-3;
+}
+
+.member-foot-tip {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.member-redeem {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 6px 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-redeem-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: #FFFFFF;
+}
+
+// ============ 功能卡 - 横向四宫格 ============
 .menu-grid {
   display: flex;
-  background: var(--bg-card, $bg-card);
-  margin: 0 16px;
-  padding: 16px 0;
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm, $shadow-sm);
+  flex-direction: row;
+  background: $bg-card;
+  margin: $space-3 $space-4 0 $space-4;
+  padding: $space-4 0;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
 }
 
 .grid-item {
@@ -72,20 +176,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
 }
 
 .grid-icon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
-  background: var(--bg-input, $bg-input);
+  border-radius: $radius-lg;
+  background: $bg-input;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  margin-bottom: $space-2;
 }
 
 .grid-label {
-  font-size: 12px;
-  color: var(--text-secondary, $text-secondary);
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-secondary;
+}
+
+// ============ 版本信息行（v1.7.0 新建） ============
+.version-text {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $text-placeholder;
+  text-align: center;
+  margin-top: $space-6;
+  margin-bottom: $space-4;
 }

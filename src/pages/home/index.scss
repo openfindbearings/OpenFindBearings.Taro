@@ -1,51 +1,53 @@
-// 首页样式（H5 + RN 通用）
-// H5 端：var(--xxx) 引用 CSS 变量；RN 端：$xxx 引用 _rn.scss 编译期变量
-// 图标颜色用 color prop 直接传入，不依赖 className（RN 端 CSS 变量失效）
+﻿// 首页样式（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：删除 var() 兜底（Metro SCSS 不支持回退语法）与 padding-bottom:74px hack
+// （骨架避让已由 PageLayout/CustomTabBar 统一处理）；尺寸全部走 dp token；
+// 快捷入口改实心彩圆 + 白图标；简洁模式用 flexGrow 在滚动区内垂直居中。
 @import '../../styles/_rn';
 
-.home {
-  min-height: 100vh;
-  background: var(--bg-page, $bg-page);
-  padding: 16px 16px 80px;
-  box-sizing: border-box;
-
-  // 简洁模式：内容垂直居中，无 NavBar，无历史/热门
-  &.simple {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 16px;
-  }
+// ============ 简洁模式：搜索框 + 三钮作为一组垂直居中 ============
+// 改动说明：原 min-height:520px 魔法数改 flex:1，配合 PageLayout 内容容器 flexGrow:1
+// 真正撑满视口后整体垂直居中；justify-content:center 让搜索框与三钮聚成一簇居中。
+.home-simple {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  padding-left: $space-4;
+  padding-right: $space-4;
 }
 
-// 搜索栏
-.search-bar {
-  margin-top: 16px;
-  margin-bottom: 24px;
-}
-
+// ============ 搜索框（NavBar 搜索态中间栏 / 简洁模式内容区共用） ============
+// 改动说明：原 flex:1 在 NavBar 行容器里横向撑满（对），但在简洁模式纵向容器里
+// 会变成纵向撑满把三钮顶下去（错）。改 width:100% 两种容器都只横向填满、高度保持 36dp。
 .search-input-wrap {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  background: var(--bg-card, $bg-card);
-  border-radius: 12px;
-  padding: 10px 14px;
-  box-shadow: var(--shadow-md, $shadow-md);
-  border: 1px solid var(--border, $border);
+  height: $search-box-height;
+  background: $bg-input;
+  border-radius: $radius-lg;
+  padding-left: $space-3;
+  padding-right: $space-2;
+  width: 100%;
+  min-width: 0;
 }
 
 .search-input {
   flex: 1;
-  margin-left: 10px;
-  font-size: 15px;
-  color: var(--text-primary, $text-primary);
+  min-width: 0;
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
+  background: transparent;
+  margin-left: $space-2;
+  margin-right: $space-2;
 }
 
 .search-actions {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  margin-left: 8px;
 }
 
 .action-icon {
@@ -54,94 +56,136 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: var(--bg-input, $bg-input);
 }
 
-// 快捷入口
+// ============ 快捷三钮 ============
 .quick-actions {
   display: flex;
+  flex-direction: row;
   justify-content: space-around;
-  margin-bottom: 24px;
-  padding: 16px 0;
+  align-items: center;
+  padding-top: $space-5;
+  padding-bottom: $space-5;
 }
 
 .quick-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
 }
 
+// 实心彩圆 56dp（v1.7.0：浅底彩图标 → 实心彩底白图标）
 .quick-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: $quick-entry-size;
+  height: $quick-entry-size;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  // 颜色通过 background 实现（RN 不支持渐变）
-  &.voice {
-    background: var(--bg-input, $gradient-voice);
-  }
-  &.camera {
-    background: var(--bg-input, $gradient-camera);
-  }
-  &.scan {
-    background: var(--bg-input, $gradient-scan);
-  }
+// 三钮底色：独立类而非组合选择器（RN 忽略 .a.b 组合写法）
+.quick-icon-voice {
+  background: $gradient-voice;
+}
+
+.quick-icon-camera {
+  background: $gradient-camera;
+}
+
+.quick-icon-scan {
+  background: $gradient-scan;
 }
 
 .quick-label {
-  font-size: 13px;
-  color: var(--text-secondary, $text-secondary);
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-secondary;
+  margin-top: $space-2;
 }
 
-// 历史/热门区
-.history-section,
+// ============ 历史 / 热门区块 ============
+// 历史 / 热门区块（RN 忽略逗号分组选择器，两类各自完整声明）
+.history-section {
+  margin-left: $space-4;
+  margin-right: $space-4;
+  margin-bottom: $space-4;
+  padding: $card-padding;
+  background: $bg-card;
+  border-radius: $radius-lg;
+}
+
 .hot-section {
-  background: var(--bg-card, $bg-card);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow-sm, $shadow-sm);
+  margin-left: $space-4;
+  margin-right: $space-4;
+  margin-bottom: $space-4;
+  padding: $card-padding;
+  background: $bg-card;
+  border-radius: $radius-lg;
 }
 
 .section-header {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: $space-3;
 }
 
 .section-title {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--text-primary, $text-primary);
+}
+
+.section-title-text {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
+  font-weight: bold;
+  margin-left: $space-1;
+}
+
+.section-title-plain {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
   font-weight: bold;
 }
 
 .clear-btn {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-tertiary, $text-tertiary);
 }
 
+.clear-btn-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  margin-left: 2px;
+}
+
+// 标签流式排布（RN flexWrap 原生支持）
 .history-tags {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 8px;
 }
 
 .history-tag {
-  padding: 6px 14px;
-  background: var(--bg-input, $bg-badge);
-  border-radius: 20px;
-  font-size: 13px;
-  color: var(--text-secondary, $text-secondary);
+  background: $bg-input;
+  border-radius: $radius-full;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: $space-3;
+  padding-right: $space-3;
+  margin-right: $space-2;
+  margin-bottom: $space-2;
+}
+
+.history-tag-text {
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-secondary;
 }

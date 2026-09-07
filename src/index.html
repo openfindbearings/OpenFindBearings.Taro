@@ -10,6 +10,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" >
   <title>openfindbearings</title>
   <script><%= htmlWebpackPlugin.options.script %></script>
+  <!-- 页面根节点 flex:1 撑满视口需要确定高度（页面已 disableScroll，自管滚动布局） -->
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    #app { height: 100%; }
+  </style>
 </head>
 <body>
   <div id="app"></div>

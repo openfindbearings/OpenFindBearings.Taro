@@ -1,10 +1,12 @@
 // 搜索结果页
+// v1.7.0 度量重构：接入 PageLayout（删 rnHeight hack），输入行/结果卡走 dp token
 // NavBar：标题居中"搜索"，左侧返回箭头（showBack）
-// 调用 BFF `/api/mobile/bearings` 公开端点
+// 调用 BFF `/mobile/api/mobile/bearings` 公开端点
 import { useState, useCallback } from 'react'
+import Icon from '../../components/Icon'
 import { View, Input, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
-import { Search, Package } from 'lucide-react-taro'
+import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
 import './search.scss'
 
@@ -18,6 +20,9 @@ interface BearingItem {
   dynamicLoad: number | null
   staticLoad: number | null
 }
+
+// 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
+definePageConfig({ disableScroll: true })
 
 export default function SearchPage() {
   const router = useRouter()
@@ -55,16 +60,15 @@ export default function SearchPage() {
   })
 
   return (
-    <View className='search-page'>
-      <NavBar title="搜索" showBack />
-
-      {/* 搜索输入 */}
+    <PageLayout nav={<NavBar title="搜索" showBack />}>
+      {/* 搜索输入行 */}
       <View className='search-input-wrap'>
-        <Search size={16} color='#94A3B8' />
+        <Icon name="search" size={18} color='#64748B' />
         <Input
           className='search-input'
           type='text'
           placeholder='搜索轴承型号、品牌...'
+          placeholderTextColor='#94A3B8'
           value={keyword}
           onInput={(e) => setKeyword(e.detail.value)}
           onConfirm={() => doSearch(keyword)}
@@ -75,7 +79,7 @@ export default function SearchPage() {
 
       {loading && (
         <View className='loading'>
-          <Text>搜索中...</Text>
+          <Text className='loading-text'>搜索中...</Text>
         </View>
       )}
 
@@ -89,7 +93,7 @@ export default function SearchPage() {
               onClick={() => Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(item.bearingPartNumber)}` })}
             >
               <View className='result-icon'>
-                <Package size={20} color='#0EA5E9' />
+                <Icon name="package" size={22} color='#0EA5E9' />
               </View>
               <View className='result-info'>
                 <Text className='result-name'>{item.bearingPartNumber}</Text>
@@ -106,7 +110,7 @@ export default function SearchPage() {
 
       {!loading && searched && results.length === 0 && (
         <View className='empty-state'>
-          <Package size={48} color='#CBD5E1' />
+          <Icon name="package" size={48} color='#CBD5E1' />
           <Text className='empty-text'>未找到相关轴承</Text>
           <Text className='empty-hint'>请尝试其他关键词</Text>
         </View>
@@ -114,10 +118,10 @@ export default function SearchPage() {
 
       {!searched && (
         <View className='empty-state'>
-          <Search size={48} color='#CBD5E1' />
+          <Icon name="search" size={48} color='#CBD5E1' />
           <Text className='empty-text'>输入关键词开始搜索</Text>
         </View>
       )}
-    </View>
+    </PageLayout>
   )
 }
