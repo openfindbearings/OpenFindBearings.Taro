@@ -111,38 +111,7 @@
   margin-left: $space-2;
 }
 
-// ============ 开关（44×26dp 轨道 + 22dp 滑块） ============
-// 真机修复：RN 0.70 Android 对 border-radius 超过短边一半会忽略（999px 使轨道
-// 渲染成 26dp 圆、白滑块居中 → "蓝环白点"）。胶囊需精确取短边一半：轨道 13、滑块 11。
-.toggle {
-  width: 44px;
-  height: 26px;
-  border-radius: 13px;
-  background: $border;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 2px;
-  padding-right: 2px;
-  flex-shrink: 0;
-}
-
-.toggle-on {
-  background: $primary;
-}
-
-.toggle-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 11px;
-  background: #FFFFFF;
-}
-
-// 开态滑块：显式 margin 位移（44 - 2×2 padding - 22 = 18，取 18dp 靠右），
-// 不依赖 justify-content 类合并顺序，行为确定
-.toggle-thumb-on {
-  margin-left: 18px;
-}
+// ============ 开关：改用 Taro 标准 <Switch>（RN 原生控件），删除自绘 .toggle 样式 ============
 
 // ============ 字体大小三档 ============
 .font-size-picker {

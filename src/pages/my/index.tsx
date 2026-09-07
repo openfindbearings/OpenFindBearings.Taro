@@ -90,6 +90,12 @@ export default function MyPage() {
     Taro.navigateTo({ url: '/pages/my/settings' })
   }
 
+  // 个人信息入口：本轮从设置页移到"我的"页头像（登录态点击头像进入）。
+  // 个人信息详情页尚未实现，先占位提示，接入页面后改为 navigateTo。
+  const handleProfileClick = () => {
+    Taro.showToast({ title: '个人信息开发中', icon: 'none' })
+  }
+
   // 会员卡（美团风格）：收支明细入口与去兑换按钮暂为占位
   const handlePointsDetail = () => {
     Taro.showToast({ title: '收支明细开发中', icon: 'none' })
@@ -122,7 +128,7 @@ export default function MyPage() {
       {/* 用户信息区 */}
       <View className='user-section'>
         {user.isLoggedIn ? (
-          <View className='user-info'>
+          <View className='user-info' onClick={handleProfileClick}>
             <View className='avatar'>
               {user.avatar ? (
                 <Image className='avatar-img' src={user.avatar} mode='aspectFill' />

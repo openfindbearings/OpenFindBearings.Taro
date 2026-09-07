@@ -1,17 +1,17 @@
 // 设置页（详情页）— v1.7.0 度量重构，纯 RN 基准
-// 改动说明：
-//   1. 接入 PageLayout（删 rnHeight/自管 ScrollView hack）；
-//   2. 删除 useThemeColors + 逐元素 inline 色板（H5 深色时代遗留）——本轮 RN 锁定浅色，
-//      颜色全部走 settings.scss 的编译期 dp/色 token；
-//   3. 深色模式入口保留（用户能看到选项），但 RN 端点击弹 toast"将在后续版本支持"，
-//      不落库不生效——避免"设置页能变暗、别页不变"的分裂体验（审核采纳项）；
-//   4. 字体大小三档：RN 端记录偏好并即时提示重启生效（本轮仅存储，应用逻辑后续接入）；
-//   5. 组合类（list-item.indent/.on/.danger）全部拆为独立类名（RN 忽略组合选择器）。
+// 改动说明（本轮设置页折腾）：
+//   1. 开关控件由自绘 View(.toggle) 改用 Taro 标准 <Switch>（RN 映射原生 Switch，
+//      修复自绘 thumb 定位在 RN 下显示异常的老问题）；
+//   2. "个人信息"入口从设置页移除，改由"我的"页头像进入（见 my/index.tsx）；
+//   3. "注销账户""退出登录"按登录态条件渲染：未登录隐藏，登录才显示；
+//   4. "首页模式"默认普通；点击"简洁"未登录时弹"请先登录"（复用我的页门槛逻辑），
+//      点击"普通"始终允许；
+//   5. 深色模式入口保留但 RN 本轮锁定浅色，点击仅提示不生效；主题色功能下阶段接入。
 import { useState } from 'react'
 import Icon from '../../components/Icon'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Switch } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { getObject, setObject, removeItem } from '../../utils/storage'
+import { getItem, getObject, setObject, removeItem } from '../../utils/storage'
 import { IS_RN } from '../../utils/platform'
 import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
@@ -40,11 +40,14 @@ export default function SettingsPage() {
     soundEnabled: true,
     vibrateEnabled: true
   })
+  // 登录态：控制"注销账户/退出登录"显隐，以及"简洁首页模式"的登录门槛
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useDidShow(() => {
     getObject<AppSettings>(SETTINGS_KEY).then((saved) => {
       if (saved) setSettings(saved)
     }).catch(() => { /* 默认值 */ })
+    getItem('access_token').then(t => setIsLoggedIn(!!t)).catch(() => setIsLoggedIn(false))
   })
 
   // 保存设置（纯存储，无 DOM 操作——RN 无 document）
@@ -61,6 +64,24 @@ export default function SettingsPage() {
       return
     }
     Taro.showToast({ title: '深色模式开发中', icon: 'none' })
+  }
+
+  // 首页模式：普通（simpleHome=false）始终可选；简洁（true）需登录，未登录弹提示
+  const handleHomeMode = (simple: boolean) => {
+    if (simple && !isLoggedIn) {
+      Taro.showModal({
+        title: '提示',
+        content: '简洁首页模式需登录后使用',
+        confirmText: '去登录',
+        success: (res) => {
+          if (res.confirm) {
+            // TODO: 跳转登录页
+          }
+        }
+      })
+      return
+    }
+    save({ simpleHome: simple })
   }
 
   // 字体大小三档：存偏好；RN 提示重启生效（应用逻辑后续接入）
@@ -127,6 +148,7 @@ export default function SettingsPage() {
     })
   }
 
+  // 震动开关：开启时触发一次轻震动反馈
   const toggleVibrate = () => {
     const next = !settings.vibrateEnabled
     save({ vibrateEnabled: next })
@@ -134,13 +156,6 @@ export default function SettingsPage() {
       Taro.vibrateShort({ type: 'light' }).catch(() => {})
     }
   }
-
-  // 开关组件：on 态用独立类（组合选择器 RN 忽略）
-  const Toggle = ({ on, onClick }: { on: boolean; onClick?: () => void }) => (
-    <View className={on ? 'toggle toggle-on' : 'toggle'} onClick={onClick}>
-      <View className={on ? 'toggle-thumb toggle-thumb-on' : 'toggle-thumb'} />
-    </View>
-  )
 
   return (
     <PageLayout nav={<NavBar title="设置" showBack />}>
@@ -162,7 +177,7 @@ export default function SettingsPage() {
             </View>
           </View>
 
-          {/* 首页模式：普通（顶部搜索栏）/简洁（搜索框+快捷按钮居中） */}
+          {/* 首页模式：普通（顶部搜索栏）/简洁（搜索框+快捷按钮居中）。简洁需登录 */}
           <View className='list-item'>
             <View className='list-left'>
               <View className='list-icon'>
@@ -181,7 +196,7 @@ export default function SettingsPage() {
                   <View
                     key={String(opt.key)}
                     className={settings.simpleHome === opt.key ? 'font-btn font-btn-active' : 'font-btn'}
-                    onClick={() => save({ simpleHome: opt.key })}
+                    onClick={() => handleHomeMode(opt.key)}
                   >
                     <Text className={settings.simpleHome === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}>
                       {opt.label}
@@ -229,7 +244,11 @@ export default function SettingsPage() {
               </View>
               <Text className='list-label'>消息推送</Text>
             </View>
-            <Toggle on={settings.pushEnabled} onClick={() => save({ pushEnabled: !settings.pushEnabled })} />
+            <Switch
+              checked={settings.pushEnabled}
+              color='#0EA5E9'
+              onChange={(e) => save({ pushEnabled: e.detail.value })}
+            />
           </View>
           <View className='list-item list-item-last'>
             <View className='list-left'>
@@ -238,7 +257,11 @@ export default function SettingsPage() {
               </View>
               <Text className='list-label'>广告设置</Text>
             </View>
-            <Toggle on={settings.adEnabled} onClick={() => save({ adEnabled: !settings.adEnabled })} />
+            <Switch
+              checked={settings.adEnabled}
+              color='#0EA5E9'
+              onChange={(e) => save({ adEnabled: e.detail.value })}
+            />
           </View>
         </View>
       </View>
@@ -254,16 +277,20 @@ export default function SettingsPage() {
               </View>
               <Text className='list-label'>音效</Text>
             </View>
-            <Toggle on={settings.soundEnabled} onClick={() => save({ soundEnabled: !settings.soundEnabled })} />
+            <Switch
+              checked={settings.soundEnabled}
+              color='#0EA5E9'
+              onChange={(e) => save({ soundEnabled: e.detail.value })}
+            />
           </View>
-          <View className='list-item' onClick={toggleVibrate}>
+          <View className='list-item'>
             <View className='list-left'>
               <View className='list-icon'>
                 <Icon name="vibrate" size={20} color='#0EA5E9' />
               </View>
               <Text className='list-label'>震动</Text>
             </View>
-            <Toggle on={settings.vibrateEnabled} />
+            <Switch checked={settings.vibrateEnabled} color='#0EA5E9' onChange={toggleVibrate} />
           </View>
           <View className='list-item list-item-last' onClick={checkVersion}>
             <View className='list-left'>
@@ -307,19 +334,10 @@ export default function SettingsPage() {
         </View>
       </View>
 
-      {/* 其他 */}
+      {/* 其他：服务热线；注销账户仅登录后可见（个人信息入口已移至"我的"页头像） */}
       <View className='section'>
         <View className='list'>
-          <View className='list-item' onClick={() => Taro.showToast({ title: '个人信息（开发中）', icon: 'none' })}>
-            <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="user" size={20} color='#0EA5E9' />
-              </View>
-              <Text className='list-label'>个人信息</Text>
-            </View>
-            <Icon name="chevron_right" size={18} color='#64748B' />
-          </View>
-          <View className='list-item' onClick={callHotline}>
+          <View className={isLoggedIn ? 'list-item' : 'list-item list-item-last'} onClick={callHotline}>
             <View className='list-left'>
               <View className='list-icon'>
                 <Icon name="phone" size={20} color='#0EA5E9' />
@@ -331,27 +349,31 @@ export default function SettingsPage() {
               <Icon name="chevron_right" size={18} color='#64748B' />
             </View>
           </View>
-          <View className='list-item list-item-last' onClick={handleDeleteAccount}>
-            <View className='list-left'>
-              <View className='list-icon list-icon-danger'>
-                <Icon name="trash" size={20} color='#EF4444' />
+          {isLoggedIn && (
+            <View className='list-item list-item-last' onClick={handleDeleteAccount}>
+              <View className='list-left'>
+                <View className='list-icon list-icon-danger'>
+                  <Icon name="trash" size={20} color='#EF4444' />
+                </View>
+                <Text className='list-label list-label-danger'>注销账户</Text>
               </View>
-              <Text className='list-label list-label-danger'>注销账户</Text>
+              <Icon name="chevron_right" size={18} color='#64748B' />
             </View>
-            <Icon name="chevron_right" size={18} color='#64748B' />
-          </View>
+          )}
         </View>
       </View>
 
-      {/* 退出登录 */}
-      <View className='section'>
-        <View className='list'>
-          <View className='list-item list-item-last list-item-center' onClick={handleLogout}>
-            <Icon name="log_out" size={18} color='#EF4444' />
-            <Text className='list-label-danger logout-text'>退出登录</Text>
+      {/* 退出登录：仅登录后可见 */}
+      {isLoggedIn && (
+        <View className='section'>
+          <View className='list'>
+            <View className='list-item list-item-last list-item-center' onClick={handleLogout}>
+              <Icon name="log_out" size={18} color='#EF4444' />
+              <Text className='list-label-danger logout-text'>退出登录</Text>
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       <Text className='footer'>
         登录即表示同意
