@@ -189,3 +189,96 @@
   line-height: $line-height-base;
   color: $text-secondary;
 }
+
+// ============ 热门轴承（横向卡片，BFF /home） ============
+.hot-bearings-section {
+  margin-left: $space-4;
+  margin-right: $space-4;
+  margin-top: $space-4;
+}
+
+.hot-bearings-scroll {
+  flex-direction: row;
+}
+
+.bearing-card {
+  width: 140px;
+  border-radius: $radius-lg;
+  padding: $space-3;
+  margin-right: $space-3;
+}
+
+.bearing-part {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: bold;
+}
+
+.bearing-type {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: $space-1;
+}
+
+.bearing-brand {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: 2px;
+}
+
+// ============ 推荐商家（竖向卡片，BFF /home） ============
+.merchant-section {
+  margin: $space-4;
+  border-radius: $radius-lg;
+  padding: $space-2 $space-4;
+}
+
+.merchant-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: $space-3;
+  padding-bottom: $space-3;
+}
+
+.merchant-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+  flex-shrink: 0;
+}
+
+.merchant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.merchant-name {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: bold;
+}
+
+.merchant-desc {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: 2px;
+}
+
+.merchant-badge {
+  border-radius: $radius-sm;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: $space-2;
+  padding-right: $space-2;
+  margin-left: $space-2;
+}
+
+.merchant-badge-text {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+}

@@ -1,0 +1,146 @@
+// 轴承详情页样式（RN 基准，dp 直写，颜色由 useTheme inline，此处只管布局/尺寸）
+@import '../../styles/_rn';
+
+.bd {
+  padding-bottom: $space-10;
+}
+
+// 头部卡
+.bd-hero {
+  margin: $space-3 $space-4 0 $space-4;
+  border-radius: $radius-lg;
+  padding: $space-4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bd-img {
+  width: 160px;
+  height: 160px;
+}
+
+.bd-img-placeholder {
+  width: 160px;
+  height: 160px;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bd-part {
+  font-weight: bold;
+  margin-top: $space-3;
+}
+
+.bd-old {
+  margin-top: 2px;
+}
+
+.bd-sub {
+  margin-top: 4px;
+}
+
+// 通用信息卡
+.bd-card {
+  margin: $space-3 $space-4 0 $space-4;
+  border-radius: $radius-lg;
+  padding: $space-4;
+}
+
+.bd-card-title {
+  font-weight: bold;
+  margin-bottom: $space-3;
+}
+
+.bd-empty {
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+}
+
+// 参数行
+.bd-spec-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+}
+
+.bd-spec-k {
+  color: $text-tertiary;
+}
+
+.bd-spec-v {
+  font-weight: bold;
+}
+
+// 列表行（在售商家 / 替代品）
+.bd-list-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: $space-3;
+  padding-bottom: $space-3;
+}
+
+.bd-list-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+  flex-shrink: 0;
+}
+
+.bd-list-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.bd-list-name {
+  font-weight: bold;
+}
+
+.bd-list-sub {
+  margin-top: 2px;
+}
+
+// 操作按钮
+.bd-actions {
+  flex-direction: row;
+  margin: $space-5 $space-4 0 $space-4;
+}
+
+.bd-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: $radius-lg;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+}
+
+.bd-btn-text {
+  font-weight: bold;
+  margin-left: $space-2;
+}
+
+.bd-btn-ghost {
+  flex: 1;
+  height: 44px;
+  border-radius: $radius-lg;
+  border-width: 1px;
+  border-style: solid;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.bd-btn-ghost-text {
+  margin-left: $space-2;
+}

@@ -22,6 +22,7 @@ export const API = {
   BEARINGS_SEARCH: `${API_PREFIX}/bearings/search`,
   BEARING_DETAIL: (id: string) => `${API_PREFIX}/bearings/${id}`,
   BEARING_MERCHANTS: (id: string) => `${API_PREFIX}/bearings/${id}/merchants`,
+  BEARING_INTERCHANGES: (id: string) => `${API_PREFIX}/bearings/${id}/interchanges`,
 
   /** 商家 */
   MERCHANTS_SEARCH: `${API_PREFIX}/merchants/search`,

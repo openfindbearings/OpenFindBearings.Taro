@@ -1,68 +1,67 @@
-// 搜索结果页
-// v1.7.0 度量重构：接入 PageLayout（删 rnHeight hack），输入行/结果卡走 dp token
-// NavBar：标题居中"搜索"，左侧返回箭头（showBack）
-// 调用 BFF `/mobile/api/mobile/bearings` 公开端点
-import { useState, useCallback } from 'react'
+// 搜索结果页：一个关键字同时查 轴承/商家/品牌/类型 四类（顶部 Tab 切换）。
+// 轴承、商家走 BFF 搜索；品牌、类型用 /home 全量列表前端按关键字过滤（数据量小）。
+// 结果点击：轴承→轴承详情；商家→商家详情；品牌/类型→以该名称为关键字再搜轴承。
+import { useState } from 'react'
+import { View, Text, Image, Input, ScrollView } from '@tarojs/components'
+import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
-import { View, Input, Text } from '@tarojs/components'
-import Taro, { useRouter } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
+import { searchBearings, type Bearing } from '../../services/bearing'
+import { searchMerchants, type Merchant } from '../../services/merchant'
+import { getHome, type HomeRef } from '../../services/home'
 import './search.scss'
 
-const BFF_BASE = '/mobile'
-
-interface BearingItem {
-  id: string
-  bearingPartNumber: string
-  brandName: string
-  englishName: string | null
-  dynamicLoad: number | null
-  staticLoad: number | null
-}
-
-// 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
+
+type TabKey = 'bearing' | 'merchant' | 'brand' | 'type'
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'bearing', label: '轴承' },
+  { key: 'merchant', label: '商家' },
+  { key: 'brand', label: '品牌' },
+  { key: 'type', label: '类型' }
+]
 
 export default function SearchPage() {
   const router = useRouter()
-  const [keyword, setKeyword] = useState(router.params.keyword || '')
-  const [results, setResults] = useState<BearingItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [searched, setSearched] = useState(false)
-  // 主题色板（结果图标/卡片/文字随模式）+ 全局字号
   const t = useTheme()
   const fs = useFs()
 
-  const doSearch = useCallback(async (kw: string) => {
+  const [keyword, setKeyword] = useState(router.params.keyword || '')
+  const [tab, setTab] = useState<TabKey>('bearing')
+  const [bearings, setBearings] = useState<Bearing[]>([])
+  const [merchants, setMerchants] = useState<Merchant[]>([])
+  const [brands, setBrands] = useState<HomeRef[]>([])
+  const [types, setTypes] = useState<HomeRef[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searched, setSearched] = useState(false)
+
+  const runSearch = (kw: string) => {
     if (!kw.trim()) return
     setLoading(true)
     setSearched(true)
-    try {
-      const res = await Taro.request({
-        url: `${BFF_BASE}/api/mobile/bearings?keyword=${encodeURIComponent(kw.trim())}&page=1&pageSize=20`,
-        method: 'GET'
-      })
-      if (res.statusCode === 200 && res.data) {
-        const data = res.data as any
-        setResults(data.items || data.data?.items || [])
-      } else {
-        setResults([])
-      }
-    } catch {
-      setResults([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    const k = kw.trim()
+    // 轴承、商家走后端；品牌、类型前端过滤全量列表
+    searchBearings({ keyword: k }).then(r => setBearings(r?.items || [])).catch(() => setBearings([]))
+    searchMerchants({ keyword: k }).then(r => setMerchants(r?.items || [])).catch(() => setMerchants([]))
+    getHome().then(h => {
+      const lk = k.toLowerCase()
+      setBrands((h?.brands || []).filter(b => b.name.toLowerCase().includes(lk)))
+      setTypes((h?.bearingTypes || []).filter(x => x.name.toLowerCase().includes(lk)))
+    }).catch(() => { setBrands([]); setTypes([]) })
+      .finally(() => setLoading(false))
+  }
 
-  // 首次进入自动搜索
-  useState(() => {
-    const kw = router.params.keyword
-    if (kw) doSearch(kw)
-  })
+  useDidShow(() => { if (keyword) runSearch(keyword) })
+
+  const goBearing = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })
+  const goMerchant = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
+  // 品牌/类型 → 以该名称为关键字再搜轴承
+  const searchByRef = (name: string) => { setKeyword(name); runSearch(name) }
+
+  const resultCount = tab === 'bearing' ? bearings.length : tab === 'merchant' ? merchants.length : tab === 'brand' ? brands.length : types.length
 
   return (
     <PageLayout nav={<NavBar title="搜索" showBack />}>
@@ -73,60 +72,97 @@ export default function SearchPage() {
           className='search-input'
           style={{ color: t.textPrimary }}
           type='text'
-          placeholder='搜索轴承型号、品牌...'
+          placeholder='搜索型号、品牌、商家...'
           placeholderTextColor={t.textTertiary}
           value={keyword}
           onInput={(e) => setKeyword(e.detail.value)}
-          onConfirm={() => doSearch(keyword)}
+          onConfirm={() => runSearch(keyword)}
           confirmType='search'
-          focus
         />
       </View>
 
-      {loading && (
-        <View className='loading'>
-          <Text className='loading-text' style={{ ...fs(15), color: t.textSecondary }}>搜索中...</Text>
-        </View>
-      )}
+      {/* 分类 Tab */}
+      <View className='search-tabs' style={{ backgroundColor: t.bgCard, borderColor: t.border }}>
+        {TABS.map((tb) => (
+          <View key={tb.key} className='search-tab' onClick={() => setTab(tb.key)}>
+            <Text className='search-tab-text' style={{ ...fs(15), color: tab === tb.key ? t.primaryText : t.textSecondary, fontWeight: tab === tb.key ? 'bold' : 'normal' }}>
+              {tb.label}
+            </Text>
+            {tab === tb.key && <View className='search-tab-underline' style={{ backgroundColor: t.primary }} />}
+          </View>
+        ))}
+      </View>
 
-      {!loading && searched && results.length > 0 && (
+      {loading && <View className='loading'><Text className='loading-text' style={{ ...fs(15), color: t.textSecondary }}>搜索中...</Text></View>}
+
+      {/* 轴承结果 */}
+      {!loading && tab === 'bearing' && (
         <View className='result-list'>
-          <Text className='result-count' style={{ ...fs(13), color: t.textTertiary }}>共找到 {results.length} 个结果</Text>
-          {results.map((item) => (
-            <View
-              key={item.id}
-              className='result-item'
-              style={{ backgroundColor: t.bgCard }}
-              onClick={() => Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(item.bearingPartNumber)}` })}
-            >
+          {searched && <Text className='result-count' style={{ ...fs(13), color: t.textTertiary }}>共 {bearings.length} 个轴承</Text>}
+          {bearings.map((b) => (
+            <View key={b.id} className='result-item' style={{ backgroundColor: t.bgCard }} onClick={() => goBearing(b.id)}>
               <View className='result-icon' style={{ backgroundColor: t.primaryLight }}>
-                <Icon name="package" size={22} color={t.primary} />
+                {b.image2DUrl ? <Image className='result-thumb' src={b.image2DUrl} mode='aspectFit' /> : <Icon name="package" size={22} color={t.primary} />}
               </View>
               <View className='result-info'>
-                <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }}>{item.bearingPartNumber}</Text>
-                <Text className='result-brand' style={{ ...fs(13), color: t.textSecondary }}>{item.brandName}{item.englishName ? ` · ${item.englishName}` : ''}</Text>
-                <View className='result-specs'>
-                  {item.dynamicLoad != null && <Text className='spec' style={{ ...fs(12), color: t.textTertiary }}>C: {item.dynamicLoad} kN</Text>}
-                  {item.staticLoad != null && <Text className='spec' style={{ ...fs(12), color: t.textTertiary }}>C0: {item.staticLoad} kN</Text>}
-                </View>
+                <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }}>{b.partNumber}</Text>
+                <Text className='result-brand' style={{ ...fs(13), color: t.textSecondary }}>{b.bearingType} · {b.brandName}</Text>
               </View>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           ))}
         </View>
       )}
 
-      {!loading && searched && results.length === 0 && (
-        <View className='empty-state'>
-          <Icon name="package" size={48} color={t.border} />
-          <Text className='empty-text' style={{ ...fs(15), color: t.textSecondary }}>未找到相关轴承</Text>
-          <Text className='empty-hint' style={{ ...fs(13), color: t.textTertiary }}>请尝试其他关键词</Text>
+      {/* 商家结果 */}
+      {!loading && tab === 'merchant' && (
+        <View className='result-list'>
+          {searched && <Text className='result-count' style={{ ...fs(13), color: t.textTertiary }}>共 {merchants.length} 个商家</Text>}
+          {merchants.map((m) => (
+            <View key={m.id} className='result-item' style={{ backgroundColor: t.bgCard }} onClick={() => goMerchant(m.id)}>
+              <View className='result-icon' style={{ backgroundColor: t.primaryLight }}>
+                {m.logoUrl ? <Image className='result-thumb' src={m.logoUrl} mode='aspectFill' /> : <Icon name="store" size={22} color={t.primary} />}
+              </View>
+              <View className='result-info'>
+                <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.name}</Text>
+                <Text className='result-brand' style={{ ...fs(13), color: t.textSecondary }}>{m.productCount ?? 0} 个在售{m.isVerified ? ' · 已认证' : ''}</Text>
+              </View>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
+            </View>
+          ))}
         </View>
       )}
 
-      {!searched && (
+      {/* 品牌结果（前端过滤） */}
+      {!loading && tab === 'brand' && (
+        <View className='result-list'>
+          {brands.map((b) => (
+            <View key={b.id} className='ref-row' style={{ backgroundColor: t.bgCard }} onClick={() => searchByRef(b.name)}>
+              <Text className='ref-name' style={{ ...fs(15), color: t.textPrimary }}>{b.name}</Text>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* 类型结果（前端过滤） */}
+      {!loading && tab === 'type' && (
+        <View className='result-list'>
+          {types.map((x) => (
+            <View key={x.id} className='ref-row' style={{ backgroundColor: t.bgCard }} onClick={() => searchByRef(x.name)}>
+              <Text className='ref-name' style={{ ...fs(15), color: t.textPrimary }}>{x.name}</Text>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* 空态 */}
+      {!loading && searched && resultCount === 0 && (
         <View className='empty-state'>
           <Icon name="search" size={48} color={t.border} />
-          <Text className='empty-text' style={{ ...fs(15), color: t.textSecondary }}>输入关键词开始搜索</Text>
+          <Text className='empty-text' style={{ ...fs(15), color: t.textSecondary }}>未找到相关结果</Text>
+          <Text className='empty-hint' style={{ ...fs(13), color: t.textTertiary }}>请尝试其他关键词</Text>
         </View>
       )}
     </PageLayout>

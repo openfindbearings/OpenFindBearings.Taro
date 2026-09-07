@@ -1,33 +1,69 @@
+// 商家服务：搜索、详情、在售轴承（均调 BFF public 端点，auth:false）
 import { request } from './request'
 import { API } from './config'
+import type { Paged } from './bearing'
 
-/** 商家信息 */
+/** 商家搜索结果项（对齐 BFF MerchantItem） */
 export interface Merchant {
   id: string
   name: string
-  logoUrl?: string
-  description?: string
+  companyName?: string | null
+  type?: string | null
   isVerified: boolean
-  contact?: string
-  businessScope?: string
-  /** 在售商品数 */
-  bearingCount?: number
+  status?: string | null
+  productCount?: number | null
+  logoUrl?: string | null
+}
+
+/** 商家详情（对齐 BFF MerchantDetail） */
+export interface MerchantDetail {
+  id: string
+  name: string
+  companyName?: string | null
+  type?: string | null
+  contactPerson?: string | null
+  phone?: string | null
+  mobile?: string | null
+  email?: string | null
+  address?: string | null
+  isVerified: boolean
+  status?: string | null
+  grade?: string | null
+  followerCount: number
+  productCount: number
+  logoUrl?: string | null
+}
+
+/** 商家在售轴承项（对齐 BFF MerchantBearingItem） */
+export interface MerchantBearing {
+  bearingId: string
+  bearingPartNumber: string
+  oldNumber?: string | null
+  bearingTypeName?: string | null
+  brandName?: string | null
+  innerDiameter?: number | null
+  outerDiameter?: number | null
+  width?: number | null
+  price?: string | null
+  isOnSale: boolean
 }
 
 /** 搜索商家 */
-export async function searchMerchants(keyword: string, page = 1, pageSize = 20) {
-  return request<{ items: Merchant[]; totalCount: number }>(
-    `${API.MERCHANTS_SEARCH}?keyword=${encodeURIComponent(keyword)}&page=${page}&pageSize=${pageSize}`,
-    { auth: false }
-  )
+export function searchMerchants(params: { keyword?: string; verifiedOnly?: boolean; page?: number; pageSize?: number }) {
+  const q = new URLSearchParams()
+  if (params.keyword) q.set('keyword', params.keyword)
+  if (params.verifiedOnly != null) q.set('verifiedOnly', String(params.verifiedOnly))
+  q.set('page', String(params.page ?? 1))
+  q.set('pageSize', String(params.pageSize ?? 20))
+  return request<Paged<Merchant>>(`${API.MERCHANTS_SEARCH}?${q.toString()}`, { auth: false })
 }
 
-/** 获取商家详情 */
-export async function getMerchantDetail(id: string) {
-  return request<Merchant>(API.MERCHANT_DETAIL(id), { auth: false })
+/** 商家详情 */
+export function getMerchantDetail(id: string) {
+  return request<MerchantDetail>(API.MERCHANT_DETAIL(id), { auth: false })
 }
 
-/** 获取商家在售商品 */
-export async function getMerchantBearings(merchantId: string) {
-  return request<any[]>(API.MERCHANT_BEARINGS(merchantId), { auth: false })
+/** 商家在售轴承 */
+export function getMerchantBearings(id: string) {
+  return request<Paged<MerchantBearing>>(`${API.MERCHANT_BEARINGS(id)}?page=1&pageSize=20`, { auth: false })
 }

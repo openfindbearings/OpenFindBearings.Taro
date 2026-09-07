@@ -4,9 +4,10 @@
 // 简洁模式：nav=null 无顶栏，搜索框+三钮在滚动区内垂直居中，隐藏历史/热门，保留 TabBar。
 import { useState, useCallback } from 'react'
 import Icon from '../../components/Icon'
-import { View, Input, Text } from '@tarojs/components'
+import { View, Input, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { getItem, setItem, removeItem } from '../../utils/storage'
+import { getHome, type HomeData } from '../../services/home'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
 import PageLayout from '../../components/PageLayout'
@@ -29,6 +30,8 @@ export default function HomePage() {
   const [keyword, setKeyword] = useState('')
   const [history, setHistory] = useState<string[]>([])
   const [simpleMode, setSimpleMode] = useState(false)
+  // 首页聚合数据（热门轴承 + 推荐商家），来自 BFF /mobile/home（public）
+  const [home, setHome] = useState<HomeData | null>(null)
   // 全局字号缩放生成器
   const fs = useFs()
   // 主题色板（搜索框/卡片/标签/文字随模式）
@@ -43,6 +46,9 @@ export default function HomePage() {
         try { setSimpleMode(!!(JSON.parse(savedSettings) as AppSettings).simpleHome) } catch { /* 默认 */ }
       }
     }).catch(() => { /* 默认空状态 */ })
+
+    // 拉取首页聚合数据（public，auth:false）；失败静默降级为不显示相关区块
+    getHome().then(setHome).catch(() => { /* 离线/后端未就绪时隐藏热门轴承/推荐商家 */ })
   })
 
   const saveHistory = useCallback((kw: string) => {
@@ -181,6 +187,66 @@ export default function HomePage() {
           ))}
         </View>
       </View>
+
+      {/* 热门轴承（BFF /home 数据，public）：横向卡片，点击按型号进搜索 */}
+      {home && home.hotBearings.length > 0 && (
+        <View className='hot-bearings-section'>
+          <View className='section-header'>
+            <View className='section-title'>
+              <Icon name="trending-up" size={16} color={t.textTertiary} />
+              <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>热门轴承</Text>
+            </View>
+          </View>
+          <ScrollView className='hot-bearings-scroll' scrollX showsHorizontalScrollIndicator={false}>
+            {home.hotBearings.map((b) => (
+              <View
+                key={b.id}
+                className='bearing-card'
+                style={{ backgroundColor: t.bgCard }}
+                onClick={() => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${b.id}` })}
+              >
+                <Text className='bearing-part' style={{ ...fs(15), color: t.textPrimary }}>{b.partNumber}</Text>
+                <Text className='bearing-type' style={{ ...fs(12), color: t.textSecondary }}>{b.bearingType}</Text>
+                <Text className='bearing-brand' style={{ ...fs(12), color: t.textTertiary }}>{b.brandName}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* 推荐商家（BFF /home 数据，public）：竖向卡片，点击进商家详情（详情页待建，先提示） */}
+      {home && home.merchants.length > 0 && (
+        <View className='merchant-section' style={{ backgroundColor: t.bgCard }}>
+          <View className='section-header'>
+            <View className='section-title'>
+              <Icon name="store" size={16} color={t.textTertiary} />
+              <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>推荐商家</Text>
+            </View>
+          </View>
+          {home.merchants.map((m) => (
+            <View
+              key={m.id}
+              className='merchant-row'
+              onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${m.id}` })}
+            >
+              <View className='merchant-avatar' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="store" size={20} color={t.primary} />
+              </View>
+              <View className='merchant-info'>
+                <Text className='merchant-name' style={{ ...fs(15), color: t.textPrimary }}>{m.name}</Text>
+                {m.description ? (
+                  <Text className='merchant-desc' style={{ ...fs(12), color: t.textTertiary }} numberOfLines={1}>{m.description}</Text>
+                ) : null}
+              </View>
+              {m.isVerified && (
+                <View className='merchant-badge' style={{ backgroundColor: t.primaryLight }}>
+                  <Text className='merchant-badge-text' style={{ ...fs(11), color: t.primaryText }}>认证</Text>
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
     </PageLayout>
   )
 }

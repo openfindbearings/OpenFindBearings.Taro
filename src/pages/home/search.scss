@@ -132,3 +132,54 @@
   color: $text-tertiary;
   margin-top: $space-2;
 }
+
+// ============ 分类 Tab ============
+.search-tabs {
+  display: flex;
+  flex-direction: row;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  margin-top: $space-3;
+}
+
+.search-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: $space-3;
+  padding-bottom: $space-2;
+}
+
+.search-tab-text {
+  color: $text-secondary;
+}
+
+.search-tab-underline {
+  width: 24px;
+  height: 3px;
+  border-radius: 999px;
+  margin-top: $space-2;
+}
+
+// 结果缩略图（有图时）
+.result-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+}
+
+// ============ 品牌/类型引用行 ============
+.ref-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: $radius-lg;
+  padding: $card-padding;
+  margin-bottom: $space-2;
+}
+
+.ref-name {
+  font-weight: bold;
+}

@@ -1,0 +1,116 @@
+# OpenFindBearings.Taro 界面设计规范
+
+> 当前版本：v1.3.0
+> 日期：2026-09-07
+> 阶段：RN 优先（Android/iOS 标准 RN）；H5、微信小程序为后续阶段
+> 对应重构方案：Taro架构重构方案 v1.7.0
+
+## 0. 本版变更摘要（相对 v1.2.0）
+
+- **运行时主题系统落地**：`useTheme()` 全色板，支持 浅色/深色/跟随系统 三模式 + 6 套预设主题色（方案①：深色尊重用户选色，用其亮变体）。全站颜色 inline 接管。
+- **全局字号缩放**：`useFs(base)` + `fontSize` store，小/中/大实时生效。
+- **主题化 Switch**：新建 `components/Switch`（RN 用原生 Switch 全控色，修 Taro Switch 圆点恒绿问题）。
+- **新增页面**：轴承详情 `pages/home/bearingDetail`、商家详情 `pages/merchant/merchantDetail`。
+- **搜索结果页升级**：单关键字查 轴承/商家/品牌/类型 四类（顶部 Tab）。
+- **首页对接 BFF**：`/mobile/home` 渲染热门轴承 + 推荐商家（含 logo）。
+- **隐私合规页**：`pages/common/doc` + `src/content/legal.ts`（PIPL 全文）。
+- 设置入库（首页模式/推送/同意留痕/注销）为**待完成**，见《设置入库与合规待办 v1.0.0》。
+
+## 1. 运行时主题系统
+
+### 1.1 三模式 × 六预设
+
+- 模式：`light` / `dark` / `system`（`stores/theme.ts`，持久化 `app_theme`；system 用 RN `Appearance` 订阅）。
+- 预设（`styles/themes.ts`，`hooks/useThemeColor.ts` 持久化 `app_theme_color`）：天空蓝(默认)/翡翠绿/琥珀橙/玫瑰红/紫罗兰/石墨灰，冷暖兼顾。
+- **方案①**：深色用固定中性深色彩底，但强调色仍尊重用户预设（取每预设的 `primaryDark` 亮变体）→ 切深色不跳色、不没收用户颜色。
+
+### 1.2 useTheme() 全色板（`hooks/useTheme.ts`）
+
+返回按 `mode × preset` 计算的完整色板，全站 inline 取用：
+`bgPage / bgCard / bgInput / bgBadge / textPrimary / textSecondary / textTertiary / textOnPrimary / border / borderLight / primary / primaryText / primaryDeep / primaryLight / danger / success / warning / navBarBg / navBarText / tabBarBg / tabBarBorder / tabBarText / tabBarTextActive / memberGradientFrom / memberGradientTo / shadowColor`。
+
+| Token | 浅色 | 深色 |
+|---|---|---|
+| bgPage | #F5F7FA | #0F172A |
+| bgCard | #FFFFFF | #1E293B |
+| bgInput | #F1F5F9 | #334155 |
+| textPrimary | #0F172A | #F1F5F9 |
+| textSecondary | #475569 | #CBD5E1 |
+| textTertiary | #64748B | #94A3B8 |
+| textOnPrimary | #FFFFFF | #0B1220 |
+| border | #E2E8F0 | #334155 |
+| primary | 预设.primary | 预设.primaryDark |
+| danger/success/warning | #EF4444/#10B981/#F59E0B | #F87171/#34D399/#FBBF24 |
+
+> 语义色（快捷三钮蓝/绿/橙、分类色）不随主题变。
+
+### 1.3 全局字号（`stores/fontSize.ts` + `hooks/useFontScale.ts`）
+
+- 档位 small0.9 / medium1.0 / large1.15，持久化 `app_font_size`。
+- 用法：`const fs = useFs(); <Text className='x' style={{ ...fs(15), color: t.textPrimary }}>`。className 供颜色/字重，inline 供缩放后字号。
+
+### 1.4 为什么 inline（RN 约束）
+
+Taro RN className 文件作用域 + SCSS 编译期常量 → 运行时改色/字号只能 inline 覆盖，无 CSS 变量/封装组件捷径。启动 `app.tsx` 调 `initFontSize()+initTheme()+initThemeColor()` 恢复。
+
+## 2. 度量体系（承 v1.2.0）
+
+dp 直写双开关（`config.rn.postcss`：`scalable:false` + `pxtransform.config.deviceRatio:{750:2}`）→ SCSS `Npx`=RN `N`dp。关键尺寸：NavBar 44/搜索态48/侧栏72、TabBar 56、快捷圆56、搜索框36、卡片圆角12。RN 红线：禁 gap/组合选择器/CSS渐变/fixed/vh/var回退/百分比圆角；Text 字号行高数值。
+
+## 3. 组件
+
+| 组件 | 路径 | 说明 |
+|---|---|---|
+| PageLayout | `components/PageLayout` | 顶栏+滚动+底栏骨架，页面底色 inline=t.bgPage，内容容器 flexGrow:1 |
+| NavBar | `components/NavBar` | 标准安全区；`rightIcons` 声明式（32dp 紧凑）；背景/标题/图标 inline 随主题 |
+| CustomTabBar | `components/CustomTabBar` | 56dp，商家大圆动态突出，颜色随 useTheme |
+| Icon | `components/Icon` | 平台分支：RN=lucide-react-native+svg，H5=lucide-react |
+| Switch | `components/Switch` | 主题化开关：RN 原生 Switch 控 trackColor/thumbColor（修默认绿），H5 走 Taro Switch |
+
+## 4. 页面
+
+### 4.1 首页（home）
+- 普通模式：NavBar 搜索态铺满搜索框；快捷三钮实心圆；搜索历史(本地)；热门搜索；**热门轴承**(横向卡,`/home.hotBearings`)→轴承详情；**推荐商家**(`home.merchants`,含logo)→商家详情。
+- 简洁模式：无 NavBar，搜索框+三钮聚簇垂直居中。
+
+### 4.2 搜索结果页（search）
+- 顶部 4 Tab：轴承/商家/品牌/类型。
+- 轴承/商家走 BFF 搜索；品牌/类型用 `/home` 全量列表前端过滤。
+- 轴承→轴承详情；商家→商家详情；品牌/类型→以该名称再搜轴承。
+
+### 4.3 轴承详情（bearingDetail）
+- 图片(`<Image>`,无图占位) + 型号/旧型号/英文名/品牌/类型 + 尺寸(d·D·B)/重量/产地。
+- 在售商家(`/bearings/{id}/merchants`)→商家详情；替代品(`/bearings/{id}/interchanges`)→对应轴承详情。
+- 收藏 / 纠错：登录门槛（未登录提示），提交待登录功能实现。
+
+### 4.4 商家详情（merchantDetail）
+- Logo(`<Image>`,无图占位) + 名称 + 认证标 + 公司名/类型。
+- 联系信息（联系人/电话(可拨)/邮箱/地址/在售数/粉丝数）。
+- 在售轴承(`/merchants/{id}/bearings`)→轴承详情。
+- 关注 / 纠错：登录门槛。
+
+### 4.5 我的（my）
+- 头像卡（点击进个人信息，登录门槛）+ 会员卡(LinearGradient 主题渐变) + 四宫格 + 无版本行(已移除)。
+
+### 4.6 设置（settings）
+- 外观：首页模式(简洁需登录)/主题色(6预设,登录门槛)/深色模式(浅/深/跟随,ActionSheet)/字体大小(小中大)。
+- 消息(推送/广告,标"暂未上线")、隐私(4项→doc页)、通用(音效暂未上线/震动/版本)、其他(服务热线/注销[登录])、退出[登录]。
+- 开关用主题化 `<Switch>`。
+
+### 4.7 文档页（common/doc）
+- `?type=` 取 `src/content/legal.ts`：隐私政策/收集清单/共享清单/隐私管理/用户协议，PIPL 合规全文，可滚动。
+
+## 5. 交互与门槛
+- 登录门槛项（主题色、简洁首页模式、收藏/关注/纠错、注销/退出）：未登录 `showModal 请先登录/去登录`。
+- 主题色/深色/字号：选后全站即时生效 + 持久化。
+
+## 6. 待办
+- 设置入库（首页模式/推送/隐私同意留痕/注销）+ 首次启动隐私弹窗：见《设置入库与合规待办 v1.0.0》，随登录实现。
+
+## 7. 版本历史
+| 版本 | 日期 | 变更 |
+|---|---|---|
+| v1.3.0 | 2026-09-07 | 运行时主题(深浅/跟随×6预设,方案①)、全局字号、主题化Switch、轴承/商家详情页、搜索4类、首页对接BFF、隐私合规doc页 |
+| v1.2.0 | 2026-09-07 | RN 优先度量重构落地（dp直写、天空蓝色板、PageLayout/NavBar/TabBar/Icon、会员卡渐变） |
+| v1.1.0 | 2026-09-03 | 历史版本（H5 优先、CSS 变量、#2563EB、48px TabBar、NavBar 内联） |
+| v1.0.0 | — | 初始设计规范 |
