@@ -1,0 +1,63 @@
+// 文档页样式（RN 基准，dp 直写，禁 gap/组合选择器/渐变）
+@import '../../styles/_rn';
+
+.doc {
+  padding-left: $space-4;
+  padding-right: $space-4;
+  padding-top: $space-4;
+  padding-bottom: $space-10;
+}
+
+.doc-updated {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  margin-bottom: $space-3;
+}
+
+.doc-intro {
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-secondary;
+  margin-bottom: $space-4;
+}
+
+.doc-section {
+  margin-bottom: $space-5;
+}
+
+.doc-heading {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
+  font-weight: bold;
+  margin-bottom: $space-2;
+}
+
+.doc-para {
+  font-size: $font-size-base;
+  line-height: $line-height-lg;
+  color: $text-secondary;
+  margin-bottom: $space-2;
+}
+
+.doc-footer {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  text-align: center;
+  margin-top: $space-6;
+}
+
+.doc-empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.doc-empty-text {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-tertiary;
+}

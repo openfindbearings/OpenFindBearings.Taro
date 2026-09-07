@@ -5,7 +5,8 @@ export default defineAppConfig({
     'pages/my/index',
     'pages/home/search',
     'pages/my/settings',
-    'pages/my/all-features'
+    'pages/my/all-features',
+    'pages/common/doc'
   ],
   window: {
     backgroundTextStyle: 'light',

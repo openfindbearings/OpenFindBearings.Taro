@@ -6,6 +6,8 @@ import { View, Text } from '@tarojs/components'
 import Icon from '../Icon'
 import Taro from '@tarojs/taro'
 import { useSafeArea } from '../../utils/use-safe-area'
+import { useFs } from '../../hooks/useFontScale'
+import { useTheme } from '../../hooks/useTheme'
 import './index.scss'
 
 interface NavBarProps {
@@ -49,6 +51,10 @@ export default function NavBar({
 
   // 标准安全区：外层吃顶部内缩，内层固定基准高
   const { top } = useSafeArea()
+  // 全局字号缩放：标题按 navbar-title 基准 17dp 缩放
+  const fs = useFs()
+  // 主题色板：导航栏背景/标题/返回图标随模式
+  const t = useTheme()
 
   // 搜索模式（真机修复）：首页无返回/右侧内容时不渲染 96dp 侧栏，
   // 否则中间栏被两侧共吃掉 192dp，搜索框只剩一小截（京东/淘宝是搜索框铺满整栏）
@@ -58,7 +64,7 @@ export default function NavBar({
   return (
     <View
       className={`navbar ${searchMode ? 'navbar-search' : ''}`}
-      style={{ paddingTop: top }}
+      style={{ paddingTop: top, backgroundColor: t.navBarBg, borderBottomColor: t.border }}
     >
       {/* 内层内容行：固定基准高，垂直居中 */}
       <View className={`navbar-inner ${searchMode ? 'navbar-inner-search' : ''}`}>
@@ -67,7 +73,7 @@ export default function NavBar({
           <View className='navbar-left'>
             {showBack && (
               <View className='navbar-icon' onClick={handleBack}>
-                <Icon name="arrow_left" size={24} />
+                <Icon name="arrow_left" size={24} color={t.navBarText} />
               </View>
             )}
           </View>
@@ -75,7 +81,7 @@ export default function NavBar({
 
         {/* 中间栏：搜索框（centerSlot）或标题 */}
         <View className='navbar-center'>
-          {centerSlot || <Text className='navbar-title'>{title}</Text>}
+          {centerSlot || <Text className='navbar-title' style={{ ...fs(17), color: t.navBarText }}>{title}</Text>}
         </View>
 
         {/* 右侧栏：优先渲染声明式 rightIcons（类名在本文件作用域，稳定生效），
@@ -90,7 +96,7 @@ export default function NavBar({
                   className='navbar-right-icon'
                   onClick={ic.onClick}
                 >
-                  <Icon name={ic.name} size={ic.size ?? 24} />
+                  <Icon name={ic.name} size={ic.size ?? 24} color={t.navBarText} />
                 </View>
               ))}
             {rightSlot}

@@ -7,6 +7,8 @@ import Icon from '../../components/Icon'
 import { View, Input, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { getItem, setItem, removeItem } from '../../utils/storage'
+import { useFs } from '../../hooks/useFontScale'
+import { useTheme } from '../../hooks/useTheme'
 import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
@@ -27,6 +29,10 @@ export default function HomePage() {
   const [keyword, setKeyword] = useState('')
   const [history, setHistory] = useState<string[]>([])
   const [simpleMode, setSimpleMode] = useState(false)
+  // 全局字号缩放生成器
+  const fs = useFs()
+  // 主题色板（搜索框/卡片/标签/文字随模式）
+  const t = useTheme()
 
   useDidShow(() => {
     Promise.all([getItem(HISTORY_KEY), getItem(SETTINGS_KEY)]).then(([savedHist, savedSettings]) => {
@@ -73,10 +79,11 @@ export default function HomePage() {
 
   // 搜索框（普通模式放 NavBar 中间；简洁模式放内容区居中处）
   const searchBox = (
-    <View className='search-input-wrap'>
+    <View className='search-input-wrap' style={{ backgroundColor: t.bgInput }}>
       <Icon name="scan_line" size={20} color='#64748B' />
       <Input
         className='search-input'
+        style={{ color: t.textPrimary }}
         type='text'
         placeholder='搜索轴承型号、品牌...'
         placeholderTextColor='#94A3B8'
@@ -103,19 +110,19 @@ export default function HomePage() {
         <View className='quick-icon quick-icon-voice'>
           <Icon name="mic" size={28} color='#FFFFFF' />
         </View>
-        <Text className='quick-label'>讲语音</Text>
+        <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>讲语音</Text>
       </View>
       <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
         <View className='quick-icon quick-icon-camera'>
           <Icon name="camera" size={28} color='#FFFFFF' />
         </View>
-        <Text className='quick-label'>拍轴承</Text>
+        <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>拍轴承</Text>
       </View>
       <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
         <View className='quick-icon quick-icon-scan'>
           <Icon name="scan_line" size={28} color='#FFFFFF' />
         </View>
-        <Text className='quick-label'>扫条码</Text>
+        <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>扫条码</Text>
       </View>
     </View>
   )
@@ -138,35 +145,38 @@ export default function HomePage() {
       {quickActions}
 
       {history.length > 0 && (
-        <View className='history-section'>
+        <View className='history-section' style={{ backgroundColor: t.bgCard }}>
           <View className='section-header'>
             <View className='section-title'>
-              <Icon name="clock" size={16} color='#64748B' />
-              <Text className='section-title-text'>搜索历史</Text>
+              <Icon name="clock" size={16} color={t.textTertiary} />
+              <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>搜索历史</Text>
             </View>
             <View className='clear-btn' onClick={clearHistory}>
-              <Icon name="trash" size={14} color='#64748B' />
-              <Text className='clear-btn-text'>清空</Text>
+              <Icon name="trash" size={14} color={t.textTertiary} />
+              <Text className='clear-btn-text' style={{ ...fs(13), color: t.textTertiary }}>清空</Text>
             </View>
           </View>
           <View className='history-tags'>
             {history.map((item, idx) => (
-              <View key={idx} className='history-tag' onClick={() => handleHistoryClick(item)}>
-                <Text className='history-tag-text'>{item}</Text>
+              <View key={idx} className='history-tag' style={{ backgroundColor: t.bgInput }} onClick={() => handleHistoryClick(item)}>
+                <Text className='history-tag-text' style={{ ...fs(14), color: t.textSecondary }}>{item}</Text>
               </View>
             ))}
           </View>
         </View>
       )}
 
-      <View className='hot-section'>
+      <View className='hot-section' style={{ backgroundColor: t.bgCard }}>
         <View className='section-header'>
-          <Text className='section-title-plain'>热门搜索</Text>
+          <View className='section-title'>
+            <Icon name="flame" size={16} color={t.textTertiary} />
+            <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>热门搜索</Text>
+          </View>
         </View>
         <View className='history-tags'>
           {['SKF', 'NSK', '6205', '6308', '轴承型号查询', '深沟球轴承'].map((item, idx) => (
-            <View key={idx} className='history-tag' onClick={() => handleHistoryClick(item)}>
-              <Text className='history-tag-text'>{item}</Text>
+            <View key={idx} className='history-tag' style={{ backgroundColor: t.bgInput }} onClick={() => handleHistoryClick(item)}>
+              <Text className='history-tag-text' style={{ ...fs(14), color: t.textSecondary }}>{item}</Text>
             </View>
           ))}
         </View>

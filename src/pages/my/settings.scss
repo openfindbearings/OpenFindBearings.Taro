@@ -94,6 +94,28 @@
   color: $text-primary;
 }
 
+// "即将上线"标注：标签后的小灰底胶囊（底层功能未接入的开关用）
+.list-badge {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  background: $bg-input;
+  border-radius: $radius-sm;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: $space-2;
+  padding-right: $space-2;
+  margin-left: $space-2;
+}
+
+// 主题色当前色点（inline 背景色由 useTheme 提供）
+.theme-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  margin-right: $space-2;
+}
+
 .list-label-danger {
   font-size: $font-size-md;
   line-height: $line-height-md;

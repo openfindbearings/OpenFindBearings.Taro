@@ -1,70 +1,37 @@
-// 主题状态管理（Zustand）
-// H5 端：data-theme 属性运行时切换深浅色
-// RN 端：v1.7.0 本轮锁定浅色（深色需全页配色令牌化，属第二阶段），非浅色选择
-//   在 setMode 单点拦截并 toast 提示，避免"设置页能变暗别页不变"的分裂体验。
-//   第二步放开时删除 IS_RN 守卫即可。
+// 主题模式 store（Zustand）：light / dark / system
+// 改动说明（深色模式落地）：
+//   1. 移除此前"RN 锁浅色"的 setMode 守卫——本轮实现真·深色；
+//   2. 持久化改用跨端异步 storage 封装（RN 无 window.localStorage）；
+//   3. H5 的 DOM data-theme 切换归入第二阶段（做 H5 时按平台重新接入），
+//      此处仅维护模式状态；实际取色由 useTheme() 按 mode × 主题预设计算。
 import { create } from 'zustand'
-import Taro from '@tarojs/taro'
-import { IS_RN } from '../utils/platform'
+import { getItem, setItem } from '../utils/storage'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 
-interface ThemeState {
-  mode: ThemeMode
-  setMode: (mode: ThemeMode) => void
-}
-
 const STORAGE_KEY = 'app_theme'
 
-/** 从 localStorage 读取初始主题 */
-function getInitialMode(): ThemeMode {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const saved = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null
-      if (saved === 'light' || saved === 'dark' || saved === 'system') {
-        return saved
-      }
-    }
-  } catch {
-    // 容错：localStorage 不可用时返回默认值
-  }
-  return 'light'
-}
-
-/** 将主题应用到 <html data-theme> 属性（H5 端生效） */
-function applyThemeToDom(mode: ThemeMode) {
-  // #ifdef H5
-  if (typeof document === 'undefined') return
-  const root = document.documentElement
-  if (mode === 'system') {
-    // 跟随系统：移除 data-theme，让媒体查询自动生效
-    root.removeAttribute('data-theme')
-  } else {
-    root.setAttribute('data-theme', mode)
-  }
-  // #endif
+interface ThemeState {
+  mode: ThemeMode
+  setMode: (m: ThemeMode) => void
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  mode: getInitialMode(),
-  setMode: (mode: ThemeMode) => {
-    // RN 锁浅色守卫：非 light 选择直接提示并返回，不落 storage 不改状态
-    if (IS_RN && mode !== 'light') {
-      Taro.showToast({ title: '深色模式将在后续版本支持', icon: 'none' })
-      return
-    }
-    try {
-      window.localStorage.setItem(STORAGE_KEY, mode)
-    } catch {
-      // 容错
-    }
-    applyThemeToDom(mode)
-    set({ mode })
+  mode: 'light',
+  setMode: (m: ThemeMode) => {
+    set({ mode: m })
+    setItem(STORAGE_KEY, m).catch(() => { /* 存储失败不影响运行时 */ })
   }
 }))
 
-/** 初始化主题（app.tsx 启动时调用一次） */
-export function initTheme() {
-  const mode = getInitialMode()
-  applyThemeToDom(mode)
+/** 启动时从本地存储恢复主题模式（app 入口调用一次） */
+export async function initTheme(): Promise<void> {
+  try {
+    const v = await getItem(STORAGE_KEY)
+    if (v === 'light' || v === 'dark' || v === 'system') {
+      useThemeStore.setState({ mode: v })
+    }
+  } catch {
+    /* 默认 light */
+  }
 }

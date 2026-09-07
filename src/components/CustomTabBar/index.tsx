@@ -14,6 +14,8 @@ import { View, Text, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { getItem } from '../../utils/storage'
 import { useSafeArea } from '../../utils/use-safe-area'
+import { useTheme } from '../../hooks/useTheme'
+import { useFs } from '../../hooks/useFontScale'
 import './index.scss'
 
 /** 商家入驻状态 */
@@ -31,10 +33,6 @@ const tabs = [
   { key: 'merchant', text: '入驻', pagePath: '/pages/merchant/index' },
   { key: 'my', text: '我的', pagePath: '/pages/my/index' }
 ]
-
-/** 选中/未选中图标色（与 _rn.scss 主题一致的 JS 常量，Icon color 需 prop 传入） */
-const COLOR_ACTIVE = '#0284C7'   // 文字级主色（AA 达标）
-const COLOR_INACTIVE = '#64748B' // 辅助灰
 
 /** 获取商家入驻状态（异步；RN 不支持 getStorageSync）
  * approved 用严格字符串比较，避免 storage 中存了字符串 "false" 被误判为 true */
@@ -102,10 +100,14 @@ export default function CustomTabBar() {
 
   // 底部安全区内嵌（手势条/Home Indicator），标准 useSafeAreaInserts
   const { bottom } = useSafeArea()
+  // 主题色板（栏底/边框/选中态/大圆）+ 全局字号
+  const t = useTheme()
+  const fs = useFs()
 
   // 大圆阴影双端写法：iOS 走 shadow 四件套，Android 走 elevation（Taro 不自动转换）。
   // 类型断言原因：shadow*/elevation 是 RN 专有样式属性，Taro 的 CSSProperties 类型未声明
   const highlightStyle = {
+    backgroundColor: t.primary,
     shadowColor: 'rgba(15, 23, 42, 0.2)',
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
@@ -114,7 +116,7 @@ export default function CustomTabBar() {
   } as any
 
   return (
-    <View className='tab-bar' style={{ paddingBottom: bottom }}>
+    <View className='tab-bar' style={{ paddingBottom: bottom, backgroundColor: t.tabBarBg, borderTopColor: t.tabBarBorder }}>
       {tabs.map((tab, idx) => {
         const isActive = idx === selected
         const isMerchant = tab.key === 'merchant'
@@ -148,13 +150,17 @@ export default function CustomTabBar() {
               <View className='icon-wrap'>
                 <Icon
                   name={iconName}
-                  color={isActive ? COLOR_ACTIVE : COLOR_INACTIVE}
+                  color={isActive ? t.tabBarTextActive : t.tabBarText}
                   size={24}
                 />
               </View>
             )}
-            {/* 商家名限 1 行截断，防长店名挤压相邻 tab */}
-            <Text className={`tab-text ${isActive ? 'tab-text-active' : ''}`} numberOfLines={1}>
+            {/* 商家名限 1 行截断，防长店名挤压相邻 tab；文字 12dp 随全局字号缩放，颜色随主题模式 */}
+            <Text
+              className={`tab-text ${isActive ? 'tab-text-active' : ''}`}
+              numberOfLines={1}
+              style={isActive ? { ...fs(12), color: t.tabBarTextActive } : { ...fs(12), color: t.tabBarText }}
+            >
               {tabText}
             </Text>
           </View>

@@ -9,6 +9,8 @@ import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import LinearGradient from 'react-native-linear-gradient'
 import { getItem } from '../../utils/storage'
+import { useTheme } from '../../hooks/useTheme'
+import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
@@ -20,9 +22,6 @@ interface UserInfo {
   avatar: string
   isLoggedIn: boolean
 }
-
-// 应用版本号（与发布版本同步维护）
-const APP_VERSION = '1.0.0'
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
 // 第4项为"全部功能"（layout_grid 图标），设置仅在 NavBar 右上角
@@ -43,6 +42,9 @@ export default function MyPage() {
     avatar: '',
     isLoggedIn: false
   })
+  // 主题色板（会员卡渐变/用户区底/图标底/文字随模式）+ 全局字号
+  const t = useTheme()
+  const fs = useFs()
 
   useDidShow(() => {
     Promise.all([
@@ -128,27 +130,27 @@ export default function MyPage() {
       {/* 用户信息区 */}
       <View className='user-section'>
         {user.isLoggedIn ? (
-          <View className='user-info' onClick={handleProfileClick}>
+          <View className='user-info' style={{ backgroundColor: t.primary }} onClick={handleProfileClick}>
             <View className='avatar'>
               {user.avatar ? (
                 <Image className='avatar-img' src={user.avatar} mode='aspectFill' />
               ) : (
-                <Icon name="user" size={32} color='#FFFFFF' />
+                <Icon name="user" size={32} color={t.textOnPrimary} />
               )}
             </View>
             <View className='user-detail'>
-              <Text className='nickname'>{user.nickname || '已登录用户'}</Text>
-              {user.phone && <Text className='phone'>{user.phone}</Text>}
+              <Text className='nickname' style={{ ...fs(17), color: t.textOnPrimary }}>{user.nickname || '已登录用户'}</Text>
+              {user.phone && <Text className='phone' style={{ ...fs(13), color: t.textOnPrimary }}>{user.phone}</Text>}
             </View>
           </View>
         ) : (
-          <View className='user-info' onClick={() => Taro.showToast({ title: '登录功能开发中', icon: 'none' })}>
+          <View className='user-info' style={{ backgroundColor: t.primary }} onClick={() => Taro.showToast({ title: '登录功能开发中', icon: 'none' })}>
             <View className='avatar'>
-              <Icon name="log_in" size={28} color='#FFFFFF' />
+              <Icon name="log_in" size={28} color={t.textOnPrimary} />
             </View>
             <View className='user-detail'>
-              <Text className='nickname'>点击登录</Text>
-              <Text className='phone'>登录后享受更多功能</Text>
+              <Text className='nickname' style={{ ...fs(17), color: t.textOnPrimary }}>点击登录</Text>
+              <Text className='phone' style={{ ...fs(13), color: t.textOnPrimary }}>登录后享受更多功能</Text>
             </View>
           </View>
         )}
@@ -158,35 +160,35 @@ export default function MyPage() {
           背景用 react-native-linear-gradient 标准原生渐变（主题蓝天蓝系），
           替代之前"RN 不支持渐变"妥协的单一纯色实现——RN 端原生组件可直接使用。 */}
       <LinearGradient
-        colors={['#0EA5E9', '#0369A1']}
+        colors={[t.memberGradientFrom, t.memberGradientTo]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className='member-card'
         style={memberCardStyle}
       >
         <View className='member-head'>
-          <Text className='member-head-title'>我的积分</Text>
+          <Text className='member-head-title' style={{ ...fs(13), color: t.textOnPrimary }}>我的积分</Text>
           <View className='member-detail' onClick={handlePointsDetail}>
-            <Text className='member-detail-text'>收支明细</Text>
-            <Icon name="chevron_right" size={14} color='#FFFFFF' />
+            <Text className='member-detail-text' style={{ ...fs(13), color: t.textOnPrimary }}>收支明细</Text>
+            <Icon name="chevron_right" size={14} color={t.textOnPrimary} />
           </View>
         </View>
 
         <View className='member-main'>
-          <Text className='member-points'>0</Text>
-          <Text className='member-points-label'>积分</Text>
+          <Text className='member-points' style={{ ...fs(32), color: t.textOnPrimary }}>0</Text>
+          <Text className='member-points-label' style={{ ...fs(13), color: t.textOnPrimary }}>积分</Text>
         </View>
 
         <View className='member-foot'>
-          <Text className='member-foot-tip'>积分可兑换现金</Text>
-          <View className='member-redeem' onClick={handleRedeem}>
-            <Text className='member-redeem-text'>去兑换</Text>
+          <Text className='member-foot-tip' style={{ ...fs(12), color: t.textOnPrimary }}>积分可兑换现金</Text>
+          <View className='member-redeem' style={{ backgroundColor: t.textOnPrimary + '22' }} onClick={handleRedeem}>
+            <Text className='member-redeem-text' style={{ ...fs(13), color: t.textOnPrimary }}>去兑换</Text>
           </View>
         </View>
       </LinearGradient>
 
       {/* 功能卡 - 横向四宫格 */}
-      <View className='menu-grid'>
+      <View className='menu-grid' style={{ backgroundColor: t.bgCard }}>
         {menuItems.map((item) => (
           <View
             key={item.key}
@@ -196,13 +198,10 @@ export default function MyPage() {
             <View className='grid-icon'>
               <Icon name={item.icon} size={28} color={item.color} />
             </View>
-            <Text className='grid-label'>{item.label}</Text>
+            <Text className='grid-label' style={{ ...fs(13), color: t.textSecondary }}>{item.label}</Text>
           </View>
         ))}
       </View>
-
-      {/* 版本信息行（v1.7.0 补齐设计文档要求的元素） */}
-      <Text className='version-text'>OpenFindBearings v{APP_VERSION}</Text>
     </PageLayout>
   )
 }

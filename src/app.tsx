@@ -8,6 +8,9 @@
 import { Component, PropsWithChildren } from 'react'
 import Taro from '@tarojs/taro'
 import { getItem } from './utils/storage'
+import { initFontSize } from './stores/fontSize'
+import { initTheme } from './stores/theme'
+import { initThemeColor } from './hooks/useThemeColor'
 import './app.scss'
 
 // 预读商家入驻状态存入 globalData，供 CustomTabBar 首次渲染时同步读取
@@ -32,6 +35,9 @@ function preloadMerchantState() {
 class App extends Component<PropsWithChildren> {
   componentDidMount() {
     preloadMerchantState()
+    initFontSize()
+    initTheme()
+    initThemeColor()
   }
 
   componentDidShow() {

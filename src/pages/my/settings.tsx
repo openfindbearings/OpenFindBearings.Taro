@@ -9,10 +9,17 @@
 //   5. 深色模式入口保留但 RN 本轮锁定浅色，点击仅提示不生效；主题色功能下阶段接入。
 import { useState } from 'react'
 import Icon from '../../components/Icon'
-import { View, Text, Switch } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { getItem, getObject, setObject, removeItem } from '../../utils/storage'
 import { IS_RN } from '../../utils/platform'
+import Switch from '../../components/Switch'
+import { useFontSizeStore } from '../../stores/fontSize'
+import { useThemeStore, type ThemeMode } from '../../stores/theme'
+import { useThemeColorStore } from '../../hooks/useThemeColor'
+import { THEME_PRESETS } from '../../styles/themes'
+import { useTheme } from '../../hooks/useTheme'
+import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
 import './settings.scss'
@@ -21,7 +28,6 @@ const SETTINGS_KEY = 'app_settings'
 
 interface AppSettings {
   simpleHome: boolean
-  fontSize: 'small' | 'medium' | 'large'
   pushEnabled: boolean
   adEnabled: boolean
   soundEnabled: boolean
@@ -34,7 +40,6 @@ definePageConfig({ disableScroll: true })
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings>({
     simpleHome: false,
-    fontSize: 'medium',
     pushEnabled: true,
     adEnabled: false,
     soundEnabled: true,
@@ -42,6 +47,18 @@ export default function SettingsPage() {
   })
   // 登录态：控制"注销账户/退出登录"显隐，以及"简洁首页模式"的登录门槛
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // 字号：全局 store 为唯一来源（实时生效），不再走 app_settings
+  const fontSize = useFontSizeStore((s) => s.size)
+  const setFontSize = useFontSizeStore((s) => s.setSize)
+  // 主题色板（全站色随模式×预设）+ 全局字号缩放
+  const t = useTheme()
+  const fs = useFs()
+  // 主题模式（浅/深/跟随系统）
+  const mode = useThemeStore((s) => s.mode)
+  const setMode = useThemeStore((s) => s.setMode)
+  // 主题色选择：当前 key + setter
+  const themeKey = useThemeColorStore((s) => s.key)
+  const setThemeKey = useThemeColorStore((s) => s.setKey)
 
   useDidShow(() => {
     getObject<AppSettings>(SETTINGS_KEY).then((saved) => {
@@ -57,13 +74,19 @@ export default function SettingsPage() {
     setSettings(next)
   }
 
-  // 深色模式入口：RN 本轮锁定浅色，仅提示不生效（第二阶段 H5 适配时恢复完整实现）
+  // 深色模式三选：浅色 / 深色 / 跟随系统，选后全站 useTheme 即时切换（方案①深色尊重主题色）
+  const MODE_LABELS = ['浅色', '深色', '跟随系统']
   const handleThemeClick = () => {
-    if (IS_RN) {
-      Taro.showToast({ title: '深色模式将在后续版本支持', icon: 'none' })
-      return
-    }
-    Taro.showToast({ title: '深色模式开发中', icon: 'none' })
+    Taro.showActionSheet({ itemList: MODE_LABELS })
+      .then((res) => {
+        const modes: ThemeMode[] = ['light', 'dark', 'system']
+        const m = modes[res.tapIndex]
+        if (m) {
+          setMode(m)
+          Taro.showToast({ title: `已切换${MODE_LABELS[res.tapIndex]}`, icon: 'success' })
+        }
+      })
+      .catch(() => { /* 用户取消 */ })
   }
 
   // 首页模式：普通（simpleHome=false）始终可选；简洁（true）需登录，未登录弹提示
@@ -84,12 +107,35 @@ export default function SettingsPage() {
     save({ simpleHome: simple })
   }
 
-  // 字体大小三档：存偏好；RN 提示重启生效（应用逻辑后续接入）
-  const handleFontSize = (s: 'small' | 'medium' | 'large') => {
-    save({ fontSize: s })
-    if (IS_RN) {
-      Taro.showToast({ title: '字体大小将在下次启动生效', icon: 'none' })
+  // 主题色选择：登录门槛（与简洁首页模式一致），选后即时生效（useTheme 全站响应）
+  const handleThemeColor = () => {
+    if (!isLoggedIn) {
+      Taro.showModal({
+        title: '提示',
+        content: '主题色需登录后使用',
+        confirmText: '去登录',
+        success: (res) => {
+          if (res.confirm) {
+            // TODO: 跳转登录页
+          }
+        }
+      })
+      return
     }
+    Taro.showActionSheet({ itemList: THEME_PRESETS.map((p) => p.name) })
+      .then((res) => {
+        const preset = THEME_PRESETS[res.tapIndex]
+        if (preset) {
+          setThemeKey(preset.key)
+          Taro.showToast({ title: `已切换为${preset.name}`, icon: 'success' })
+        }
+      })
+      .catch(() => { /* 用户取消 */ })
+  }
+
+  // 字体大小三档：写入全局 store，实时生效（各页 Text 通过 useFs 读取缩放）
+  const handleFontSize = (s: 'small' | 'medium' | 'large') => {
+    setFontSize(s)
   }
 
   const handleLogout = () => {
@@ -121,10 +167,6 @@ export default function SettingsPage() {
         }
       }
     })
-  }
-
-  const showStaticPage = (title: string, content: string) => {
-    Taro.showModal({ title, content, showCancel: false, confirmText: '我知道了' })
   }
 
   const checkVersion = () => {
@@ -160,30 +202,17 @@ export default function SettingsPage() {
   return (
     <PageLayout nav={<NavBar title="设置" showBack />}>
 
-      {/* 外观 */}
+      {/* 外观：首页模式 / 深色模式 / 字体大小（首页模式与深色模式按需求换序） */}
       <View className='section'>
-        <Text className='section-title'>外观</Text>
-        <View className='list'>
-          <View className='list-item' onClick={handleThemeClick}>
-            <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="moon" size={20} color='#0EA5E9' />
-              </View>
-              <Text className='list-label'>深色模式</Text>
-            </View>
-            <View className='list-right'>
-              <Text className='list-value'>后续支持</Text>
-              <Icon name="chevron_right" size={18} color='#64748B' />
-            </View>
-          </View>
-
+        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>外观</Text>
+        <View className='list' style={{ backgroundColor: t.bgCard }}>
           {/* 首页模式：普通（顶部搜索栏）/简洁（搜索框+快捷按钮居中）。简洁需登录 */}
-          <View className='list-item'>
+          <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="layout_grid" size={20} color='#0EA5E9' />
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="layout_grid" size={20} color={t.primary} />
               </View>
-              <Text className='list-label'>首页模式</Text>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>首页模式</Text>
             </View>
             <View className='list-right'>
               <View className='font-size-picker'>
@@ -196,9 +225,13 @@ export default function SettingsPage() {
                   <View
                     key={String(opt.key)}
                     className={settings.simpleHome === opt.key ? 'font-btn font-btn-active' : 'font-btn'}
+                    style={{ backgroundColor: settings.simpleHome === opt.key ? t.primary : t.bgInput }}
                     onClick={() => handleHomeMode(opt.key)}
                   >
-                    <Text className={settings.simpleHome === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}>
+                    <Text
+                      className={settings.simpleHome === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}
+                      style={{ ...fs(13), color: settings.simpleHome === opt.key ? t.textOnPrimary : t.textSecondary }}
+                    >
                       {opt.label}
                     </Text>
                   </View>
@@ -207,22 +240,54 @@ export default function SettingsPage() {
             </View>
           </View>
 
+          {/* 主题色：预设色板选择（登录门槛），选后全站主色即时切换 */}
+          <View className='list-item' style={{ borderBottomColor: t.border }} onClick={handleThemeColor}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="palette" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>主题色</Text>
+            </View>
+            <View className='list-right'>
+              <View className='theme-dot' style={{ backgroundColor: t.primary }} />
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>{THEME_PRESETS.find((p) => p.key === themeKey)?.name}</Text>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
+            </View>
+          </View>
+
+          <View className='list-item' style={{ borderBottomColor: t.border }} onClick={handleThemeClick}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="moon" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>深色模式</Text>
+            </View>
+            <View className='list-right'>
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>{mode === 'light' ? '浅色' : mode === 'dark' ? '深色' : '跟随系统'}</Text>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
+            </View>
+          </View>
+
           <View className='list-item list-item-last'>
             <View className='list-left'>
-              <View className='list-icon'>
-                <Text className='list-icon-letter'>A</Text>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Text className='list-icon-letter' style={{ ...fs(15), color: t.primaryText }}>A</Text>
               </View>
-              <Text className='list-label'>字体大小</Text>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>字体大小</Text>
             </View>
             <View className='list-right'>
               <View className='font-size-picker'>
                 {(['small', 'medium', 'large'] as const).map((s) => (
                   <View
                     key={s}
-                    className={settings.fontSize === s ? 'font-btn font-btn-active' : 'font-btn'}
+                    className={fontSize === s ? 'font-btn font-btn-active' : 'font-btn'}
+                    style={{ backgroundColor: fontSize === s ? t.primary : t.bgInput }}
                     onClick={() => handleFontSize(s)}
                   >
-                    <Text className={settings.fontSize === s ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}>
+                    <Text
+                      className={fontSize === s ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}
+                      style={{ ...fs(13), color: fontSize === s ? t.textOnPrimary : t.textSecondary }}
+                    >
                       {s === 'small' ? '小' : s === 'medium' ? '中' : '大'}
                     </Text>
                   </View>
@@ -233,131 +298,132 @@ export default function SettingsPage() {
         </View>
       </View>
 
-      {/* 消息 */}
+      {/* 消息：底层推送/广告能力未接入，开关先保留并标注"暂未上线" */}
       <View className='section'>
-        <Text className='section-title'>消息</Text>
-        <View className='list'>
-          <View className='list-item'>
+        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>消息</Text>
+        <View className='list' style={{ backgroundColor: t.bgCard }}>
+          <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="bell" size={20} color='#0EA5E9' />
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="bell" size={20} color={t.primary} />
               </View>
-              <Text className='list-label'>消息推送</Text>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>消息推送</Text>
+              <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
             </View>
             <Switch
               checked={settings.pushEnabled}
-              color='#0EA5E9'
-              onChange={(e) => save({ pushEnabled: e.detail.value })}
+              onChange={(v) => save({ pushEnabled: v })}
             />
           </View>
           <View className='list-item list-item-last'>
             <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="megaphone" size={20} color='#0EA5E9' />
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="megaphone" size={20} color={t.primary} />
               </View>
-              <Text className='list-label'>广告设置</Text>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>广告设置</Text>
+              <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
             </View>
             <Switch
               checked={settings.adEnabled}
-              color='#0EA5E9'
-              onChange={(e) => save({ adEnabled: e.detail.value })}
+              onChange={(v) => save({ adEnabled: v })}
             />
           </View>
         </View>
       </View>
 
-      {/* 通用 */}
+      {/* 隐私：点击进入通用文档页（合规全文见 src/content/legal.ts）。按需求与通用换序，隐私在前 */}
       <View className='section'>
-        <Text className='section-title'>通用</Text>
-        <View className='list'>
-          <View className='list-item'>
-            <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="volume_2" size={20} color='#0EA5E9' />
-              </View>
-              <Text className='list-label'>音效</Text>
-            </View>
-            <Switch
-              checked={settings.soundEnabled}
-              color='#0EA5E9'
-              onChange={(e) => save({ soundEnabled: e.detail.value })}
-            />
-          </View>
-          <View className='list-item'>
-            <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="vibrate" size={20} color='#0EA5E9' />
-              </View>
-              <Text className='list-label'>震动</Text>
-            </View>
-            <Switch checked={settings.vibrateEnabled} color='#0EA5E9' onChange={toggleVibrate} />
-          </View>
-          <View className='list-item list-item-last' onClick={checkVersion}>
-            <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="info" size={20} color='#0EA5E9' />
-              </View>
-              <Text className='list-label'>版本更新</Text>
-            </View>
-            <View className='list-right'>
-              <Text className='list-value'>v1.0.0</Text>
-              <Icon name="chevron_right" size={18} color='#64748B' />
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* 隐私 */}
-      <View className='section'>
-        <Text className='section-title'>隐私</Text>
-        <View className='list'>
+        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>隐私</Text>
+        <View className='list' style={{ backgroundColor: t.bgCard }}>
           {[
-            { icon: 'shield', label: '隐私管理', desc: '您可以在隐私管理中控制个人信息的使用范围。' },
-            { icon: 'file_text', label: '隐私政策', desc: '本应用尊重并保护您的隐私。我们仅收集必要的产品信息以提供轴承查询服务。' },
-            { icon: 'user', label: '个人信息收集清单', desc: '我们收集以下信息：账户信息、设备信息、使用数据。' },
-            { icon: 'users', label: '第三方信息共享清单', desc: '我们与云服务和统计分析服务共享必要信息，不会出售您的个人信息。' }
+            { icon: 'shield', label: '隐私管理', type: 'privacy-manage' },
+            { icon: 'file_text', label: '隐私政策', type: 'privacy-policy' },
+            { icon: 'user', label: '个人信息收集清单', type: 'info-collection' },
+            { icon: 'users', label: '第三方信息共享清单', type: 'third-party-share' }
           ].map((item, i, arr) => (
             <View
               key={item.label}
               className={i === arr.length - 1 ? 'list-item list-item-last' : 'list-item'}
-              onClick={() => showStaticPage(item.label, item.desc)}
+              style={{ borderBottomColor: t.border }}
+              onClick={() => Taro.navigateTo({ url: `/pages/common/doc?type=${item.type}` })}
             >
               <View className='list-left'>
-                <View className='list-icon'>
-                  <Icon name={item.icon} size={20} color='#0EA5E9' />
+                <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                  <Icon name={item.icon} size={20} color={t.primary} />
                 </View>
-                <Text className='list-label'>{item.label}</Text>
+                <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>{item.label}</Text>
               </View>
-              <Icon name="chevron_right" size={18} color='#64748B' />
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           ))}
         </View>
       </View>
 
-      {/* 其他：服务热线；注销账户仅登录后可见（个人信息入口已移至"我的"页头像） */}
+      {/* 通用：音效（底层未接入，标注暂未上线）/ 震动（真实生效）/ 版本更新 */}
       <View className='section'>
-        <View className='list'>
-          <View className={isLoggedIn ? 'list-item' : 'list-item list-item-last'} onClick={callHotline}>
+        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>通用</Text>
+        <View className='list' style={{ backgroundColor: t.bgCard }}>
+          <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
-              <View className='list-icon'>
-                <Icon name="phone" size={20} color='#0EA5E9' />
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="volume_2" size={20} color={t.primary} />
               </View>
-              <Text className='list-label'>服务热线</Text>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>音效</Text>
+              <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
+            </View>
+            <Switch
+              checked={settings.soundEnabled}
+              onChange={(v) => save({ soundEnabled: v })}
+            />
+          </View>
+          <View className='list-item' style={{ borderBottomColor: t.border }}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="vibrate" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>震动</Text>
+            </View>
+            <Switch checked={settings.vibrateEnabled} onChange={toggleVibrate} />
+          </View>
+          <View className='list-item list-item-last' onClick={checkVersion}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="info" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>版本更新</Text>
             </View>
             <View className='list-right'>
-              <Text className='list-value'>400-xxx-xxxx</Text>
-              <Icon name="chevron_right" size={18} color='#64748B' />
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>v1.0.0</Text>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* 其他：服务热线；注销账户仅登录后可见（个人信息入口已移至"我的"页头像） */}
+      <View className='section'>
+        <View className='list' style={{ backgroundColor: t.bgCard }}>
+          <View className={isLoggedIn ? 'list-item' : 'list-item list-item-last'} style={{ borderBottomColor: t.border }} onClick={callHotline}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="phone" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>服务热线</Text>
+            </View>
+            <View className='list-right'>
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>400-xxx-xxxx</Text>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           </View>
           {isLoggedIn && (
             <View className='list-item list-item-last' onClick={handleDeleteAccount}>
               <View className='list-left'>
-                <View className='list-icon list-icon-danger'>
-                  <Icon name="trash" size={20} color='#EF4444' />
+                <View className='list-icon list-icon-danger' style={{ backgroundColor: t.danger + '22' }}>
+                  <Icon name="trash" size={20} color={t.danger} />
                 </View>
-                <Text className='list-label list-label-danger'>注销账户</Text>
+                <Text className='list-label list-label-danger' style={{ ...fs(15), color: t.danger }}>注销账户</Text>
               </View>
-              <Icon name="chevron_right" size={18} color='#64748B' />
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           )}
         </View>
@@ -366,20 +432,20 @@ export default function SettingsPage() {
       {/* 退出登录：仅登录后可见 */}
       {isLoggedIn && (
         <View className='section'>
-          <View className='list'>
+          <View className='list' style={{ backgroundColor: t.bgCard }}>
             <View className='list-item list-item-last list-item-center' onClick={handleLogout}>
-              <Icon name="log_out" size={18} color='#EF4444' />
-              <Text className='list-label-danger logout-text'>退出登录</Text>
+              <Icon name="log_out" size={18} color={t.danger} />
+              <Text className='list-label-danger logout-text' style={{ ...fs(15), color: t.danger }}>退出登录</Text>
             </View>
           </View>
         </View>
       )}
 
-      <Text className='footer'>
+      <Text className='footer' style={{ ...fs(13), color: t.textTertiary }}>
         登录即表示同意
-        <Text className='link' onClick={() => showStaticPage('用户协议', '欢迎使用 OpenFindBearings。')}>《用户协议》</Text>
+        <Text className='link' style={{ color: t.primaryText }} onClick={() => Taro.navigateTo({ url: '/pages/common/doc?type=user-agreement' })}>《用户协议》</Text>
         和
-        <Text className='link' onClick={() => showStaticPage('隐私政策', '本应用尊重并保护您的隐私。')}>《隐私政策》</Text>
+        <Text className='link' style={{ color: t.primaryText }} onClick={() => Taro.navigateTo({ url: '/pages/common/doc?type=privacy-policy' })}>《隐私政策》</Text>
       </Text>
     </PageLayout>
   )

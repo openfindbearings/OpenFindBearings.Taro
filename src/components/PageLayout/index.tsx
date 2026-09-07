@@ -10,6 +10,7 @@
 import { View, ScrollView } from '@tarojs/components'
 import { ReactNode } from 'react'
 import { getWindowHeight } from '../../utils/safe-area'
+import { useTheme } from '../../hooks/useTheme'
 import './index.scss'
 
 interface PageLayoutProps {
@@ -26,7 +27,9 @@ interface PageLayoutProps {
 export default function PageLayout({ nav, tabbar, children, scrollY = true }: PageLayoutProps) {
   // RN 端根节点显式高度 = windowHeight（dp，inline 不缩放）；H5/小程序返回 0 走 CSS flex 撑满
   const h = getWindowHeight()
-  const rootStyle = h > 0 ? { height: h } : undefined
+  // 页面底色随主题模式（浅/深）运行时切换，inline 覆盖 scss 静态 $bg-page
+  const t = useTheme()
+  const rootStyle = { backgroundColor: t.bgPage, ...(h > 0 ? { height: h } : {}) }
 
   return (
     <View className='page-layout' style={rootStyle}>

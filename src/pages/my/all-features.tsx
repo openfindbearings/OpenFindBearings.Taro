@@ -4,6 +4,8 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import { useFs } from '../../hooks/useFontScale'
+import { useTheme } from '../../hooks/useTheme'
 import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
 import './all-features.scss'
@@ -21,6 +23,9 @@ const featureList = [
 ]
 
 export default function AllFeaturesPage() {
+  // 全局字号缩放 + 主题色板
+  const fs = useFs()
+  const t = useTheme()
   const handleClick = (key: string) => {
     if (key === 'settings') {
       Taro.navigateTo({ url: '/pages/my/settings' })
@@ -35,6 +40,7 @@ export default function AllFeaturesPage() {
         <View
           key={item.key}
           className='feature-item'
+          style={{ backgroundColor: t.bgCard }}
           onClick={() => handleClick(item.key)}
         >
           {/* 图标底用 inline 半透明色（8 位 hex 尾缀透明度），RN 支持 */}
@@ -42,10 +48,10 @@ export default function AllFeaturesPage() {
             <Icon name={item.icon} size={24} color={item.color} />
           </View>
           <View className='feature-info'>
-            <Text className='feature-label'>{item.label}</Text>
-            <Text className='feature-desc'>{item.desc}</Text>
+            <Text className='feature-label' style={{ ...fs(15), color: t.textPrimary }}>{item.label}</Text>
+            <Text className='feature-desc' style={{ ...fs(13), color: t.textTertiary }}>{item.desc}</Text>
           </View>
-          <Icon name='chevron_right' size={20} color='#CBD5E1' />
+          <Icon name='chevron_right' size={20} color={t.textTertiary} />
         </View>
       ))}
     </PageLayout>
