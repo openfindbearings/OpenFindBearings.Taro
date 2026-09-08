@@ -49,10 +49,12 @@ export interface MerchantBearing {
 }
 
 /** 搜索商家 */
-export function searchMerchants(params: { keyword?: string; verifiedOnly?: boolean; page?: number; pageSize?: number }) {
+export function searchMerchants(params: { keyword?: string; verifiedOnly?: boolean; sortBy?: 'name' | 'productcount'; sortOrder?: 'asc' | 'desc'; page?: number; pageSize?: number }) {
   const qs = buildQuery({
     keyword: params.keyword,
     verifiedOnly: params.verifiedOnly == null ? undefined : String(params.verifiedOnly),
+    sortBy: params.sortBy,
+    sortOrder: params.sortOrder,
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20
   })

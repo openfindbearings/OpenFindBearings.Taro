@@ -60,12 +60,37 @@ export interface Paged<T> {
   pageSize: number
 }
 
-/** 搜索轴承（可按 keyword / brandName / bearingType 过滤） */
-export function searchBearings(params: { keyword?: string; brandName?: string; bearingType?: string; page?: number; pageSize?: number }) {
+/** 轴承搜索参数：关键词 / 按品牌ID / 按类型ID / 排序 / 尺寸范围 */
+export interface BearingSearchParams {
+  keyword?: string
+  brandId?: string
+  bearingTypeId?: string
+  sortBy?: 'partnumber' | 'innerdiameter' | 'outerdiameter' | 'width' | 'viewcount'
+  sortOrder?: 'asc' | 'desc'
+  minInnerDiameter?: number
+  maxInnerDiameter?: number
+  minOuterDiameter?: number
+  maxOuterDiameter?: number
+  minWidth?: number
+  maxWidth?: number
+  page?: number
+  pageSize?: number
+}
+
+/** 搜索轴承（可按 keyword / brandId / bearingTypeId / 尺寸范围过滤，支持排序分页） */
+export function searchBearings(params: BearingSearchParams) {
   const qs = buildQuery({
     keyword: params.keyword,
-    brandName: params.brandName,
-    bearingType: params.bearingType,
+    brandId: params.brandId,
+    bearingTypeId: params.bearingTypeId,
+    sortBy: params.sortBy,
+    sortOrder: params.sortOrder,
+    minInnerDiameter: params.minInnerDiameter,
+    maxInnerDiameter: params.maxInnerDiameter,
+    minOuterDiameter: params.minOuterDiameter,
+    maxOuterDiameter: params.maxOuterDiameter,
+    minWidth: params.minWidth,
+    maxWidth: params.maxWidth,
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20
   })
