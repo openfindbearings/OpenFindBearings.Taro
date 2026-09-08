@@ -1,10 +1,10 @@
 # OpenFindBearings.Taro
 
-移动端 H5 前端，基于 Taro 4.x + React 18 + TypeScript 构建，一套代码编译到 H5（浏览器）、微信小程序、Android/iOS 原生 APP（React Native）。
+移动端 H5 前端，基于 Taro 3.6.40 + React 18 + TypeScript 构建，一套代码编译到 H5（浏览器）、微信小程序、Android/iOS 原生 APP（React Native）。
 
 ## 技术栈
 
-- Taro 4.x + React 18 + TypeScript
+- Taro 3.6.40 + React 18 + TypeScript
 - NutUI (React 版) UI 组件库
 - lucide-react-taro 图标库（1500+ 图标，tree-shaking）
 - Zustand 状态管理
@@ -12,10 +12,10 @@
 
 ## 架构
 
-Taro H5 前端独立部署到 `mobile.515813.xyz`，通过 BFF (bff.515813.xyz) 访问后端服务。
+Taro H5 前端独立部署，通过 BFF访问后端服务。
 
 ```
-Taro H5 (mobile.515813.xyz) → Mobile BFF (bff.515813.xyz) → API + Identity
+Taro H5 → Mobile BFF → API + Identity
 ```
 
 ## 功能特性
