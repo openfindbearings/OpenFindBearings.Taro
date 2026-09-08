@@ -7,7 +7,9 @@ import { useState } from 'react'
 import Icon from '../../components/Icon'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import LinearGradient from 'react-native-linear-gradient'
+// 改动说明：原直接 import react-native-linear-gradient 会让 H5 webpack 打包 RN 原生模块而报
+// ModuleParseError；改用平台分文件的 Gradient 组件（RN 走原生、H5/小程序走 CSS 渐变），JSX 用法不变。
+import LinearGradient from '../../components/Gradient'
 import { getItem } from '../../utils/storage'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'

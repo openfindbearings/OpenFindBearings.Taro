@@ -15,18 +15,28 @@ jobs:
     steps:
     - uses: actions/checkout@v6.0.2
 
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 9
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
+
+    # 改动说明：改用 corepack 激活固定版本 pnpm@9.15.0（与 Dockerfile 完全一致），
+    # 替代 pnpm/action-setup@v3 version:9——后者解析出的 pnpm 小版本不确定，
+    # 与 lockfile 生成时所用版本的 overrides 配置哈希对不上，导致
+    # --frozen-lockfile 报 ERR_PNPM_LOCKFILE_CONFIG_MISMATCH。
+    - name: Enable corepack (pnpm@9.15.0)
+      run: |
+        corepack enable
+        corepack prepare pnpm@9.15.0 --activate
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
     - name: Build H5
       run: pnpm run build:h5
+
+    # 改动说明：新增 RN bundle 编译验证（仅 Metro 打 JS，不含 gradle/签名），
+    # 与 H5 一起做双端回归守卫，避免改共享代码时把 RN 编译弄崩（如误在共享页
+    # import RN 原生模块、写入 RN 不支持的 SCSS 语法等）。
+    - name: Build RN bundle
+      run: npx taro build --type rn
