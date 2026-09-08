@@ -1,191 +1,186 @@
-.settings-page {
-  min-height: 100vh;
-  background: var(--bg-page);
+﻿// 设置页样式（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：删 .settings-page/.settings-scroll（骨架由 PageLayout 提供）与全部 inline 色板；
+// 颜色/尺寸走 _rn.scss 编译期 token；组合类（.indent/.on/.danger/.active）全部拆独立类
+// （RN 忽略 .a.b 组合选择器）；border 简写拆三属性；行高落 dp。
+@import '../../styles/_rn';
+
+// ============ 分组 ============
+.section {
+  margin-top: $space-3;
+  margin-left: $space-4;
+  margin-right: $space-4;
 }
 
-// 导航栏
-.nav-bar {
+.section-title {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  margin-bottom: $space-2;
+  margin-left: $space-1;
+}
+
+// 分组卡片：白底圆角，行内条目用细分割线
+.list {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+// ============ 列表行 ============
+.list-item {
   display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.nav-back {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-}
-
-.nav-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-// 设置分组
-.settings-group {
-  margin: 16px;
-}
-
-.group-title {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin-bottom: 8px;
-  display: block;
-  padding-left: 4px;
-}
-
-// 设置项
-.setting-item {
-  display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-light);
-
-  &:first-of-type {
-    border-radius: 10px 10px 0 0;
-  }
-
-  &:last-of-type {
-    border-radius: 0 0 10px 10px;
-    border-bottom: none;
-  }
-
-  &:only-of-type {
-    border-radius: 10px;
-  }
-
-  &:active {
-    background: var(--bg-hover);
-  }
+  min-height: 52px;
+  padding-left: $space-4;
+  padding-right: $space-4;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: $border;
 }
 
-.setting-left {
+// 末行去分割线（独立类替代 :last-child 伪类，RN 不支持伪类）
+.list-item-last {
+  border-bottom-width: 0;
+}
+
+// 退出登录行：内容居中
+.list-item-center {
+  justify-content: center;
+}
+
+.list-left {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
-  flex: 1;
+  min-width: 0;
 }
 
-.setting-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+.list-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+// 行首圆角图标底（40dp 浅主色底）
+.list-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  background: $primary-light;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: $space-3;
   flex-shrink: 0;
 }
 
-// 图标背景色
-.icon-bg-primary {
-  background: var(--primary-light);
-}
-.icon-bg-success {
-  background: var(--success-bg);
-}
-.icon-bg-warning {
-  background: var(--warning-bg);
-}
-.icon-bg-secondary {
-  background: var(--bg-badge);
+.list-icon-danger {
+  background: $danger-bg;
 }
 
-.setting-text {
-  flex: 1;
+// 字体大小行的 "A" 图标（文字充当图标，系统字体无版权）
+.list-icon-letter {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: bold;
+  color: $primary-text;
 }
 
-.setting-label {
-  font-size: 15px;
-  color: var(--text-primary);
-  display: block;
+.list-label {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
 }
 
-.setting-desc {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  display: block;
+// "即将上线"标注：标签后的小灰底胶囊（底层功能未接入的开关用）
+.list-badge {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  background: $bg-input;
+  border-radius: $radius-sm;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: $space-2;
+  padding-right: $space-2;
+  margin-left: $space-2;
 }
 
-.setting-right {
+// 主题色当前色点（inline 背景色由 useTheme 提供）
+.theme-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  margin-right: $space-2;
+}
+
+.list-label-danger {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $danger;
+}
+
+.list-value {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  margin-right: $space-1;
+}
+
+.logout-text {
+  margin-left: $space-2;
+}
+
+// ============ 开关：改用 Taro 标准 <Switch>（RN 原生控件），删除自绘 .toggle 样式 ============
+
+// ============ 字体大小三档 ============
+.font-size-picker {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.font-btn {
+  min-width: 40px;
+  height: 30px;
+  border-radius: $radius-md;
+  background: $bg-input;
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+  justify-content: center;
+  margin-left: $space-2;
+  padding-left: $space-2;
+  padding-right: $space-2;
 }
 
-.setting-value {
-  font-size: 13px;
-  color: var(--text-tertiary);
+.font-btn-active {
+  background: $primary;
 }
 
-// 选中圆点
-.check-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary);
-  flex-shrink: 0;
+.font-btn-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-secondary;
 }
 
-// Toggle 开关
-.toggle {
-  width: 48px;
-  height: 28px;
-  border-radius: 14px;
-  background: var(--bg-input);
-  position: relative;
-  transition: background 0.2s;
-  flex-shrink: 0;
-
-  &.on {
-    background: var(--primary);
-  }
+.font-btn-text-active {
+  color: #FFFFFF;
 }
 
-.toggle-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-
-  .on & {
-    transform: translateX(20px);
-  }
+// ============ 页脚协议 ============
+.footer {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  color: $text-placeholder;
+  text-align: center;
+  margin-top: $space-6;
+  margin-bottom: $space-6;
+  padding-left: $space-4;
+  padding-right: $space-4;
 }
 
-// 图标颜色（继承自 theme.scss）
-.icon-primary {
-  color: var(--icon-primary);
-}
-.icon-on-card {
-  color: var(--icon-on-card);
-}
-.icon-warning {
-  color: var(--warning);
-}
-.icon-success {
-  color: var(--success);
-}
-.icon-secondary {
-  color: var(--text-secondary);
-}
-.icon-tertiary {
-  color: var(--text-tertiary);
+.link {
+  color: $primary-text;
 }

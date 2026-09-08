@@ -1,0 +1,174 @@
+// 商家详情页样式（RN 基准，dp 直写，颜色由 useTheme inline）
+@import '../../styles/_rn';
+
+.md {
+  padding-bottom: $space-10;
+}
+
+// 头部
+.md-hero {
+  margin: $space-3 $space-4 0 $space-4;
+  border-radius: $radius-lg;
+  padding: $space-4;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.md-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: $radius-md;
+  margin-right: $space-3;
+}
+
+.md-logo-ph {
+  width: 64px;
+  height: 64px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+  flex-shrink: 0;
+}
+
+.md-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.md-name-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.md-name {
+  font-weight: bold;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.md-badge {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-radius: $radius-sm;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: $space-2;
+  padding-right: $space-2;
+  margin-left: $space-2;
+}
+
+.md-badge-text {
+  font-weight: bold;
+  margin-left: 3px;
+}
+
+.md-sub {
+  margin-top: 4px;
+}
+
+// 信息卡
+.md-card {
+  margin: $space-3 $space-4 0 $space-4;
+  border-radius: $radius-lg;
+  padding: $space-4;
+}
+
+.md-card-title {
+  font-weight: bold;
+  margin-bottom: $space-3;
+}
+
+.md-empty {
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+}
+
+.md-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+}
+
+.md-k {
+  color: $text-tertiary;
+}
+
+.md-v {
+  font-weight: bold;
+}
+
+.md-v-call {
+  flex-direction: row;
+  align-items: center;
+}
+
+// 在售轴承行
+.md-list-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: $space-3;
+  padding-bottom: $space-3;
+}
+
+.md-list-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.md-list-name {
+  font-weight: bold;
+}
+
+.md-list-sub {
+  margin-top: 2px;
+}
+
+.md-list-price {
+  font-weight: bold;
+  margin-right: $space-2;
+}
+
+// 操作按钮
+.md-actions {
+  flex-direction: row;
+  margin: $space-5 $space-4 0 $space-4;
+}
+
+.md-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: $radius-lg;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+}
+
+.md-btn-text {
+  font-weight: bold;
+  margin-left: $space-2;
+}
+
+.md-btn-ghost {
+  flex: 1;
+  height: 44px;
+  border-radius: $radius-lg;
+  border-width: 1px;
+  border-style: solid;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.md-btn-ghost-text {
+  margin-left: $space-2;
+}

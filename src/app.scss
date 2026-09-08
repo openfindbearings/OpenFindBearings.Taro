@@ -1,8 +1,7 @@
-@use './styles/theme';
-
-page {
-  background-color: var(--bg-page);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  color: var(--text-primary);
-  font-size: 28px;
-}
+// 全局样式入口（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：
+//   1. 删除 page/text 标签选择器块——RN 忽略标签选择器且 font-size:28px（H5 rem 基准写法）
+//      会被 RN 端当作 28dp 污染默认字号、无单位 line-height:1.5 触发 stylelint 告警；
+//   2. 本轮 RN：页面底色由 PageLayout（$bg-page）、文字色由各页 token 提供，
+//      全局层不再兜底；第二阶段做 H5 时再按平台追加全局样式（rem 基准/系统字体栈/CSS 变量主题）。
+// 约束：本文件被 RN Metro 解析，禁止 var()/媒体查询/属性选择器/:root/无单位行高。

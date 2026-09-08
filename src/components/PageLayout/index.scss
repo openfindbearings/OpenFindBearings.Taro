@@ -1,0 +1,16 @@
+// PageLayout 骨架样式（v1.7.0 度量重构新建）
+// flex column 三段式：nav（固定高）→ scroll（flex:1）→ tabbar（固定高）
+// RN 不支持 vh，根高度由 tsx inline 注入 windowHeight（dp）
+@import '../../styles/_rn';
+
+.page-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: $bg-page;
+}
+
+// 中间滚动区：flex:1 占据 nav/tabbar 之外的全部空间
+.page-layout-scroll {
+  flex: 1;
+}

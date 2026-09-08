@@ -1,4 +1,6 @@
 packages: []
+overrides:
+  react-native-reanimated: 3.6.3
 allowBuilds:
   '0': '@parcel/watcher'
   '1': '@swc/core'

@@ -1,50 +1,53 @@
-.home {
-  min-height: 100vh;
-  background: var(--bg-page);
-  padding: 24px;
-  padding-bottom: 80px;
+﻿// 首页样式（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：删除 var() 兜底（Metro SCSS 不支持回退语法）与 padding-bottom:74px hack
+// （骨架避让已由 PageLayout/CustomTabBar 统一处理）；尺寸全部走 dp token；
+// 快捷入口改实心彩圆 + 白图标；简洁模式用 flexGrow 在滚动区内垂直居中。
+@import '../../styles/_rn';
 
-  // 简洁模式：隐藏历史和热门，内容垂直居中
-  &.simple {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-top: 0;
-
-    .history-section,
-    .hot-section {
-      display: none;
-    }
-  }
+// ============ 简洁模式：搜索框 + 三钮作为一组垂直居中 ============
+// 改动说明：原 min-height:520px 魔法数改 flex:1，配合 PageLayout 内容容器 flexGrow:1
+// 真正撑满视口后整体垂直居中；justify-content:center 让搜索框与三钮聚成一簇居中。
+.home-simple {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  padding-left: $space-4;
+  padding-right: $space-4;
 }
 
-// 搜索栏
-.search-bar {
-  margin-bottom: 32px;
-}
-
+// ============ 搜索框（NavBar 搜索态中间栏 / 简洁模式内容区共用） ============
+// 改动说明：原 flex:1 在 NavBar 行容器里横向撑满（对），但在简洁模式纵向容器里
+// 会变成纵向撑满把三钮顶下去（错）。改 width:100% 两种容器都只横向填满、高度保持 36dp。
 .search-input-wrap {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  background: var(--bg-card);
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border);
+  height: $search-box-height;
+  background: $bg-input;
+  border-radius: $radius-lg;
+  padding-left: $space-3;
+  padding-right: $space-2;
+  width: 100%;
+  min-width: 0;
 }
 
 .search-input {
   flex: 1;
-  margin-left: 10px;
-  font-size: 15px;
-  color: var(--text-primary);
+  min-width: 0;
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
+  background: transparent;
+  margin-left: $space-2;
+  margin-right: $space-2;
 }
 
 .search-actions {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
-  margin-left: 8px;
 }
 
 .action-icon {
@@ -53,122 +56,236 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: var(--bg-input);
 }
 
-// 快捷入口
+// ============ 快捷三钮 ============
 .quick-actions {
   display: flex;
+  flex-direction: row;
   justify-content: space-around;
-  margin-bottom: 32px;
-  padding: 20px 0;
+  align-items: center;
+  padding-top: $space-5;
+  padding-bottom: $space-5;
 }
 
 .quick-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
 }
 
+// 实心彩圆 56dp（v1.7.0：浅底彩图标 → 实心彩底白图标）
 .quick-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: $quick-entry-size;
+  height: $quick-entry-size;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  &.voice {
-    background: var(--gradient-voice);
-  }
-  &.camera {
-    background: var(--gradient-camera);
-  }
-  &.scan {
-    background: var(--gradient-scan);
-    transform: rotate(90deg);
-  }
+// 三钮底色：独立类而非组合选择器（RN 忽略 .a.b 组合写法）
+.quick-icon-voice {
+  background: $gradient-voice;
+}
+
+.quick-icon-camera {
+  background: $gradient-camera;
+}
+
+.quick-icon-scan {
+  background: $gradient-scan;
 }
 
 .quick-label {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-secondary;
+  margin-top: $space-2;
 }
 
-// 区块
-.history-section,
+// ============ 历史 / 热门区块 ============
+// 历史 / 热门区块（RN 忽略逗号分组选择器，两类各自完整声明）
+.history-section {
+  margin-left: $space-4;
+  margin-right: $space-4;
+  margin-bottom: $space-4;
+  padding: $card-padding;
+  background: $bg-card;
+  border-radius: $radius-lg;
+}
+
 .hot-section {
-  background: var(--bg-card);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow-sm);
+  margin-left: $space-4;
+  margin-right: $space-4;
+  margin-bottom: $space-4;
+  padding: $card-padding;
+  background: $bg-card;
+  border-radius: $radius-lg;
 }
 
 .section-header {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: $space-3;
 }
 
 .section-title {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--text-primary);
-  font-weight: 500;
+}
+
+.section-title-text {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
+  font-weight: bold;
+  margin-left: $space-1;
+}
+
+.section-title-plain {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $text-primary;
+  font-weight: bold;
 }
 
 .clear-btn {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-tertiary);
 }
 
+.clear-btn-text {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  color: $text-tertiary;
+  margin-left: 2px;
+}
+
+// 标签流式排布（RN flexWrap 原生支持）
 .history-tags {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 8px;
 }
 
 .history-tag {
-  padding: 6px 14px;
-  background: var(--bg-badge);
-  border-radius: 20px;
-  font-size: 13px;
-  color: var(--text-secondary);
+  background: $bg-input;
+  border-radius: $radius-full;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: $space-3;
+  padding-right: $space-3;
+  margin-right: $space-2;
+  margin-bottom: $space-2;
 }
 
-// 图标颜色（通过 CSS 变量适配深色模式）
-.icon-tertiary {
-  color: var(--text-tertiary);
-}
-.icon-secondary {
-  color: var(--text-secondary);
-}
-.icon-voice {
-  color: var(--icon-voice);
-}
-.icon-camera {
-  color: var(--icon-camera);
-}
-.icon-scan {
-  color: var(--icon-scan);
-}
-.icon-primary {
-  color: var(--icon-primary);
-}
-.icon-on-card {
-  color: var(--icon-on-card);
+.history-tag-text {
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-secondary;
 }
 
-.scan-barcode-icon {
-  transform: rotate(90deg);
-  display: inline-block;
+// ============ 热门轴承（横向卡片，BFF /home） ============
+.hot-bearings-section {
+  margin-left: $space-4;
+  margin-right: $space-4;
+  margin-top: $space-4;
+}
+
+.hot-bearings-scroll {
+  flex-direction: row;
+}
+
+.bearing-card {
+  width: 140px;
+  border-radius: $radius-lg;
+  padding: $space-3;
+  margin-right: $space-3;
+}
+
+.bearing-part {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: bold;
+}
+
+.bearing-type {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: $space-1;
+}
+
+.bearing-brand {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: 2px;
+}
+
+// ============ 推荐商家（竖向卡片，BFF /home） ============
+.merchant-section {
+  margin: $space-4;
+  border-radius: $radius-lg;
+  padding: $space-2 $space-4;
+}
+
+.merchant-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: $space-3;
+  padding-bottom: $space-3;
+}
+
+.merchant-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.merchant-avatar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+}
+
+.merchant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.merchant-name {
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: bold;
+}
+
+.merchant-desc {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: 2px;
+}
+
+.merchant-badge {
+  border-radius: $radius-sm;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: $space-2;
+  padding-right: $space-2;
+  margin-left: $space-2;
+}
+
+.merchant-badge-text {
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
 }

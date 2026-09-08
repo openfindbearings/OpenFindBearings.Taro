@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         API.LOGIN,
         { method: 'POST', data: { phone, password }, auth: false }
       )
-      setToken(res.accessToken, res.refreshToken)
+      await setToken(res.accessToken, res.refreshToken)
       await get().fetchProfile()
       set({ isLoggedIn: true, loading: false })
     } catch (err) {
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         API.REGISTER,
         { method: 'POST', data: { phone, password }, auth: false }
       )
-      setToken(res.accessToken, res.refreshToken)
+      await setToken(res.accessToken, res.refreshToken)
       await get().fetchProfile()
       set({ isLoggedIn: true, loading: false })
     } catch (err) {

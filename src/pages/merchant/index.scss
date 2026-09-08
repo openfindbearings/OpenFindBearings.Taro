@@ -1,58 +1,46 @@
-.merchant-page {
-  min-height: 100vh;
-  background: var(--bg-page);
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 80px;
-}
+﻿// 商家页样式（v1.7.0 度量重构，纯 RN 基准）
+// 改动说明：删 .merchant-page/.merchant-scroll（骨架与滚动由 PageLayout 提供，
+// 100vh 与 padding-bottom:74px hack 一并移除）；占位区尺寸 dp token + 行高落 dp。
+@import '../../styles/_rn';
 
-// NavBar
-.nav-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.nav-bar-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
+// 占位区垂直居中：flex:1 撑满 PageLayout 内容容器（已设 flexGrow:1），
+// justify-content:center 使图标+标题+描述整体在视口内垂直居中。
+// 改动说明：删原 padding-top:80px 伪居中（内容少时偏上），改真正的 flex 居中。
 .placeholder {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding-left: $space-4;
+  padding-right: $space-4;
 }
 
+// 大圆图标底（96dp 见方，浅主色底）
 .placeholder-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--primary-light);
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  background: $primary-light;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: $space-4;
 }
 
 .placeholder-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 8px;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  color: $text-primary;
+  font-weight: bold;
+  margin-bottom: $space-2;
+  text-align: center;
 }
 
 .placeholder-desc {
-  font-size: 14px;
-  color: var(--text-tertiary);
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-tertiary;
+  text-align: center;
 }

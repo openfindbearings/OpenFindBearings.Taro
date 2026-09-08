@@ -12,3 +12,5 @@ data:
   # 改动说明：maui-client 统一重命名为 mobile-client
   Identity__ClientId: "mobile-client"
   # 改动说明：ClientSecret 已迁移到 openfindbearings-mobile-secrets（Secret），不再放 ConfigMap
+  # 内部服务间调用令牌：BFF→API 带此头豁免 API 按 IP 的用户级限流。须与 API 侧 Internal__ApiToken 完全一致。
+  Internal__ApiToken: "ofb-internal-3f9a1c7e5b2d4a86"

@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro'
 import { getBaseUrl, API } from './config'
+import { getItem, setItem, removeItem } from '../utils/storage'
 
 /** 通用 API 响应结构 */
 interface ApiResponse<T = any> {
@@ -8,57 +9,40 @@ interface ApiResponse<T = any> {
   data: T
 }
 
-/** 分页响应结构 */
-interface PagedData<T> {
-  items: T[]
-  totalCount: number
-  page: number
-  pageSize: number
-}
-
 /** Token 存储键名 */
 const TOKEN_KEY = 'access_token'
 const REFRESH_KEY = 'refresh_token'
 
-/** 内存中缓存的 token */
+/** 内存中缓存的 token（同步读用，避免每次请求都 await 存储） */
 let cachedToken: string | null = null
 
-/** 获取当前 access token */
+/** 初始化时尝试从存储恢复 token（异步，fire-and-forget） */
+;(async () => {
+  cachedToken = await getItem(TOKEN_KEY)
+})()
+
+/** 获取当前 access token（同步返回缓存值；启动后第一次 await init 后才能用） */
 export function getToken(): string | null {
-  if (cachedToken) return cachedToken
-  try {
-    cachedToken = Taro.getStorageSync(TOKEN_KEY) || null
-  } catch {
-    cachedToken = null
-  }
   return cachedToken
 }
 
 /** 保存 token */
-export function setToken(accessToken: string, refreshToken?: string) {
+export async function setToken(accessToken: string, refreshToken?: string): Promise<void> {
   cachedToken = accessToken
-  try {
-    Taro.setStorageSync(TOKEN_KEY, accessToken)
-    if (refreshToken) Taro.setStorageSync(REFRESH_KEY, refreshToken)
-  } catch { /* ignore */ }
+  await setItem(TOKEN_KEY, accessToken)
+  if (refreshToken) await setItem(REFRESH_KEY, refreshToken)
 }
 
 /** 清除 token */
-export function clearToken() {
+export async function clearToken(): Promise<void> {
   cachedToken = null
-  try {
-    Taro.removeStorageSync(TOKEN_KEY)
-    Taro.removeStorageSync(REFRESH_KEY)
-  } catch { /* ignore */ }
+  await removeItem(TOKEN_KEY)
+  await removeItem(REFRESH_KEY)
 }
 
-/** 获取 refresh token */
-export function getRefreshToken(): string | null {
-  try {
-    return Taro.getStorageSync(REFRESH_KEY) || null
-  } catch {
-    return null
-  }
+/** 获取 refresh token（异步，调用方 await） */
+export async function getRefreshToken(): Promise<string | null> {
+  return await getItem(REFRESH_KEY)
 }
 
 /** 通用请求方法 */
@@ -75,11 +59,8 @@ export async function request<T = any>(
   const baseUrl = getBaseUrl()
 
   // 自动附加 JWT
-  if (auth) {
-    const token = getToken()
-    if (token) {
-      header['Authorization'] = `Bearer ${token}`
-    }
+  if (auth && cachedToken) {
+    header['Authorization'] = `Bearer ${cachedToken}`
   }
 
   try {
@@ -99,9 +80,8 @@ export async function request<T = any>(
       const refreshed = await tryRefreshToken()
       if (refreshed) {
         // 刷新成功，重试请求
-        const newToken = getToken()
-        if (newToken) {
-          header['Authorization'] = `Bearer ${newToken}`
+        if (cachedToken) {
+          header['Authorization'] = `Bearer ${cachedToken}`
           const retryRes = await Taro.request({
             url: `${baseUrl}${url}`,
             method,
@@ -114,8 +94,8 @@ export async function request<T = any>(
           }
         }
       }
-      // 刷新失败或重试失败，清除 token 跳登录
-      clearToken()
+      // 刷新失败或重试失败，清除 token 抛错
+      await clearToken()
       throw new Error('UNAUTHORIZED')
     }
 
@@ -133,7 +113,7 @@ export async function request<T = any>(
 
 /** 尝试刷新 token */
 async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken()
+  const refreshToken = await getRefreshToken()
   if (!refreshToken) return false
 
   try {
@@ -148,7 +128,7 @@ async function tryRefreshToken(): Promise<boolean> {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       const body = res.data as ApiResponse<{ accessToken: string; refreshToken: string }>
       if (body?.data) {
-        setToken(body.data.accessToken, body.data.refreshToken)
+        await setToken(body.data.accessToken, body.data.refreshToken)
         return true
       }
     }
