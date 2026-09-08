@@ -10,7 +10,7 @@ import { Text } from '@tarojs/components'
 import * as Lucide from 'lucide-react-native'
 
 function toPascal(name: string): string {
-  return name.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
+  return name.split(/[-_]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
 }
 
 interface IconProps {

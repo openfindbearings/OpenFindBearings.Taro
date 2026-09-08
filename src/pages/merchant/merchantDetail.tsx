@@ -10,9 +10,8 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../components/PageLayout'
 import NavBar from '../../components/NavBar'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
+import { usableImage } from '../../services/config'
 import './merchantDetail.scss'
-
-definePageConfig({ disableScroll: true })
 
 export default function MerchantDetailPage() {
   const router = useRouter()
@@ -47,8 +46,8 @@ export default function MerchantDetailPage() {
       <View className='md'>
         {/* 头部：Logo + 名称 + 认证 + 类型 */}
         <View className='md-hero' style={{ backgroundColor: t.bgCard }}>
-          {detail?.logoUrl ? (
-            <Image className='md-logo' src={detail.logoUrl} mode='aspectFill' />
+          {usableImage(detail?.logoUrl) ? (
+            <Image className='md-logo' src={usableImage(detail?.logoUrl)} mode='aspectFill' />
           ) : (
             <View className='md-logo-ph' style={{ backgroundColor: t.primaryLight }}>
               <Icon name="store" size={32} color={t.primary} />
@@ -59,12 +58,14 @@ export default function MerchantDetailPage() {
               <Text className='md-name' style={{ ...fs(18), color: t.textPrimary }} numberOfLines={1}>{detail?.name || '—'}</Text>
               {detail?.isVerified && (
                 <View className='md-badge' style={{ backgroundColor: t.primaryLight }}>
-                  <Text className='md-badge-text' style={{ ...fs(11), color: t.primaryText }}>认证</Text>
+                  <Icon name="badge-check" size={12} color={t.primaryText} />
+                  <Text className='md-badge-text' style={{ ...fs(11), color: t.primaryText }}>入驻商家</Text>
                 </View>
               )}
             </View>
             {detail?.companyName ? <Text className='md-sub' style={{ ...fs(13), color: t.textTertiary }} numberOfLines={1}>{detail.companyName}</Text> : null}
-            {detail?.type ? <Text className='md-sub' style={{ ...fs(12), color: t.textTertiary }}>{detail.type}</Text> : null}
+            {/* 改动说明：type 脏数据可能是 "0"/空，过滤掉避免眉部显示无意义的 "0" */}
+            {detail?.type && detail.type !== '0' ? <Text className='md-sub' style={{ ...fs(12), color: t.textTertiary }}>{detail.type}</Text> : null}
           </View>
         </View>
 
@@ -77,15 +78,18 @@ export default function MerchantDetailPage() {
               <Text className='md-v' style={{ ...fs(13), color: t.textPrimary }}>{detail.contactPerson}</Text>
             </View>
           )}
-          {(detail?.phone || detail?.mobile) && (
-            <View className='md-row' onClick={() => callPhone(detail?.mobile || detail?.phone)}>
-              <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>电话</Text>
+          {/* 改动说明：电话行改为始终显示（无值显示"暂无"），避免商家无联系方式时整行消失、用户以为没加载 */}
+          <View className='md-row' onClick={() => callPhone(detail?.mobile || detail?.phone)}>
+            <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系电话</Text>
+            {(detail?.mobile || detail?.phone) ? (
               <View className='md-v-call'>
                 <Text className='md-v' style={{ ...fs(13), color: t.primaryText }}>{detail?.mobile || detail?.phone}</Text>
                 <Icon name="phone" size={16} color={t.primaryText} />
               </View>
-            </View>
-          )}
+            ) : (
+              <Text className='md-v-empty' style={{ ...fs(13), color: t.textTertiary }}>暂无</Text>
+            )}
+          </View>
           {detail?.email && (
             <View className='md-row'>
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>邮箱</Text>

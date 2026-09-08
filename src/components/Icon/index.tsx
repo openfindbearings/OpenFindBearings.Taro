@@ -10,7 +10,9 @@ import { Text } from '@tarojs/components'
 import * as Lucide from 'lucide-react'
 
 function toPascal(name: string): string {
-  return name.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
+  // 改动说明：原只按 '_' 分割，导致连字符图标名（trending-up/user-plus/badge-check）解析不到
+  // Lucide 导出（TrendingUp/UserPlus/BadgeCheck）。改为同时按 '-' 与 '_' 分割。
+  return name.split(/[-_]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
 }
 
 interface IconProps {

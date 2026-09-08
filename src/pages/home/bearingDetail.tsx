@@ -13,9 +13,8 @@ import {
   getBearingDetail, getBearingMerchants, getBearingInterchanges,
   type BearingDetail, type BearingMerchant, type Interchange
 } from '../../services/bearing'
+import { usableImage } from '../../services/config'
 import './bearingDetail.scss'
-
-definePageConfig({ disableScroll: true })
 
 export default function BearingDetailPage() {
   const router = useRouter()
@@ -49,7 +48,7 @@ export default function BearingDetailPage() {
   const goMerchant = (mid: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${mid}` })
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
 
-  const img = detail?.image3DUrl || detail?.image2DUrl
+  const img = usableImage(detail?.image3DUrl) || usableImage(detail?.image2DUrl)
 
   return (
     <PageLayout nav={<NavBar title="轴承详情" showBack />}>

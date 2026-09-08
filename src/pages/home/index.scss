@@ -250,6 +250,13 @@
   justify-content: center;
   margin-right: $space-3;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.merchant-avatar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
 }
 
 .merchant-info {

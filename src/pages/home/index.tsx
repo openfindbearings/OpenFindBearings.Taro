@@ -4,10 +4,11 @@
 // 简洁模式：nav=null 无顶栏，搜索框+三钮在滚动区内垂直居中，隐藏历史/热门，保留 TabBar。
 import { useState, useCallback } from 'react'
 import Icon from '../../components/Icon'
-import { View, Input, Text, ScrollView } from '@tarojs/components'
+import { View, Input, Text, ScrollView, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { getItem, setItem, removeItem } from '../../utils/storage'
 import { getHome, type HomeData } from '../../services/home'
+import { usableImage } from '../../services/config'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
 import PageLayout from '../../components/PageLayout'
@@ -230,13 +231,15 @@ export default function HomePage() {
               onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${m.id}` })}
             >
               <View className='merchant-avatar' style={{ backgroundColor: t.primaryLight }}>
-                <Icon name="store" size={20} color={t.primary} />
+                {usableImage(m.logoUrl)
+                  ? <Image className='merchant-avatar-img' src={usableImage(m.logoUrl)} mode='aspectFill' />
+                  : <Icon name="store" size={20} color={t.primary} />}
               </View>
               <View className='merchant-info'>
                 <Text className='merchant-name' style={{ ...fs(15), color: t.textPrimary }}>{m.name}</Text>
-                {m.description ? (
-                  <Text className='merchant-desc' style={{ ...fs(12), color: t.textTertiary }} numberOfLines={1}>{m.description}</Text>
-                ) : null}
+                <Text className='merchant-desc' style={{ ...fs(12), color: t.textTertiary }} numberOfLines={1}>
+                  {m.companyName || (m.productCount != null ? `${m.productCount} 个在售` : '')}
+                </Text>
               </View>
               {m.isVerified && (
                 <View className='merchant-badge' style={{ backgroundColor: t.primaryLight }}>

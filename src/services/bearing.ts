@@ -1,6 +1,6 @@
 // 轴承服务：搜索、详情、在售商家、替代品（均调 BFF public 端点，auth:false）
 import { request } from './request'
-import { API } from './config'
+import { API, buildQuery } from './config'
 
 /** 轴承搜索结果项（对齐 BFF BearingItem） */
 export interface Bearing {
@@ -62,13 +62,14 @@ export interface Paged<T> {
 
 /** 搜索轴承（可按 keyword / brandName / bearingType 过滤） */
 export function searchBearings(params: { keyword?: string; brandName?: string; bearingType?: string; page?: number; pageSize?: number }) {
-  const q = new URLSearchParams()
-  if (params.keyword) q.set('keyword', params.keyword)
-  if (params.brandName) q.set('brandName', params.brandName)
-  if (params.bearingType) q.set('bearingType', params.bearingType)
-  q.set('page', String(params.page ?? 1))
-  q.set('pageSize', String(params.pageSize ?? 20))
-  return request<Paged<Bearing>>(`${API.BEARINGS_SEARCH}?${q.toString()}`, { auth: false })
+  const qs = buildQuery({
+    keyword: params.keyword,
+    brandName: params.brandName,
+    bearingType: params.bearingType,
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 20
+  })
+  return request<Paged<Bearing>>(`${API.BEARINGS_SEARCH}?${qs}`, { auth: false })
 }
 
 /** 轴承详情 */

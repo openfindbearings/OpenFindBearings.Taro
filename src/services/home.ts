@@ -17,12 +17,14 @@ export interface HotBearing {
   image2DUrl?: string | null
 }
 
-/** 推荐商家项（对齐 BFF MerchantDto） */
+/** 推荐商家项（对齐 BFF HomeEndpoints.MerchantDto） */
 export interface HomeMerchant {
   id: string
   name: string
-  description?: string | null
+  companyName?: string | null
   isVerified: boolean
+  productCount?: number | null
+  logoUrl?: string | null
 }
 
 /** 品牌 / 类型简项 */

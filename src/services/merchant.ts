@@ -1,6 +1,6 @@
 // 商家服务：搜索、详情、在售轴承（均调 BFF public 端点，auth:false）
 import { request } from './request'
-import { API } from './config'
+import { API, buildQuery } from './config'
 import type { Paged } from './bearing'
 
 /** 商家搜索结果项（对齐 BFF MerchantItem） */
@@ -50,12 +50,13 @@ export interface MerchantBearing {
 
 /** 搜索商家 */
 export function searchMerchants(params: { keyword?: string; verifiedOnly?: boolean; page?: number; pageSize?: number }) {
-  const q = new URLSearchParams()
-  if (params.keyword) q.set('keyword', params.keyword)
-  if (params.verifiedOnly != null) q.set('verifiedOnly', String(params.verifiedOnly))
-  q.set('page', String(params.page ?? 1))
-  q.set('pageSize', String(params.pageSize ?? 20))
-  return request<Paged<Merchant>>(`${API.MERCHANTS_SEARCH}?${q.toString()}`, { auth: false })
+  const qs = buildQuery({
+    keyword: params.keyword,
+    verifiedOnly: params.verifiedOnly == null ? undefined : String(params.verifiedOnly),
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 20
+  })
+  return request<Paged<Merchant>>(`${API.MERCHANTS_SEARCH}?${qs}`, { auth: false })
 }
 
 /** 商家详情 */
