@@ -51,6 +51,12 @@ const config = {
     publicPath: '/',
     staticDirectory: 'static',
     postcss: {
+      // 改动说明：H5 关闭 pxtransform 的 rem 缩放，px 保持字面值 1:1，
+      // 与 RN 的 dp 语义（scalable:false + deviceRatio{750:2}）同值，
+      // 使同一份 SCSS 在 H5 与 RN 渲染比例一致，避免 H5 布局被放大错乱。
+      pxtransform: {
+        enable: false
+      },
       autoprefixer: {
         enable: true,
         config: {

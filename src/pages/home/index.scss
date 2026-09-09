@@ -167,19 +167,25 @@
 }
 
 // 标签流式排布（RN flexWrap 原生支持）
+// 改动说明：补 align-items:center——默认 stretch 会把标签竖向拉高到整行高度；center 让标签 hug 自身文字高。
 .history-tags {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-items: center;
 }
 
+// 改动说明：标签由"胖圆 pill"改细长紧凑。根因——标签是块级容器包 inline 文字，
+// 行盒高被继承的大 line-height(strut) 撑到 ~50px，align-items:center 管不到 strut。
+// 解法：定高 26px + display:flex 居中（定高压过 strut 与任何拉伸），去掉竖向 padding。
 .history-tag {
+  display: flex;
+  align-items: center;
+  height: 26px;
   background: $bg-input;
-  border-radius: $radius-full;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  padding-left: $space-3;
-  padding-right: $space-3;
+  border-radius: $radius-md;
+  padding-left: 10px;
+  padding-right: 10px;
   margin-right: $space-2;
   margin-bottom: $space-2;
 }
@@ -197,11 +203,23 @@
   margin-top: $space-4;
 }
 
+// 改动说明：补 display:flex——H5 下缺它则 bearing-card(block) 竖堆而非横向滚动条内排布；RN 默认 flex 不受影响。
+// 补 align-items:flex-start——默认 stretch 会让矮卡被最高卡(型号换行者)拉齐到满高、文字间空开；
+// flex-start 让每张卡贴合自身内容高度，行距恢复正常。
 .hot-bearings-scroll {
+  display: flex;
   flex-direction: row;
+  align-items: flex-start;
 }
 
+// 改动说明：H5 下 Taro scrollX 的内层 flex 容器默认 align-items:stretch，会把矮卡拉齐到最高卡高度、
+// 文字被撑开。这里对卡片自身显式：align-self:flex-start 停拉伸 + flex 列 justify flex-start 让三行文字顶对齐紧排。
+// RN 下 View 默认即 flex 列，加这几条无副作用。
 .bearing-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-self: flex-start;
   width: 140px;
   border-radius: $radius-lg;
   padding: $space-3;

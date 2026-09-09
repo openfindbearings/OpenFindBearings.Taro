@@ -1,0 +1,32 @@
+// PageLayout 骨架样式 —— H5 / 小程序版（文档流 + sticky/fixed）
+@import '../styles/_rn';
+
+// 根：块级流，min-height 撑满视口让底色铺满
+.pl-h5 {
+  display: block;
+  min-height: 100vh;
+}
+
+// 顶栏容器：sticky 钉顶，z-index 高于内容，背景不透明防穿透
+.pl-h5-nav {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+// 内容主体：普通块级流，随文档自然滚动（padding-bottom 由 tsx inline 按有无 tabbar 注入）
+.pl-h5-body {
+  display: block;
+  width: 100%;
+}
+
+// 底栏容器：fixed 钉底
+.pl-h5-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+}

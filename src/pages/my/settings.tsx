@@ -20,13 +20,19 @@ import { useThemeColorStore } from '../../hooks/useThemeColor'
 import { THEME_PRESETS } from '../../styles/themes'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
-import PageLayout from '../../components/PageLayout'
+import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import './settings.scss'
 
 const SETTINGS_KEY = 'app_settings'
 
+/** 首页模式：普通 / 简洁 / 智能 */
+type HomeMode = 'normal' | 'simple' | 'smart'
+
 interface AppSettings {
+  /** 首页模式（主字段） */
+  homeMode: HomeMode
+  /** 旧字段：简洁模式布尔，保留做兼容写入（homeMode==='simple' 时为 true） */
   simpleHome: boolean
   pushEnabled: boolean
   adEnabled: boolean
@@ -39,6 +45,7 @@ definePageConfig({ disableScroll: true })
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings>({
+    homeMode: 'normal',
     simpleHome: false,
     pushEnabled: true,
     adEnabled: false,
@@ -62,7 +69,11 @@ export default function SettingsPage() {
 
   useDidShow(() => {
     getObject<AppSettings>(SETTINGS_KEY).then((saved) => {
-      if (saved) setSettings(saved)
+      if (saved) {
+        // 迁移：优先 homeMode；无则由旧 simpleHome 推导
+        const homeMode: HomeMode = saved.homeMode ?? (saved.simpleHome ? 'simple' : 'normal')
+        setSettings({ ...saved, homeMode })
+      }
     }).catch(() => { /* 默认值 */ })
     getItem('access_token').then(t => setIsLoggedIn(!!t)).catch(() => setIsLoggedIn(false))
   })
@@ -89,9 +100,9 @@ export default function SettingsPage() {
       .catch(() => { /* 用户取消 */ })
   }
 
-  // 首页模式：普通（simpleHome=false）始终可选；简洁（true）需登录，未登录弹提示
-  const handleHomeMode = (simple: boolean) => {
-    if (simple && !isLoggedIn) {
+  // 首页模式：普通/智能始终可选；简洁沿用原登录门槛。写 homeMode（主）+ simpleHome（旧字段兼容）
+  const handleHomeMode = (mode: HomeMode) => {
+    if (mode === 'simple' && !isLoggedIn) {
       Taro.showModal({
         title: '提示',
         content: '简洁首页模式需登录后使用',
@@ -104,7 +115,7 @@ export default function SettingsPage() {
       })
       return
     }
-    save({ simpleHome: simple })
+    save({ homeMode: mode, simpleHome: mode === 'simple' })
   }
 
   // 主题色选择：登录门槛（与简洁首页模式一致），选后即时生效（useTheme 全站响应）
@@ -218,19 +229,20 @@ export default function SettingsPage() {
               <View className='font-size-picker'>
                 {(
                   [
-                    { key: false, label: '普通' },
-                    { key: true, label: '简洁' }
+                    { key: 'normal', label: '普通' },
+                    { key: 'simple', label: '简洁' },
+                    { key: 'smart', label: '智能' }
                   ] as const
                 ).map((opt) => (
                   <View
-                    key={String(opt.key)}
-                    className={settings.simpleHome === opt.key ? 'font-btn font-btn-active' : 'font-btn'}
-                    style={{ backgroundColor: settings.simpleHome === opt.key ? t.primary : t.bgInput }}
+                    key={opt.key}
+                    className={settings.homeMode === opt.key ? 'font-btn font-btn-active' : 'font-btn'}
+                    style={{ backgroundColor: settings.homeMode === opt.key ? t.primary : t.bgInput }}
                     onClick={() => handleHomeMode(opt.key)}
                   >
                     <Text
-                      className={settings.simpleHome === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}
-                      style={{ ...fs(13), color: settings.simpleHome === opt.key ? t.textOnPrimary : t.textSecondary }}
+                      className={settings.homeMode === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}
+                      style={{ ...fs(13), color: settings.homeMode === opt.key ? t.textOnPrimary : t.textSecondary }}
                     >
                       {opt.label}
                     </Text>

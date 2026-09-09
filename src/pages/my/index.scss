@@ -37,7 +37,11 @@
   height: 100%;
 }
 
+// 改动说明：补 display:flex; flex-direction:column——昵称/副标题两个 <Text> 是 inline，
+// H5 块级容器里会挤成一行；RN 下 View 默认列所以正常。显式列布局让两端都把两行文字竖排。
 .user-detail {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
 }

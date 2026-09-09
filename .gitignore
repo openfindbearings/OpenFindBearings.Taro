@@ -77,3 +77,5 @@ Thumbs.db
 # Secret files (never commit)
 secret.yml
 *.secret.yml
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/assets/index.android.map

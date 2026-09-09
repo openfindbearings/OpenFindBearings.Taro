@@ -46,7 +46,9 @@
 }
 
 // 退出登录行：内容居中
+// 改动说明：补 display:flex——H5 下缺它则 justify-content 失效；RN 忽略组合选择器本就靠此类独立生效。
 .list-item-center {
+  display: flex;
   justify-content: center;
 }
 
