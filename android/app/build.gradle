@@ -79,7 +79,13 @@ import org.apache.tools.ant.taskdefs.condition.Os
  */
 
 project.ext.react = [
-    enableHermes: true,  // clean and rebuild if changing
+   enableHermes: true,  // clean and rebuild if changing
+   // 改动说明：release 的 JS bundle 与 drawable 改由前置 `taro build --type rn` 产出
+   // （写到 src/main/assets 与 src/main/res），禁用 gradle 自带的 bundleReleaseJsAndAssets，
+   // 避免它在 build/generated 下重复生成同一批 drawable 导致 mergeReleaseResources 撞车；
+   // 且 gradle 版 metro 不正确处理 metro.config.js 的 async 导出、产出的 bundle 无效。
+   // 仅影响 release 打包；dev:rn 走 Metro 实时加载、与此开关无关。
+   bundleInRelease: false,
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
