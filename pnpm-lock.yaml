@@ -171,6 +171,9 @@ importers:
       install-peerdeps:
         specifier: ^3.0.3
         version: 3.0.7
+      metro-config:
+        specifier: 0.72.4
+        version: 0.72.4
       pod-install:
         specifier: ^0.1.23
         version: 0.1.39

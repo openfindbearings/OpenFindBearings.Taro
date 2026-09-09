@@ -96,6 +96,7 @@
     "eslint-plugin-react": "^7.8.2",
     "eslint-plugin-react-hooks": "^4.2.0",
     "install-peerdeps": "^3.0.3",
+    "metro-config": "0.72.4",
     "pod-install": "^0.1.23",
     "postcss": "^8.4.18",
     "react-native-gradle-plugin": "0.70.3",
