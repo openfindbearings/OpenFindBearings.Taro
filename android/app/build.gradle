@@ -79,13 +79,16 @@ import org.apache.tools.ant.taskdefs.condition.Os
  */
 
 project.ext.react = [
-   enableHermes: true,  // clean and rebuild if changing
-   // 改动说明：release 的 JS bundle 与 drawable 改由前置 `taro build --type rn` 产出
-   // （写到 src/main/assets 与 src/main/res），禁用 gradle 自带的 bundleReleaseJsAndAssets，
-   // 避免它在 build/generated 下重复生成同一批 drawable 导致 mergeReleaseResources 撞车；
-   // 且 gradle 版 metro 不正确处理 metro.config.js 的 async 导出、产出的 bundle 无效。
-   // 仅影响 release 打包；dev:rn 走 Metro 实时加载、与此开关无关。
-   bundleInRelease: false,
+    enableHermes: true,  // clean and rebuild if changing
+    // 改动说明：release 的 JS bundle 与 drawable 全部交给前置 `taro build --type rn` 产出
+    // （写到 src/main/assets 与 src/main/res），彻底禁用 gradle 自带的 bundleReleaseJsAndAssets，
+    // 否则它会在 build/generated 下重复生成同一批 drawable，mergeReleaseResources 报 Duplicate resources；
+    // 且 gradle 版 metro 不正确处理 metro.config.js 的 async 导出、产出的 bundle 无效。
+    // 注意：不能用 bundleInRelease:false —— RN 0.70 react.gradle 的判定是
+    //   bundleInRelease || bundleIn${variant} || variant.name.contains("release")，
+    //   对 release 变体最后一项恒 true，false 被 || 短路吞掉、关不掉；必须覆盖 bundleForVariant。
+    // 仅影响 release 打包；dev:rn 走 Metro 实时加载、与此无关。
+    bundleForVariant: { variant -> false },
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
