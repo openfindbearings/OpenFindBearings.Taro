@@ -7,6 +7,11 @@ on:
         description: 'Image tag'
         required: false
         default: 'latest'
+      build_apk:
+        description: '同时构建 Android APK（arm64-v8a + armeabi-v7a）'
+        type: boolean
+        required: false
+        default: true
   release:
     types: [published]
 
@@ -40,8 +45,8 @@ jobs:
           echo "docker_tag=latest" >> $GITHUB_OUTPUT
         fi
 
-    # 改动说明：移除 workflow 级 pnpm 安装与 H5 构建步骤——Dockerfile 内部经 corepack（读取
-    # package.json 的 packageManager 字段）自行完成构建，workflow 级重复安装属冗余且拖慢发布
+    # 改动说明：移除 workflow 级 pnpm 安装与 H5 构建步骤——Dockerfile 内部经 corepack 显式
+    # prepare pnpm@9.15.0 自行完成构建（非读取 packageManager 字段），workflow 级重复安装属冗余且拖慢发布
     - name: Log in to GHCR
       uses: docker/login-action@v3
       with:
@@ -91,3 +96,76 @@ jobs:
         kubectl rollout status deployment/${{ env.DEPLOYMENT }} \
           -n ${{ env.NAMESPACE }} \
           --timeout=10m
+
+  # 改动说明：新增 APK 构建 job——每次 release 发布自动产出 arm64-v8a + armeabi-v7a
+  # 两个分包并挂到该 Release；手动触发由 build_apk 开关控制。与 H5 镜像 job 并行、互不依赖。
+  # 签名用已入库的 android/app/debug.keystore（可直装、零 Secret，不上 Play）。
+  apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || inputs.build_apk
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v6.0.2
+
+    # 改动说明：显式装 Node 22——react.gradle / root build.gradle 在 gradle 配置期执行
+    # `node --print` 读取 react-native 版本，不能只依赖 runner 预装 node。
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+
+    - name: Enable corepack (pnpm@9.15.0)
+      run: |
+        corepack enable
+        corepack prepare pnpm@9.15.0 --activate
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    # 改动说明：build-tools 34.0.0 为 compileSdk 所需；30.0.3 是 AGP 7.4.2 的 AIDL
+    # 任务硬编码回退版本（本地经验），一并装作廉价保险。不装 NDK——newArch=false 下
+    # 原生库全用预编译 .so，装了纯属浪费。
+    - name: Install Android packages
+      run: |
+        yes | sdkmanager --licenses
+        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" "build-tools;30.0.3"
+
+    - name: Cache Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    # 改动说明：不跑 `taro build --type rn`——gradle 的 bundleReleaseJsAndAssets 会经
+    # rn-transformer 在 Metro transform 期自行注入正确入口并重打 bundle，前置 taro build 冗余。
+    # chmod +x gradlew 修复 git 里 gradlew 缺执行位导致的 Linux Permission denied；
+    # -x lintVitalRelease 跳过 release 关键 lint（compileSdk 34 + 新 androidx 易翻车）。
+    - name: Build release APK (arm64-v8a + armeabi-v7a)
+      working-directory: android
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleRelease --no-daemon -x lintVitalRelease \
+          -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+    - name: Upload APKs to Release
+      if: github.event_name == 'release'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release upload "${{ github.event.release.tag_name }}" \
+          android/app/build/outputs/apk/release/*.apk --clobber
+
+    - name: Upload APKs as workflow artifact
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk
+        path: android/app/build/outputs/apk/release/*.apk
