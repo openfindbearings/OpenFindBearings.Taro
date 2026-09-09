@@ -184,6 +184,137 @@
   font-weight: bold;
 }
 
+// 品牌/类型行副提示
+.ref-hint {
+  margin-left: $space-2;
+  flex: 1;
+}
+
+// ============ 排序栏 ============
+.sort-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 40px;
+  padding-left: $space-3;
+  padding-right: $space-3;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.sort-item {
+  flex-direction: row;
+  align-items: center;
+  margin-right: $space-4;
+}
+
+.sort-filter-btn {
+  flex-direction: row;
+  align-items: center;
+  margin-left: auto;
+}
+
+// ============ 已选筛选 chips ============
+.filter-chips {
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding-left: $space-4;
+  padding-right: $space-4;
+  padding-top: $space-2;
+}
+
+.chip {
+  flex-direction: row;
+  align-items: center;
+  border-radius: 999px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: $space-2;
+  padding-right: $space-2;
+  margin-right: $space-2;
+  margin-bottom: $space-2;
+}
+
+.chip-text {
+  margin-right: 4px;
+}
+
+// ============ 尺寸筛选面板 ============
+.filter-panel {
+  margin: $space-2 $space-4;
+  border-radius: $radius-lg;
+  padding: $space-4;
+}
+
+.filter-panel-title {
+  font-weight: bold;
+  margin-bottom: $space-3;
+}
+
+.filter-range-row {
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: $space-3;
+}
+
+.filter-range-label {
+  width: 44px;
+}
+
+.filter-range-input {
+  flex: 1;
+  height: 36px;
+  border-radius: $radius-md;
+  padding-left: $space-2;
+  padding-right: $space-2;
+  font-size: $font-size-md;
+}
+
+.filter-range-dash {
+  margin-left: $space-2;
+  margin-right: $space-2;
+}
+
+.filter-panel-actions {
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: $space-2;
+}
+
+.filter-reset {
+  height: 36px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: $radius-lg;
+  padding-left: $space-5;
+  padding-right: $space-5;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-3;
+}
+
+.filter-apply {
+  height: 36px;
+  border-radius: $radius-lg;
+  padding-left: $space-5;
+  padding-right: $space-5;
+  align-items: center;
+  justify-content: center;
+}
+
+// 轴承行内尺寸
+.result-specs-inline {
+  margin-top: 2px;
+}
+
+// 加载更多
+.load-more {
+  align-items: center;
+  justify-content: center;
+  padding-top: $space-4;
+  padding-bottom: $space-4;
+}
+
 // 加载失败重试按钮
 .retry-btn {
   margin-top: $space-4;
