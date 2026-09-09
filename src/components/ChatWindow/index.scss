@@ -1,0 +1,121 @@
+// 智能模式聊天窗样式 —— RN-first（无 gap/渐变/vh/百分比圆角，尺寸走 dp token）
+@import '../../styles/_rn';
+
+// 根：flex 列，高度由 tsx inline 按平台给（RN flex:1 / H5 calc）
+.chat {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+// 消息滚动区：flex:1 占满剩余，内部滚动
+.chat-list {
+  flex: 1;
+  padding-top: $space-3;
+  padding-bottom: $space-3;
+  padding-left: $space-4;
+  padding-right: $space-4;
+}
+
+// 一行消息：横向排布，顶部对齐（气泡高度随内容）
+.chat-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: $space-3;
+}
+
+// 用户行右对齐、助手行左对齐（独立类，RN 忽略组合选择器）
+.chat-row-user {
+  justify-content: flex-end;
+}
+
+.chat-row-ai {
+  justify-content: flex-start;
+}
+
+// 助手头像圆点
+.chat-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $space-2;
+  flex-shrink: 0;
+}
+
+// 气泡：最大宽 76%，圆角，内边距（背景色由 tsx inline 随主题）
+.chat-bubble {
+  max-width: 76%;
+  border-radius: $radius-lg;
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+  padding-left: $space-3;
+  padding-right: $space-3;
+}
+
+.chat-bubble-text {
+  font-size: 15px;
+  line-height: 22px;
+}
+
+// 空状态快捷提问建议
+.chat-suggest {
+  display: flex;
+  flex-direction: column;
+  margin-top: $space-2;
+}
+
+.chat-suggest-item {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: $radius-lg;
+  padding-top: $space-3;
+  padding-bottom: $space-3;
+  padding-left: $space-3;
+  padding-right: $space-3;
+  margin-bottom: $space-2;
+}
+
+.chat-suggest-text {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+// 底部输入栏：输入框 + 发送按钮（顶部分隔线）
+.chat-input-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-top-width: 1px;
+  border-top-style: solid;
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+  padding-left: $space-3;
+  padding-right: $space-3;
+}
+
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  border-radius: $radius-lg;
+  padding-left: $space-3;
+  padding-right: $space-3;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+// 发送圆形按钮（背景色由 tsx inline 随主题/发送态）
+.chat-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: $space-2;
+  flex-shrink: 0;
+}

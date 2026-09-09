@@ -110,12 +110,16 @@
 }
 
 // 操作按钮
+// 改动说明：补 display:flex——RN 下 View 默认即 flex，但 H5 的 div 默认 block，
+// 缺 display:flex 时 flex-direction/justify 全失效（按钮不横排、内容不居中）。
 .bd-actions {
+  display: flex;
   flex-direction: row;
   margin: $space-5 $space-4 0 $space-4;
 }
 
 .bd-btn {
+  display: flex;
   flex: 1;
   height: 44px;
   border-radius: $radius-lg;
@@ -131,6 +135,7 @@
 }
 
 .bd-btn-ghost {
+  display: flex;
   flex: 1;
   height: 44px;
   border-radius: $radius-lg;

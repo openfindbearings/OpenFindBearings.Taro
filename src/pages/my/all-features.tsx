@@ -6,7 +6,7 @@ import Taro from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
-import PageLayout from '../../components/PageLayout'
+import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import './all-features.scss'
 

@@ -105,7 +105,9 @@
   font-weight: bold;
 }
 
+// 改动说明：以下容器统一补 display:flex——H5 缺它则 flex-direction/justify/align 全失效（RN 默认 flex 不受影响）
 .md-v-call {
+  display: flex;
   flex-direction: row;
   align-items: center;
 }
@@ -139,11 +141,13 @@
 
 // 操作按钮
 .md-actions {
+  display: flex;
   flex-direction: row;
   margin: $space-5 $space-4 0 $space-4;
 }
 
 .md-btn {
+  display: flex;
   flex: 1;
   height: 44px;
   border-radius: $radius-lg;
@@ -159,6 +163,7 @@
 }
 
 .md-btn-ghost {
+  display: flex;
   flex: 1;
   height: 44px;
   border-radius: $radius-lg;

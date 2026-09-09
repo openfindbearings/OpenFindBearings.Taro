@@ -11,9 +11,10 @@ import { getHome, type HomeData } from '../../services/home'
 import { usableImage } from '../../services/config'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
-import PageLayout from '../../components/PageLayout'
+import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
+import ChatWindow from '../../components/ChatWindow'
 import './index.scss'
 
 const HISTORY_KEY = 'search_history'
@@ -21,6 +22,8 @@ const SETTINGS_KEY = 'app_settings'
 const MAX_HISTORY = 10
 
 interface AppSettings {
+  /** 首页模式：normal 普通 / simple 简洁 / smart 智能。缺省时由旧字段 simpleHome 迁移 */
+  homeMode?: 'normal' | 'simple' | 'smart'
   simpleHome?: boolean
 }
 
@@ -30,7 +33,7 @@ definePageConfig({ disableScroll: true })
 export default function HomePage() {
   const [keyword, setKeyword] = useState('')
   const [history, setHistory] = useState<string[]>([])
-  const [simpleMode, setSimpleMode] = useState(false)
+  const [homeMode, setHomeMode] = useState<'normal' | 'simple' | 'smart'>('normal')
   // 首页聚合数据（热门轴承 + 推荐商家），来自 BFF /mobile/home（public）
   const [home, setHome] = useState<HomeData | null>(null)
   // 全局字号缩放生成器
@@ -44,7 +47,11 @@ export default function HomePage() {
         try { setHistory(JSON.parse(savedHist)) } catch { /* 忽略坏数据 */ }
       }
       if (savedSettings) {
-        try { setSimpleMode(!!(JSON.parse(savedSettings) as AppSettings).simpleHome) } catch { /* 默认 */ }
+        try {
+          const s = JSON.parse(savedSettings) as AppSettings
+          // 迁移：优先 homeMode；无则由旧 simpleHome 推导（true→simple，false→normal）
+          setHomeMode(s.homeMode ?? (s.simpleHome ? 'simple' : 'normal'))
+        } catch { /* 默认普通 */ }
       }
     }).catch(() => { /* 默认空状态 */ })
 
@@ -134,8 +141,18 @@ export default function HomePage() {
     </View>
   )
 
+  // 智能模式：全屏聊天窗。PageLayout 传 scrollY=false（RN 关外层滚动、由 ChatWindow 内部消息列表滚动），
+  // 顶栏标题「智能助手」、保留底栏。
+  if (homeMode === 'smart') {
+    return (
+      <PageLayout nav={<NavBar title="智能助手" />} tabbar={<CustomTabBar />} scrollY={false}>
+        <ChatWindow />
+      </PageLayout>
+    )
+  }
+
   // 简洁模式：无 NavBar，搜索框 + 三钮垂直居中（内容区高度显式计算保证居中）
-  if (simpleMode) {
+  if (homeMode === 'simple') {
     return (
       <PageLayout nav={null} tabbar={<CustomTabBar />}>
         <View className='home-simple'>

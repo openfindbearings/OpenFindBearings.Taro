@@ -6,9 +6,10 @@ import Icon from '../../components/Icon'
 import { View, Text } from '@tarojs/components'
 import { useDidShow } from '@tarojs/taro'
 import { getItem } from '../../utils/storage'
+import { IS_H5 } from '../../utils/platform'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
-import PageLayout from '../../components/PageLayout'
+import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import './index.scss'
@@ -29,7 +30,9 @@ export default function MerchantPage() {
 
   return (
     <PageLayout nav={<NavBar title={approved ? '商家' : '入驻'} />} tabbar={<CustomTabBar />}>
-      <View className='placeholder'>
+      {/* H5 下 PageLayout body 是块级、无固定高，placeholder 的 flex:1 撑不满导致不居中；
+          给一个可视高(视口 - 顶栏44 - 底栏56)让其 flex column 垂直居中。RN 靠 flex:1 已居中，不加。 */}
+      <View className='placeholder' style={IS_H5 ? { minHeight: 'calc(100vh - 100px)' } : undefined}>
         <View className='placeholder-icon' style={{ backgroundColor: t.primaryLight }}>
           <Icon name="store" size={48} color={t.primary} />
         </View>
