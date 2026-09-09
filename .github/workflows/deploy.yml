@@ -144,9 +144,15 @@ jobs:
     - name: Cache Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    # 改动说明：不跑 `taro build --type rn`——gradle 的 bundleReleaseJsAndAssets 会经
-    # rn-transformer 在 Metro transform 期自行注入正确入口并重打 bundle，前置 taro build 冗余。
-    # chmod +x gradlew 修复 git 里 gradlew 缺执行位导致的 Linux Permission denied；
+    # 改动说明：打包前必须先 `taro build --type rn`——Taro RN 的 release 流程要求它把 JS bundle
+    # 生成到 config.rn.output.android 指定路径（android/app/src/main/assets/index.android.bundle），
+    # gradle 再打包进 APK。之前误判"gradle 会自打、这步冗余"删掉它，导致 release APK 里没有
+    # bundle、真机启动即 "Unable to load script" 闪退，故加回。生成的 bundle 已被 .gitignore 忽略，
+    # 仅存在于 CI 工作区。
+    - name: Build RN bundle (Taro)
+      run: npx taro build --type rn
+
+    # 改动说明：chmod +x gradlew 修复 git 里 gradlew 缺执行位导致的 Linux Permission denied；
     # -x lintVitalRelease 跳过 release 关键 lint（compileSdk 34 + 新 androidx 易翻车）。
     - name: Build release APK (arm64-v8a + armeabi-v7a)
       working-directory: android
