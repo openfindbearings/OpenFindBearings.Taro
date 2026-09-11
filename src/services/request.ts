@@ -41,9 +41,10 @@ export function hasSession(): boolean {
 
 /** 写入令牌：access 进内存，refresh 落盘 */
 export async function setTokens(access: string, refresh?: string): Promise<void> {
-  memoryToken = access
-  // 临时诊断日志（登录态排查用，定位后删除）
-  console.log('[auth-diag] setTokens refresh=', refresh ? `len:${refresh.length}` : String(refresh))
+  // 改动说明：原写 memoryToken（不存在的变量，实际创建了幽灵全局），真正的 accessToken
+  // 恒为 null → 所有请求不带 Authorization → 401→刷新→重放仍 401 的死循环。
+  // 收藏/资料/登录态保持全部失效的总根因，改回 accessToken
+  accessToken = access
   if (refresh) await setItem(REFRESH_KEY, refresh)
 }
 
@@ -105,15 +106,8 @@ async function doRefreshToken(): Promise<boolean> {
         await setTokens(body.accessToken, body.refreshToken)
         return true
       }
-      // 临时诊断日志（登录态排查用，定位后删除）
-      console.log('[auth-diag] refresh 2xx 但无 accessToken, body=', JSON.stringify(body).slice(0, 200))
-    } else {
-      // 临时诊断日志（登录态排查用，定位后删除）
-      console.log('[auth-diag] refresh HTTP', res.statusCode, String(res.data).slice(0, 200))
     }
-  } catch (e) {
-    // 临时诊断日志（登录态排查用，定位后删除）
-    console.log('[auth-diag] refresh 异常', String(e))
+  } catch {
     /* 刷新请求异常，返回 false 由上层清态 */
   }
   return false
@@ -158,14 +152,23 @@ export async function request<T = any>(  url: string,
     if (auth && tok) h['Authorization'] = `Bearer ${tok}`
     return h
   }
-  const send = () =>
-    Taro.request({
-      url: `${baseUrl}${url}`,
-      method,
-      data,
-      header: buildHeader(accessToken),
-      timeout: 15000
-    })
+  // 改动说明：Taro RN 的 request 对非 2xx 走 fail 回调（Promise reject，reject 值即响应对象），
+  // 与 H5"任何状态码都 resolve"语义不同——导致 401→刷新→重放分支在 RN 上永远不执行，
+  // 冷启动登录态无法自愈。此处把 reject 的响应对象归一化回 res 形状，双端行为对齐
+  const send = async (): Promise<any> => {
+    try {
+      return await Taro.request({
+        url: `${baseUrl}${url}`,
+        method,
+        data,
+        header: buildHeader(accessToken),
+        timeout: 15000
+      })
+    } catch (e: any) {
+      if (e && typeof e.statusCode === 'number') return e
+      throw e
+    }
+  }
 
   let res = await send()
 

@@ -99,11 +99,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchProfile: async () => {
     try {
       const profile = await request<UserInfo>(API.PROFILE)
+      // 临时诊断（登录资料排查，定位后删除）
+      console.log('[auth-diag] fetchProfile ok userName=', profile?.userName || '(空)', 'phone=', profile?.phoneNumber || '(空)')
       if (profile) {
         set({ user: profile })
         await persistProfileFields(profile)
       }
-    } catch {
+    } catch (e) {
+      // 临时诊断（登录资料排查，定位后删除）
+      console.log('[auth-diag] fetchProfile 失败:', (e as any)?.message || String(e), 'code=', (e as any)?.code, 'status=', (e as any)?.statusCode)
       // profile 失败不在此登出（401 已由 request 拦截处理）；保留当前登录态判断
     }
   },
@@ -111,8 +115,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   init: async () => {
     // access 仅内存，冷启动为空；以持久 refresh 是否存在判定登录态
     const refresh = await getRefreshToken()
-    // 临时诊断日志（登录态排查用，定位后删除）
-    console.log('[auth-diag] init refresh=', refresh ? `len:${refresh.length}` : String(refresh), 'memoryAccess=', !!getToken())
     if (!refresh && !getToken()) return
     set({ isLoggedIn: true })
     await get().fetchProfile()
