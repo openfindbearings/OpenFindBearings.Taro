@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { formatTime } from '../../utils/format'
@@ -68,11 +69,8 @@ export default function HistoryPage() {
     const label = tk === 'bearing'
       ? (item as BearingHistoryItem).bearingPartNumber
       : (item as MerchantHistoryItem).merchantName
-    Taro.showModal({
-      title: '删除记录',
-      content: `删除「${label}」的浏览记录？`,
-      success: async (res) => {
-        if (!res.confirm) return
+    showConfirmDialog({ title: '删除记录', content: `删除「${label}」的浏览记录？` }).then(async (ok) => {
+        if (!ok) return
         const key = tk === 'bearing' ? (item as BearingHistoryItem).bearingId : (item as MerchantHistoryItem).merchantId
         setBusyId(key)
         try {
@@ -87,17 +85,13 @@ export default function HistoryPage() {
         } catch {
           Taro.showToast({ title: '删除失败', icon: 'none' })
         } finally { setBusyId('') }
-      }
-    })
+      })
   }
 
   /** 清空当前用户全部浏览历史（轴承+商家两表） */
   const onClearAll = () => {
-    Taro.showModal({
-      title: '清空历史',
-      content: '确定清空全部浏览历史？该操作不可恢复。',
-      success: async (res) => {
-        if (!res.confirm) return
+    showConfirmDialog({ title: '清空历史', content: '确定清空全部浏览历史？该操作不可恢复。' }).then(async (ok) => {
+        if (!ok) return
         try {
           await clearHistory()
           setBearings([])
@@ -107,8 +101,7 @@ export default function HistoryPage() {
         } catch {
           Taro.showToast({ title: '清空失败', icon: 'none' })
         }
-      }
-    })
+      })
   }
 
   const rightIcons = isLoggedIn ? [{ name: 'trash-2', onClick: onClearAll }] : []

@@ -12,6 +12,7 @@ import Icon from '../../components/Icon'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { getObject, setObject } from '../../utils/storage'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 // 改动说明：toggleVibrate 移除后 IS_RN 不再使用，删除导入避免未引用告警
 import Switch from '../../components/Switch'
 import { useFontSizeStore } from '../../stores/fontSize'
@@ -109,15 +110,8 @@ export default function SettingsPage() {
   // 智能反而可设，与"个性化设置属登录用户"的语义矛盾）。写 homeMode（主）+ simpleHome（旧字段兼容）
   const handleHomeMode = (mode: HomeMode) => {
     if (mode !== 'normal' && !isLoggedIn) {
-      Taro.showModal({
-        title: '提示',
-        content: '首页模式需登录后设置',
-        confirmText: '去登录',
-        success: (res) => {
-          if (res.confirm) {
-            Taro.navigateTo({ url: '/pages/auth/login' })
-          }
-        }
+      showConfirmDialog({ title: '提示', content: '首页模式需登录后设置', confirmText: '去登录' }).then((ok) => {
+        if (ok) Taro.navigateTo({ url: '/pages/auth/login' })
       })
       return
     }
@@ -127,15 +121,8 @@ export default function SettingsPage() {
   // 主题色选择：登录门槛（与简洁首页模式一致），选后即时生效（useTheme 全站响应）
   const handleThemeColor = () => {
     if (!isLoggedIn) {
-      Taro.showModal({
-        title: '提示',
-        content: '主题色需登录后使用',
-        confirmText: '去登录',
-        success: (res) => {
-          if (res.confirm) {
-            Taro.navigateTo({ url: '/pages/auth/login' })
-          }
-        }
+      showConfirmDialog({ title: '提示', content: '主题色需登录后使用', confirmText: '去登录' }).then((ok) => {
+        if (ok) Taro.navigateTo({ url: '/pages/auth/login' })
       })
       return
     }
@@ -156,58 +143,41 @@ export default function SettingsPage() {
   }
 
   const handleLogout = () => {
-    Taro.showModal({
-      title: '退出登录',
-      content: '确定要退出当前账号吗？',
-      confirmColor: '#EF4444',
-      success: (res) => {
-        if (res.confirm) {
-          // 改动说明：统一走 auth store 的 logout（先吊销服务端刷新令牌，再清本地 access/refresh 与展示信息），
-          // 设备身份 device_id 与隐私同意保留，不整体 clearStorage。
-          ;(async () => {
-            // store 的 logout 内部已置 isLoggedIn:false，页面订阅自动响应，无需本地状态
-            await useAuthStore.getState().logout()
-            Taro.reLaunch({ url: '/pages/home/index' })
-          })()
-        }
+    showConfirmDialog({ title: '退出登录', content: '确定要退出当前账号吗？', confirmColor: '#EF4444' }).then((ok) => {
+      if (ok) {
+        // 改动说明：统一走 auth store 的 logout（先吊销服务端刷新令牌，再清本地 access/refresh 与展示信息），
+        // 设备身份 device_id 与隐私同意保留，不整体 clearStorage。
+        ;(async () => {
+          // store 的 logout 内部已置 isLoggedIn:false，页面订阅自动响应，无需本地状态
+          await useAuthStore.getState().logout()
+          Taro.reLaunch({ url: '/pages/home/index' })
+        })()
       }
     })
   }
 
   const handleDeleteAccount = () => {
-    Taro.showModal({
+    showConfirmDialog({
       title: '注销账户',
       content: '注销后所有数据将被清除且无法恢复，确定继续？',
       confirmText: '确认注销',
-      confirmColor: '#EF4444',
-      success: (res) => {
-        if (res.confirm) {
-          Taro.clearStorage()
-          Taro.showToast({ title: '账户已注销', icon: 'success' })
-          setTimeout(() => Taro.reLaunch({ url: '/pages/home/index' }), 1500)
-        }
+      confirmColor: '#EF4444'
+    }).then((ok) => {
+      if (ok) {
+        Taro.clearStorage()
+        Taro.showToast({ title: '账户已注销', icon: 'success' })
+        setTimeout(() => Taro.reLaunch({ url: '/pages/home/index' }), 1500)
       }
     })
   }
 
   const checkVersion = () => {
-    Taro.showModal({
-      title: '版本更新',
-      content: '当前版本 v1.0.0，已是最新版本。',
-      showCancel: false,
-      confirmText: '知道了'
-    })
+    showConfirmDialog({ title: '版本更新', content: '当前版本 v1.0.0，已是最新版本。', showCancel: false, confirmText: '知道了' })
   }
 
   const callHotline = () => {
-    Taro.showModal({
-      title: '服务热线',
-      content: '拨打 400-xxx-xxxx？',
-      success: (res) => {
-        if (res.confirm) {
-          Taro.makePhoneCall({ phoneNumber: '400-xxx-xxxx' }).catch(() => {})
-        }
-      }
+    showConfirmDialog({ title: '服务热线', content: '拨打 400-xxx-xxxx？' }).then((ok) => {
+      if (ok) Taro.makePhoneCall({ phoneNumber: '400-xxx-xxxx' }).catch(() => {})
     })
   }
 

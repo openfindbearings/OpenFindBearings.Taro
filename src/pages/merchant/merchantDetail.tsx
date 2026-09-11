@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
@@ -40,9 +41,8 @@ export default function MerchantDetailPage() {
   })
 
   const requireLogin = () => {
-    Taro.showModal({
-      title: '提示', content: '该功能需登录后使用', confirmText: '去登录',
-      success: (res) => { if (res.confirm) Taro.navigateTo({ url: '/pages/auth/login' }) }
+    showConfirmDialog({ title: '提示', content: '该功能需登录后使用', confirmText: '去登录' }).then((ok) => {
+      if (ok) Taro.navigateTo({ url: '/pages/auth/login' })
     })
   }
   // 关注/取消关注切换
