@@ -8,9 +8,14 @@ data:
   ASPNETCORE_URLS: "http://+:8080"
   Api__BaseUrl: "http://openfindbearings-api:80"
   Identity__Authority: "http://openfindbearings-identity:80"
-  Identity__Audience: "api:mobile"
+  # 改动说明：受众应为资源名 openfindbearings-api（api:mobile scope 签发令牌的 aud），
+  # 旧值 api:mobile 是 scope 名而非 aud，会导致 BFF 校验用户令牌失败；对齐 appsettings 修正。
+  Identity__Audience: "openfindbearings-api"
   # 改动说明：maui-client 统一重命名为 mobile-client
   Identity__ClientId: "mobile-client"
+  # 租户标识与请求 scope：BFF 调 /connect/token 时附加，缺失会走代码默认值，显式配置更稳妥
+  Identity__Realm: "openfindbearings"
+  Identity__Scope: "api:mobile"
   # 改动说明：ClientSecret 已迁移到 openfindbearings-mobile-secrets（Secret），不再放 ConfigMap
   # 内部服务间调用令牌：BFF→API 带此头豁免 API 按 IP 的用户级限流。须与 API 侧 Internal__ApiToken 完全一致。
   Internal__ApiToken: "ofb-internal-3f9a1c7e5b2d4a86"

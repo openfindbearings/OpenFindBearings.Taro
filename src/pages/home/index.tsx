@@ -11,6 +11,9 @@ import { getHome, type HomeData } from '../../services/home'
 import { usableImage } from '../../services/config'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
+// 改动说明：补 useAuthStore 导入——上一轮加"未登录降级普通模式"时只写了使用处漏了 import，
+// 导致 loggedIn 抛 ReferenceError、整段降级逻辑从未生效（tsc TS2304 抓出）
+import { useAuthStore } from '../../stores/auth'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
@@ -34,6 +37,11 @@ export default function HomePage() {
   const [keyword, setKeyword] = useState('')
   const [history, setHistory] = useState<string[]>([])
   const [homeMode, setHomeMode] = useState<'normal' | 'simple' | 'smart'>('normal')
+  // 改动说明：简洁模式有登录门槛（设置页只拦"切换"，拦不住"存量设置"）——
+  // 未登录时显示级降级为普通模式，不改持久设置，重新登录后自动恢复简洁
+  const loggedIn = useAuthStore((s) => s.isLoggedIn)
+  const effectiveMode: 'normal' | 'simple' | 'smart' =
+    !loggedIn && homeMode === 'simple' ? 'normal' : homeMode
   // 首页聚合数据（热门轴承 + 推荐商家），来自 BFF /mobile/home（public）
   const [home, setHome] = useState<HomeData | null>(null)
   // 全局字号缩放生成器
@@ -132,7 +140,8 @@ export default function HomePage() {
         </View>
         <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>拍轴承</Text>
       </View>
-      <View className='quick-item' onClick={() => Taro.showToast({ title: '扫条码（开发中）', icon: 'none' })}>
+      {/* 改动说明：扫码底层能力未接入，统一"暂未上线"停用文案 */}
+      <View className='quick-item' onClick={() => Taro.showToast({ title: '扫码功能暂未上线', icon: 'none' })}>
         <View className='quick-icon quick-icon-scan'>
           <Icon name="scan_line" size={28} color='#FFFFFF' />
         </View>
@@ -143,7 +152,7 @@ export default function HomePage() {
 
   // 智能模式：全屏聊天窗。PageLayout 传 scrollY=false（RN 关外层滚动、由 ChatWindow 内部消息列表滚动），
   // 顶栏标题「智能助手」、保留底栏。
-  if (homeMode === 'smart') {
+  if (effectiveMode === 'smart') {
     return (
       <PageLayout nav={<NavBar title="智能助手" />} tabbar={<CustomTabBar />} scrollY={false}>
         <ChatWindow />
@@ -152,7 +161,7 @@ export default function HomePage() {
   }
 
   // 简洁模式：无 NavBar，搜索框 + 三钮垂直居中（内容区高度显式计算保证居中）
-  if (homeMode === 'simple') {
+  if (effectiveMode === 'simple') {
     return (
       <PageLayout nav={null} tabbar={<CustomTabBar />}>
         <View className='home-simple'>

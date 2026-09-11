@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
-import { getItem } from '../../utils/storage'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
+import { useAuthStore } from '../../stores/auth'
+import { checkFollow, toggleFollow, recordMerchantView } from '../../services/user'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
 import { usableImage } from '../../services/config'
 import './merchantDetail.scss'
@@ -21,23 +22,41 @@ export default function MerchantDetailPage() {
 
   const [detail, setDetail] = useState<MerchantDetail | null>(null)
   const [bearings, setBearings] = useState<MerchantBearing[]>([])
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // 改动说明：登录态改订阅 auth store（同轴承详情页，access 只存内存旧写法恒判未登录）
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  const [isFollowed, setIsFollowed] = useState(false)
 
   useDidShow(() => {
-    getItem('access_token').then(tk => setIsLoggedIn(!!tk)).catch(() => setIsLoggedIn(false))
     if (!id) return
     getMerchantDetail(id).then(setDetail).catch(() => {})
     getMerchantBearings(id).then(r => setBearings(r?.items || [])).catch(() => {})
+    // 关注状态回显 + 浏览上报（仅登录时）
+    if (isLoggedIn) {
+      checkFollow(id).then(setIsFollowed).catch(() => setIsFollowed(false))
+      recordMerchantView(id)
+    } else {
+      setIsFollowed(false)
+    }
   })
 
   const requireLogin = () => {
     Taro.showModal({
       title: '提示', content: '该功能需登录后使用', confirmText: '去登录',
-      success: (res) => { if (res.confirm) { /* TODO: 跳登录页 */ } }
+      success: (res) => { if (res.confirm) Taro.navigateTo({ url: '/pages/auth/login' }) }
     })
   }
-  const handleFollow = () => { if (!isLoggedIn) return requireLogin(); Taro.showToast({ title: '关注功能开发中', icon: 'none' }) }
-  const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); Taro.showToast({ title: '纠错功能开发中', icon: 'none' }) }
+  // 关注/取消关注切换
+  const handleFollow = async () => {
+    if (!isLoggedIn) return requireLogin()
+    const res = await toggleFollow(id, isFollowed).catch(() => null)
+    if (res?.success) {
+      setIsFollowed(!isFollowed)
+      Taro.showToast({ title: isFollowed ? '已取消关注' : '已关注', icon: 'none' })
+    } else {
+      Taro.showToast({ title: res?.message || '操作失败，请稍后重试', icon: 'none' })
+    }
+  }
+  const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); Taro.showToast({ title: '纠错暂未上线', icon: 'none' }) }
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
   const callPhone = (p?: string | null) => { if (p) Taro.makePhoneCall({ phoneNumber: p }).catch(() => {}) }
 
@@ -128,9 +147,9 @@ export default function MerchantDetailPage() {
 
         {/* 操作：关注 / 纠错（登录门槛） */}
         <View className='md-actions'>
-          <View className='md-btn' style={{ backgroundColor: t.primary }} onClick={handleFollow}>
-            <Icon name="user-plus" size={18} color={t.textOnPrimary} />
-            <Text className='md-btn-text' style={{ ...fs(15), color: t.textOnPrimary }}>关注</Text>
+          <View className='md-btn' style={{ backgroundColor: isFollowed ? t.danger : t.primary }} onClick={handleFollow}>
+            <Icon name={isFollowed ? 'user-check' : 'user-plus'} size={18} color={t.textOnPrimary} />
+            <Text className='md-btn-text' style={{ ...fs(15), color: t.textOnPrimary }}>{isFollowed ? '已关注' : '关注'}</Text>
           </View>
           <View className='md-btn-ghost' style={{ borderColor: t.border }} onClick={handleCorrect}>
             <Icon name="edit" size={18} color={t.textSecondary} />

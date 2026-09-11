@@ -31,7 +31,17 @@ export default function AllFeaturesPage() {
       Taro.navigateTo({ url: '/pages/my/settings' })
       return
     }
-    Taro.showToast({ title: '功能开发中', icon: 'none' })
+    // 改动说明：收藏/关注/历史已实现，跳转真实页面（页面内含未登录引导）
+    const urls: Record<string, string> = {
+      favorites: '/pages/my/favorites',
+      followed: '/pages/my/followed',
+      history: '/pages/my/history'
+    }
+    if (urls[key]) {
+      Taro.navigateTo({ url: urls[key] })
+      return
+    }
+    Taro.showToast({ title: '功能暂未上线', icon: 'none' })
   }
 
   return (

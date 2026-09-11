@@ -8,7 +8,17 @@ export default defineAppConfig({
     'pages/merchant/merchantDetail',
     'pages/my/settings',
     'pages/my/all-features',
-    'pages/common/doc'
+    'pages/my/favorites',
+    'pages/my/followed',
+    'pages/my/history',
+    'pages/my/profile-edit',
+    'pages/common/doc',
+    'pages/auth/login',
+    'pages/auth/register',
+    'pages/my/favorites',
+    'pages/my/followed',
+    'pages/my/history',
+    'pages/my/profile-edit'
   ],
   window: {
     backgroundTextStyle: 'light',

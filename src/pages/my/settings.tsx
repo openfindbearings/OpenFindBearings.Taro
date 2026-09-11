@@ -11,8 +11,8 @@ import { useState } from 'react'
 import Icon from '../../components/Icon'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { getItem, getObject, setObject, removeItem } from '../../utils/storage'
-import { IS_RN } from '../../utils/platform'
+import { getObject, setObject } from '../../utils/storage'
+// 改动说明：toggleVibrate 移除后 IS_RN 不再使用，删除导入避免未引用告警
 import Switch from '../../components/Switch'
 import { useFontSizeStore } from '../../stores/fontSize'
 import { useThemeStore, type ThemeMode } from '../../stores/theme'
@@ -20,6 +20,7 @@ import { useThemeColorStore } from '../../hooks/useThemeColor'
 import { THEME_PRESETS } from '../../styles/themes'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
+import { useAuthStore } from '../../stores/auth'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import './settings.scss'
@@ -53,7 +54,12 @@ export default function SettingsPage() {
     vibrateEnabled: true
   })
   // 登录态：控制"注销账户/退出登录"显隐，以及"简洁首页模式"的登录门槛
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // 改动说明：由本地 useState + useDidShow 读 storage，改为订阅 auth store（唯一事实源）——
+  // 登录成功返回、登出、冷启动 init 恢复均即时响应，不再依赖页面显示时序与 storage 读取
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  // 改动说明：未登录时首页模式一律显示"普通"（与首页 effectiveMode 降级一致），
+  // 登录态变化即时响应；已存的个性化模式在登录后恢复显示
+  const displayHomeMode: HomeMode = isLoggedIn ? settings.homeMode : 'normal'
   // 字号：全局 store 为唯一来源（实时生效），不再走 app_settings
   const fontSize = useFontSizeStore((s) => s.size)
   const setFontSize = useFontSizeStore((s) => s.setSize)
@@ -75,7 +81,6 @@ export default function SettingsPage() {
         setSettings({ ...saved, homeMode })
       }
     }).catch(() => { /* 默认值 */ })
-    getItem('access_token').then(t => setIsLoggedIn(!!t)).catch(() => setIsLoggedIn(false))
   })
 
   // 保存设置（纯存储，无 DOM 操作——RN 无 document）
@@ -100,16 +105,17 @@ export default function SettingsPage() {
       .catch(() => { /* 用户取消 */ })
   }
 
-  // 首页模式：普通/智能始终可选；简洁沿用原登录门槛。写 homeMode（主）+ simpleHome（旧字段兼容）
+  // 改动说明：首页模式整组上登录门槛——未登录只能保持"普通"（原仅简洁受限，
+  // 智能反而可设，与"个性化设置属登录用户"的语义矛盾）。写 homeMode（主）+ simpleHome（旧字段兼容）
   const handleHomeMode = (mode: HomeMode) => {
-    if (mode === 'simple' && !isLoggedIn) {
+    if (mode !== 'normal' && !isLoggedIn) {
       Taro.showModal({
         title: '提示',
-        content: '简洁首页模式需登录后使用',
+        content: '首页模式需登录后设置',
         confirmText: '去登录',
         success: (res) => {
           if (res.confirm) {
-            // TODO: 跳转登录页
+            Taro.navigateTo({ url: '/pages/auth/login' })
           }
         }
       })
@@ -127,7 +133,7 @@ export default function SettingsPage() {
         confirmText: '去登录',
         success: (res) => {
           if (res.confirm) {
-            // TODO: 跳转登录页
+            Taro.navigateTo({ url: '/pages/auth/login' })
           }
         }
       })
@@ -156,9 +162,13 @@ export default function SettingsPage() {
       confirmColor: '#EF4444',
       success: (res) => {
         if (res.confirm) {
-          removeItem(SETTINGS_KEY)
-          Taro.clearStorage()
-          Taro.reLaunch({ url: '/pages/home/index' })
+          // 改动说明：统一走 auth store 的 logout（先吊销服务端刷新令牌，再清本地 access/refresh 与展示信息），
+          // 设备身份 device_id 与隐私同意保留，不整体 clearStorage。
+          ;(async () => {
+            // store 的 logout 内部已置 isLoggedIn:false，页面订阅自动响应，无需本地状态
+            await useAuthStore.getState().logout()
+            Taro.reLaunch({ url: '/pages/home/index' })
+          })()
         }
       }
     })
@@ -201,14 +211,7 @@ export default function SettingsPage() {
     })
   }
 
-  // 震动开关：开启时触发一次轻震动反馈
-  const toggleVibrate = () => {
-    const next = !settings.vibrateEnabled
-    save({ vibrateEnabled: next })
-    if (next && IS_RN) {
-      Taro.vibrateShort({ type: 'light' }).catch(() => {})
-    }
-  }
+  // 改动说明：震动改为停用态后，原 toggleVibrate（含 RN 震动反馈）不再被引用，已移除
 
   return (
     <PageLayout nav={<NavBar title="设置" showBack />}>
@@ -236,13 +239,13 @@ export default function SettingsPage() {
                 ).map((opt) => (
                   <View
                     key={opt.key}
-                    className={settings.homeMode === opt.key ? 'font-btn font-btn-active' : 'font-btn'}
-                    style={{ backgroundColor: settings.homeMode === opt.key ? t.primary : t.bgInput }}
+                    className={displayHomeMode === opt.key ? 'font-btn font-btn-active' : 'font-btn'}
+                    style={{ backgroundColor: displayHomeMode === opt.key ? t.primary : t.bgInput }}
                     onClick={() => handleHomeMode(opt.key)}
                   >
                     <Text
-                      className={settings.homeMode === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}
-                      style={{ ...fs(13), color: settings.homeMode === opt.key ? t.textOnPrimary : t.textSecondary }}
+                      className={displayHomeMode === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}
+                      style={{ ...fs(13), color: displayHomeMode === opt.key ? t.textOnPrimary : t.textSecondary }}
                     >
                       {opt.label}
                     </Text>
@@ -322,8 +325,10 @@ export default function SettingsPage() {
               <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>消息推送</Text>
               <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
             </View>
+            {/* 改动说明：底层推送未接入，开关做真停用态且恒显示关闭（与广告设置一致，避免"停用却开着"的矛盾观感） */}
             <Switch
-              checked={settings.pushEnabled}
+              checked={false}
+              disabled
               onChange={(v) => save({ pushEnabled: v })}
             />
           </View>
@@ -337,6 +342,7 @@ export default function SettingsPage() {
             </View>
             <Switch
               checked={settings.adEnabled}
+              disabled
               onChange={(v) => save({ adEnabled: v })}
             />
           </View>
@@ -383,8 +389,10 @@ export default function SettingsPage() {
               <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>音效</Text>
               <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
             </View>
+            {/* 改动说明：音效底层未接入，停用且恒关（与广告设置一致） */}
             <Switch
-              checked={settings.soundEnabled}
+              checked={false}
+              disabled
               onChange={(v) => save({ soundEnabled: v })}
             />
           </View>
@@ -393,9 +401,11 @@ export default function SettingsPage() {
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
                 <Icon name="vibrate" size={20} color={t.primary} />
               </View>
-              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>震动</Text>
-            </View>
-            <Switch checked={settings.vibrateEnabled} onChange={toggleVibrate} />
+                <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>震动</Text>
+                {/* 改动说明：震动按需求与广告设置统一为"停用未选择"态（原真实生效，暂停用） */}
+                <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
+              </View>
+              <Switch checked={false} disabled onChange={(v) => save({ vibrateEnabled: v })} />
           </View>
           <View className='list-item list-item-last' onClick={checkVersion}>
             <View className='list-left'>

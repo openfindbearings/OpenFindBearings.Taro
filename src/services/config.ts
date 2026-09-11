@@ -44,8 +44,26 @@ export function getBaseUrl(): string {
  * 故仅当为绝对 http(s) 地址时才渲染 <Image>，否则由调用方回退默认占位图标。
  */
 export function usableImage(url?: string | null): string {
-  return url && /^https?:\/\//i.test(url) ? url : ''
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  // 改动说明：相对路径不再直接判死（原来一律回退占位，轴承图/头像全废）。
+  // /mobile/ 开头是 BFF 路由直接拼 base；其余（/images/、/uploads/ 等 API 静态路径）
+  // 走 BFF 媒体代理 /mobile/media/** 转发（API 无公网 ingress）
+  if (url.startsWith('/')) {
+    const base = getBaseUrl()
+    return url.startsWith('/mobile/') ? `${base}${url}` : `${base}/mobile/media${url}`
+  }
+  return ''
 }
+
+/**
+ * 预置头像（随 API 镜像构建的静态图，经 BFF 媒体代理访问）。
+ * 改动说明：绝对地址在保存时入库（Identity [Url] 校验要求绝对），
+ * H5 开发环境 base 为空串走同源代理，保存的是相对地址仅影响本地库。
+ */
+export const PRESET_AVATARS: string[] = [1, 2, 3, 4, 5, 6].map(
+  (n) => `${getBaseUrl()}/mobile/media/avatars/presets/p${n}.png`
+)
 
 /** API 路径 */
 export const API = {
@@ -53,6 +71,10 @@ export const API = {
   LOGIN: `${API_PREFIX}/auth/login`,
   REGISTER: `${API_PREFIX}/auth/register`,
   REFRESH: `${API_PREFIX}/auth/refresh`,
+  LOGIN_SMS: `${API_PREFIX}/auth/login-sms`,
+  SEND_CODE: `${API_PREFIX}/auth/send-code`,
+  LOGOUT: `${API_PREFIX}/auth/logout`,
+  DELETION: `${API_PREFIX}/auth/deletion`,
 
   /** 首页聚合 */
   HOME: `${API_PREFIX}/home`,
@@ -72,7 +94,23 @@ export const API = {
   PROFILE: `${API_PREFIX}/profile`,
   FAVORITES: `${API_PREFIX}/favorites`,
   FOLLOWED: `${API_PREFIX}/followed`,
+  // 改动说明：原 HISTORY=/mobile/history 指向不存在的 BFF 端点（恒 404），
+  // 浏览历史改由下方 /me/history/* 真实端点承载（轴承/商家分列）。
   HISTORY: `${API_PREFIX}/history`,
+
+  /** 个人写操作（BFF /mobile/me/* 代理到 API /api/me/*，透传用户令牌） */
+  FAVORITE_TOGGLE: (id: string) => `${API_PREFIX}/me/favorites/${id}`,
+  FAVORITE_CHECK: (id: string) => `${API_PREFIX}/me/favorites/${id}/check`,
+  FOLLOW_TOGGLE: (id: string) => `${API_PREFIX}/me/follows/${id}`,
+  FOLLOW_CHECK: (id: string) => `${API_PREFIX}/me/follows/${id}/check`,
+  HISTORY_BEARINGS: `${API_PREFIX}/me/history/bearings`,
+  HISTORY_MERCHANTS: `${API_PREFIX}/me/history/merchants`,
+  HISTORY_RECORD_BEARING: (id: string) => `${API_PREFIX}/me/history/bearings/${id}`,
+  HISTORY_RECORD_MERCHANT: (id: string) => `${API_PREFIX}/me/history/merchants/${id}`,
+  HISTORY_CLEAR: `${API_PREFIX}/me/history/clear`,
+  PROFILE_UPDATE: `${API_PREFIX}/me/profile`,
+  /** 头像上传（multipart，BFF 代理到 API 落盘并返回绝对 URL） */
+  AVATAR_UPLOAD: `${API_PREFIX}/me/avatar`,
 
   /** 配置 */
   CONFIG: `${API_PREFIX}/config`,
