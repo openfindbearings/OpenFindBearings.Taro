@@ -8,6 +8,9 @@
 import { Component, PropsWithChildren } from 'react'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { bootOnce, preloadMerchantState } from './appShared'
+import PrivacyDialog from './components/PrivacyDialog'
+import VoicePanel from './components/VoicePanel'
+import ConfirmDialog from './components/ConfirmDialog'
 import './app.scss'
 
 class App extends Component<PropsWithChildren> {
@@ -21,7 +24,15 @@ class App extends Component<PropsWithChildren> {
 
   render() {
     // 标准 RN：根节点由 SafeAreaProvider 包裹，安全区内缩经 useSafeAreaInsets() 获取
-    return <SafeAreaProvider>{this.props.children}</SafeAreaProvider>
+    // 改动说明：挂载 PrivacyDialog（RN 原生 Modal 自绘隐私弹窗），接收 showPrivacyDialog() 信号
+    return (
+      <SafeAreaProvider>
+        {this.props.children}
+        <PrivacyDialog />
+        <VoicePanel />
+        <ConfirmDialog />
+      </SafeAreaProvider>
+    )
   }
 }
 export default App

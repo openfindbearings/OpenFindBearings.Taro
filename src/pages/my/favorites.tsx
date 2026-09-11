@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { formatTime } from '../../utils/format'
@@ -45,11 +46,8 @@ export default function FavoritesPage() {
 
   /** 取消收藏（确认后调 DELETE 代理，成功即本地移除该行） */
   const onRemove = (item: FavoriteItem) => {
-    Taro.showModal({
-      title: '取消收藏',
-      content: `不再收藏「${item.bearing.partNumber}」？`,
-      success: async (res) => {
-        if (!res.confirm) return
+    showConfirmDialog({ title: '取消收藏', content: `不再收藏「${item.bearing.partNumber}」？` }).then(async (ok) => {
+        if (!ok) return
         setBusyId(item.bearing.id)
         try {
           await toggleFavorite(item.bearing.id, true)
@@ -59,8 +57,7 @@ export default function FavoritesPage() {
         } catch {
           Taro.showToast({ title: '操作失败', icon: 'none' })
         } finally { setBusyId('') }
-      }
-    })
+      })
   }
 
   const goDetail = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })

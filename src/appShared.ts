@@ -4,6 +4,7 @@
 // 启动逻辑收敛到本文件，两个入口统一调用，杜绝再次漂移。
 import Taro from '@tarojs/taro'
 import { getItem, setItem } from './utils/storage'
+import { showPrivacyDialog } from './components/PrivacyDialog'
 import { initFontSize } from './stores/fontSize'
 import { initTheme } from './stores/theme'
 import { initThemeColor } from './hooks/useThemeColor'
@@ -30,20 +31,16 @@ export function preloadMerchantState() {
 
 // 首启隐私政策同意弹窗（合规：PIPL 要求收集个人信息前取得用户同意）
 // 说明：本期为软门槛——未同意仍可匿名浏览查询，仅登录/入驻等有个人信息场景在各自页再行勾选；
-// showModal 无法内嵌可点链接，此处文案引导，完整可点协议见注册页与设置页协议入口。
+// 改动说明：RN 端改走 PrivacyDialog（react-native 原生 Modal 自绘弹窗），修复
+// Taro showModal 在 Android 真机上"同意"按钮触摸失效且无法点开协议链接的问题；
+// H5/小程序仍走 showModal 分支，两端统一经 showPrivacyDialog() 命令式接口。
 const PRIVACY_CONSENT_KEY = 'privacy_consent'
 export function showPrivacyConsentOnce() {
   getItem(PRIVACY_CONSENT_KEY)
     .then((v) => {
       if (v === 'true') return
-      Taro.showModal({
-        title: '隐私保护提示',
-        content: '欢迎使用本应用。请阅读并同意《用户协议》与《隐私政策》后再使用登录、收藏、入驻等功能。',
-        confirmText: '同意',
-        cancelText: '暂不',
-        success: (res) => {
-          if (res.confirm) setItem(PRIVACY_CONSENT_KEY, 'true')
-        }
+      showPrivacyDialog().then((agree) => {
+        if (agree) setItem(PRIVACY_CONSENT_KEY, 'true')
       })
     })
     .catch(() => { /* 读取失败忽略 */ })

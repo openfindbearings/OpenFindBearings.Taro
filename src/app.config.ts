@@ -14,11 +14,7 @@ export default defineAppConfig({
     'pages/my/profile-edit',
     'pages/common/doc',
     'pages/auth/login',
-    'pages/auth/register',
-    'pages/my/favorites',
-    'pages/my/followed',
-    'pages/my/history',
-    'pages/my/profile-edit'
+    'pages/auth/register'
   ],
   window: {
     backgroundTextStyle: 'light',

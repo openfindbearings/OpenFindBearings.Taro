@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { formatTime } from '../../utils/format'
@@ -44,11 +45,8 @@ export default function FollowedPage() {
 
   /** 取消关注（确认后调 DELETE 代理，成功即本地移除该行） */
   const onUnfollow = (item: FollowedItem) => {
-    Taro.showModal({
-      title: '取消关注',
-      content: `不再关注「${item.merchant.name}」？`,
-      success: async (res) => {
-        if (!res.confirm) return
+    showConfirmDialog({ title: '取消关注', content: `不再关注「${item.merchant.name}」？` }).then(async (ok) => {
+        if (!ok) return
         setBusyId(item.merchant.id)
         try {
           await toggleFollow(item.merchant.id, true)
@@ -58,8 +56,7 @@ export default function FollowedPage() {
         } catch {
           Taro.showToast({ title: '操作失败', icon: 'none' })
         } finally { setBusyId('') }
-      }
-    })
+      })
   }
 
   const goDetail = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })

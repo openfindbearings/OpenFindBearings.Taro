@@ -14,6 +14,9 @@ import { useTheme } from '../../hooks/useTheme'
 // 改动说明：补 useAuthStore 导入——上一轮加"未登录降级普通模式"时只写了使用处漏了 import，
 // 导致 loggedIn 抛 ReferenceError、整段降级逻辑从未生效（tsc TS2304 抓出）
 import { useAuthStore } from '../../stores/auth'
+import { openVoicePanel } from '../../components/VoicePanel'
+import { IS_RN } from '../../utils/platform'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
@@ -80,6 +83,15 @@ export default function HomePage() {
     Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(keyword.trim())}` })
   }, [keyword, saveHistory])
 
+  // 点击唤起语音面板（RN 端中间大按钮按住说话；H5/小程序提示不支持）
+  const handleVoiceStart = useCallback(() => {
+    if (!IS_RN) {
+      Taro.showToast({ title: '语音搜索暂仅支持 App 端', icon: 'none' })
+      return
+    }
+    openVoicePanel()
+  }, [])
+
   const handleHistoryClick = useCallback((kw: string) => {
     setKeyword(kw)
     saveHistory(kw)
@@ -87,14 +99,10 @@ export default function HomePage() {
   }, [saveHistory])
 
   const clearHistory = useCallback(() => {
-    Taro.showModal({
-      title: '提示',
-      content: '确定清空搜索历史？',
-      success: (res) => {
-        if (res.confirm) {
-          setHistory([])
-          removeItem(HISTORY_KEY)
-        }
+    showConfirmDialog({ title: '提示', content: '确定清空搜索历史？' }).then((ok) => {
+      if (ok) {
+        setHistory([])
+        removeItem(HISTORY_KEY)
       }
     })
   }, [])
@@ -115,8 +123,8 @@ export default function HomePage() {
         confirmType='search'
       />
       <View className='search-actions'>
-        <View className='action-icon' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
-          <Icon name="mic" size={22} color='#475569' />
+        <View className='action-icon' onClick={handleVoiceStart}>
+          <Icon name='mic' size={22} color='#475569' />
         </View>
         <View className='action-icon' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
           <Icon name="camera" size={22} color='#475569' />
@@ -128,9 +136,9 @@ export default function HomePage() {
   // 快捷三钮：实心圆 56dp + 白图标 28dp（v1.7.0 由浅底彩图标改实心，更明快）
   const quickActions = (
     <View className='quick-actions'>
-      <View className='quick-item' onClick={() => Taro.showToast({ title: '讲语音（开发中）', icon: 'none' })}>
+      <View className='quick-item' onClick={handleVoiceStart}>
         <View className='quick-icon quick-icon-voice'>
-          <Icon name="mic" size={28} color='#FFFFFF' />
+          <Icon name='mic' size={28} color='#FFFFFF' />
         </View>
         <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>讲语音</Text>
       </View>
