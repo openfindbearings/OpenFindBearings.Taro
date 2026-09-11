@@ -99,15 +99,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchProfile: async () => {
     try {
       const profile = await request<UserInfo>(API.PROFILE)
-      // 临时诊断（登录资料排查，定位后删除）
-      console.log('[auth-diag] fetchProfile ok userName=', profile?.userName || '(空)', 'phone=', profile?.phoneNumber || '(空)')
       if (profile) {
         set({ user: profile })
         await persistProfileFields(profile)
       }
-    } catch (e) {
-      // 临时诊断（登录资料排查，定位后删除）
-      console.log('[auth-diag] fetchProfile 失败:', (e as any)?.message || String(e), 'code=', (e as any)?.code, 'status=', (e as any)?.statusCode)
+    } catch {
       // profile 失败不在此登出（401 已由 request 拦截处理）；保留当前登录态判断
     }
   },
