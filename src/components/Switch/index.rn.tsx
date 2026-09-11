@@ -8,14 +8,18 @@ import { useTheme } from '../../hooks/useTheme'
 interface SwitchProps {
   checked: boolean
   onChange: (value: boolean) => void
+  /** 停用态：不可交互并置灰（暂未上线功能用），与 H5 版 API 一致 */
+  disabled?: boolean
 }
 
-export default function Switch({ checked, onChange }: SwitchProps) {
+export default function Switch({ checked, onChange, disabled = false }: SwitchProps) {
   const t = useTheme()
   return (
     <RNSwitch
       value={checked}
-      onValueChange={onChange}
+      // 改动说明：disabled 时原生置灰且吞交互；onChange 内再挡一层双保险
+      disabled={disabled}
+      onValueChange={(v) => { if (!disabled) onChange(v) }}
       // 轨道：开=主色，关=输入底（深色下不再是刺眼白）
       trackColor={{ false: t.bgInput, true: t.primary }}
       // 圆点：开=白，关=卡片底（跟随主题，修掉默认绿色）

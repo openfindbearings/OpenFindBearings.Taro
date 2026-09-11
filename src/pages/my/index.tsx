@@ -3,27 +3,20 @@
 // 会员信息卡（积分/余额占位，纯色主色底）与版本信息行；NavBar 右侧图标 20→24dp。
 // NavBar：标题居中"我的"，右侧 Bell（消息中心）+ Settings（设置入口）
 // 内容：用户信息区 + 会员卡 + 功能卡（收藏/关注/历史/全部功能 四横钮）
-import { useState } from 'react'
 import Icon from '../../components/Icon'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 // 改动说明：原直接 import react-native-linear-gradient 会让 H5 webpack 打包 RN 原生模块而报
 // ModuleParseError；改用平台分文件的 Gradient 组件（RN 走原生、H5/小程序走 CSS 渐变），JSX 用法不变。
 import LinearGradient from '../../components/Gradient'
-import { getItem } from '../../utils/storage'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
+import { usableImage } from '../../services/config'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
+import { useAuthStore } from '../../stores/auth'
 import './index.scss'
-
-interface UserInfo {
-  nickname: string
-  phone: string
-  avatar: string
-  isLoggedIn: boolean
-}
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
 // 第4项为"全部功能"（layout_grid 图标），设置仅在 NavBar 右上角
@@ -38,30 +31,22 @@ const menuItems = [
 definePageConfig({ disableScroll: true })
 
 export default function MyPage() {
-  const [user, setUser] = useState<UserInfo>({
-    nickname: '',
-    phone: '',
-    avatar: '',
-    isLoggedIn: false
-  })
+  // 改动说明：登录态与用户资料改为订阅 auth store（唯一事实源）。
+  // 原实现依赖 useDidShow + 读 storage 的本地 state，登录成功 navigateBack 后
+  // 若 didShow 时序不触发就永不刷新；store 订阅保证登录/登出即时响应。
+  // 冷启动的 storage 恢复统一由 app.tsx 的 init() 完成。
+  // 改动说明：头像从 storage('user_avatar' 无人写入的断链) 改为订阅 store user.avatar，
+  // 个人信息页保存 → fetchProfile → 本页即时显示
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  const authUser = useAuthStore((s) => s.user)
+  const avatar = usableImage(authUser?.avatar)
   // 主题色板（会员卡渐变/用户区底/图标底/文字随模式）+ 全局字号
   const t = useTheme()
   const fs = useFs()
 
   useDidShow(() => {
-    Promise.all([
-      getItem('access_token'),
-      getItem('user_nickname'),
-      getItem('user_phone'),
-      getItem('user_avatar')
-    ]).then(([token, nickname, phone, avatar]) => {
-      setUser({
-        nickname: nickname || (token ? '已登录用户' : ''),
-        phone: phone || '',
-        avatar: avatar || '',
-        isLoggedIn: !!token
-      })
-    }).catch(() => { /* 默认未登录状态 */ })
+    // 每次显示时补拉一次资料（若已登录），保证昵称/手机号/头像跟随后端变更
+    if (isLoggedIn) void useAuthStore.getState().fetchProfile()
   })
 
   const handleMenuClick = (key: string) => {
@@ -70,43 +55,42 @@ export default function MyPage() {
       Taro.navigateTo({ url: '/pages/my/all-features' })
       return
     }
-    if (!user.isLoggedIn) {
-      Taro.showModal({
-        title: '提示',
-        content: '请先登录',
-        confirmText: '去登录',
-        success: (res) => {
-          if (res.confirm) {
-            // TODO: 跳转登录页
-          }
-        }
-      })
+    // 改动说明：收藏/关注/历史三入口从"开发中"占位改为跳转真实页面；
+    // 页面内部自带未登录引导空态，此处不再弹窗拦截（少一层打断）
+    const menuUrls: Record<string, string> = {
+      favorites: '/pages/my/favorites',
+      followed: '/pages/my/followed',
+      history: '/pages/my/history'
+    }
+    if (menuUrls[key]) {
+      Taro.navigateTo({ url: menuUrls[key] })
       return
     }
-    Taro.showToast({ title: '功能开发中', icon: 'none' })
+    Taro.showToast({ title: '功能暂未上线', icon: 'none' })
   }
 
+  // 改动说明：未上线占位统一"暂未上线"停用文案（与设置页开关停用态一致）
   const handleBellClick = () => {
-    Taro.showToast({ title: '消息中心开发中', icon: 'none' })
+    Taro.showToast({ title: '消息中心暂未上线', icon: 'none' })
   }
 
   const handleSettingsClick = () => {
     Taro.navigateTo({ url: '/pages/my/settings' })
   }
 
-  // 个人信息入口：本轮从设置页移到"我的"页头像（登录态点击头像进入）。
-  // 个人信息详情页尚未实现，先占位提示，接入页面后改为 navigateTo。
+  // 个人信息入口：登录态点击头像进入编辑页（未登录仍走"点击登录"卡片）。
+  // 改动说明：详情页已实现，占位 toast 改为跳转。
   const handleProfileClick = () => {
-    Taro.showToast({ title: '个人信息开发中', icon: 'none' })
+    Taro.navigateTo({ url: '/pages/my/profile-edit' })
   }
 
   // 会员卡（美团风格）：收支明细入口与去兑换按钮暂为占位
   const handlePointsDetail = () => {
-    Taro.showToast({ title: '收支明细开发中', icon: 'none' })
+    Taro.showToast({ title: '收支明细暂未上线', icon: 'none' })
   }
 
   const handleRedeem = () => {
-    Taro.showToast({ title: '积分兑换开发中', icon: 'none' })
+    Taro.showToast({ title: '积分兑换暂未上线', icon: 'none' })
   }
 
   // NavBar 右侧：Bell + Settings。改用声明式 rightIcons 交给 NavBar 内部渲染——
@@ -131,22 +115,22 @@ export default function MyPage() {
     <PageLayout nav={<NavBar title="我的" rightIcons={rightIcons} />} tabbar={<CustomTabBar />}>
       {/* 用户信息区 */}
       <View className='user-section'>
-        {user.isLoggedIn ? (
+        {isLoggedIn ? (
           <View className='user-info' style={{ backgroundColor: t.primary }} onClick={handleProfileClick}>
             <View className='avatar'>
-              {user.avatar ? (
-                <Image className='avatar-img' src={user.avatar} mode='aspectFill' />
+              {avatar ? (
+                <Image className='avatar-img' src={avatar} mode='aspectFill' />
               ) : (
                 <Icon name="user" size={32} color={t.textOnPrimary} />
               )}
             </View>
             <View className='user-detail'>
-              <Text className='nickname' style={{ ...fs(17), color: t.textOnPrimary }}>{user.nickname || '已登录用户'}</Text>
-              {user.phone && <Text className='phone' style={{ ...fs(13), color: t.textOnPrimary }}>{user.phone}</Text>}
+              <Text className='nickname' style={{ ...fs(17), color: t.textOnPrimary }}>{authUser?.nickname || authUser?.userName || '已登录用户'}</Text>
+              {authUser?.phoneNumber && <Text className='phone' style={{ ...fs(13), color: t.textOnPrimary }}>{authUser.phoneNumber}</Text>}
             </View>
           </View>
         ) : (
-          <View className='user-info' style={{ backgroundColor: t.primary }} onClick={() => Taro.showToast({ title: '登录功能开发中', icon: 'none' })}>
+          <View className='user-info' style={{ backgroundColor: t.primary }} onClick={() => Taro.navigateTo({ url: '/pages/auth/login' })}>
             <View className='avatar'>
               <Icon name="log_in" size={28} color={t.textOnPrimary} />
             </View>

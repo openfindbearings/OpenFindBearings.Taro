@@ -1,0 +1,94 @@
+// 登录/注册页共享布局样式（RN 优先）
+// 仅布局，不含颜色（颜色全部 inline 走 useTheme）；H5 需显式 display:flex，RN 忽略 display 用 flex-direction
+.auth-form {
+  margin: 16px;
+  padding: 32px 24px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-title {
+  margin-bottom: 6px;
+}
+
+.auth-sub {
+  margin-bottom: 24px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 48px;
+  padding: 0 12px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.auth-input {
+  flex: 1;
+  margin-left: 8px;
+  height: 48px;
+}
+
+.auth-msg {
+  margin-bottom: 10px;
+}
+
+.auth-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  margin-top: 8px;
+  border-radius: 10px;
+}
+
+.auth-btn-text {
+  font-weight: bold;
+}
+
+.auth-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.auth-agree {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.auth-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.auth-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.auth-ph {
+  color: #94A3B8;
+}
