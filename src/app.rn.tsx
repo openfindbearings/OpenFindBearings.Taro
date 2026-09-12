@@ -9,7 +9,6 @@ import { Component, PropsWithChildren } from 'react'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { bootOnce, preloadMerchantState } from './appShared'
 import PrivacyDialog from './components/PrivacyDialog'
-import VoicePanel from './components/VoicePanel'
 import ConfirmDialog from './components/ConfirmDialog'
 import './app.scss'
 
@@ -29,7 +28,6 @@ class App extends Component<PropsWithChildren> {
       <SafeAreaProvider>
         {this.props.children}
         <PrivacyDialog />
-        <VoicePanel />
         <ConfirmDialog />
       </SafeAreaProvider>
     )

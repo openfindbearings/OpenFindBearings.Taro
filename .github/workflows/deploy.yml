@@ -152,16 +152,6 @@ jobs:
     - name: Build RN bundle (Taro)
       run: npx taro build --type rn
 
-    # 改动说明：下载 Vosk 中文离线模型到 android/app/src/main/assets/model-cn——
-    # 模型随 APK 打包进应用，否则运行时提示"语音模型未安装"。CI 机无此资产，
-    # 须在 gradle 构建前就位；react-native-vosk 库本体走 pnpm/autolinking 自动接入。
-    - name: Download Vosk Chinese model
-      run: |
-        MODEL_URL=https://alphacephei.com/vosk/models/vosk-model-small-cn-0.22.zip
-        curl -fLo /tmp/vosk-cn.zip "$MODEL_URL"
-        unzip -q /tmp/vosk-cn.zip -d /tmp/vosk-extract
-        mv /tmp/vosk-extract/vosk-model-small-cn-0.22 android/app/src/main/assets/model-cn
-
     # 改动说明：chmod +x gradlew 修复 git 里 gradlew 缺执行位导致的 Linux Permission denied；
     # -x lintVitalRelease 跳过 release 关键 lint（compileSdk 34 + 新 androidx 易翻车）。
     - name: Build release APK (arm64-v8a + armeabi-v7a)

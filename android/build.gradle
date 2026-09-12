@@ -6,9 +6,6 @@ buildscript {
         minSdkVersion = 21
         compileSdkVersion = 34
         targetSdkVersion = 33
-        // 改动说明：react-native-vosk 库 build.gradle 依赖 rootProject.ext.kotlinVersion
-        // （否则回退到 Vosk_kotlinVersion 属性，缺失时取到 null 导致构建崩溃），这里显式声明
-        kotlinVersion = "1.6.10"
 
         if (System.properties['os.arch'] == "aarch64") {
             // For M1 Users we need to use the NDK 24 which added support for aarch64
