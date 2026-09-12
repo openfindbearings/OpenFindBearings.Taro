@@ -2,6 +2,7 @@ import Taro from '@tarojs/taro'
 import { getBaseUrl, API } from './config'
 import { getItem, setItem, removeItem } from '../utils/storage'
 import { getDeviceId } from '../utils/device'
+import { getCurrentMerchantId } from './merchantContext'
 
 /** BFF 认证扁平响应结构 */
 interface BffAuthBody {
@@ -150,6 +151,11 @@ export async function request<T = any>(  url: string,
   const buildHeader = (tok: string | null): any => {
     const h: any = { 'Content-Type': 'application/json', ...header }
     if (auth && tok) h['Authorization'] = `Bearer ${tok}`
+    // 修复 B5：注入当前商户上下文头，BFF/API 据此判定操作哪个商户（一人多商户切换）
+    if (auth) {
+      const mid = getCurrentMerchantId()
+      if (mid) h['X-Merchant-Id'] = mid
+    }
     return h
   }
   // 改动说明：Taro RN 的 request 对非 2xx 走 fail 回调（Promise reject，reject 值即响应对象），
