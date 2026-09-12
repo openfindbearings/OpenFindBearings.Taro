@@ -14,13 +14,10 @@ import { useTheme } from '../../hooks/useTheme'
 // 改动说明：补 useAuthStore 导入——上一轮加"未登录降级普通模式"时只写了使用处漏了 import，
 // 导致 loggedIn 抛 ReferenceError、整段降级逻辑从未生效（tsc TS2304 抓出）
 import { useAuthStore } from '../../stores/auth'
-import { openVoicePanel } from '../../components/VoicePanel'
-import { IS_RN } from '../../utils/platform'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
-import ChatWindow from '../../components/ChatWindow'
 import './index.scss'
 
 const HISTORY_KEY = 'search_history'
@@ -83,13 +80,10 @@ export default function HomePage() {
     Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(keyword.trim())}` })
   }, [keyword, saveHistory])
 
-  // 点击唤起语音面板（RN 端中间大按钮按住说话；H5/小程序提示不支持）
-  const handleVoiceStart = useCallback(() => {
-    if (!IS_RN) {
-      Taro.showToast({ title: '语音搜索暂仅支持 App 端', icon: 'none' })
-      return
-    }
-    openVoicePanel()
+  // 改动说明：离线语音识别效果未达预期，暂停接入并保留云 ASR 扩展骨架；
+  // 语音入口回归"未上线"占位提示，与拍轴承/扫条码一致
+  const handleVoicePlaceholder = useCallback(() => {
+    Taro.showToast({ title: '语音搜索（开发中）', icon: 'none' })
   }, [])
 
   const handleHistoryClick = useCallback((kw: string) => {
@@ -123,7 +117,7 @@ export default function HomePage() {
         confirmType='search'
       />
       <View className='search-actions'>
-        <View className='action-icon' onClick={handleVoiceStart}>
+        <View className='action-icon' onClick={handleVoicePlaceholder}>
           <Icon name='mic' size={22} color='#475569' />
         </View>
         <View className='action-icon' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
@@ -136,7 +130,7 @@ export default function HomePage() {
   // 快捷三钮：实心圆 56dp + 白图标 28dp（v1.7.0 由浅底彩图标改实心，更明快）
   const quickActions = (
     <View className='quick-actions'>
-      <View className='quick-item' onClick={handleVoiceStart}>
+      <View className='quick-item' onClick={handleVoicePlaceholder}>
         <View className='quick-icon quick-icon-voice'>
           <Icon name='mic' size={28} color='#FFFFFF' />
         </View>
@@ -158,12 +152,15 @@ export default function HomePage() {
     </View>
   )
 
-  // 智能模式：全屏聊天窗。PageLayout 传 scrollY=false（RN 关外层滚动、由 ChatWindow 内部消息列表滚动），
-  // 顶栏标题「智能助手」、保留底栏。
+  // 智能模式：改动说明——聊天窗未接入真实大模型，先展示"暂未上线"占位提示，
+  // 保留模式设置数据，后续接入真实助手时恢复 ChatWindow 渲染
   if (effectiveMode === 'smart') {
     return (
       <PageLayout nav={<NavBar title="智能助手" />} tabbar={<CustomTabBar />} scrollY={false}>
-        <ChatWindow />
+        <View className='coming-soon' style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="sparkles" size={40} color={t.textTertiary} />
+          <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>智能模式暂未上线</Text>
+        </View>
       </PageLayout>
     )
   }

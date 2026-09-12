@@ -73,7 +73,6 @@
     "react-native-screens": "3.29.0",
     "react-native-svg": "^12.5.1",
     "react-native-syan-image-picker": "0.5.3",
-    "react-native-vosk": "0.3.3",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
