@@ -2,6 +2,9 @@ export default defineAppConfig({
   pages: [
     'pages/home/index',
     'pages/merchant/index',
+    'pages/merchant/apply',
+    'pages/merchant/members',
+    'pages/merchant/manage',
     'pages/my/index',
     'pages/home/search',
     'pages/home/bearingDetail',

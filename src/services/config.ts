@@ -89,6 +89,25 @@ export const API = {
   MERCHANTS_SEARCH: `${API_PREFIX}/merchants/search`,
   MERCHANT_DETAIL: (id: string) => `${API_PREFIX}/merchants/${id}`,
   MERCHANT_BEARINGS: (id: string) => `${API_PREFIX}/merchants/${id}/bearings`,
+  /** 商户入驻（需登录） */
+  MERCHANT_APPLY: `${API_PREFIX}/merchants/apply`,
+  MERCHANT_APPLICATION: `${API_PREFIX}/merchants/application`,
+  MERCHANT_CLAIMABLE: `${API_PREFIX}/merchants/claimable`,
+  MERCHANT_NOMINATE: `${API_PREFIX}/merchants/nominate`,
+  MERCHANT_NOMINATE_ACCEPT: (code: string) => `${API_PREFIX}/merchants/nominate/${code}/accept`,
+  MERCHANT_NOMINATIONS_PENDING: `${API_PREFIX}/merchants/nominations/pending`,
+  /** 商户成员管理（需登录且为商户成员） */
+  MERCHANT_STAFF: `${API_PREFIX}/merchants/staff`,
+  MERCHANT_MEMBER_SUSPEND: (id: string) => `${API_PREFIX}/merchants/members/${id}/suspend`,
+  MERCHANT_MEMBER_ACTIVATE: (id: string) => `${API_PREFIX}/merchants/members/${id}/activate`,
+  MERCHANT_MEMBER_ROLE: (id: string) => `${API_PREFIX}/merchants/members/${id}/role`,
+  /** 商户商品管理（需登录且为商户成员） */
+  MERCHANT_BEARINGS_MINE: `${API_PREFIX}/merchant/bearings`,
+  MERCHANT_BEARING_ON_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/onshelf`,
+  MERCHANT_BEARING_OFF_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/offshelf`,
+  MERCHANT_INVENTORY_IMPORT: `${API_PREFIX}/merchant/inventory/import`,
+  /** 营业执照上传（店铺认证） */
+  MERCHANT_LICENSE: `${API_PREFIX}/merchant/license`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,

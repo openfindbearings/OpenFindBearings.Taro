@@ -3,6 +3,7 @@ import { request, setTokens, clearTokens, getRefreshToken, getToken } from '../s
 import { getDeviceId } from '../utils/device'
 import { setItem } from '../utils/storage'
 import { API } from '../services/config'
+import { useMerchantStore } from './merchant'
 
 /** 用户信息（对齐 BFF /mobile/profile 返回） */
 export interface UserInfo {
@@ -13,8 +14,8 @@ export interface UserInfo {
   /** 头像绝对 URL（BFF profile 聚合返回；个人信息页保存后 fetchProfile 刷新即联动） */
   avatar?: string
   role?: string
-  /** 商家 ID，已入驻时有值（成员表模型前暂留单值语义） */
-  merchantId?: string
+  // 改动说明：移除 merchantId —— 后端已废弃 User.MerchantId 单值列；当前商户上下文用
+  //   merchantContext / useMerchantStore.currentMerchantId（成员表多商户模型）
 }
 
 /** 认证状态与动作 */
@@ -58,6 +59,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await setTokens(res.accessToken, res.refreshToken)
       await get().fetchProfile()
       set({ isLoggedIn: true, loading: false })
+      // 登录后拉取入驻状态（非阻塞，商户页/TabBar 读取）
+      void useMerchantStore.getState().fetchApplications()
     } catch (err) {
       set({ loading: false })
       throw err
@@ -76,6 +79,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await setTokens(res.accessToken, res.refreshToken)
       await get().fetchProfile()
       set({ isLoggedIn: true, loading: false })
+      void useMerchantStore.getState().fetchApplications()
     } catch (err) {
       set({ loading: false })
       throw err
@@ -93,6 +97,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await clearTokens()
     await setItem('user_nickname', '')
     await setItem('user_phone', '')
+    useMerchantStore.getState().reset()
     set({ isLoggedIn: false, user: null })
   },
 
@@ -114,5 +119,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!refresh && !getToken()) return
     set({ isLoggedIn: true })
     await get().fetchProfile()
+    void useMerchantStore.getState().fetchApplications()
   }
 }))
