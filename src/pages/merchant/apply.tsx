@@ -16,6 +16,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
+import { useHardwareBack } from '../../hooks/useHardwareBack'
 import {
   applyMerchant,
   searchClaimableMerchants,
@@ -77,7 +78,8 @@ export default function MerchantApplyPage() {
   const [nomType, setNomType] = useState(0)
   const [nomCompanyName, setNomCompanyName] = useState('')
   const [nomAddress, setNomAddress] = useState('')
-  const [initiatorJoins, setInitiatorJoins] = useState(true)
+  // 改动说明：移除 initiatorJoins 勾选态——邀请他人为管理员时发起人本就不当管理员，
+  //   固定以员工身份入伙（后端 InitiatorJoins 默认 true），无需再让用户勾选
 
   const [submitting, setSubmitting] = useState(false)
   // 改动说明：认领走可编辑预填表单，进入时需拉取商家详情预填，claimLoading 表示预填拉取中
@@ -299,16 +301,16 @@ export default function MerchantApplyPage() {
     try {
       // 改动说明：selected 非空=向已有未认证商家发提名认领邀请（后端不新建、成员审核时建）；
       //   为空=提名新建（后端建 Draft）
+      // 改动说明：不再传 initiatorJoins——后端默认 true，发起人固定以员工身份入伙
       await nominateMerchant(
         selected
-          ? { targetMerchantId: selected.id, nomineePhone, initiatorJoins }
+          ? { targetMerchantId: selected.id, nomineePhone }
           : {
               nomineePhone,
               name: nomName.trim(),
               type: nomType || undefined,
               companyName: nomCompanyName.trim() || undefined,
-              address: nomAddress.trim() || undefined,
-              initiatorJoins
+              address: nomAddress.trim() || undefined
             }
       )
       Taro.showModal({
@@ -514,7 +516,7 @@ export default function MerchantApplyPage() {
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.type}</Text>
           </View>
           {optionCard('store', '我当管理员经营', '认领该商家并核对资料，由你作为管理员维护', onClaimGo)}
-          {optionCard('user-plus', '邀请别人当管理员', '把该商家提名给他人认领，你可选入伙当员工', onNominateGo)}
+          {optionCard('user-plus', '邀请别人当管理员', '把该商家提名给他人认领，你以员工身份入伙', onNominateGo)}
           <Text style={{ ...fs(12), color: t.textTertiary }}>
             无论哪种方式都需平台审核通过后生效；生效后可在成员管理里再添加其他员工或管理员。
           </Text>
@@ -577,10 +579,10 @@ export default function MerchantApplyPage() {
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.type}</Text>
           </View>
           {fieldColumn('被提名人手机号 *', nomineePhone, setNomineePhone, '对方需已注册的手机号', 'number')}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }} onClick={() => setInitiatorJoins(!initiatorJoins)}>
-            <View style={{ width: 18, height: 18, borderRadius: 4, borderWidth: 2, borderColor: initiatorJoins ? t.primary : t.border, backgroundColor: initiatorJoins ? t.primary : 'transparent', marginRight: 8 }} />
-            <Text style={{ ...fs(14), color: t.textPrimary }}>我同时以员工身份加入该商户</Text>
-          </View>
+          {/* 改动说明：原"我同时以员工身份加入"勾选框已移除，发起人固定以员工身份入伙 */}
+          <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 4, marginBottom: 16 }}>
+            你将默认以员工身份加入该商户，管理员权限在审核通过后生效。
+          </Text>
         </View>
       )
       buttonLabel = '发出认领提名邀请'
@@ -602,10 +604,10 @@ export default function MerchantApplyPage() {
           </View>
           {fieldColumn('企业名称', nomCompanyName, setNomCompanyName, '营业执照企业名称（选填）')}
           {fieldColumn('地址', nomAddress, setNomAddress, '经营地址（选填）')}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }} onClick={() => setInitiatorJoins(!initiatorJoins)}>
-            <View style={{ width: 18, height: 18, borderRadius: 4, borderWidth: 2, borderColor: initiatorJoins ? t.primary : t.border, backgroundColor: initiatorJoins ? t.primary : 'transparent', marginRight: 8 }} />
-            <Text style={{ ...fs(14), color: t.textPrimary }}>我同时以员工身份加入该商户</Text>
-          </View>
+          {/* 改动说明：原"我同时以员工身份加入"勾选框已移除，发起人固定以员工身份入伙 */}
+          <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 4, marginBottom: 16 }}>
+            你将默认以员工身份加入该商户，管理员权限在审核通过后生效。
+          </Text>
         </View>
       )
       buttonLabel = '发出提名邀请'
@@ -626,16 +628,27 @@ export default function MerchantApplyPage() {
     )
   }
 
-  /** 向导返回：按相位逐级退（form 到 mode 到 search 再退出页面），拦截 NavBar 默认直接退出 */
-  const onWizardBack = () => {
+  /** 逐级回退：form(3)→mode(2)→search(1) 返回 true 已消费；search/invite 返回 false 交还系统退出 */
+  const stepBack = (): boolean => {
     if (phase === 'form') {
       setPhase('mode')
-    } else if (phase === 'mode') {
-      setPhase('search')
-    } else {
-      Taro.navigateBack()
+      return true
     }
+    if (phase === 'mode') {
+      setPhase('search')
+      return true
+    }
+    return false
   }
+
+  /** NavBar 箭头返回：先逐级回退，回到第一步后再退出页面 */
+  const onWizardBack = () => {
+    if (!stepBack()) Taro.navigateBack()
+  }
+
+  // 改动说明：拦截 RN 系统/手势返回，复用同一逐级回退逻辑，
+  //   修复按系统返回键直接 pop 整个向导页、越过 3→2→1 逐级退的问题
+  useHardwareBack(stepBack)
 
   return (
     <PageLayout nav={<NavBar title="商家入驻" showBack onBack={onWizardBack} />}>
