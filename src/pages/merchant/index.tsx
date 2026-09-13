@@ -84,28 +84,13 @@ export default function MerchantPage() {
                   Taro.showToast({ title: '请先登录', icon: 'none' })
                   return
                 }
+                // 改动说明 G4：入驻入口统一收敛到向导页（apply 已内聚"查找/认领/新建/提名/被邀请"全流程），
+                // 原"提名他人任管理员"与"待我接受的提名"文字入口移除，避免与向导功能重复
                 Taro.navigateTo({ url: '/pages/merchant/apply' })
               }}
             >
               <Text style={{ ...fs(16), color: t.textOnPrimary }}>申请入驻</Text>
             </View>
-            {/* 改动说明 G2：入驻模式 B 入口——员工发起提名管理员 / 查看发给自己的提名 */}
-            {isLoggedIn && (
-              <View style={{ flexDirection: 'row', marginTop: 14 }}>
-                <Text
-                  style={{ ...fs(14), color: t.primary, marginRight: 18 }}
-                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/nominate' })}
-                >
-                  提名他人任管理员
-                </Text>
-                <Text
-                  style={{ ...fs(14), color: t.primary }}
-                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/nominations' })}
-                >
-                  待我接受的提名
-                </Text>
-              </View>
-            )}
           </View>
         )}
         {approved && (

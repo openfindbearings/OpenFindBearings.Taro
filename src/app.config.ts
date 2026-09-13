@@ -5,8 +5,6 @@ export default defineAppConfig({
     'pages/merchant/apply',
     'pages/merchant/members',
     'pages/merchant/manage',
-    'pages/merchant/nominate',
-    'pages/merchant/nominations',
     'pages/my/index',
     'pages/home/search',
     'pages/home/bearingDetail',
