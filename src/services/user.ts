@@ -64,8 +64,8 @@ export interface ProfileInfo {
   occupation?: number
   companyName?: string
   industry?: string
-  merchantId?: string
-  merchantName?: string
+  // 改动说明：移除 merchantId/merchantName —— 后端已废弃并删除 User.MerchantId 单值列，
+  //   profile 不再返回所属商户；商户身份/列表经成员表接口获取
   favoriteCount: number
   followCount: number
   isActive: boolean

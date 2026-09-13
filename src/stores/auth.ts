@@ -14,8 +14,8 @@ export interface UserInfo {
   /** 头像绝对 URL（BFF profile 聚合返回；个人信息页保存后 fetchProfile 刷新即联动） */
   avatar?: string
   role?: string
-  /** 商家 ID，已入驻时有值（成员表模型前暂留单值语义） */
-  merchantId?: string
+  // 改动说明：移除 merchantId —— 后端已废弃 User.MerchantId 单值列；当前商户上下文用
+  //   merchantContext / useMerchantStore.currentMerchantId（成员表多商户模型）
 }
 
 /** 认证状态与动作 */
