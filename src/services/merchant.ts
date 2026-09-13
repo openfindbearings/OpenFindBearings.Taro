@@ -100,6 +100,9 @@ export interface NominateMerchantBody {
   email?: string
   address?: string
   initiatorJoins?: boolean
+  // 改动说明：可选目标商家ID。为空=提名新建（后端建 Draft）；
+  //   非空=提名认领某个已存在的未认证无主商家（后端不新建、成员审核通过时建）
+  targetMerchantId?: string
 }
 
 /** 接受提名请求体（对齐 BFF AcceptNominationRequest） */

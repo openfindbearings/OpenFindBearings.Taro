@@ -22,6 +22,7 @@ import {
   nominateMerchant,
   getPendingNominations,
   acceptNomination,
+  getMerchantDetail,
   type ClaimableMerchant,
   type PendingNomination
 } from '../../services/merchant'
@@ -79,6 +80,13 @@ export default function MerchantApplyPage() {
   const [initiatorJoins, setInitiatorJoins] = useState(true)
 
   const [submitting, setSubmitting] = useState(false)
+  // 改动说明：认领走可编辑预填表单，进入时需拉取商家详情预填，claimLoading 表示预填拉取中
+  const [claimLoading, setClaimLoading] = useState(false)
+  // 自营/认领共用同一份可编辑表单（认领时预填现有资料供逐项核对）
+  const blankForm = {
+    name: '', companyName: '', type: 0, contactPerson: '',
+    phone: '', address: '', unifiedSocialCreditCode: '', description: ''
+  }
 
   /** 更新自营表单字段 */
   const setField = (k: keyof typeof form, v: string | number) => setForm((prev) => ({ ...prev, [k]: v }))
@@ -118,30 +126,57 @@ export default function MerchantApplyPage() {
     } catch { setResults([]) } finally { setSearching(false) }
   }
 
-  /** 选中一个已有商家，进入认领路径 */
+  /** 选中一个已有商家，进入操作方式选择（自我认领 / 邀请他人认领） */
   const onPick = (m: ClaimableMerchant) => {
     setSelected(m)
-    setFlow('claim')
     setPhase('mode')
   }
 
-  /** 没找到时新建商户，进入自营/提名路径 */
+  /** 没找到时新建商户，进入操作方式选择（自我新建 / 邀请他人） */
   const onCreateNew = () => {
     setSelected(null)
-    setFlow('self')
     setPhase('mode')
   }
 
-  /** 新建路径下选择自营或提名他人，进入提交表单 */
-  const onChooseFlow = (f: 'self' | 'nominate') => {
-    setFlow(f)
+  /** 我当管理员 + 新建：清空表单进入自营 */
+  const onSelfGo = () => {
+    setForm(blankForm)
+    setFlow('self')
     setPhase('form')
   }
 
-  /** 认领路径直接进入确认提交 */
+  /** 邀请别人当管理员：进入提名表单（selected 非空=提名认领已有，为空=提名新建） */
+  const onNominateGo = () => {
+    setFlow('nominate')
+    setPhase('form')
+  }
+
+  /** 我当管理员 + 认领已有：进入可编辑预填表单，并拉取商家详情供逐项核对 */
   const onClaimGo = () => {
     setFlow('claim')
     setPhase('form')
+    void prefillClaim()
+  }
+
+  /** 拉取所选商家详情预填认领表单（互联网信息不可信原则：预填后仍由认领人逐项核对修正） */
+  const prefillClaim = async () => {
+    if (!selected) return
+    setClaimLoading(true)
+    try {
+      const d = await getMerchantDetail(selected.id)
+      if (d) {
+        setForm({
+          name: d.name || selected.name || '',
+          companyName: d.companyName || '',
+          type: MERCHANT_TYPES.find((x) => x.label === d.type)?.value ?? 0,
+          contactPerson: d.contactPerson || '',
+          phone: d.phone || d.mobile || '',
+          address: d.address || '',
+          unifiedSocialCreditCode: '',
+          description: ''
+        })
+      }
+    } catch { /* 详情拉取失败则保留手填 */ } finally { setClaimLoading(false) }
   }
 
   /** 展开或收起一条提名的补资料表单 */
@@ -195,9 +230,25 @@ export default function MerchantApplyPage() {
         Taro.showToast({ title: '请先选择要认领的商家', icon: 'none' })
         return
       }
+      if (!form.name.trim()) {
+        Taro.showToast({ title: '请核对并填写商家名称', icon: 'none' })
+        return
+      }
       setSubmitting(true)
       try {
-        const r = await applyMerchant({ mode: 'claim', claimMerchantId: selected.id })
+        // 改动说明：认领随第三步核对/补全的资料一并提交，后端 ApplyClaim 应用并置 Manual
+        const r = await applyMerchant({
+          mode: 'claim',
+          claimMerchantId: selected.id,
+          name: form.name.trim(),
+          type: form.type || undefined,
+          contactPerson: form.contactPerson.trim() || undefined,
+          phone: form.phone.trim() || undefined,
+          address: form.address.trim() || undefined,
+          companyName: form.companyName.trim() || undefined,
+          unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
+          description: form.description.trim() || undefined
+        })
         Taro.showToast({ title: r?.message || '认领申请已提交，等待审核', icon: 'success' })
         void fetchApplications()
         setTimeout(() => Taro.navigateBack(), 800)
@@ -239,20 +290,27 @@ export default function MerchantApplyPage() {
       Taro.showToast({ title: '请填写被提名人正确的手机号', icon: 'none' })
       return
     }
-    if (!nomName.trim()) {
+    // 提名新建才需填商户名称；提名认领已有商家用所选商家本身信息，无需名称
+    if (!selected && !nomName.trim()) {
       Taro.showToast({ title: '请填写商家名称', icon: 'none' })
       return
     }
     setSubmitting(true)
     try {
-      await nominateMerchant({
-        nomineePhone,
-        name: nomName.trim(),
-        type: nomType || undefined,
-        companyName: nomCompanyName.trim() || undefined,
-        address: nomAddress.trim() || undefined,
-        initiatorJoins
-      })
+      // 改动说明：selected 非空=向已有未认证商家发提名认领邀请（后端不新建、成员审核时建）；
+      //   为空=提名新建（后端建 Draft）
+      await nominateMerchant(
+        selected
+          ? { targetMerchantId: selected.id, nomineePhone, initiatorJoins }
+          : {
+              nomineePhone,
+              name: nomName.trim(),
+              type: nomType || undefined,
+              companyName: nomCompanyName.trim() || undefined,
+              address: nomAddress.trim() || undefined,
+              initiatorJoins
+            }
+      )
       Taro.showModal({
         title: '提名已发出',
         content: '被提名人接受提名并补全资料后即可提交审核，你也可以稍后在商户页查看进度。',
@@ -444,29 +502,30 @@ export default function MerchantApplyPage() {
     </View>
   )
 
-  /** 第二步 操作方式：已选商家走认领；新建走自营或提名他人 */
+  /** 第二步 操作方式：两条路径都给"我当管理员 / 邀请别人当管理员"两卡（多管理员/员工走成员管理） */
   const renderMode = () => {
     if (selected) {
       return (
         <View>
-          <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 10 }}>已选择以下商家，请确认认领：</Text>
+          <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 10 }}>已选择商家，请选择入驻方式：</Text>
           <View style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 14, marginBottom: 12 }}>
             <Text style={{ ...fs(16), color: t.textPrimary }}>{selected.name}</Text>
             {selected.companyName ? <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>{selected.companyName}</Text> : null}
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.type}</Text>
           </View>
-          {optionCard('store', '自己认领经营', '确认认领该商家，由你作为管理员维护商品', onClaimGo)}
+          {optionCard('store', '我当管理员经营', '认领该商家并核对资料，由你作为管理员维护', onClaimGo)}
+          {optionCard('user-plus', '邀请别人当管理员', '把该商家提名给他人认领，你可选入伙当员工', onNominateGo)}
           <Text style={{ ...fs(12), color: t.textTertiary }}>
-            认领后需平台审核通过，审核通过后即可上架商品。
+            无论哪种方式都需平台审核通过后生效；生效后可在成员管理里再添加其他员工或管理员。
           </Text>
         </View>
       )
     }
     return (
       <View>
-        <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 12 }}>请选择本次入驻的操作方式：</Text>
-        {optionCard('store', '自己直接操作', '新建商户并由你担任管理员，提交资料后等待审核', () => onChooseFlow('self'))}
-        {optionCard('user-plus', '邀请别人操作', '新建商户并提名他人为管理员，对方接受后补资料', () => onChooseFlow('nominate'))}
+        <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 12 }}>新建商户，请选择入驻方式：</Text>
+        {optionCard('store', '我当管理员经营', '新建商户并由你担任管理员，提交资料后等待审核', onSelfGo)}
+        {optionCard('user-plus', '邀请别人当管理员', '新建商户并提名他人为管理员，对方接受后补资料', onNominateGo)}
       </View>
     )
   }
@@ -475,41 +534,58 @@ export default function MerchantApplyPage() {
   const renderForm = () => {
     let body: any = null
     let buttonLabel = '提交'
-    if (flow === 'claim' && selected) {
+    // 我当管理员：认领(预填可编辑) 与 新建(空可编辑) 共用同一份可编辑表单
+    if ((flow === 'claim' && selected) || flow === 'self') {
+      const isClaim = flow === 'claim'
       body = (
         <View>
-          <View style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
+          <Text style={{ ...fs(13), color: t.textTertiary, marginBottom: 12 }}>
+            {isClaim
+              ? (claimLoading ? '正在载入商家现有资料…' : '以下为商家现有资料，请逐项核对并修正（互联网信息不可信），无误后提交认领。')
+              : '请填写商户资料，提交后等待平台审核。'}
+          </Text>
+          <View style={{ borderRadius: 12, overflow: 'hidden' }}>
+            {fieldRow('商家名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="必填，对外展示名称" placeholderClass="auth-ph" onInput={(e) => setField('name', e.detail.value)} />)}
+            {fieldRow('商家类型', (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={() => pickType(form.type, (v) => setField('type', v))}>
+                <Text style={{ ...fs(15), color: form.type ? t.textPrimary : t.textTertiary }}>
+                  {MERCHANT_TYPES.find((x) => x.value === form.type)?.label || '请选择'}
+                </Text>
+                <Icon name="chevron-right" size={16} color={t.textTertiary} />
+              </View>
+            ))}
+            {fieldRow('企业名称', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="营业执照企业名称（选填）" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
+            {fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={30} placeholder="18位统一社会信用代码（选填）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
+            {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
+            {fieldRow('联系电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="手机或座机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
+            {fieldRow('地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="经营地址（选填）" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}
+            {fieldRow('简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍（选填）" placeholderClass="auth-ph" onInput={(e) => setField('description', e.detail.value)} />)}
+          </View>
+        </View>
+      )
+      buttonLabel = isClaim ? '提交认领申请' : '提交入驻申请'
+    } else if (flow === 'nominate' && selected) {
+      // 提名认领已有商家：展示所选商家 + 被提名人手机号 + 发起人是否入伙
+      body = (
+        <View>
+          <Text style={{ ...fs(13), color: t.textTertiary, marginBottom: 12 }}>
+            把以下商家提名给他人认领，对方接受并补全资料后提交审核。
+          </Text>
+          <View style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 14, marginBottom: 12 }}>
             <Text style={{ ...fs(16), color: t.textPrimary }}>{selected.name}</Text>
             {selected.companyName ? <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>{selected.companyName}</Text> : null}
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.type}</Text>
           </View>
-          <Text style={{ ...fs(12), color: t.textTertiary, textAlign: 'center', marginTop: 10 }}>
-            确认认领后，平台将核实资料并开通商户权限，审核通过后即可维护商品。
-          </Text>
+          {fieldColumn('被提名人手机号 *', nomineePhone, setNomineePhone, '对方需已注册的手机号', 'number')}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }} onClick={() => setInitiatorJoins(!initiatorJoins)}>
+            <View style={{ width: 18, height: 18, borderRadius: 4, borderWidth: 2, borderColor: initiatorJoins ? t.primary : t.border, backgroundColor: initiatorJoins ? t.primary : 'transparent', marginRight: 8 }} />
+            <Text style={{ ...fs(14), color: t.textPrimary }}>我同时以员工身份加入该商户</Text>
+          </View>
         </View>
       )
-      buttonLabel = '提交认领申请'
-    } else if (flow === 'self') {
-      body = (
-        <View style={{ borderRadius: 12, overflow: 'hidden' }}>
-          {fieldRow('商家名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="必填，对外展示名称" placeholderClass="auth-ph" onInput={(e) => setField('name', e.detail.value)} />)}
-          {fieldRow('商家类型', (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={() => pickType(form.type, (v) => setField('type', v))}>
-              <Text style={{ ...fs(15), color: form.type ? t.textPrimary : t.textTertiary }}>
-                {MERCHANT_TYPES.find((x) => x.value === form.type)?.label || '请选择'}
-              </Text>
-              <Icon name="chevron-right" size={16} color={t.textTertiary} />
-            </View>
-          ))}
-          {fieldRow('企业名称', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="营业执照企业名称（选填）" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
-          {fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={30} placeholder="18位统一社会信用代码（选填）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
-          {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
-          {fieldRow('联系电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="手机或座机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
-          {fieldRow('地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="经营地址（选填）" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}
-          {fieldRow('简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍（选填）" placeholderClass="auth-ph" onInput={(e) => setField('description', e.detail.value)} />)}
-        </View>
-      )
+      buttonLabel = '发出认领提名邀请'
     } else {
+      // 提名新建：发起人代填新商户信息 + 被提名人手机号
       body = (
         <View>
           <Text style={{ ...fs(13), color: t.textTertiary, marginBottom: 12 }}>

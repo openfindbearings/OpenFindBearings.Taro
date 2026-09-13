@@ -79,3 +79,6 @@ secret.yml
 *.secret.yml
 android/app/src/main/assets/index.android.bundle
 android/app/src/main/assets/index.android.map
+
+# Android autolinking 生成的图片资源（gradle 每次构建复制，勿入库）
+android/app/src/main/res/drawable-*/node_modules_*
