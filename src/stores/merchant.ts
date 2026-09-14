@@ -45,11 +45,14 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
       const current = valid ?? active[0]?.merchantId ?? null
       setCurrentMerchantId(current)
       if (current) await setItem(CURRENT_KEY, current)
-      // 改动说明 G1：merchant_approved/merchant_name 降级为"真实状态的派生缓存"，
-      // 仅供 CustomTabBar/appShared 冷启动首帧读取；每次拉取后覆盖，杜绝假 key 漂移
+      // 改动说明 G1：merchant_approved/merchant_name/merchant_logo 降级为"真实状态的派生缓存"，
+      // 仅供 CustomTabBar/appShared 冷启动首帧读取；每次拉取/切换后覆盖，杜绝假 key 漂移
       const first = active.find((m) => m.merchantId === current) ?? active[0]
       await setItem('merchant_approved', active.length > 0 ? 'true' : 'false')
-      if (first) await setItem('merchant_name', first.merchantName)
+      if (first) {
+        await setItem('merchant_name', first.merchantName)
+        await setItem('merchant_logo', first.logoUrl || '')
+      }
       set({ merchants: active, approved: active.length > 0, currentMerchantId: current, loading: false })
     } catch {
       // 拉取失败保留现状（未登录/网络异常不阻塞页面）
@@ -58,9 +61,13 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
   },
 
   switchMerchant: async (merchantId: string) => {
-    if (!get().merchants.some((m) => m.merchantId === merchantId)) return
+    const target = get().merchants.find((m) => m.merchantId === merchantId)
+    if (!target) return
     setCurrentMerchantId(merchantId)
     await setItem(CURRENT_KEY, merchantId)
+    // 改动说明：切换当前商户时同步刷新派生缓存，供 TabBar 冷启动首帧与外部读取一致
+    await setItem('merchant_name', target.merchantName)
+    await setItem('merchant_logo', target.logoUrl || '')
     set({ currentMerchantId: merchantId })
   },
 

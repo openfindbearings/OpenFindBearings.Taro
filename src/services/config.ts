@@ -108,6 +108,9 @@ export const API = {
   MERCHANT_INVENTORY_IMPORT: `${API_PREFIX}/merchant/inventory/import`,
   /** 营业执照上传（店铺认证） */
   MERCHANT_LICENSE: `${API_PREFIX}/merchant/license`,
+  /** 商户信息维护（需商户管理员）：读当前商户资料 / 写资料 / 上传 Logo */
+  MERCHANT_PROFILE: `${API_PREFIX}/merchant/profile`,
+  MERCHANT_LOGO: `${API_PREFIX}/merchant/logo`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,
