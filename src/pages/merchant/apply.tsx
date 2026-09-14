@@ -44,7 +44,14 @@ export default function MerchantApplyPage() {
   const t = useTheme()
   const fs = useFs()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  const user = useAuthStore((s) => s.user)
   const fetchApplications = useMerchantStore((s) => s.fetchApplications)
+
+  // 改动说明：本人联系方式默认取登录账户（联系电话=登录手机号，联系人=昵称；
+  //   昵称缺失则留空供手填——userName 可能是账号名/手机号，不适合当联系人姓名），
+  //   入驻人即账户持有者，无需重复手输；仍作为表单初值保留可编辑
+  const selfContactPerson = user?.nickname || ''
+  const selfPhone = user?.phoneNumber || ''
 
   // 向导相位：invite 待接受提名 / search 查找 / mode 操作方式 / form 提交表单
   const [phase, setPhase] = useState<'invite' | 'search' | 'mode' | 'form'>('search')
@@ -140,9 +147,9 @@ export default function MerchantApplyPage() {
     setPhase('mode')
   }
 
-  /** 我当管理员 + 新建：清空表单进入自营 */
+  /** 我当管理员 + 新建：预填本人联系方式进入自营 */
   const onSelfGo = () => {
-    setForm(blankForm)
+    setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
     setFlow('self')
     setPhase('form')
   }
@@ -155,6 +162,8 @@ export default function MerchantApplyPage() {
 
   /** 我当管理员 + 认领已有：进入可编辑预填表单，并拉取商家详情供逐项核对 */
   const onClaimGo = () => {
+    // 改动说明：先以本人联系方式打底（详情拉取失败时不至于空白），详情再按字段覆盖
+    setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
     setFlow('claim')
     setPhase('form')
     void prefillClaim()
@@ -167,12 +176,14 @@ export default function MerchantApplyPage() {
     try {
       const d = await getMerchantDetail(selected.id)
       if (d) {
+        // 改动说明：联系人/联系电话优先用当前账户（入驻人即联系人本人），
+        //   爬虫旧值不可信只作账户值缺失时的兜底；其余字段仍预填供核对
         setForm({
           name: d.name || selected.name || '',
           companyName: d.companyName || '',
           type: MERCHANT_TYPES.find((x) => x.label === d.type)?.value ?? 0,
-          contactPerson: d.contactPerson || '',
-          phone: d.phone || d.mobile || '',
+          contactPerson: selfContactPerson || d.contactPerson || '',
+          phone: selfPhone || d.phone || d.mobile || '',
           address: d.address || '',
           unifiedSocialCreditCode: '',
           description: ''
@@ -184,7 +195,8 @@ export default function MerchantApplyPage() {
   /** 展开或收起一条提名的补资料表单 */
   const onOpenInvite = (item: PendingNomination) => {
     setOpenCode(item.invitationCode === openCode ? null : item.invitationCode)
-    setAcceptForm({ companyName: '', creditCode: '', contactPerson: '', mobile: '', address: '' })
+    // 改动说明：补资料时联系人/手机号预填为当前账户（接受提名者即本人），仍可编辑
+    setAcceptForm({ companyName: '', creditCode: '', contactPerson: selfContactPerson, mobile: selfPhone, address: '' })
   }
 
   /** 接受提名：补资料提交后提示成功并刷新提名与入驻状态 */
@@ -282,7 +294,28 @@ export default function MerchantApplyPage() {
         void fetchApplications()
         setTimeout(() => Taro.navigateBack(), 800)
       } catch (e: any) {
-        Taro.showToast({ title: e?.message || '入驻申请提交失败', icon: 'none' })
+        // 改动说明：后端查重发现撞名且该商户可认领时返回 409 + code，引导用户改为认领而非重复新建；
+        //   保留当前已填表单（不清空），仅切 flow=claim + selected，用户核对后再次点击即走认领提交
+        if (e?.code === 'MERCHANT_CLAIMABLE_EXISTS' && e?.data?.existingMerchantId) {
+          const emId = String(e.data.existingMerchantId)
+          const emName = String(e.data.existingName || form.name.trim())
+          Taro.showModal({
+            title: '库中已有此商户',
+            content: `「${emName}」已存在但尚未被认领，是否改为认领？选"改名新建"可换个名称再自助入驻。`,
+            confirmText: '改为认领',
+            cancelText: '改名新建'
+          })
+            .then((res) => {
+              if (res.confirm) {
+                setSelected({ id: emId, name: emName })
+                setFlow('claim')
+                Taro.showToast({ title: '已切换到认领，请核对资料后再次提交', icon: 'none' })
+              }
+            })
+            .catch(() => { /* 弹窗被系统打断时静默 */ })
+        } else {
+          Taro.showToast({ title: e?.message || '入驻申请提交失败', icon: 'none' })
+        }
       } finally { setSubmitting(false) }
       return
     }

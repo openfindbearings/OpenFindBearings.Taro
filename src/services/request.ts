@@ -14,10 +14,11 @@ interface BffAuthBody {
   message?: string
 }
 
-/** 通用错误响应结构（BFF 失败体 {success:false, code, message}） */
+/** 通用错误响应结构（BFF 失败体 {success:false, code, message, ...扩展字段}） */
 interface ApiErrorBody {
   code?: string
   message?: string
+  [key: string]: unknown
 }
 
 /**
@@ -67,11 +68,14 @@ export async function getRefreshToken(): Promise<string | null> {
 export class ApiError extends Error {
   code?: string
   statusCode?: number
-  constructor(message: string, code?: string, statusCode?: number) {
+  /** 改动说明：附带完整错误响应体，供调用方读取 code 之外的结构化字段（如认领冲突的 existingMerchantId/existingName） */
+  data?: ApiErrorBody
+  constructor(message: string, code?: string, statusCode?: number, data?: ApiErrorBody) {
     super(message)
     this.name = 'ApiError'
     this.code = code
     this.statusCode = statusCode
+    this.data = data
   }
 }
 
@@ -185,7 +189,7 @@ export async function request<T = any>(  url: string,
       return ((b && (b.data ?? b)) ?? b) as T
     }
     const eb = (res.data || {}) as ApiErrorBody
-    throw new ApiError(eb.message || `HTTP ${res.statusCode}`, eb.code, res.statusCode)
+    throw new ApiError(eb.message || `HTTP ${res.statusCode}`, eb.code, res.statusCode, eb)
   }
 
   // 业务端点 401：尝试刷新一次并重放；刷新失败清态并抛未授权
@@ -206,7 +210,7 @@ export async function request<T = any>(  url: string,
 
   const eb = (res.data || {}) as ApiErrorBody
   if (res.statusCode === 429) {
-    throw new ApiError(eb.message || '操作过于频繁，请稍后再试', 'RATE_LIMITED', 429)
+    throw new ApiError(eb.message || '操作过于频繁，请稍后再试', 'RATE_LIMITED', 429, eb)
   }
-  throw new ApiError(eb.message || `HTTP ${res.statusCode}`, eb.code, res.statusCode)
+  throw new ApiError(eb.message || `HTTP ${res.statusCode}`, eb.code, res.statusCode, eb)
 }
