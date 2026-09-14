@@ -60,6 +60,8 @@ export interface MerchantApplication {
   /** MerchantAdmin / MerchantStaff */
   role?: string
   isVerified: boolean
+  /** 商户 Logo 相对/绝对 URL（改动说明：TabBar/切换器显示当前商户头像） */
+  logoUrl?: string | null
 }
 
 /** 可认领爬虫商家项（对齐 BFF ClaimableMerchantItem） */
@@ -313,6 +315,91 @@ export function importInventory(filePath: string): Promise<OpResult> {
         }
       },
       fail: (err) => reject(err)
+    })
+  })
+}
+
+/** 商户资料（对齐 BFF MerchantProfile，供信息维护页编辑回填） */
+export interface MerchantProfile {
+  id: string
+  name: string
+  companyName?: string | null
+  type?: string | null
+  contactPerson?: string | null
+  phone?: string | null
+  mobile?: string | null
+  email?: string | null
+  address?: string | null
+  logoUrl?: string | null
+  website?: string | null
+  unifiedSocialCreditCode?: string | null
+  description?: string | null
+  businessScope?: string | null
+  isVerified: boolean
+  status?: string | null
+}
+
+/** 更新商户资料请求体（null/undefined 字段后端保留原值；type 为数字枚举值） */
+export interface UpdateMerchantProfileBody {
+  name?: string
+  companyName?: string
+  englishName?: string
+  unifiedSocialCreditCode?: string
+  type?: number
+  description?: string
+  businessScope?: string
+  logoUrl?: string
+  website?: string
+  contactPerson?: string
+  phone?: string
+  mobile?: string
+  email?: string
+  address?: string
+}
+
+/** 读取当前商户资料（维护页初始化，走 X-Merchant-Id 上下文） */
+export function getMerchantProfile() {
+  return request<MerchantProfile>(API.MERCHANT_PROFILE)
+}
+
+/** 更新当前商户资料（需商户管理员） */
+export function updateMerchantProfile(body: UpdateMerchantProfileBody) {
+  return request<OpResult>(API.MERCHANT_PROFILE, { method: 'PUT', data: body })
+}
+
+/**
+ * 选择图片并上传商户 Logo：返回可访问绝对 URL（不直接落库，保存资料时随 profile.logoUrl 写入）。
+ * 改动说明：仿 uploadLicense 的 multipart 旁路，带 X-Merchant-Id 当前商户上下文头。
+ */
+export function uploadMerchantLogo(): Promise<{ success: boolean; url?: string; message?: string }> {
+  return Taro.chooseImage({ count: 1, sizeType: ['compressed'] }).then((choose) => {
+    const token = getToken()
+    const path = choose.tempFilePaths[0]
+    return new Promise<{ success: boolean; url?: string; message?: string }>((resolve, reject) => {
+      Taro.uploadFile({
+        url: `${getBaseUrl()}${API.MERCHANT_LOGO}`,
+        filePath: path,
+        name: 'file',
+        header: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
+        },
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              const d = JSON.parse(res.data)
+              const url = d?.url ?? d?.data?.url
+              if (url) resolve({ success: true, url })
+              else resolve({ success: false, message: d?.message || '上传失败' })
+            } catch {
+              resolve({ success: false, message: '上传响应解析失败' })
+            }
+          } else {
+            resolve({ success: false, message: `上传失败（${res.statusCode}）` })
+          }
+        },
+        fail: (err) => reject(err)
+      })
     })
   })
 }

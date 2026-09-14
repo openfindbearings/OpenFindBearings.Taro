@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { bootOnce, preloadMerchantState } from './appShared'
 import PrivacyDialog from './components/PrivacyDialog'
 import ConfirmDialog from './components/ConfirmDialog'
+import MerchantSwitchSheet from './components/MerchantSwitchSheet'
 import './app.scss'
 
 class App extends Component<PropsWithChildren> {
@@ -29,6 +30,7 @@ class App extends Component<PropsWithChildren> {
         {this.props.children}
         <PrivacyDialog />
         <ConfirmDialog />
+        <MerchantSwitchSheet />
       </SafeAreaProvider>
     )
   }

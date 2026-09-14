@@ -13,6 +13,7 @@ import { useMerchantStore } from '../../stores/merchant'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
+import { showMerchantSwitchSheet, MerchantSwitchItem } from '../../components/MerchantSwitchSheet'
 import { uploadLicense } from '../../services/merchant'
 import './index.scss'
 
@@ -35,10 +36,15 @@ export default function MerchantPage() {
   const current = merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0]
 
   const onSwitchMerchant = () => {
-    Taro.showActionSheet({ itemList: merchants.map((m) => m.merchantName) })
-      .then((res) => {
-        const target = merchants[res.tapIndex]
-        if (target) void switchMerchant(target.merchantId)
+    // 改动说明：改用全局 MerchantSwitchSheet（与 TabBar 中间切换同一套 UI，每行 logo+角色+对勾），
+    //   替代原 Taro.showActionSheet（RN 样式不可控、6 项上限、无 logo/角色）
+    const items: MerchantSwitchItem[] = merchants.map((m) => ({
+      id: m.merchantId, name: m.merchantName, logoUrl: m.logoUrl, role: m.role
+    }))
+    showMerchantSwitchSheet(items, currentMerchantId)
+      .then(async (r) => {
+        if (r.action === 'switch' && r.merchantId) await switchMerchant(r.merchantId)
+        else if (r.action === 'add') Taro.navigateTo({ url: '/pages/merchant/apply' })
       })
       .catch(() => { /* 取消 */ })
   }
@@ -94,7 +100,7 @@ export default function MerchantPage() {
           </View>
         )}
         {approved && (
-          <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 20, justifyContent: 'center' }}>
             <View
               className='placeholder-btn'
               style={{ backgroundColor: t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, paddingLeft: 30, paddingRight: 30 }}
@@ -109,6 +115,16 @@ export default function MerchantPage() {
             >
               <Text style={{ ...fs(16), color: t.primary }}>成员管理</Text>
             </View>
+            {/* 改动说明：信息维护为商户管理员专属功能（后端 PUT /profile + logo 上传均校验 MerchantAdmin） */}
+            {current?.role === 'MerchantAdmin' && (
+              <View
+                className='placeholder-btn'
+                style={{ backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, paddingLeft: 30, paddingRight: 30, borderWidth: 1, borderColor: t.primary }}
+                onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}
+              >
+                <Text style={{ ...fs(16), color: t.primary }}>信息维护</Text>
+              </View>
+            )}
           </View>
         )}
         {/* 改动说明 G3：店铺认证——已入驻未认证时上传营业执照（Admin 审核后获得认证） */}

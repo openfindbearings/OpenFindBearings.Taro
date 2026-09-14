@@ -44,7 +44,14 @@ export default function MerchantApplyPage() {
   const t = useTheme()
   const fs = useFs()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  const user = useAuthStore((s) => s.user)
   const fetchApplications = useMerchantStore((s) => s.fetchApplications)
+
+  // 改动说明：本人联系方式默认取登录账户（联系电话=登录手机号，联系人=昵称；
+  //   昵称缺失则留空供手填——userName 可能是账号名/手机号，不适合当联系人姓名），
+  //   入驻人即账户持有者，无需重复手输；仍作为表单初值保留可编辑
+  const selfContactPerson = user?.nickname || ''
+  const selfPhone = user?.phoneNumber || ''
 
   // 向导相位：invite 待接受提名 / search 查找 / mode 操作方式 / form 提交表单
   const [phase, setPhase] = useState<'invite' | 'search' | 'mode' | 'form'>('search')
@@ -140,9 +147,9 @@ export default function MerchantApplyPage() {
     setPhase('mode')
   }
 
-  /** 我当管理员 + 新建：清空表单进入自营 */
+  /** 我当管理员 + 新建：预填本人联系方式进入自营 */
   const onSelfGo = () => {
-    setForm(blankForm)
+    setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
     setFlow('self')
     setPhase('form')
   }
@@ -155,6 +162,8 @@ export default function MerchantApplyPage() {
 
   /** 我当管理员 + 认领已有：进入可编辑预填表单，并拉取商家详情供逐项核对 */
   const onClaimGo = () => {
+    // 改动说明：先以本人联系方式打底（详情拉取失败时不至于空白），详情再按字段覆盖
+    setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
     setFlow('claim')
     setPhase('form')
     void prefillClaim()
@@ -167,12 +176,14 @@ export default function MerchantApplyPage() {
     try {
       const d = await getMerchantDetail(selected.id)
       if (d) {
+        // 改动说明：联系人/联系电话优先用当前账户（入驻人即联系人本人），
+        //   爬虫旧值不可信只作账户值缺失时的兜底；其余字段仍预填供核对
         setForm({
           name: d.name || selected.name || '',
           companyName: d.companyName || '',
           type: MERCHANT_TYPES.find((x) => x.label === d.type)?.value ?? 0,
-          contactPerson: d.contactPerson || '',
-          phone: d.phone || d.mobile || '',
+          contactPerson: selfContactPerson || d.contactPerson || '',
+          phone: selfPhone || d.phone || d.mobile || '',
           address: d.address || '',
           unifiedSocialCreditCode: '',
           description: ''
@@ -184,7 +195,8 @@ export default function MerchantApplyPage() {
   /** 展开或收起一条提名的补资料表单 */
   const onOpenInvite = (item: PendingNomination) => {
     setOpenCode(item.invitationCode === openCode ? null : item.invitationCode)
-    setAcceptForm({ companyName: '', creditCode: '', contactPerson: '', mobile: '', address: '' })
+    // 改动说明：补资料时联系人/手机号预填为当前账户（接受提名者即本人），仍可编辑
+    setAcceptForm({ companyName: '', creditCode: '', contactPerson: selfContactPerson, mobile: selfPhone, address: '' })
   }
 
   /** 接受提名：补资料提交后提示成功并刷新提名与入驻状态 */
@@ -282,7 +294,28 @@ export default function MerchantApplyPage() {
         void fetchApplications()
         setTimeout(() => Taro.navigateBack(), 800)
       } catch (e: any) {
-        Taro.showToast({ title: e?.message || '入驻申请提交失败', icon: 'none' })
+        // 改动说明：后端查重发现撞名且该商户可认领时返回 409 + code，引导用户改为认领而非重复新建；
+        //   保留当前已填表单（不清空），仅切 flow=claim + selected，用户核对后再次点击即走认领提交
+        if (e?.code === 'MERCHANT_CLAIMABLE_EXISTS' && e?.data?.existingMerchantId) {
+          const emId = String(e.data.existingMerchantId)
+          const emName = String(e.data.existingName || form.name.trim())
+          Taro.showModal({
+            title: '库中已有此商户',
+            content: `「${emName}」已存在但尚未被认领，是否改为认领？选"改名新建"可换个名称再自助入驻。`,
+            confirmText: '改为认领',
+            cancelText: '改名新建'
+          })
+            .then((res) => {
+              if (res.confirm) {
+                setSelected({ id: emId, name: emName })
+                setFlow('claim')
+                Taro.showToast({ title: '已切换到认领，请核对资料后再次提交', icon: 'none' })
+              }
+            })
+            .catch(() => { /* 弹窗被系统打断时静默 */ })
+        } else {
+          Taro.showToast({ title: e?.message || '入驻申请提交失败', icon: 'none' })
+        }
       } finally { setSubmitting(false) }
       return
     }
@@ -333,17 +366,20 @@ export default function MerchantApplyPage() {
   const inputStyle = { ...fs(15), color: t.textPrimary, textAlign: 'right' as const, flex: 1 }
 
   /** 上标签下输入框的列式字段（提名/接受表单用） */
-  const fieldColumn = (label: string, value: string, onChange: (v: string) => void, placeholder?: string, type?: 'text' | 'number') => (
+  const fieldColumn = (label: string, value: string, onChange: (v: string) => void, placeholder?: string, type?: 'text' | 'number', readOnly?: boolean, hint?: string) => (
     <View style={{ marginBottom: 12 }}>
       <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 4 }}>{label}</Text>
       <Input
-        style={{ backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 10, paddingBottom: 10, fontSize: 15, lineHeight: 22, color: t.textPrimary }}
+        style={{ backgroundColor: readOnly ? t.bgCard : t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 10, paddingBottom: 10, fontSize: 15, lineHeight: 22, color: readOnly ? t.textTertiary : t.textPrimary }}
         value={value}
         type={type || 'text'}
         placeholder={placeholder}
         placeholderStyle={`color:${t.textTertiary}`}
-        onInput={(e) => onChange(e.detail.value)}
+        readOnly={!!readOnly}
+        onInput={(e) => readOnly ? undefined : onChange(e.detail.value)}
       />
+      {/* 改动说明：只读账户手机号下方给一行浅灰提示，说明来源不可改 */}
+      {readOnly && hint ? <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>{hint}</Text> : null}
     </View>
   )
 
@@ -425,7 +461,7 @@ export default function MerchantApplyPage() {
                   {fieldColumn('企业名称', acceptForm.companyName, (v) => setAcceptForm((p) => ({ ...p, companyName: v })), '营业执照上的企业名称')}
                   {fieldColumn('统一社会信用代码', acceptForm.creditCode, (v) => setAcceptForm((p) => ({ ...p, creditCode: v })), '18位信用代码（选填）')}
                   {fieldColumn('联系人', acceptForm.contactPerson, (v) => setAcceptForm((p) => ({ ...p, contactPerson: v })), '您的姓名')}
-                  {fieldColumn('手机号', acceptForm.mobile, (v) => setAcceptForm((p) => ({ ...p, mobile: v })), '11位手机号', 'number')}
+                  {fieldColumn('手机号', acceptForm.mobile, (v) => setAcceptForm((p) => ({ ...p, mobile: v })), '11位手机号', 'number', !!selfPhone, '为当前登录手机号，不可修改')}
                   {fieldColumn('地址', acceptForm.address, (v) => setAcceptForm((p) => ({ ...p, address: v })), '经营地址（选填）')}
                   <View
                     style={{ backgroundColor: accepting ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 11, paddingBottom: 11, alignItems: 'center', marginTop: 4 }}
@@ -559,7 +595,9 @@ export default function MerchantApplyPage() {
             {fieldRow('企业名称', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="营业执照企业名称（选填）" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
             {fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={30} placeholder="18位统一社会信用代码（选填）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
             {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
-            {fieldRow('联系电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="手机或座机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
+            {fieldRow('联系电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="手机或座机" placeholderClass="auth-ph" readOnly={!!selfPhone} onInput={(e) => (selfPhone ? undefined : setField('phone', e.detail.value))} />)}
+            {/* 改动说明：账户手机号即登录身份，向导内锁为只读并附来源说明，避免误改与后端 JWT 手机号不一致 */}
+            {selfPhone ? <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4, marginBottom: 6, paddingLeft: 16 }}>为当前登录手机号，不可修改</Text> : null}
             {fieldRow('地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="经营地址（选填）" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}
             {fieldRow('简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍（选填）" placeholderClass="auth-ph" onInput={(e) => setField('description', e.detail.value)} />)}
           </View>
