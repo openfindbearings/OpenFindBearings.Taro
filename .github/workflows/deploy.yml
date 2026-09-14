@@ -115,7 +115,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [build-and-push, meta]
+    needs: build-and-push
     steps:
     - name: Set up kubectl
       uses: azure/setup-kubectl@v4
@@ -142,33 +142,6 @@ jobs:
         kubectl rollout status deployment/${{ env.DEPLOYMENT }} \
           -n ${{ env.NAMESPACE }} \
           --timeout=10m
-
-    # 改动说明：版本更新自动化——规范版本发布后，把 tag 写入 API 库 Mobile.AppVersion，
-    # 并取 Release 正文首行（去引号）写 Mobile.UpdateMessage，作为客户端更新弹窗文案。
-    # Postgres 在集群外（宿主机 172.222.0.15），故起一次性 psql Pod 直连（凭据读 API Secret，
-    # 不落 workflow）；不改业务表、不碰 db_raw。SystemConfigRepository.GetAllAsync 无缓存，即时生效
-    - name: Record version to server config
-      if: github.event_name == 'release' && needs.meta.outputs.official == 'true'
-      env:
-        TAG: ${{ needs.meta.outputs.tag }}
-        RELEASE_BODY: ${{ github.event.release.body }}
-      run: |
-        set -e
-        CONN=$(kubectl -n "${{ env.NAMESPACE }}" get secret openfindbearings-api-secrets \
-          -o jsonpath='{.data.ConnectionStrings__DefaultConnection}' | base64 -d)
-        get() { echo "$CONN" | tr ';' '\n' | grep -m1 -i "^$1=" | cut -d= -f2-; }
-        PGH=$(get Host); PGP=$(get Port); PGD=$(get Database); PGU=$(get Username); PGG=$(get Password)
-        # 更新文案=Release 正文首个非空行（单行、去引号反斜杠防 SQL 转义问题），空则保留原配置不动
-        MSG=$(echo "$RELEASE_BODY" | grep -m1 . | cut -c1-200 | tr -d "'\"\\\\" || true)
-        SQL="UPDATE \"SystemConfigs\" SET \"Value\"='${TAG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.AppVersion';"
-        if [ -n "$MSG" ]; then
-          SQL="${SQL} UPDATE \"SystemConfigs\" SET \"Value\"='${MSG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.UpdateMessage';"
-        fi
-        kubectl -n "${{ env.NAMESPACE }}" run "psql-ver-${GITHUB_RUN_ID}" \
-          --rm -i --restart=Never --image=postgres:16-alpine \
-          --env="PGPASSWORD=${PGG}" \
-          -- psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGD" -c "$SQL"
-        echo "Mobile.AppVersion 已更新为 ${TAG}"
 
   # 改动说明：新增 APK 构建 job——每次 release 发布自动产出 arm64-v8a + armeabi-v7a
   # 两个分包并挂到该 Release；手动触发由 build_apk 开关控制。与 H5 镜像 job 并行、互不依赖。
@@ -300,6 +273,50 @@ jobs:
         done
         # 校验：列出远端目录确认本次分包已就位
         kubectl -n openfindbearings exec "$POD" -- ls -lh /data/dl
+
+    # 改动说明：写库步骤从 deploy job 移到 apk job 的"推 /dl 之后"——服务端 Mobile.AppVersion
+    # 必须在 APK 真正就位后才改写，否则存在"已宣告新版但下载 404"的竞态窗口。
+    # 取 Release 正文首行（去引号）写 Mobile.UpdateMessage 作更新弹窗文案；Postgres 在集群外
+    # （宿主机 172.222.0.15），凭据读 API Secret 不落 workflow；GetAllAsync 无缓存即时生效。
+    # 另：改用分离式 kubectl run（无 --rm）+ 独立 wait + 保留 Pod 至读日志后清理——
+    # 原 --rm -i 一次性 Pod 被取消/超时会连带删 Pod，丢失失败日志，排障难
+    - name: Record version to server config
+      if: github.event_name == 'release' && needs.meta.outputs.official == 'true'
+      env:
+        TAG: ${{ needs.meta.outputs.tag }}
+        RELEASE_BODY: ${{ github.event.release.body }}
+        KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_CONTENT }}
+      run: |
+        set -e
+        if [ -z "$KUBECONFIG_CONTENT" ]; then
+          echo "KUBECONFIG_CONTENT not set, skip writing version"
+          exit 0
+        fi
+        mkdir -p $HOME/.kube
+        echo "$KUBECONFIG_CONTENT" > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+        CONN=$(kubectl -n openfindbearings get secret openfindbearings-api-secrets \
+          -o jsonpath='{.data.ConnectionStrings__DefaultConnection}' | base64 -d)
+        get() { echo "$CONN" | tr ';' '\n' | grep -m1 -i "^$1=" | cut -d= -f2-; }
+        PGH=$(get Host); PGP=$(get Port); PGD=$(get Database); PGU=$(get Username); PGG=$(get Password)
+        MSG=$(echo "$RELEASE_BODY" | grep -m1 . | cut -c1-200 | tr -d "'\"\\\\" || true)
+        SQL="UPDATE \"SystemConfigs\" SET \"Value\"='${TAG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.AppVersion';"
+        if [ -n "$MSG" ]; then
+          SQL="${SQL} UPDATE \"SystemConfigs\" SET \"Value\"='${MSG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.UpdateMessage';"
+        fi
+        POD="psql-ver-${GITHUB_RUN_ID}"
+        kubectl -n openfindbearings delete pod "$POD" --ignore-not-found --wait=0
+        kubectl -n openfindbearings run "$POD" --image=postgres:16-alpine --restart=Never \
+          --env="PGPASSWORD=${PGG}" \
+          --command -- psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGD" -c "$SQL"
+        # 等 Pod 完成（含首次拉 postgres:16-alpine 镜像，给足 5m），失败不中断以便读日志
+        kubectl -n openfindbearings wait --for=condition=PodCompleted "pod/$POD" --timeout=5m || true
+        echo "--- psql pod logs ---"
+        kubectl -n openfindbearings logs "$POD" || true
+        RC=$(kubectl -n openfindbearings get pod "$POD" -o jsonpath='{.status.containerStatuses[0].state.terminated.exitCode}' 2>/dev/null)
+        kubectl -n openfindbearings delete pod "$POD" --wait=0
+        echo "psql exit code: ${RC:-unknown}"
+        [ "$RC" = "0" ] && echo "Mobile.AppVersion 已更新为 ${TAG}" || { echo "写库失败"; exit 1; }
 
     - name: Upload APKs as workflow artifact
       if: github.event_name == 'workflow_dispatch'

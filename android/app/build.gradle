@@ -145,9 +145,11 @@ def reactNativeArchitectures() {
 // 改动说明：版本号以 package.json 为唯一来源（JS 侧 defineConstants 注入 __APP_VERSION__，
 // RN 运行时经 DeviceInfo 读 versionName），发布时 git tag / package.json / APK versionName 三者同源，
 // 修复此前 gradle 写死 "1.0" 与 package.json 漂移导致版本检查误判的问题。
-// versionName 不能含 "+" 等 build 元数据字符，剥离后保留 prerelease（如 1.0.0-rc.1）
+// versionName 不能含 "+" 等 build 元数据字符，剥离后保留 prerelease（如 1.0.0-rc.1）。
+// 路径修正：projectDir 是 android/app，退两级（../../）才是仓库根的 package.json
+// （原写 ../ 指向 android/package.json 不存在，CI 构建即在 JsonSlurper "Unable to process file" 失败）
 def appVersionName = { ->
-    def pkg = new groovy.json.JsonSlurper().parse(new File(projectDir, "../package.json"))
+    def pkg = new groovy.json.JsonSlurper().parse(new File(projectDir, "../../package.json"))
     return pkg.version.toString().split(/\+/)[0]
 }.call()
 
