@@ -178,7 +178,7 @@ export default function MerchantProfilePage() {
         {fieldRow('企业名称', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="营业执照企业名称" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
         {fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="18位统一社会信用代码" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
         {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
-        {fieldRow('联系电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="手机或座机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
+        {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="对外公开，可填400/座机/手机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
         {fieldRow('手机号', <Input style={inputStyle} value={form.mobile} maxlength={20} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('mobile', e.detail.value)} />)}
         {fieldRow('邮箱', <Input style={inputStyle} value={form.email} maxlength={50} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('email', e.detail.value)} />)}
         {fieldRow('经营地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}

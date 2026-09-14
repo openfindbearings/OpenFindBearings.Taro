@@ -1,11 +1,18 @@
-// 入驻/商家页（Tab 根页）
-// v1.7.0 度量重构：接入 PageLayout（删 rnHeight/自管 ScrollView hack）
-// 改动说明：入驻状态真实化——由本地 storage merchant_approved 假 key 改为从
-// BFF /mobile/merchants/application 拉取（一人多商户，有 Active 商户即视为已入驻）
+// 入驻/商家页（Tab 根页）——v1.8.0 现代化改版：顶部对齐的"商户卡片列表"
+// 改动说明：
+//   1. 原占位居中式布局对"一人多商户 + 申请状态可见"承载不足且视觉过时，改为商户卡片流；
+//   2. 每商户一行带状态徽标（已生效/审核中/未通过），审核中不再露出"申请入驻"大按钮（防重复提交），
+//      但仍保留"＋ 申请入驻其他商户"入口（一人多商户天然成立）；
+//   3. 当前生效商户内联展示"商品/成员/信息维护"操作与认证/执照入口；点击其它生效商户卡即切换为当前；
+//   4. 数据来源 stores/merchant 的 applications（全量非 Draft），后端零改动；
+//   5. 撤回申请改为京东购物车式左滑操作条（SwipeCell），移除卡底独立"撤回申请"按钮，卡面更精简；
+//   6. Badge/MerchantCard 由"页面函数内定义"提升为模块级组件——函数内定义使每次父级重渲染都生成
+//      新组件类型，React 按类型变化整棵子树 remount，SwipeCell 内部拖拽态被清零，正是"滑出后缩回
+//      定不住"的根因（松手 onOpenChange 触发页面 setState 即重渲染）；提升后组件实例稳定。
 import Icon from '../../components/Icon'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { IS_H5 } from '../../utils/platform'
+import { useState } from 'react'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useAuthStore } from '../../stores/auth'
@@ -13,139 +20,300 @@ import { useMerchantStore } from '../../stores/merchant'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
-import { showMerchantSwitchSheet, MerchantSwitchItem } from '../../components/MerchantSwitchSheet'
-import { uploadLicense } from '../../services/merchant'
+import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
+import { uploadLicense, withdrawApplication, type MerchantApplication } from '../../services/merchant'
+import { usableImage } from '../../services/config'
 import './index.scss'
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
 
-export default function MerchantPage() {
-  // 主题色板（占位图标底/图标/文字随模式）+ 全局字号
+/** 角色码转中文 */
+function roleLabel(role?: string | null): string {
+  if (role === 'MerchantAdmin') return '管理员'
+  if (role === 'MerchantStaff') return '员工'
+  return ''
+}
+
+/** 状态徽标元数据（文案 + 语义色），主题 token 由调用方传入 */
+function statusMeta(t: ReturnType<typeof useTheme>, s: string): { label: string; color: string } {
+  if (s === 'Active') return { label: '已生效', color: t.success }
+  if (s === 'Pending') return { label: '审核中', color: t.warning }
+  if (s === 'Suspended') return { label: '未通过', color: t.danger }
+  return { label: s, color: t.textTertiary }
+}
+
+/** 状态徽标（圆点 + 文字，胶囊底）。模块级组件：见文件头改动说明 6 */
+function Badge({ status }: { status: string }) {
+  const t = useTheme()
+  const fs = useFs()
+  const meta = statusMeta(t, status)
+  return (
+    <View className='mch-badge' style={{ backgroundColor: t.bgBadge }}>
+      <View className='mch-badge-dot' style={{ backgroundColor: meta.color }} />
+      <Text className='mch-badge-text' style={{ ...fs(12), color: meta.color }}>{meta.label}</Text>
+    </View>
+  )
+}
+
+interface MerchantCardProps {
+  m: MerchantApplication
+  /** 当前处于左滑展开态的商户 id（页面级互斥） */
+  swipeOpenId: string | null
+  /** 展开态变化：open 传该卡 id，close 传 null */
+  onSwipeOpenChange: (id: string | null) => void
+}
+
+/**
+ * 单个商户卡：Pending 卡外包 SwipeCell（左滑露出撤回），其余状态直接渲染。
+ * 模块级组件：见文件头改动说明 6（防 remount 丢 SwipeCell 状态）。
+ */
+function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) {
   const t = useTheme()
   const fs = useFs()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
-  const merchants = useMerchantStore((s) => s.merchants)
+  const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
   const fetchApplications = useMerchantStore((s) => s.fetchApplications)
   const switchMerchant = useMerchantStore((s) => s.switchMerchant)
-  const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
-  // 修复 B2：approved 直接派生自 store（原 useState + 渲染闭包读取旧值，
-  // 提交申请返回后状态不更新；派生写法随 store 更新自动重渲染，根除闭包问题）
-  const approved = isLoggedIn && merchants.length > 0
-  // 改动说明 B5：多商户切换器——当前商户名 + 切换入口（仅多商户时显示）
-  const current = merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0]
 
-  const onSwitchMerchant = () => {
-    // 改动说明：改用全局 MerchantSwitchSheet（与 TabBar 中间切换同一套 UI，每行 logo+角色+对勾），
-    //   替代原 Taro.showActionSheet（RN 样式不可控、6 项上限、无 logo/角色）
-    const items: MerchantSwitchItem[] = merchants.map((m) => ({
-      id: m.merchantId, name: m.merchantName, logoUrl: m.logoUrl, role: m.role
-    }))
-    showMerchantSwitchSheet(items, currentMerchantId)
-      .then(async (r) => {
-        if (r.action === 'switch' && r.merchantId) await switchMerchant(r.merchantId)
-        else if (r.action === 'add') Taro.navigateTo({ url: '/pages/merchant/apply' })
+  const isCurrent = m.merchantId === currentMerchantId
+  const isActive = m.status === 'Active'
+  const swipeable = m.status === 'Pending'
+  const src = m.logoUrl ? usableImage(m.logoUrl) : ''
+
+  // 卡片通用阴影（RN：iOS shadow 四件套 + Android elevation）
+  const cardShadow = {
+    shadowColor: t.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    shadowOpacity: 1,
+    elevation: 2
+  } as const
+
+  const goApply = () => {
+    if (!isLoggedIn) { Taro.showToast({ title: '请先登录', icon: 'none' }); return }
+    Taro.navigateTo({ url: '/pages/merchant/apply' })
+  }
+
+  /** 点击商户卡：生效商户切换为当前；未通过则重新申请 */
+  const onCardTap = () => {
+    if (m.status === 'Active' && m.merchantId !== currentMerchantId) void switchMerchant(m.merchantId)
+    else if (m.status === 'Suspended') goApply()
+  }
+
+  /** 撤回待审核申请：二次确认后调 BFF，成功后刷新列表（self 卡消失回申请态 / claim 退回公共池） */
+  const onWithdraw = () => {
+    Taro.showModal({
+      title: '撤回入驻申请',
+      content: '撤回后该待审核申请将被取消，可稍后重新申请。确定撤回？'
+    })
+      .then(async (res) => {
+        if (!res.confirm) return
+        try {
+          const r = await withdrawApplication(m.merchantId)
+          Taro.showToast({ title: r?.message || '已撤回', icon: 'none' })
+          void fetchApplications()
+        } catch (e) {
+          Taro.showToast({ title: (e as { message?: string })?.message || '撤回失败', icon: 'none' })
+        }
       })
       .catch(() => { /* 取消 */ })
   }
 
-  useDidShow(() => {
-    // 登录态由 auth store 保证；拉取真实入驻状态（失败保留 store 现值）
-    if (isLoggedIn) {
-      fetchApplications().catch(() => { /* 拉取失败保持当前状态 */ })
-    }
-  })
-
-  return (
-    <PageLayout nav={<NavBar title={approved ? '商家' : '入驻'} />} tabbar={<CustomTabBar />}>
-      {/* H5 下 PageLayout body 是块级、无固定高，placeholder 的 flex:1 撑不满导致不居中；
-          给一个可视高(视口 - 顶栏44 - 底栏56)让其 flex column 垂直居中。RN 靠 flex:1 已居中，不加。 */}
-      <View className='placeholder' style={IS_H5 ? { minHeight: 'calc(100vh - 100px)' } : undefined}>
-        {/* 改动说明 B5：多商户当前上下文条（点击切换） */}
-        {approved && merchants.length > 1 && (
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 20, paddingLeft: 14, paddingRight: 14, paddingTop: 8, paddingBottom: 8, marginBottom: 16, alignSelf: 'center' }}
-            onClick={onSwitchMerchant}
-          >
-            <Text style={{ ...fs(13), color: t.textPrimary }}>{current?.merchantName}</Text>
-            <Icon name="chevron-down" size={14} color={t.textSecondary} />
-          </View>
-        )}
-        <View className='placeholder-icon' style={{ backgroundColor: t.primaryLight }}>
-          <Icon name="store" size={48} color={t.primary} />
+  const card = (
+    <View
+      className='mch-card'
+      // 改动说明：swipeable 时阴影/下边距上移到 SwipeCell 容器（容器 overflow:hidden 会裁掉卡片自身阴影），
+      //   卡片自身置 marginBottom:0 防撑高容器导致操作条底部漏出
+      style={{ backgroundColor: t.bgCard, ...(swipeable ? { marginBottom: 0 } : cardShadow) }}
+      onClick={onCardTap}
+    >
+      <View className='mch-card-row'>
+        <View className='mch-avatar' style={{ backgroundColor: t.primary }}>
+          {src
+            ? <Image className='mch-avatar' src={src} mode='aspectFill' style={{ width: 44, height: 44 }} />
+            : <Text style={{ ...fs(18), color: t.textOnPrimary, fontWeight: '600' }}>{(m.merchantName || '商').slice(0, 1)}</Text>}
         </View>
-        <Text className='placeholder-title' style={{ ...fs(17), color: t.textPrimary }}>
-          {approved ? '商家管理' : '商家入驻'}
-        </Text>
-        <Text className='placeholder-desc' style={{ ...fs(14), color: t.textTertiary }}>
-          {approved ? '商家信息维护与商品管理' : '商家入驻申请与店铺管理'}
-        </Text>
-        {!approved && (
-          <View style={{ alignItems: 'center' }}>
-            <View
-              className='placeholder-btn'
-              style={{ backgroundColor: t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, paddingLeft: 40, paddingRight: 40, marginTop: 20 }}
-              onClick={() => {
-                if (!isLoggedIn) {
-                  Taro.showToast({ title: '请先登录', icon: 'none' })
-                  return
-                }
-                // 改动说明 G4：入驻入口统一收敛到向导页（apply 已内聚"查找/认领/新建/提名/被邀请"全流程），
-                // 原"提名他人任管理员"与"待我接受的提名"文字入口移除，避免与向导功能重复
-                Taro.navigateTo({ url: '/pages/merchant/apply' })
-              }}
-            >
-              <Text style={{ ...fs(16), color: t.textOnPrimary }}>申请入驻</Text>
+        <View className='mch-mid'>
+          <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.merchantName}</Text>
+          {/* Pending 副标题两行（用户确认的版式）：首行状态+左滑提示、次行审核时长；
+              用两个 Text 叠放而非 \n+pre-line（RN 不支持 white-space，flex column 三端一致） */}
+          {m.status === 'Pending' ? (
+            <>
+              <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>已提交，左滑可撤回</Text>
+              <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>预计 1–3 个工作日完成审核</Text>
+            </>
+          ) : (
+            <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>
+              {isActive
+                ? (m.isVerified ? `${roleLabel(m.role)} · 已认证` : `${roleLabel(m.role)} · 未认证`)
+                : (m.rejectReason || '审核未通过，可修改资料后重新提交')}
+            </Text>
+          )}
+        </View>
+        <Badge status={m.status} />
+      </View>
+
+      {/* 未通过：给出驳回原因条 */}
+      {m.status === 'Suspended' && m.rejectReason && (
+        <View className='mch-reason' style={{ backgroundColor: t.bgInput }}>
+          <Text style={{ ...fs(12), color: t.danger }}>驳回原因：{m.rejectReason}</Text>
+        </View>
+      )}
+
+      {/* 当前生效商户：内联操作区 */}
+      {isActive && isCurrent && (
+        <>
+          <View className='mch-actions' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}>
+            <View className='mch-action' style={{ backgroundColor: t.primary }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/manage' })}>
+              <Text style={{ ...fs(13), color: t.textOnPrimary }}>商品管理</Text>
             </View>
-          </View>
-        )}
-        {approved && (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 20, justifyContent: 'center' }}>
-            <View
-              className='placeholder-btn'
-              style={{ backgroundColor: t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, paddingLeft: 30, paddingRight: 30 }}
-              onClick={() => Taro.navigateTo({ url: '/pages/merchant/manage' })}
-            >
-              <Text style={{ ...fs(16), color: t.textOnPrimary }}>商品管理</Text>
+            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/members' })}>
+              <Text style={{ ...fs(13), color: t.textPrimary }}>成员管理</Text>
             </View>
-            <View
-              className='placeholder-btn'
-              style={{ backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, paddingLeft: 30, paddingRight: 30, borderWidth: 1, borderColor: t.primary }}
-              onClick={() => Taro.navigateTo({ url: '/pages/merchant/members' })}
-            >
-              <Text style={{ ...fs(16), color: t.primary }}>成员管理</Text>
-            </View>
-            {/* 改动说明：信息维护为商户管理员专属功能（后端 PUT /profile + logo 上传均校验 MerchantAdmin） */}
-            {current?.role === 'MerchantAdmin' && (
-              <View
-                className='placeholder-btn'
-                style={{ backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, paddingLeft: 30, paddingRight: 30, borderWidth: 1, borderColor: t.primary }}
-                onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}
-              >
-                <Text style={{ ...fs(16), color: t.primary }}>信息维护</Text>
+            {m.role === 'MerchantAdmin' && (
+              <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
+                <Text style={{ ...fs(13), color: t.textPrimary }}>信息维护</Text>
               </View>
             )}
           </View>
-        )}
-        {/* 改动说明 G3：店铺认证——已入驻未认证时上传营业执照（Admin 审核后获得认证） */}
-        {approved && current && !current.isVerified && (
-          <View
-            style={{ marginTop: 14, backgroundColor: t.bgCard, borderRadius: 10, borderWidth: 1, borderColor: t.border, paddingTop: 10, paddingBottom: 10, paddingLeft: 16, paddingRight: 16 }}
-            onClick={async () => {
-              try {
-                const r = await uploadLicense()
-                Taro.showToast({ title: r?.message || '已提交', icon: 'none' })
-                void fetchApplications()
-              } catch {
-                Taro.showToast({ title: '上传失败', icon: 'none' })
-              }
-            }}
-          >
-            <Text style={{ ...fs(14), color: t.primary }}>上传营业执照，申请商家认证</Text>
+
+          {/* 认证 / 执照 */}
+          {!m.isVerified ? (
+            <View className='mch-verify-row' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}
+              onClick={async () => {
+                try {
+                  const r = await uploadLicense()
+                  Taro.showToast({ title: r?.message || '已提交', icon: 'none' })
+                  void fetchApplications()
+                } catch { Taro.showToast({ title: '上传失败', icon: 'none' }) }
+              }}
+            >
+              <Text style={{ ...fs(13), color: t.textSecondary }}>上传营业执照，申请商家认证</Text>
+              <Icon name='chevron-right' size={16} color={t.textTertiary} />
+            </View>
+          ) : (
+            <Text style={{ ...fs(12), color: t.success, marginTop: 10 }}>· 商家已认证</Text>
+          )}
+        </>
+      )}
+
+      {/* 非当前的生效商户：引导切换 */}
+      {isActive && !isCurrent && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
+          <Text style={{ ...fs(12), color: t.primaryText }}>点击设为当前商户</Text>
+          <Icon name='chevron-right' size={14} color={t.primaryText} />
+        </View>
+      )}
+    </View>
+  )
+
+  if (!swipeable) return card
+
+  // 审核中卡：左滑露出撤回操作条（京东购物车式），替代原卡底独立按钮
+  const actions: SwipeCellAction[] = [{
+    key: 'withdraw',
+    label: '撤回',
+    color: t.textOnPrimary,
+    bg: t.danger,
+    onPress: () => { onSwipeOpenChange(null); onWithdraw() }
+  }]
+  return (
+    <SwipeCell
+      actions={actions}
+      opened={swipeOpenId === m.merchantId}
+      onOpenChange={(o) => onSwipeOpenChange(o ? m.merchantId : null)}
+      containerStyle={{ ...cardShadow, marginBottom: 12 }}
+    >
+      {card}
+    </SwipeCell>
+  )
+}
+
+export default function MerchantPage() {
+  const t = useTheme()
+  const fs = useFs()
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  const merchants = useMerchantStore((s) => s.merchants)
+  const applications = useMerchantStore((s) => s.applications)
+  const pendingCount = useMerchantStore((s) => s.pendingCount)
+  const fetchApplications = useMerchantStore((s) => s.fetchApplications)
+
+  // 左滑互斥：全页同时只允许一张卡处于展开态，记录展开卡的 merchantId
+  const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null)
+
+  useDidShow(() => {
+    if (isLoggedIn) fetchApplications().catch(() => { /* 拉取失败保持当前状态 */ })
+  })
+
+  const goApply = () => {
+    if (!isLoggedIn) { Taro.showToast({ title: '请先登录', icon: 'none' }); return }
+    Taro.navigateTo({ url: '/pages/merchant/apply' })
+  }
+
+  // 卡片通用阴影（RN：iOS shadow 四件套 + Android elevation），页面级空态/引导卡使用
+  const cardShadow = {
+    shadowColor: t.shadowColor,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    shadowOpacity: 1,
+    elevation: 2
+  } as const
+
+  return (
+    <PageLayout nav={<NavBar title='商家' />} tabbar={<CustomTabBar />}>
+      <View className='mch-body'>
+        {/* 顶部品牌区 */}
+        <View className='mch-hero'>
+          <View className='mch-hero-icon' style={{ backgroundColor: t.primaryLight }}>
+            <Icon name='store' size={26} color={t.primary} />
           </View>
-        )}
-        {approved && current?.isVerified && (
-          <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 10 }}>商家已认证</Text>
+          <View style={{ flex: 1 }}>
+            <Text className='mch-hero-title' style={{ ...fs(17), color: t.textPrimary }}>
+              {applications.length > 0 ? '我的商户' : '开设轴承店铺'}
+            </Text>
+            <Text className='mch-hero-desc' style={{ ...fs(13), color: t.textTertiary }}>
+              {applications.length > 0 ? '一个账号可管理多家商户' : '提交入驻申请，审核通过即可上架经营'}
+            </Text>
+          </View>
+        </View>
+
+        {/* 未登录引导 */}
+        {!isLoggedIn ? (
+          <View className='mch-card' style={{ backgroundColor: t.bgCard, ...cardShadow, alignItems: 'center', padding: 24 }}>
+            <Text style={{ ...fs(14), color: t.textSecondary, textAlign: 'center' }}>登录后可申请入驻与管理店铺</Text>
+            <View className='mch-primary' style={{ backgroundColor: t.primary, alignSelf: 'stretch' }}
+              onClick={() => Taro.navigateTo({ url: '/pages/auth/login' })}>
+              <Text style={{ ...fs(15), color: t.textOnPrimary }}>去登录</Text>
+            </View>
+          </View>
+        ) : applications.length > 0 ? (
+          <>
+            <View className='mch-section'>
+              <Text className='mch-section-title' style={{ ...fs(14), color: t.textPrimary }}>我的商户</Text>
+              <Text className='mch-section-count' style={{ ...fs(12), color: t.textTertiary }}>
+                {merchants.length} 家已生效{pendingCount > 0 ? ` · ${pendingCount} 家审核中` : ''}
+              </Text>
+            </View>
+
+            {applications.map((m) => (
+              <MerchantCard key={m.merchantId} m={m} swipeOpenId={swipeOpenId} onSwipeOpenChange={setSwipeOpenId} />
+            ))}
+
+            {/* 虚线新增卡：一人多商户，始终可再申请一家 */}
+            <View className='mch-add' style={{ borderColor: t.border }} onClick={goApply}>
+              <Icon name='plus' size={16} color={t.primary} />
+              <Text style={{ ...fs(14), color: t.primaryText, marginLeft: 6 }}>申请入驻其他商户</Text>
+            </View>
+          </>
+        ) : (
+          /* 空状态：无任何申请 */
+          <View className='mch-card' style={{ backgroundColor: t.bgCard, ...cardShadow, alignItems: 'center', padding: 24 }}>
+            <Text style={{ ...fs(14), color: t.textSecondary, textAlign: 'center' }}>你还没有入驻任何商户</Text>
+            <View className='mch-primary' style={{ backgroundColor: t.primary, alignSelf: 'stretch' }} onClick={goApply}>
+              <Text style={{ ...fs(15), color: t.textOnPrimary }}>申请入驻</Text>
+            </View>
+          </View>
         )}
       </View>
     </PageLayout>

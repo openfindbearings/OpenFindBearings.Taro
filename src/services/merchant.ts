@@ -163,6 +163,11 @@ export function getMerchantApplication() {
   return request<MerchantApplication[]>(API.MERCHANT_APPLICATION)
 }
 
+/** 申请人自助撤回待审核的入驻申请（self 新建删店 / claim 认领退回公共池） */
+export function withdrawApplication(merchantId: string) {
+  return request<OpResult>(API.MERCHANT_WITHDRAW(merchantId), { method: 'POST' })
+}
+
 /** 认领搜索爬虫商家 */
 export function searchClaimableMerchants(params: { keyword?: string; page?: number; pageSize?: number }) {
   const qs = buildQuery({
