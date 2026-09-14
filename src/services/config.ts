@@ -92,6 +92,8 @@ export const API = {
   /** 商户入驻（需登录） */
   MERCHANT_APPLY: `${API_PREFIX}/merchants/apply`,
   MERCHANT_APPLICATION: `${API_PREFIX}/merchants/application`,
+  /** 申请人自助撤回待审核申请（self 新建删店 / claim 认领退回公共池） */
+  MERCHANT_WITHDRAW: (id: string) => `${API_PREFIX}/merchants/${id}/withdraw`,
   MERCHANT_CLAIMABLE: `${API_PREFIX}/merchants/claimable`,
   MERCHANT_NOMINATE: `${API_PREFIX}/merchants/nominate`,
   MERCHANT_NOMINATE_ACCEPT: (code: string) => `${API_PREFIX}/merchants/nominate/${code}/accept`,

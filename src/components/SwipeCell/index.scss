@@ -1,0 +1,39 @@
+// SwipeCell 左滑操作单元格样式（H5 / 小程序；RN 版用 StyleSheet 内联，不引用本文件）
+// 结构：容器裁切圆角 -> 操作条绝对定位右侧垫底 -> 内容层相对定位盖在上（translate3d 平移）
+//       -> 展开态遮罩拦截内容区首次点击。
+
+.swipe-cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-cell-actions {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.swipe-cell-action {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.swipe-cell-content {
+  position: relative;
+  z-index: 1;
+  // H5 主流做法：声明横向手势交给 JS（浏览器不做横向平移/过滚），纵向滚动保留
+  touch-action: pan-y;
+}
+
+.swipe-cell-mask {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+}

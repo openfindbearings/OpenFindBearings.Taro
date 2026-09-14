@@ -1,46 +1,180 @@
-﻿// 商家页样式（v1.7.0 度量重构，纯 RN 基准）
-// 改动说明：删 .merchant-page/.merchant-scroll（骨架与滚动由 PageLayout 提供，
-// 100vh 与 padding-bottom:74px hack 一并移除）；占位区尺寸 dp token + 行高落 dp。
+﻿// 商家页样式（v1.8.0 现代化改版：占位居中式 → 顶部对齐的商户卡片列表）
+// 改动说明：原 .placeholder 居中布局对"一人多商户 + 申请状态可见"承载不足且视觉过时；
+//   改为"顶部对齐 + 卡片流"：状态徽标 pill、商户卡、虚线新增卡、底部安全留白。
+// 尺寸 token 全部取自 _rn.scss；颜色走运行时 inline（深色模式覆盖），SCSS 仅承载静态几何/字距。
 @import '../../styles/_rn';
 
-// 占位区垂直居中：flex:1 撑满 PageLayout 内容容器（已设 flexGrow:1），
-// justify-content:center 使图标+标题+描述整体在视口内垂直居中。
-// 改动说明：删原 padding-top:80px 伪居中（内容少时偏上），改真正的 flex 居中。
-.placeholder {
+// 页面内容容器：顶部对齐、左右 16 内边距、底部预留 tabbar+安全区
+.mch-body {
   display: flex;
-  flex: 1;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   padding-left: $space-4;
   padding-right: $space-4;
+  padding-top: $space-4;
+  padding-bottom: 96px;
 }
 
-// 大圆图标底（96dp 见方，浅主色底）
-.placeholder-icon {
-  width: 96px;
-  height: 96px;
-  border-radius: 999px;
-  background: $primary-light;
+// 顶部品牌区：图标 + 标题 + 引导文案
+.mch-hero {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: $space-5;
+}
+.mch-hero-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-bottom: $space-4;
+  margin-right: 12px;
 }
-
-.placeholder-title {
+.mch-hero-title {
   font-size: $font-size-lg;
   line-height: $line-height-lg;
-  color: $text-primary;
   font-weight: bold;
-  margin-bottom: $space-2;
-  text-align: center;
+}
+.mch-hero-desc {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: 2px;
 }
 
-.placeholder-desc {
+// 段落小标题（左文字 + 右计数）
+.mch-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-3;
+  margin-top: $space-2;
+}
+.mch-section-title {
   font-size: $font-size-base;
   line-height: $line-height-base;
-  color: $text-tertiary;
-  text-align: center;
+  font-weight: bold;
+}
+.mch-section-count {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+}
+
+// 商户卡片
+.mch-card {
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.mch-card-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.mch-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-right: 12px;
+}
+.mch-mid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-right: 8px;
+}
+.mch-name {
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  font-weight: bold;
+}
+.mch-sub {
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  margin-top: 2px;
+}
+// 状态徽标：小圆点 + 文字，胶囊底
+.mch-badge {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  border-radius: 999px;
+}
+.mch-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+.mch-badge-text {
+  font-size: $font-size-xs;
+  line-height: 16px;
+}
+
+// 当前商户的操作区（卡内分隔线下的一组按钮）
+.mch-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.mch-action {
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-radius: 999px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+// 驳回原因条
+.mch-reason {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+// 认证提示行
+.mch-verify-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+// 主操作按钮（申请入驻 / 再申请一家）
+.mch-primary {
+  height: 48px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: $space-3;
+}
+
+// 虚线新增卡
+.mch-add {
+  border-radius: 16px;
+  border-width: 1px;
+  border-style: dashed;
+  padding-top: 18px;
+  padding-bottom: 18px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
 }

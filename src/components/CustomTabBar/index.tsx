@@ -32,6 +32,7 @@ export default function CustomTabBar() {
   const merchants = useMerchantStore((s) => s.merchants)
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
   const switchMerchant = useMerchantStore((s) => s.switchMerchant)
+  const pendingCount = useMerchantStore((s) => s.pendingCount)
   const approved = merchants.length > 0
   // 当前商户：优先 currentMerchantId 命中，回退列表首个
   const current = merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0] ?? null
@@ -85,8 +86,12 @@ export default function CustomTabBar() {
     return 'user'
   }
 
-  // 商家 tab 文案：已入驻用当前商户名，否则用"入驻"
-  const getMerchantText = () => (approved ? merchantName : '入驻')
+  // 商家 tab 文案：已生效用商户名；仅审核中用"审核中"；否则"入驻"
+  const getMerchantText = () => {
+    if (approved) return merchantName
+    if (pendingCount > 0) return '审核中'
+    return '入驻'
+  }
 
   // 底部安全区内嵌（手势条/Home Indicator），标准 useSafeAreaInserts
   const { bottom } = useSafeArea()

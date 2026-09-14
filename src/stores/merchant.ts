@@ -13,8 +13,12 @@ const CURRENT_KEY = 'current_merchant_id'
 interface MerchantState {
   /** 已生效（Active）商户列表，一人可多个 */
   merchants: MerchantApplication[]
+  /** 全部申请中的商户（Active + Pending + Suspended，排除 Draft）——商户页状态列表用 */
+  applications: MerchantApplication[]
   /** 是否已入驻（存在生效商户） */
   approved: boolean
+  /** 审核中（Pending）数量 */
+  pendingCount: number
   /** 当前选中商户ID（多商户操作上下文） */
   currentMerchantId: string | null
   loading: boolean
@@ -30,7 +34,9 @@ interface MerchantState {
 
 export const useMerchantStore = create<MerchantState>((set, get) => ({
   merchants: [],
+  applications: [],
   approved: false,
+  pendingCount: 0,
   currentMerchantId: null,
   loading: false,
 
@@ -38,7 +44,12 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
     set({ loading: true })
     try {
       const list = await getMerchantApplication()
-      const active = list?.filter((x) => x.status === 'Active') ?? []
+      // 改动说明：后端返回用户全部在职成员商户（含 Pending/Suspended/Active），
+      //   merchants 仅取 Active 作操作上下文（不变），applications 保留全量供商户页状态列表渲染，
+      //   杜绝"审核中看不到、还能重复点申请入驻"的问题
+      const all = list ?? []
+      const active = all.filter((x) => x.status === 'Active')
+      const pendingCount = all.filter((x) => x.status === 'Pending').length
       // 当前选中失效（不在列表/未选）时回退首个，并同步到请求上下文模块
       const stored = await getItem(CURRENT_KEY)
       const valid = active.some((m) => m.merchantId === stored) ? stored : null
@@ -53,7 +64,14 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
         await setItem('merchant_name', first.merchantName)
         await setItem('merchant_logo', first.logoUrl || '')
       }
-      set({ merchants: active, approved: active.length > 0, currentMerchantId: current, loading: false })
+      set({
+        merchants: active,
+        applications: all,
+        approved: active.length > 0,
+        pendingCount,
+        currentMerchantId: current,
+        loading: false
+      })
     } catch {
       // 拉取失败保留现状（未登录/网络异常不阻塞页面）
       set({ loading: false })
@@ -83,6 +101,6 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
     // 改动说明 G1：同步清派生缓存，避免下一个账号首帧读到上一账号的入驻状态
     void removeItem('merchant_approved')
     void removeItem('merchant_name')
-    set({ merchants: [], approved: false, currentMerchantId: null, loading: false })
+    set({ merchants: [], applications: [], approved: false, pendingCount: 0, currentMerchantId: null, loading: false })
   }
 }))
