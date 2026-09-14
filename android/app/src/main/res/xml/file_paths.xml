@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 改动说明：版本更新功能 FileProvider 路径配置。
+     external-files-path 映射应用外部私有目录（getExternalFilesDir），
+     下载的 APK 落在该目录 Download/ 子目录下，经 FileProvider 授权给系统安装器读取。 -->
+<paths>
+  <external-files-path
+    name="downloads"
+    path="Download/" />
+</paths>

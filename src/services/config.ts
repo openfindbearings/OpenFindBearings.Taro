@@ -138,4 +138,6 @@ export const API = {
 
   /** 配置 */
   CONFIG: `${API_PREFIX}/config`,
+  /** 版本更新检查（BFF /mobile/version/check 匿名代理到 API） */
+  VERSION_CHECK: `${API_PREFIX}/version/check`,
 } as const

@@ -142,6 +142,15 @@ def reactNativeArchitectures() {
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
+// 改动说明：版本号以 package.json 为唯一来源（JS 侧 defineConstants 注入 __APP_VERSION__，
+// RN 运行时经 DeviceInfo 读 versionName），发布时 git tag / package.json / APK versionName 三者同源，
+// 修复此前 gradle 写死 "1.0" 与 package.json 漂移导致版本检查误判的问题。
+// versionName 不能含 "+" 等 build 元数据字符，剥离后保留 prerelease（如 1.0.0-rc.1）
+def appVersionName = { ->
+    def pkg = new groovy.json.JsonSlurper().parse(new File(projectDir, "../package.json"))
+    return pkg.version.toString().split(/\+/)[0]
+}.call()
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -152,8 +161,9 @@ android {
         applicationId app_id
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // 改动说明：versionName 改为从 package.json 读取（appVersionName），与 JS 侧版本单一来源对齐
         versionCode 1
-        versionName "1.0"
+        versionName appVersionName
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
 
         if (isNewArchitectureEnabled()) {

@@ -24,6 +24,8 @@ import { useFs } from '../../hooks/useFontScale'
 import { useAuthStore } from '../../stores/auth'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
+import { checkUpdateManually } from '../../services/update'
+import { getAppVersion } from '../../utils/version'
 import './settings.scss'
 
 const SETTINGS_KEY = 'app_settings'
@@ -171,8 +173,10 @@ export default function SettingsPage() {
     })
   }
 
+  // 改动说明：原硬编码"已是最新版本"占位，接入后端版本检查（BFF /mobile/version/check）。
+  // 三端策略与启动检查共用 services/update：RN 真实比较+应用内下载安装，H5/小程序给确定性指引
   const checkVersion = () => {
-    showConfirmDialog({ title: '版本更新', content: '当前版本 v1.0.0，已是最新版本。', showCancel: false, confirmText: '知道了' })
+    void checkUpdateManually()
   }
 
   const callHotline = () => {
@@ -385,7 +389,8 @@ export default function SettingsPage() {
               <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>版本更新</Text>
             </View>
             <View className='list-right'>
-              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>v1.0.0</Text>
+              {/* 改动说明：版本号从单一来源 utils/version 读取（RN 安装包 versionName / H5 编译常量），不再写死 */}
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>v{getAppVersion()}</Text>
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           </View>

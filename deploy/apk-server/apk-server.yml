@@ -1,0 +1,138 @@
+# APK 静态下载服务：自建 K3s 托管安卓安装包（GitHub Release 国内访问不稳，仅当备份渠道）
+# 对外地址：https://bff.515813.xyz/dl/app-v<版本>-<abi>.apk
+# 推包方式：Taro CI（deploy.yml apk job）构建后 kubectl cp 两个分包到本 Pod 的 /data/dl/ 目录
+# 注意：PVC + replicas:1 —— CI 用 kubectl cp 写文件到单副本，扩副本会导致文件只在其中一个 Pod 上；
+#       如需高可用改用 RWX 存储或换对象存储，目前单副本足够
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openfindbearings-apk-server-pvc
+  namespace: openfindbearings
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openfindbearings-apk-server-nginx
+  namespace: openfindbearings
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+      root /data;
+      # 仅开放 /dl 前缀，APK 文件由 CI 推入 PVC 的 dl 目录
+      location /dl/ {
+        types { }
+        default_type application/vnd.android.package-archive;
+        add_header Cache-Control "no-cache";
+      }
+      # 探活端点，供 liveness/readiness 使用
+      location = /healthz {
+        return 200 'ok';
+      }
+      location / {
+        return 404;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openfindbearings-apk-server
+  namespace: openfindbearings
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: openfindbearings-apk-server
+  template:
+    metadata:
+      labels:
+        app: openfindbearings-apk-server
+    spec:
+      containers:
+      - name: openfindbearings-apk-server
+        image: nginx:1.27-alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: apk-storage
+          mountPath: /data
+        - name: nginx-conf
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 20
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+          requests:
+            memory: "16Mi"
+            cpu: "10m"
+      volumes:
+      - name: apk-storage
+        persistentVolumeClaim:
+          claimName: openfindbearings-apk-server-pvc
+      - name: nginx-conf
+        configMap:
+          name: openfindbearings-apk-server-nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openfindbearings-apk-server
+  namespace: openfindbearings
+spec:
+  selector:
+    app: openfindbearings-apk-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+# 改动说明：与 BFF 共用 bff.515813.xyz 域名（ingress-nginx 会合并同 host 多个 Ingress 的规则），
+# 仅新增 /dl 路径；TLS 直接引用 Mobile 仓库 Ingress 已由 cert-manager 签发的 secret，
+# 本资源不带 cert-manager 注解，避免对同一 host 重复签发证书
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openfindbearings-apk-server-ingress
+  namespace: openfindbearings
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - bff.515813.xyz
+    secretName: bff-515813-xyz-tls
+  rules:
+  - host: bff.515813.xyz
+    http:
+      paths:
+      - path: /dl
+        pathType: Prefix
+        backend:
+          service:
+            name: openfindbearings-apk-server
+            port:
+              number: 80

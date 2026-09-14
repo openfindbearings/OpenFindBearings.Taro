@@ -16,3 +16,6 @@ declare namespace NodeJS {
     TARO_ENV: 'weapp' | 'swan' | 'alipay' | 'h5' | 'rn' | 'tt' | 'quickapp' | 'qq' | 'jd'
   }
 }
+
+// 编译期注入的应用版本号（config/index.ts defineConstants 从 package.json 读入）
+declare const __APP_VERSION__: string;
