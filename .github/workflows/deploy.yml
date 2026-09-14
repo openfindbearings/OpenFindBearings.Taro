@@ -23,8 +23,46 @@ env:
   CONTAINER: openfindbearings-taro
 
 jobs:
+  # 改动说明：版本更新自动化——meta 是版本链唯一裁决点：解析发布 tag（或手动触发时读
+  # package.json），输出 tag/version/official。official=true（SemVer 带点 rc 规范格式）才会：
+  # 反写 package.json 进构建产物、推 APK 到 K3s /dl、写服务端 Mobile.AppVersion；
+  # 非规范 tag 照常构建与传 GitHub Release 页面，仅不发布更新（存档用途）
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+      official: ${{ steps.resolve.outputs.official }}
+    steps:
+    - uses: actions/checkout@v6.0.2
+
+    - name: Resolve tag and version
+      id: resolve
+      env:
+        INPUT_TAG: ${{ github.event.inputs.tag }}
+        RELEASE_TAG: ${{ github.event.release.tag_name }}
+      run: |
+        RAW="$RELEASE_TAG"
+        if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+          # 手动触发：填了非 latest 的 tag 用它，否则回落 package.json version（补 v 前缀）
+          if [ -n "$INPUT_TAG" ] && [ "$INPUT_TAG" != "latest" ]; then
+            RAW="$INPUT_TAG"
+          else
+            RAW="v$(node -p "require('./package.json').version")"
+          fi
+        fi
+        if echo "$RAW" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$'; then
+          echo "official=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "official=false" >> "$GITHUB_OUTPUT"
+        fi
+        echo "tag=$RAW" >> "$GITHUB_OUTPUT"
+        echo "version=${RAW#v}" >> "$GITHUB_OUTPUT"
+        echo "resolved tag=$RAW"
+
   build-and-push:
     runs-on: ubuntu-latest
+    needs: meta
     permissions:
       contents: read
       packages: write
@@ -44,6 +82,14 @@ jobs:
         else
           echo "docker_tag=latest" >> $GITHUB_OUTPUT
         fi
+
+    # 改动说明：规范版本发布时以 tag 反写 package.json.version（仅工作区临时改动、不 commit），
+    # Docker 构建上下文与 H5 的 __APP_VERSION__ 编译常量由此与 tag 单源一致，杜绝手动漂移
+    - name: Sync package.json version from tag
+      if: needs.meta.outputs.official == 'true'
+      env:
+        PKG_VERSION: ${{ needs.meta.outputs.version }}
+      run: node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.PKG_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
 
     # 改动说明：移除 workflow 级 pnpm 安装与 H5 构建步骤——Dockerfile 内部经 corepack 显式
     # prepare pnpm@9.15.0 自行完成构建（非读取 packageManager 字段），workflow 级重复安装属冗余且拖慢发布
@@ -69,7 +115,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [build-and-push, meta]
     steps:
     - name: Set up kubectl
       uses: azure/setup-kubectl@v4
@@ -97,17 +143,53 @@ jobs:
           -n ${{ env.NAMESPACE }} \
           --timeout=10m
 
+    # 改动说明：版本更新自动化——规范版本发布后，把 tag 写入 API 库 Mobile.AppVersion，
+    # 并取 Release 正文首行（去引号）写 Mobile.UpdateMessage，作为客户端更新弹窗文案。
+    # Postgres 在集群外（宿主机 172.222.0.15），故起一次性 psql Pod 直连（凭据读 API Secret，
+    # 不落 workflow）；不改业务表、不碰 db_raw。SystemConfigRepository.GetAllAsync 无缓存，即时生效
+    - name: Record version to server config
+      if: github.event_name == 'release' && needs.meta.outputs.official == 'true'
+      env:
+        TAG: ${{ needs.meta.outputs.tag }}
+        RELEASE_BODY: ${{ github.event.release.body }}
+      run: |
+        set -e
+        CONN=$(kubectl -n "${{ env.NAMESPACE }}" get secret openfindbearings-api-secrets \
+          -o jsonpath='{.data.ConnectionStrings__DefaultConnection}' | base64 -d)
+        get() { echo "$CONN" | tr ';' '\n' | grep -m1 -i "^$1=" | cut -d= -f2-; }
+        PGH=$(get Host); PGP=$(get Port); PGD=$(get Database); PGU=$(get Username); PGG=$(get Password)
+        # 更新文案=Release 正文首个非空行（单行、去引号反斜杠防 SQL 转义问题），空则保留原配置不动
+        MSG=$(echo "$RELEASE_BODY" | grep -m1 . | cut -c1-200 | tr -d "'\"\\\\" || true)
+        SQL="UPDATE \"SystemConfigs\" SET \"Value\"='${TAG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.AppVersion';"
+        if [ -n "$MSG" ]; then
+          SQL="${SQL} UPDATE \"SystemConfigs\" SET \"Value\"='${MSG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.UpdateMessage';"
+        fi
+        kubectl -n "${{ env.NAMESPACE }}" run "psql-ver-${GITHUB_RUN_ID}" \
+          --rm -i --restart=Never --image=postgres:16-alpine \
+          --env="PGPASSWORD=${PGG}" \
+          -- psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGD" -c "$SQL"
+        echo "Mobile.AppVersion 已更新为 ${TAG}"
+
   # 改动说明：新增 APK 构建 job——每次 release 发布自动产出 arm64-v8a + armeabi-v7a
   # 两个分包并挂到该 Release；手动触发由 build_apk 开关控制。与 H5 镜像 job 并行、互不依赖。
   # 签名用已入库的 android/app/debug.keystore（可直装、零 Secret，不上 Play）。
   apk:
     name: Build Android APK
     runs-on: ubuntu-latest
+    needs: meta
     if: github.event_name == 'release' || inputs.build_apk
     permissions:
       contents: write
     steps:
     - uses: actions/checkout@v6.0.2
+
+    # 改动说明：规范版本发布时以 meta 的 tag 反写 package.json.version（仅工作区，不 commit），
+    # RN bundle 的 __APP_VERSION__ 与 gradle JsonSlurper 读到的 versionName 由此与 tag 单源一致
+    - name: Sync package.json version from tag
+      if: needs.meta.outputs.official == 'true'
+      env:
+        PKG_VERSION: ${{ needs.meta.outputs.version }}
+      run: node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.version=process.env.PKG_VERSION;fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
 
     # 改动说明：显式装 Node 22——react.gradle / root build.gradle 在 gradle 配置期执行
     # `node --print` 读取 react-native 版本，不能只依赖 runner 预装 node。
@@ -161,16 +243,8 @@ jobs:
         ./gradlew assembleRelease --no-daemon -x lintVitalRelease \
           -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
 
-    # 改动说明：提取版本号——release 事件用 tag（如 v1.0.20），手动触发从 build.gradle 读 versionName
-    - name: Determine version
-      id: version
-      run: |
-        if [ "${{ github.event_name }}" = "release" ]; then
-          echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
-        else
-          VERSION=$(grep 'versionName' android/app/build.gradle | awk '{print $2}' | tr -d '"')
-          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
-        fi
+    # 改动说明：原 Determine version 步骤删除——版本号统一由 meta job 裁决（release 用 tag，
+    # 手动触发用 package.json），后续步骤直接引用 needs.meta.outputs.tag
 
     # 改动说明：将 app-arm64-v8a-release.apk 等原名改为 app-v1.0.20-arm64-v8a.apk 格式，便于用户识别版本
     - name: Rename APKs with version
@@ -179,7 +253,7 @@ jobs:
         for f in app-*-release.apk; do
           ABI=${f#app-}
           ABI=${ABI%-release.apk}
-          mv "$f" "app-${{ steps.version.outputs.tag }}-${ABI}.apk"
+          mv "$f" "app-${{ needs.meta.outputs.tag }}-${ABI}.apk"
         done
 
     - name: Upload APKs to Release
@@ -188,11 +262,48 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh release upload "${{ github.event.release.tag_name }}" \
-          android/app/build/outputs/apk/release/app-${{ steps.version.outputs.tag }}-*.apk --clobber
+          android/app/build/outputs/apk/release/app-${{ needs.meta.outputs.tag }}-*.apk --clobber
+
+    # 改动说明：版本更新功能上线——GitHub Release 国内下载不稳，主分发渠道改为
+    # K3s 自建静态下载服务（deploy/apk-server/，https://bff.515813.xyz/dl/）。
+    # 构建完把分包 kubectl cp 进 apk-server Pod 的 PVC 目录；版本号不变的重发用同名覆盖。
+    # 与 deploy job 共用 KUBECONFIG_CONTENT secret；未配置该 secret 时静默跳过，不阻断 Release 产物
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v4
+
+    # 改动说明：非规范 tag（official=false）不推 /dl——GitHub Release 页面照常上传仅作存档，
+    # 客户端统一从 K3s /dl 下载，未被非规范版本污染
+    - name: Push APKs to K3s download server
+      if: needs.meta.outputs.official == 'true'
+      env:
+        KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_CONTENT }}
+      run: |
+        if [ -z "$KUBECONFIG_CONTENT" ]; then
+          echo "KUBECONFIG_CONTENT not set, skip pushing APKs to K3s"
+          exit 0
+        fi
+        mkdir -p $HOME/.kube
+        echo "$KUBECONFIG_CONTENT" > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+        if ! kubectl -n openfindbearings get deploy openfindbearings-apk-server >/dev/null 2>&1; then
+          echo "apk-server 尚未部署（首次需手工 kubectl apply -f deploy/apk-server/apk-server.yml），跳过推包"
+          exit 0
+        fi
+        kubectl -n openfindbearings wait --for=condition=Ready pod \
+          -l app=openfindbearings-apk-server --timeout=120s
+        POD=$(kubectl -n openfindbearings get pod -l app=openfindbearings-apk-server \
+          -o jsonpath='{.items[0].metadata.name}')
+        kubectl -n openfindbearings exec "$POD" -- mkdir -p /data/dl
+        for f in android/app/build/outputs/apk/release/app-${{ needs.meta.outputs.tag }}-*.apk; do
+          echo "cp $f -> $POD:/data/dl/"
+          kubectl -n openfindbearings cp "$f" "$POD:/data/dl/$(basename "$f")"
+        done
+        # 校验：列出远端目录确认本次分包已就位
+        kubectl -n openfindbearings exec "$POD" -- ls -lh /data/dl
 
     - name: Upload APKs as workflow artifact
       if: github.event_name == 'workflow_dispatch'
       uses: actions/upload-artifact@v4
       with:
-        name: android-apk-${{ steps.version.outputs.tag }}
-        path: android/app/build/outputs/apk/release/app-${{ steps.version.outputs.tag }}-*.apk
+        name: android-apk-${{ needs.meta.outputs.tag }}
+        path: android/app/build/outputs/apk/release/app-${{ needs.meta.outputs.tag }}-*.apk

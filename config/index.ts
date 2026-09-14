@@ -1,3 +1,9 @@
+// 改动说明：版本号单一来源——package.json 的 version 注入为编译期常量 __APP_VERSION__，
+// H5/小程序运行时直接读该常量；RN 端另走 android/app/build.gradle 同源读取 + DeviceInfo 运行时获取。
+// 发布流程只需改 package.json 一处（git tag 与其保持一致）
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pkg = require('../package.json')
+
 const config = {
   projectName: 'openfindbearings',
   date: '2026-9-3',
@@ -11,6 +17,8 @@ const config = {
   outputRoot: 'dist',
   plugins: [],
   defineConstants: {
+    // 编译期全局常量：当前应用版本号（SemVer，如 1.0.0-rc.1），供版本更新检查上报用
+    __APP_VERSION__: JSON.stringify(pkg.version)
   },
   copy: {
     patterns: [

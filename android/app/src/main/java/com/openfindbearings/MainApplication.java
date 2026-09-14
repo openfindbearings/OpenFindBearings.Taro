@@ -25,6 +25,8 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
           @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
+          // 改动说明：注册 APK 应用内更新模块（版本更新功能，下载完成后拉起系统安装）
+          packages.add(new ApkUpdatePackage());
           return packages;
         }
 
