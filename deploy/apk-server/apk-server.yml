@@ -1,6 +1,6 @@
 # APK 静态下载服务：自建 K3s 托管安卓安装包（GitHub Release 国内访问不稳，仅作拉取源）
 # 对外地址：https://bff.515813.xyz/dl/app-v<版本>-<abi>.apk
-# 同步方式：本文件内 apk-sync CronJob 每 30 分钟从 GitHub Release 拉最新规范版本的
+# 同步方式：本文件内 apk-sync CronJob 每晚 1 点（北京时间）从 GitHub Release 拉最新规范版本的
 #           分包到 PVC 的 dl 目录，两包齐才改写 API 库 Mobile.AppVersion（拉不完不宣告）；
 #           CI 侧不再持有集群凭据，发布动作纯 GitHub 化
 # 注意：PVC + replicas:1 —— 写文件的 CronJob 与读服务的 Deployment 同节点挂载（RWO 允许）；
@@ -232,8 +232,10 @@ metadata:
   name: openfindbearings-apk-sync
   namespace: openfindbearings
 spec:
-  # 每 30 分钟一轮；单轮含最慢 ~25 分钟下载，Forbid 防重入
-  schedule: "*/30 * * * *"
+  # 每晚 1 点（北京时间）一轮：低峰期同步，慢速下载(~25 分钟)在无人时段完成，
+  # 早上 App 启动即可检测到昨夜发布的新版；单轮含下载，Forbid 防重入
+  schedule: "0 1 * * *"
+  timeZone: "Asia/Shanghai"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
