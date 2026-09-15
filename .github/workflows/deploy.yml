@@ -185,8 +185,14 @@ jobs:
         distribution: temurin
         java-version: '17'
 
+    # 改动说明：显式设 packages 覆盖 action 默认值 'tools platform-tools'——Google 已从 SDK
+    # 仓库移除遗留 tools 包，action 内部 sdkmanager tools 会报 "Failed to find package 'tools'"
+    # 直接崩（连 v4.0.1 默认值都仍是 tools platform-tools，升级无效）。这里只留 platform-tools
+    # （仓库存在且构建必需）；真正的 platforms/build-tools 仍由下一步显式安装
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        packages: 'platform-tools'
 
     # 改动说明：build-tools 34.0.0 为 compileSdk 所需；30.0.3 是 AGP 7.4.2 的 AIDL
     # 任务硬编码回退版本（本地经验），一并装作廉价保险。不装 NDK——newArch=false 下
