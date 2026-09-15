@@ -237,86 +237,10 @@ jobs:
         gh release upload "${{ github.event.release.tag_name }}" \
           android/app/build/outputs/apk/release/app-${{ needs.meta.outputs.tag }}-*.apk --clobber
 
-    # 改动说明：版本更新功能上线——GitHub Release 国内下载不稳，主分发渠道改为
-    # K3s 自建静态下载服务（deploy/apk-server/，https://bff.515813.xyz/dl/）。
-    # 构建完把分包 kubectl cp 进 apk-server Pod 的 PVC 目录；版本号不变的重发用同名覆盖。
-    # 与 deploy job 共用 KUBECONFIG_CONTENT secret；未配置该 secret 时静默跳过，不阻断 Release 产物
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v4
-
-    # 改动说明：非规范 tag（official=false）不推 /dl——GitHub Release 页面照常上传仅作存档，
-    # 客户端统一从 K3s /dl 下载，未被非规范版本污染
-    - name: Push APKs to K3s download server
-      if: needs.meta.outputs.official == 'true'
-      env:
-        KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_CONTENT }}
-      run: |
-        if [ -z "$KUBECONFIG_CONTENT" ]; then
-          echo "KUBECONFIG_CONTENT not set, skip pushing APKs to K3s"
-          exit 0
-        fi
-        mkdir -p $HOME/.kube
-        echo "$KUBECONFIG_CONTENT" > $HOME/.kube/config
-        chmod 600 $HOME/.kube/config
-        if ! kubectl -n openfindbearings get deploy openfindbearings-apk-server >/dev/null 2>&1; then
-          echo "apk-server 尚未部署（首次需手工 kubectl apply -f deploy/apk-server/apk-server.yml），跳过推包"
-          exit 0
-        fi
-        kubectl -n openfindbearings wait --for=condition=Ready pod \
-          -l app=openfindbearings-apk-server --timeout=120s
-        POD=$(kubectl -n openfindbearings get pod -l app=openfindbearings-apk-server \
-          -o jsonpath='{.items[0].metadata.name}')
-        kubectl -n openfindbearings exec "$POD" -- mkdir -p /data/dl
-        for f in android/app/build/outputs/apk/release/app-${{ needs.meta.outputs.tag }}-*.apk; do
-          echo "cp $f -> $POD:/data/dl/"
-          kubectl -n openfindbearings cp "$f" "$POD:/data/dl/$(basename "$f")"
-        done
-        # 校验：列出远端目录确认本次分包已就位
-        kubectl -n openfindbearings exec "$POD" -- ls -lh /data/dl
-
-    # 改动说明：写库步骤从 deploy job 移到 apk job 的"推 /dl 之后"——服务端 Mobile.AppVersion
-    # 必须在 APK 真正就位后才改写，否则存在"已宣告新版但下载 404"的竞态窗口。
-    # 取 Release 正文首行（去引号）写 Mobile.UpdateMessage 作更新弹窗文案；Postgres 在集群外
-    # （宿主机 172.222.0.15），凭据读 API Secret 不落 workflow；GetAllAsync 无缓存即时生效。
-    # 另：改用分离式 kubectl run（无 --rm）+ 独立 wait + 保留 Pod 至读日志后清理——
-    # 原 --rm -i 一次性 Pod 被取消/超时会连带删 Pod，丢失失败日志，排障难
-    - name: Record version to server config
-      if: github.event_name == 'release' && needs.meta.outputs.official == 'true'
-      env:
-        TAG: ${{ needs.meta.outputs.tag }}
-        RELEASE_BODY: ${{ github.event.release.body }}
-        KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_CONTENT }}
-      run: |
-        set -e
-        if [ -z "$KUBECONFIG_CONTENT" ]; then
-          echo "KUBECONFIG_CONTENT not set, skip writing version"
-          exit 0
-        fi
-        mkdir -p $HOME/.kube
-        echo "$KUBECONFIG_CONTENT" > $HOME/.kube/config
-        chmod 600 $HOME/.kube/config
-        CONN=$(kubectl -n openfindbearings get secret openfindbearings-api-secrets \
-          -o jsonpath='{.data.ConnectionStrings__DefaultConnection}' | base64 -d)
-        get() { echo "$CONN" | tr ';' '\n' | grep -m1 -i "^$1=" | cut -d= -f2-; }
-        PGH=$(get Host); PGP=$(get Port); PGD=$(get Database); PGU=$(get Username); PGG=$(get Password)
-        MSG=$(echo "$RELEASE_BODY" | grep -m1 . | cut -c1-200 | tr -d "'\"\\\\" || true)
-        SQL="UPDATE \"SystemConfigs\" SET \"Value\"='${TAG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.AppVersion';"
-        if [ -n "$MSG" ]; then
-          SQL="${SQL} UPDATE \"SystemConfigs\" SET \"Value\"='${MSG}', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.UpdateMessage';"
-        fi
-        POD="psql-ver-${GITHUB_RUN_ID}"
-        kubectl -n openfindbearings delete pod "$POD" --ignore-not-found --wait=0
-        kubectl -n openfindbearings run "$POD" --image=postgres:16-alpine --restart=Never \
-          --env="PGPASSWORD=${PGG}" \
-          --command -- psql -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGD" -c "$SQL"
-        # 等 Pod 完成（含首次拉 postgres:16-alpine 镜像，给足 5m），失败不中断以便读日志
-        kubectl -n openfindbearings wait --for=condition=PodCompleted "pod/$POD" --timeout=5m || true
-        echo "--- psql pod logs ---"
-        kubectl -n openfindbearings logs "$POD" || true
-        RC=$(kubectl -n openfindbearings get pod "$POD" -o jsonpath='{.status.containerStatuses[0].state.terminated.exitCode}' 2>/dev/null)
-        kubectl -n openfindbearings delete pod "$POD" --wait=0
-        echo "psql exit code: ${RC:-unknown}"
-        [ "$RC" = "0" ] && echo "Mobile.AppVersion 已更新为 ${TAG}" || { echo "写库失败"; exit 1; }
+    # 改动说明：原"Push APKs to K3s download server"与"Record version to server config"两步删除——
+    # 跨境 kubectl cp 上行仅 ~50KB/s 且发布时长时间阻塞、CI 需持有集群凭据；
+    # 分发包同步与 Mobile.AppVersion 宣告改由集群侧 CronJob 完成（deploy/apk-server/apk-server.yml，
+    # 每 30 分钟从 GitHub Release 拉取，包齐才写库），CI 回归纯构建 + 传 Release
 
     - name: Upload APKs as workflow artifact
       if: github.event_name == 'workflow_dispatch'
