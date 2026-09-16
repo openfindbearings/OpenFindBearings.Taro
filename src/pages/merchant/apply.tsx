@@ -49,9 +49,10 @@ export default function MerchantApplyPage() {
 
   // 改动说明：仅"对外联系人姓名"默认取登录昵称（申请人多半就是首任联系人，仍可改；
   //   userName 可能是账号名/手机号，不适合当联系人姓名故不取）。
-  //   "客服电话"属商户对外公开联系方式（可为 400/座机），不预填、不锁——申请人身份手机在账户层
-  //   （JWT/成员行），与本字段语义分离，故不再用 selfPhone 预填联系电话（借鉴美团/淘宝门店电话）。
+  //   "客服电话"预填登录账号手机号（可改）——借鉴主流平台入驻表单默认填申请人手机，
+  //   申请人多数即对外联系窗口；商户如需 400/座机可自行覆盖，不再强制留空。
   const selfContactPerson = user?.nickname || ''
+  const selfPhone = user?.phoneNumber || ''
 
   // 向导相位：invite 待接受提名 / search 查找 / mode 操作方式 / form 提交表单
   const [phase, setPhase] = useState<'invite' | 'search' | 'mode' | 'form'>('search')
@@ -147,9 +148,9 @@ export default function MerchantApplyPage() {
     setPhase('mode')
   }
 
-  /** 我当管理员 + 新建：预填对外联系人（客服电话留空由商户自定）进入自营 */
+  /** 我当管理员 + 新建：预填对外联系人与客服电话（登录账号手机，均可改）进入自营 */
   const onSelfGo = () => {
-    setForm({ ...blankForm, contactPerson: selfContactPerson })
+    setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
     setFlow('self')
     setPhase('form')
   }
@@ -162,8 +163,8 @@ export default function MerchantApplyPage() {
 
   /** 我当管理员 + 认领已有：进入可编辑预填表单，并拉取商家详情供逐项核对 */
   const onClaimGo = () => {
-    // 改动说明：先以对外联系人打底（详情拉取失败时不至于空白），客服电话由详情预填爬虫值或留空
-    setForm({ ...blankForm, contactPerson: selfContactPerson })
+    // 改动说明：先以对外联系人+账户手机打底（详情拉取失败时不至于空白），客服电话随后被详情预填覆盖
+    setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
     setFlow('claim')
     setPhase('form')
     void prefillClaim()
@@ -183,7 +184,8 @@ export default function MerchantApplyPage() {
           companyName: d.companyName || '',
           type: MERCHANT_TYPES.find((x) => x.label === d.type)?.value ?? 0,
           contactPerson: selfContactPerson || d.contactPerson || '',
-          phone: d.phone || d.mobile || '',
+          // 改动说明：客服电话优先商户已有对外电话（爬虫值供核对），无值时回退登录账号手机号
+          phone: d.phone || d.mobile || selfPhone,
           address: d.address || '',
           unifiedSocialCreditCode: '',
           description: ''
@@ -195,13 +197,18 @@ export default function MerchantApplyPage() {
   /** 展开或收起一条提名的补资料表单 */
   const onOpenInvite = (item: PendingNomination) => {
     setOpenCode(item.invitationCode === openCode ? null : item.invitationCode)
-    // 改动说明：补资料时对外联系人预填登录昵称（可改）；客服电话留空由被提名人自定（不预填其账户手机）
-    setAcceptForm({ companyName: '', creditCode: '', contactPerson: selfContactPerson, mobile: '', address: '' })
+    // 改动说明：补资料时对外联系人预填登录昵称、客服电话预填登录账号手机号（均可改）
+    setAcceptForm({ companyName: '', creditCode: '', contactPerson: selfContactPerson, mobile: selfPhone, address: '' })
   }
 
   /** 接受提名：补资料提交后提示成功并刷新提名与入驻状态 */
   const onAccept = async (code: string) => {
     if (accepting) return
+    // 改动说明：企业名称必填（与后端 AcceptNomination 校验同口径）
+    if (!acceptForm.companyName.trim()) {
+      Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
+      return
+    }
     setAccepting(true)
     try {
       await acceptNomination(code, {
@@ -248,6 +255,11 @@ export default function MerchantApplyPage() {
         Taro.showToast({ title: '请核对并填写商家名称', icon: 'none' })
         return
       }
+      // 改动说明：企业名称必填（后端 ApplyMerchant 同口径校验，防绕过）
+      if (!form.companyName.trim()) {
+        Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
+        return
+      }
       setSubmitting(true)
       try {
         // 改动说明：认领随第三步核对/补全的资料一并提交，后端 ApplyClaim 应用并置 Manual
@@ -275,6 +287,11 @@ export default function MerchantApplyPage() {
     if (flow === 'self') {
       if (!form.name.trim()) {
         Taro.showToast({ title: '请填写商家名称', icon: 'none' })
+        return
+      }
+      // 改动说明：企业名称必填（后端 ApplyMerchant 同口径校验，防绕过）
+      if (!form.companyName.trim()) {
+        Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
         return
       }
       setSubmitting(true)
@@ -455,7 +472,7 @@ export default function MerchantApplyPage() {
               </View>
               {open && (
                 <View style={{ marginTop: 14 }}>
-                  {fieldColumn('企业名称', acceptForm.companyName, (v) => setAcceptForm((p) => ({ ...p, companyName: v })), '营业执照上的企业名称')}
+                  {fieldColumn('企业名称 *', acceptForm.companyName, (v) => setAcceptForm((p) => ({ ...p, companyName: v })), '必填，营业执照上的企业名称')}
                   {fieldColumn('统一社会信用代码', acceptForm.creditCode, (v) => setAcceptForm((p) => ({ ...p, creditCode: v })), '18位信用代码（选填）')}
                   {fieldColumn('联系人', acceptForm.contactPerson, (v) => setAcceptForm((p) => ({ ...p, contactPerson: v })), '您的姓名')}
                   {fieldColumn('客服电话', acceptForm.mobile, (v) => setAcceptForm((p) => ({ ...p, mobile: v })), '顾客可见，可填 400/座机/手机')}
@@ -589,7 +606,7 @@ export default function MerchantApplyPage() {
                 <Icon name="chevron-right" size={16} color={t.textTertiary} />
               </View>
             ))}
-            {fieldRow('企业名称', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="营业执照企业名称（选填）" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
+            {fieldRow('企业名称 *', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="必填，营业执照上的企业名称" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
             {fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={30} placeholder="18位统一社会信用代码（选填）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
             {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
             {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="顾客可见，可填 400/座机/手机（选填）" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}

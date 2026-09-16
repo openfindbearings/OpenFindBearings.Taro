@@ -12,6 +12,7 @@ import { useSafeArea } from '../../utils/use-safe-area'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useMerchantStore } from '../../stores/merchant'
+import { useNotificationStore } from '../../stores/notification'
 import { showMerchantSwitchSheet, MerchantSwitchItem } from '../MerchantSwitchSheet'
 import { usableImage } from '../../services/config'
 import './index.scss'
@@ -33,6 +34,13 @@ export default function CustomTabBar() {
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
   const switchMerchant = useMerchantStore((s) => s.switchMerchant)
   const pendingCount = useMerchantStore((s) => s.pendingCount)
+  // 改动说明：站内信未读角标——订阅 notification store；CustomTabBar 随页面切换重挂载，
+  //   故 mount 时拉一次未读数即可实现"切 tab 自动刷新"，无需轮询
+  const unreadCount = useNotificationStore((s) => s.unreadCount)
+  const fetchUnread = useNotificationStore((s) => s.fetchUnread)
+  useEffect(() => {
+    void fetchUnread()
+  }, [fetchUnread])
   const approved = merchants.length > 0
   // 当前商户：优先 currentMerchantId 命中，回退列表首个
   const current = merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0] ?? null
@@ -142,13 +150,19 @@ export default function CustomTabBar() {
                 )}
               </View>
             ) : (
-              // 普通 tab：图标统一 24dp（Material 标准），仅颜色区分选中态
-              <View className='icon-wrap'>
+              // 普通 tab：图标统一 24dp（Material 标准），仅颜色区分选中态；
+              // "我的"tab 叠加站内信未读角标（红点数字，>99 显示 99+）
+              <View className='icon-wrap' style={{ position: 'relative' }}>
                 <Icon
                   name={iconName}
                   color={isActive ? t.tabBarTextActive : t.tabBarText}
                   size={24}
                 />
+                {tab.key === 'my' && unreadCount > 0 && (
+                  <View style={{ position: 'absolute', top: -4, right: -10, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingLeft: 4, paddingRight: 4 }}>
+                    <Text style={{ fontSize: 10, lineHeight: 14, color: '#FFFFFF' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                  </View>
+                )}
               </View>
             )}
             {/* 商家名限 1 行截断，防长店名挤压相邻 tab；文字 12dp 随全局字号缩放，颜色随主题模式 */}

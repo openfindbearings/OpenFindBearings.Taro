@@ -31,11 +31,13 @@ export default function AllFeaturesPage() {
       Taro.navigateTo({ url: '/pages/my/settings' })
       return
     }
-    // 改动说明：收藏/关注/历史已实现，跳转真实页面（页面内含未登录引导）
+    // 改动说明：收藏/关注/历史已实现，跳转真实页面（页面内含未登录引导）；
+    //   消息中心随站内信功能上线，跳转真实收件箱页
     const urls: Record<string, string> = {
       favorites: '/pages/my/favorites',
       followed: '/pages/my/followed',
-      history: '/pages/my/history'
+      history: '/pages/my/history',
+      messages: '/pages/notifications/index'
     }
     if (urls[key]) {
       Taro.navigateTo({ url: urls[key] })
