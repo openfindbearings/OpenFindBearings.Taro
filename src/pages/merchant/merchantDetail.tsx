@@ -1,7 +1,7 @@
 // 商家详情页：商家信息（含 Logo）+ 在售轴承。关注/纠错为登录门槛（未登录提示）。
 // 数据来自 BFF public 端点：/merchants/{id}、/merchants/{id}/bearings。
 import { useState } from 'react'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
@@ -12,7 +12,7 @@ import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { checkFollow, toggleFollow, recordMerchantView } from '../../services/user'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
-import { usableImage } from '../../services/config'
+import MediaImage from '../../components/MediaImage'
 import './merchantDetail.scss'
 
 export default function MerchantDetailPage() {
@@ -65,13 +65,16 @@ export default function MerchantDetailPage() {
       <View className='md'>
         {/* 头部：Logo + 名称 + 认证 + 类型 */}
         <View className='md-hero' style={{ backgroundColor: t.bgCard }}>
-          {usableImage(detail?.logoUrl) ? (
-            <Image className='md-logo' src={usableImage(detail?.logoUrl)} mode='aspectFill' />
-          ) : (
-            <View className='md-logo-ph' style={{ backgroundColor: t.primaryLight }}>
-              <Icon name="store" size={32} color={t.primary} />
-            </View>
-          )}
+          <MediaImage
+            url={detail?.logoUrl}
+            className='md-logo'
+            mode='aspectFit'
+            fallback={
+              <View className='md-logo-ph' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="store" size={32} color={t.primary} />
+              </View>
+            }
+          />
           <View className='md-hero-info'>
             <View className='md-name-row'>
               <Text className='md-name' style={{ ...fs(18), color: t.textPrimary }} numberOfLines={1}>{detail?.name || '—'}</Text>

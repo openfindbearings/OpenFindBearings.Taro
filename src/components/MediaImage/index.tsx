@@ -8,9 +8,11 @@ import { usableImage } from '../../services/config'
 import Icon from '../Icon'
 
 interface MediaImageProps {
-  /** 库内媒体地址：相对键 /images、/uploads、/avatars，或绝对 http(s)，或预置键 */
+  /** 首选库内媒体地址：相对键 /images、/uploads、/avatars，或绝对 http(s)，或预置键 */
   url?: string | null
-  /** 无地址或加载失败时回退的 lucide 图标名 */
+  /** 备选地址链：主 url 加载失败（404 等）时按序降级，全部失败才显示占位 */
+  fallbacks?: (string | null | undefined)[]
+  /** 无地址或全部候选加载失败时回退的 lucide 图标名 */
   fallbackIcon?: string
   /** 回退图标颜色 */
   fallbackColor?: string
@@ -27,22 +29,25 @@ interface MediaImageProps {
 }
 
 interface MediaImageState {
-  failed: boolean
+  // 当前尝试到的候选下标；超过候选链长度即"全部失败"，渲染占位
+  idx: number
 }
 
 export default class MediaImage extends Component<MediaImageProps, MediaImageState> {
-  state: MediaImageState = { failed: false }
+  state: MediaImageState = { idx: 0 }
 
-  // url 变化（列表项复用、切换商户/条目）时清空失败标记，避免上一条的失败态残留到新图
+  // 主/备地址变化（列表项复用、切换条目）时重置到候选链首，避免上一条的失败下标残留
   componentDidUpdate(prev: MediaImageProps) {
-    if (prev.url !== this.props.url && this.state.failed) {
-      this.setState({ failed: false })
+    const key = (p: MediaImageProps) => `${p.url ?? ''}|${(p.fallbacks ?? []).join(',')}`
+    if (key(prev) !== key(this.props) && this.state.idx !== 0) {
+      this.setState({ idx: 0 })
     }
   }
 
   render() {
     const {
       url,
+      fallbacks,
       fallbackIcon = 'image',
       fallbackColor = '#94A3B8',
       fallbackSize = 22,
@@ -51,8 +56,19 @@ export default class MediaImage extends Component<MediaImageProps, MediaImageSta
       style,
       mode = 'aspectFill'
     } = this.props
-    const src = usableImage(url)
-    if (!src || this.state.failed) {
+    // 候选链：[主, ...备] 经 usableImage 解析后滤空并去重（保序），详情/列表传入重复值时不会重复请求
+    const raw = [url, ...(fallbacks ?? [])]
+    const seen = new Set<string>()
+    const candidates: string[] = []
+    for (const u of raw) {
+      const s = usableImage(u)
+      if (s && !seen.has(s)) {
+        seen.add(s)
+        candidates.push(s)
+      }
+    }
+    const src = candidates[this.state.idx]
+    if (!src) {
       if (fallback !== undefined) return fallback
       return <Icon name={fallbackIcon} size={fallbackSize} color={fallbackColor} />
     }
@@ -62,7 +78,8 @@ export default class MediaImage extends Component<MediaImageProps, MediaImageSta
         style={style}
         src={src}
         mode={mode as any}
-        onError={() => this.setState({ failed: true })}
+        // 加载失败自动前进到下一个候选，候选耗尽则本组件下一帧渲染占位
+        onError={() => this.setState({ idx: this.state.idx + 1 })}
       />
     )
   }

@@ -75,6 +75,7 @@ export default function BearingDetailPage() {
         <View className='bd-hero' style={{ backgroundColor: t.bgCard }}>
           <MediaImage
             url={detail?.image3DUrl || detail?.image2DUrl}
+            fallbacks={[detail?.image2DUrl]}
             className='bd-img'
             mode='aspectFit'
             fallback={

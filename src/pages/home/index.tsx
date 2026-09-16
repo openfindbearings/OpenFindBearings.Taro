@@ -262,7 +262,7 @@ export default function HomePage() {
               onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${m.id}` })}
             >
               <View className='merchant-avatar' style={{ backgroundColor: t.primaryLight }}>
-                <MediaImage url={m.logoUrl} className='merchant-avatar-img' mode='aspectFill' fallbackIcon="store" fallbackColor={t.primary} fallbackSize={20} />
+                <MediaImage url={m.logoUrl} className='merchant-avatar-img' mode='aspectFit' fallbackIcon="store" fallbackColor={t.primary} fallbackSize={20} />
               </View>
               <View className='merchant-info'>
                 <Text className='merchant-name' style={{ ...fs(15), color: t.textPrimary }}>{m.name}</Text>

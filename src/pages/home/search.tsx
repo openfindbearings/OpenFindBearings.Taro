@@ -358,7 +358,7 @@ export default function SearchPage() {
               {bearings.map((b) => (
                 <View key={b.id} className='result-item' style={{ backgroundColor: t.bgCard }} onClick={() => goBearing(b.id)}>
                   <View className='result-icon' style={{ backgroundColor: t.primaryLight }}>
-                    <MediaImage url={b.image2DUrl} className='result-thumb' mode='aspectFit' fallbackIcon="package" fallbackColor={t.primary} fallbackSize={22} />
+                    <MediaImage url={b.image3DUrl || b.image2DUrl} fallbacks={[b.image2DUrl]} className='result-thumb' mode='aspectFit' fallbackIcon="package" fallbackColor={t.primary} fallbackSize={22} />
                   </View>
                   <View className='result-info'>
                     <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }}>{b.partNumber}</Text>
@@ -404,7 +404,7 @@ export default function SearchPage() {
             {!loading && merchants.map((m) => (
               <View key={m.id} className='result-item' style={{ backgroundColor: t.bgCard }} onClick={() => goMerchant(m.id)}>
                 <View className='result-icon' style={{ backgroundColor: t.primaryLight }}>
-                  <MediaImage url={m.logoUrl} className='result-thumb' mode='aspectFill' fallbackIcon="store" fallbackColor={t.primary} fallbackSize={22} />
+                  <MediaImage url={m.logoUrl} className='result-thumb' mode='aspectFit' fallbackIcon="store" fallbackColor={t.primary} fallbackSize={22} />
                 </View>
                 <View className='result-info'>
                   <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.name}</Text>
