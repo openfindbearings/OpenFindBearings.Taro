@@ -157,6 +157,9 @@ data:
     API="https://api.github.com/repos/$REPO"
     DL_DIR="/data/dl"
     log() { echo "[apk-sync] $*"; }
+    # 只保留 $1 版本的分包，删除 /dl 下其他 app-*.apk：历史版本包客户端永不引用（只下当前
+    # Mobile.AppVersion 那版），纯占空间；find 的 ! -name 排除当前版，绝不碰正在指向的包
+    prune_old() { find "$DL_DIR" -maxdepth 1 -type f -name 'app-*.apk' ! -name "app-$1-*.apk" -exec rm -f {} + 2>/dev/null || true; }
     mkdir -p "$DL_DIR"
 
     # 解析 ADO.NET 连接串 -> libpq 环境变量（凭据来自 openfindbearings-api-secrets）
@@ -231,7 +234,11 @@ data:
       exit 0
     fi
 
-    # 5) 包齐且与当前宣告不一致 -> 写库（更新弹窗文案为固定模板，可在 Admin 系统配置页覆盖）
+    # 5) 两包已齐且校验通过 -> 清理历史版本，只留当前 TARGET 版分包
+    #    （放在 MISS 门之后，此刻 /dl 必然含完整 TARGET 两包，prune 的 ! -name 排除它，绝不误删正被指向的包）
+    prune_old "$TARGET"
+
+    # 6) 包齐且与当前宣告不一致 -> 写库（更新弹窗文案为固定模板，可在 Admin 系统配置页覆盖）
     if [ "$TARGET" != "$CUR" ]; then
       psql -c "UPDATE \"SystemConfigs\" SET \"Value\"='$TARGET', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.AppVersion';" \
         && psql -c "UPDATE \"SystemConfigs\" SET \"Value\"='发现新版本 $TARGET，建议更新', \"UpdatedAt\"=now() WHERE \"Key\"='Mobile.UpdateMessage';" \
