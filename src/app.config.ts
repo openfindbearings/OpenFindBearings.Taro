@@ -6,6 +6,7 @@ export default defineAppConfig({
     'pages/merchant/members',
     'pages/merchant/manage',
     'pages/merchant/profile',
+    'pages/notifications/index',
     'pages/my/index',
     'pages/home/search',
     'pages/home/bearingDetail',

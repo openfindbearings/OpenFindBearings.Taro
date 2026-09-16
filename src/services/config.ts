@@ -167,6 +167,12 @@ export const API = {
   MERCHANT_PROFILE: `${API_PREFIX}/merchant/profile`,
   MERCHANT_LOGO: `${API_PREFIX}/merchant/logo`,
 
+  // 改动说明：站内信（消息中心列表/未读数/已读标记），代理 BFF /mobile/notifications/*
+  NOTIFICATIONS: `${API_PREFIX}/notifications`,
+  NOTIFICATIONS_UNREAD_COUNT: `${API_PREFIX}/notifications/unread-count`,
+  NOTIFICATION_READ: (id: string) => `${API_PREFIX}/notifications/${id}/read`,
+  NOTIFICATIONS_READ_ALL: `${API_PREFIX}/notifications/read-all`,
+
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,
   FAVORITES: `${API_PREFIX}/favorites`,
