@@ -72,6 +72,27 @@ export interface ClaimableMerchant {
   type?: string
 }
 
+/** 入驻申请详情（对齐 BFF ApplicationDetailItem，v1.6.0 新增：被拒重提表单预填源） */
+export interface ApplicationDetail {
+  merchantId: string
+  merchantName: string
+  status: string
+  rejectReason?: string | null
+  /** self / claim / nomination / none（前端据此决定编辑页形态） */
+  applicationMode: string
+  role: string
+  type: number
+  companyName?: string | null
+  unifiedSocialCreditCode?: string | null
+  contactPerson?: string | null
+  phone?: string | null
+  mobile?: string | null
+  email?: string | null
+  address?: string | null
+  description?: string | null
+  logoUrl?: string | null
+}
+
 /** 入驻申请请求体（对齐 BFF ApplyRequest） */
 export interface ApplyMerchantBody {
   mode?: 'self' | 'claim'
@@ -166,6 +187,21 @@ export function getMerchantApplication() {
 /** 申请人自助撤回待审核的入驻申请（self 新建删店 / claim 认领退回公共池） */
 export function withdrawApplication(merchantId: string) {
   return request<OpResult>(API.MERCHANT_WITHDRAW(merchantId), { method: 'POST' })
+}
+
+/** 查询入驻申请详情（被拒重提表单预填，v1.6.0 新增） */
+export function getApplicationDetail(merchantId: string) {
+  return request<ApplicationDetail>(API.MERCHANT_APPLICATION_DETAIL(merchantId))
+}
+
+/** 被拒后修改资料重新提交（v1.6.0 新增，字段同申请、不带 mode/claimMerchantId） */
+export function resubmitApplication(merchantId: string, body: Omit<ApplyMerchantBody, 'mode' | 'claimMerchantId'>) {
+  return request<{ merchantId: string; message?: string }>(API.MERCHANT_RESUBMIT(merchantId), { method: 'POST', data: body })
+}
+
+/** 删除被驳回的入驻申请（v1.6.0 新增，self 硬删 / claim 退回公共池） */
+export function deleteApplication(merchantId: string) {
+  return request<OpResult>(API.MERCHANT_DELETE_APPLICATION(merchantId), { method: 'POST' })
 }
 
 /** 认领搜索爬虫商家 */

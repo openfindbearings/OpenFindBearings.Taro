@@ -21,7 +21,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
-import { uploadLicense, withdrawApplication, type MerchantApplication } from '../../services/merchant'
+import { uploadLicense, withdrawApplication, deleteApplication, type MerchantApplication } from '../../services/merchant'
 import { usableImage } from '../../services/config'
 import './index.scss'
 
@@ -65,7 +65,8 @@ interface MerchantCardProps {
 }
 
 /**
- * 单个商户卡：Pending 卡外包 SwipeCell（左滑露出撤回），其余状态直接渲染。
+ * 单个商户卡：Pending 卡外包 SwipeCell（左滑露出撤回），Suspended 卡外包 SwipeCell（左滑露出删除、
+ * 点击进修改重提编辑页），其余状态直接渲染。
  * 模块级组件：见文件头改动说明 6（防 remount 丢 SwipeCell 状态）。
  */
 function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) {
@@ -78,7 +79,8 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
 
   const isCurrent = m.merchantId === currentMerchantId
   const isActive = m.status === 'Active'
-  const swipeable = m.status === 'Pending'
+  // 改动说明（v2.6.0）：Pending 左滑=撤回、Suspended 左滑=删除，两态都外包 SwipeCell
+  const swipeable = m.status === 'Pending' || m.status === 'Suspended'
   const src = m.logoUrl ? usableImage(m.logoUrl) : ''
 
   // 卡片通用阴影（RN：iOS shadow 四件套 + Android elevation）
@@ -90,15 +92,34 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
     elevation: 2
   } as const
 
-  const goApply = () => {
-    if (!isLoggedIn) { Taro.showToast({ title: '请先登录', icon: 'none' }); return }
-    Taro.navigateTo({ url: '/pages/merchant/apply' })
+  // 改动说明（v2.6.0）：Suspended 卡点击已改为带 merchantId 进编辑页，原卡内 goApply（跳空白向导）移除
+
+  /** 删除被驳回申请：二次确认后调 BFF，成功后刷新列表（self 卡消失 / claim 退回公共池） */
+  const onDelete = () => {
+    Taro.showModal({
+      title: '删除被驳回申请',
+      content: '删除后该驳回记录将被清除，之后可重新申请入驻。确定删除？'
+    })
+      .then(async (res) => {
+        if (!res.confirm) return
+        try {
+          const r = await deleteApplication(m.merchantId)
+          Taro.showToast({ title: r?.message || '已删除', icon: 'none' })
+          void fetchApplications()
+        } catch (e) {
+          Taro.showToast({ title: (e as { message?: string })?.message || '删除失败', icon: 'none' })
+        }
+      })
+      .catch(() => { /* 取消 */ })
   }
 
-  /** 点击商户卡：生效商户切换为当前；未通过则重新申请 */
+  /** 点击商户卡：生效商户切换为当前；未通过则带商户 id 进"修改并重新提交"编辑页（v2.6.0，原为跳空白向导） */
   const onCardTap = () => {
     if (m.status === 'Active' && m.merchantId !== currentMerchantId) void switchMerchant(m.merchantId)
-    else if (m.status === 'Suspended') goApply()
+    else if (m.status === 'Suspended') {
+      if (!isLoggedIn) { Taro.showToast({ title: '请先登录', icon: 'none' }); return }
+      Taro.navigateTo({ url: `/pages/merchant/apply?merchantId=${m.merchantId}` })
+    }
   }
 
   /** 撤回待审核申请：二次确认后调 BFF，成功后刷新列表（self 卡消失回申请态 / claim 退回公共池） */
@@ -147,7 +168,8 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>
               {isActive
                 ? (m.isVerified ? `${roleLabel(m.role)} · 已认证` : `${roleLabel(m.role)} · 未认证`)
-                : (m.rejectReason || '审核未通过，可修改资料后重新提交')}
+                // 改动说明（v2.6.0）：被拒副标题改为操作指引（驳回原因已由下方红条展示，不再重复）
+                : '审核未通过，点击修改重新提交，左滑可删除'}
             </Text>
           )}
         </View>
@@ -210,13 +232,13 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
 
   if (!swipeable) return card
 
-  // 审核中卡：左滑露出撤回操作条（京东购物车式），替代原卡底独立按钮
+  // 审核中卡：左滑露出撤回操作条；被拒卡：左滑露出删除操作条（京东购物车式，替代独立按钮）
   const actions: SwipeCellAction[] = [{
-    key: 'withdraw',
-    label: '撤回',
+    key: m.status === 'Pending' ? 'withdraw' : 'delete',
+    label: m.status === 'Pending' ? '撤回' : '删除',
     color: t.textOnPrimary,
     bg: t.danger,
-    onPress: () => { onSwipeOpenChange(null); onWithdraw() }
+    onPress: () => { onSwipeOpenChange(null); if (m.status === 'Pending') onWithdraw(); else onDelete() }
   }]
   return (
     <SwipeCell
