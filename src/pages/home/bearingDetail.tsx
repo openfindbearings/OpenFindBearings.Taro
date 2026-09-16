@@ -1,7 +1,7 @@
 // 轴承详情页：基本信息 + 参数 + 在售商家 + 替代品。收藏/纠错为登录门槛（未登录提示，登录功能后续接入）。
 // 数据来自 BFF public 端点：/bearings/{id}、/bearings/{id}/merchants、/bearings/{id}/interchanges。
 import { useState } from 'react'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
@@ -15,7 +15,7 @@ import {
   getBearingDetail, getBearingMerchants, getBearingInterchanges,
   type BearingDetail, type BearingMerchant, type Interchange
 } from '../../services/bearing'
-import { usableImage } from '../../services/config'
+import MediaImage from '../../components/MediaImage'
 import './bearingDetail.scss'
 
 export default function BearingDetailPage() {
@@ -68,20 +68,21 @@ export default function BearingDetailPage() {
   const goMerchant = (mid: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${mid}` })
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
 
-  const img = usableImage(detail?.image3DUrl) || usableImage(detail?.image2DUrl)
-
   return (
     <PageLayout nav={<NavBar title="轴承详情" showBack />}>
       <View className='bd'>
         {/* 头部：图片 + 型号 + 品牌类型 */}
         <View className='bd-hero' style={{ backgroundColor: t.bgCard }}>
-          {img ? (
-            <Image className='bd-img' src={img} mode='aspectFit' />
-          ) : (
-            <View className='bd-img-placeholder' style={{ backgroundColor: t.bgInput }}>
-              <Icon name="package" size={40} color={t.textTertiary} />
-            </View>
-          )}
+          <MediaImage
+            url={detail?.image3DUrl || detail?.image2DUrl}
+            className='bd-img'
+            mode='aspectFit'
+            fallback={
+              <View className='bd-img-placeholder' style={{ backgroundColor: t.bgInput }}>
+                <Icon name="package" size={40} color={t.textTertiary} />
+              </View>
+            }
+          />
           <Text className='bd-part' style={{ ...fs(22), color: t.textPrimary }}>{detail?.partNumber || '—'}</Text>
           {detail?.oldNumber ? <Text className='bd-old' style={{ ...fs(13), color: t.textTertiary }}>旧型号：{detail.oldNumber}</Text> : null}
           <Text className='bd-sub' style={{ ...fs(14), color: t.textSecondary }}>{detail?.bearingType}{detail?.brandName ? ` · ${detail.brandName}` : ''}</Text>

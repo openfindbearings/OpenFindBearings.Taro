@@ -10,6 +10,7 @@ import { initTheme } from './stores/theme'
 import { initThemeColor } from './hooks/useThemeColor'
 import { useAuthStore } from './stores/auth'
 import { checkUpdateOnLaunch } from './services/update'
+import { applySiteConfigOnLaunch } from './services/config-api'
 
 // 预读商家入驻状态存入 globalData，供 CustomTabBar 首次渲染时同步读取
 // 修复商家 tab 冷启动时图标从普通样式跳变为大圆 logo 的闪烁问题
@@ -63,6 +64,8 @@ export function bootOnce() {
   initTheme()
   initThemeColor()
   void useAuthStore.getState().init()
+  // 改动说明：拉站点配置应用媒体源 base（换域名/切对象存储免发版），失败回落编译期默认，不阻塞启动
+  void applySiteConfigOnLaunch()
   // 改动说明：版本更新启动静默检查（每日节流、隐私门槛在服务内部处理），延迟错开首帧渲染，
   // 不 await、不影响启动链路
   setTimeout(() => {

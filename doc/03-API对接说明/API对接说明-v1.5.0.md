@@ -1,10 +1,19 @@
-# Taro API 对接说明 v1.4.0
+# Taro API 对接说明 v1.5.0
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`bff.515813.xyz/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.0 (2026-09-16)
+
+- 媒体图片改**独立 nginx 媒体服务直出**（`/media/**`），BFF `/mobile/media` 代理转发退役（应用不应逐字节代理图片，反模式）。
+- URL 契约治本：库内只存**相对媒体键**（`/images/...`、`/uploads/...`、`/avatars/...`），host 由前端 `getMediaBase()` 拼接；媒体源 base 经站点配置 `Mobile.MediaBaseUrl` 下发并运行时覆盖，换域名/切对象存储免发版。
+- `services/config.ts`：新增 `getMediaBase()` + `setMediaBaseUrl()`；`usableImage` 改为相对键拼媒体源（含历史绝对/`/mobile/media` 前缀兼容归一），不再走 `/mobile/media`。
+- 预置头像改**打包进客户端本地**（`src/assets/avatars/p1-6.png`），`PRESET_AVATARS` → `PRESET_AVATAR_KEYS`（存稳定键、展示映射本地图），不再依赖服务端下发。
+- 新增 `components/MediaImage`：统一 `usableImage` + `onError` 回退占位图标，修复"解析出地址却加载失败时显示空白"（首页搜索结果轴承图症状）；接入 search / home / bearingDetail。
+- 启动引导 `bootOnce` 拉站点配置应用 `mediaBaseUrl`。
 
 ### v1.4.0 (2026-09-15)
 
@@ -169,7 +178,7 @@ interface Bearing { id; partNumber; oldNumber?; bearingType; innerDiameter; oute
 interface BearingDetail extends 上 + englishName?; weight?; brandCountry?; viewCount; favoriteCount
 ```
 
-> 图片字段可能是相对路径 `/images/...`，用 `usableImage()` 过滤后再渲染。
+> 图片字段是相对媒体键（`/images/...`、`/uploads/...`、`/avatars/...`），用 `usableImage()` 拼媒体源 base 后渲染；预置键映射到客户端本地资源。渲染统一走 `components/MediaImage`（内含 `onError` 回退占位图标，破图不再显示空白）。
 
 ### 商家 `merchant.ts`
 
@@ -247,9 +256,9 @@ await Taro.uploadFile({
 })
 ```
 
-- 返回 `{ success: boolean; url?: string }`（url 为 BFF 媒体代理绝对地址）。
+- 返回 `{ success: boolean; url?: string }`（url 为**相对媒体键** `/uploads/avatars/...`，入库原样存相对，展示经 `usableImage` 拼媒体源；不再返回绝对地址，避免 host 焊进库）。
 - 格式限制：jpg/png/webp，≤2MB。
-- 预置头像：`PRESET_AVATARS` 数组（6 张 128x128 PNG，经 BFF 媒体代理访问）。
+- 预置头像：`PRESET_AVATAR_KEYS`（6 个稳定键 `/avatars/presets/pN.png`，图片打包进客户端本地，展示经 `usableImage` 映射到本地资源，不从服务器取）。
 
 #### 收藏
 

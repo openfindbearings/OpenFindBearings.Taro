@@ -3,7 +3,7 @@
 // 品牌/类型 Tab 点击 → 切到轴承 Tab 并挂上该品牌/类型筛选（chip 可清除），不另开页。
 // 数据：轴承/商家走 BFF 搜索；品牌/类型用 /home 全量列表前端过滤。
 import { useState, useRef } from 'react'
-import { View, Text, Image, Input, ScrollView } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -13,7 +13,7 @@ import NavBar from '../../components/NavBar'
 import { searchBearings, type Bearing, type BearingSearchParams } from '../../services/bearing'
 import { searchMerchants, type Merchant } from '../../services/merchant'
 import { getHome, type HomeRef } from '../../services/home'
-import { usableImage } from '../../services/config'
+import MediaImage from '../../components/MediaImage'
 import './search.scss'
 
 definePageConfig({ disableScroll: true })
@@ -358,7 +358,7 @@ export default function SearchPage() {
               {bearings.map((b) => (
                 <View key={b.id} className='result-item' style={{ backgroundColor: t.bgCard }} onClick={() => goBearing(b.id)}>
                   <View className='result-icon' style={{ backgroundColor: t.primaryLight }}>
-                    {usableImage(b.image2DUrl) ? <Image className='result-thumb' src={usableImage(b.image2DUrl)} mode='aspectFit' /> : <Icon name="package" size={22} color={t.primary} />}
+                    <MediaImage url={b.image2DUrl} className='result-thumb' mode='aspectFit' fallbackIcon="package" fallbackColor={t.primary} fallbackSize={22} />
                   </View>
                   <View className='result-info'>
                     <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }}>{b.partNumber}</Text>
@@ -404,7 +404,7 @@ export default function SearchPage() {
             {!loading && merchants.map((m) => (
               <View key={m.id} className='result-item' style={{ backgroundColor: t.bgCard }} onClick={() => goMerchant(m.id)}>
                 <View className='result-icon' style={{ backgroundColor: t.primaryLight }}>
-                  {usableImage(m.logoUrl) ? <Image className='result-thumb' src={usableImage(m.logoUrl)} mode='aspectFill' /> : <Icon name="store" size={22} color={t.primary} />}
+                  <MediaImage url={m.logoUrl} className='result-thumb' mode='aspectFill' fallbackIcon="store" fallbackColor={t.primary} fallbackSize={22} />
                 </View>
                 <View className='result-info'>
                   <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.name}</Text>

@@ -10,7 +10,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { getProfile, updateProfile, uploadAvatar, type ProfileInfo } from '../../services/user'
-import { usableImage, PRESET_AVATARS } from '../../services/config'
+import { usableImage, PRESET_AVATAR_KEYS } from '../../services/config'
 
 definePageConfig({ disableScroll: true })
 
@@ -151,15 +151,15 @@ export default function ProfileEditPage() {
           <View style={{ width: 280, marginTop: 14, backgroundColor: t.bgInput, borderRadius: 12, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
             <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 10 }}>预置头像</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-              {PRESET_AVATARS.map((url) => {
-                const selected = form.avatar === url
+              {PRESET_AVATAR_KEYS.map((key) => {
+                const selected = form.avatar === key
                 return (
                   <View
-                    key={url}
+                    key={key}
                     style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 10, alignItems: 'center', justifyContent: 'center', borderWidth: selected ? 3 : 0, borderColor: t.primary, overflow: 'hidden' }}
-                    onClick={() => { setField('avatar', url); setPickerOpen(false) }}
+                    onClick={() => { setField('avatar', key); setPickerOpen(false) }}
                   >
-                    <Image style={{ width: 56, height: 56, borderRadius: 28 }} src={url} mode="aspectFill" />
+                    <Image style={{ width: 56, height: 56, borderRadius: 28 }} src={usableImage(key)} mode="aspectFill" />
                   </View>
                 )
               })}
