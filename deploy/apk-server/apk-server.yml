@@ -1,6 +1,6 @@
 # APK 静态下载服务：自建 K3s 托管安卓安装包（GitHub Release 国内访问不稳，仅作拉取源）
 # 对外地址：https://bff.515813.xyz/dl/app-v<版本>-<abi>.apk
-# 同步方式：本文件内 apk-sync CronJob 每晚 1 点（北京时间）从 GitHub Release 拉最新规范版本的
+# 同步方式：本文件内 apk-sync CronJob 每晚 4 点（北京时间）从 GitHub Release 拉最新规范版本的
 #           分包到 PVC 的 dl 目录，两包齐才改写 API 库 Mobile.AppVersion（拉不完不宣告）；
 #           CI 侧不再持有集群凭据，发布动作纯 GitHub 化
 # 注意：PVC + replicas:1 —— 写文件的 CronJob 与读服务的 Deployment 同节点挂载（RWO 允许）；
@@ -140,7 +140,7 @@ spec:
               number: 80
 ---
 # 改动说明：拉取式版本同步——跨境推包(GitHub runner 到国内服务器)上行仅 ~50KB/s 且发布时阻塞 CI，
-# 改为服务器侧 CronJob 定时从 GitHub Release 拉包（下行 ~20KB/s，慢但可断点续传、失败下轮自愈），
+# 改为服务器侧 CronJob 每晚从 GitHub Release 拉包（下行速度波动、偶发连接重置，用重试循环+断点续传死磕），
 # 两个分包全部就位后才改写 Mobile.AppVersion，保证"宣告即下载得到"
 apiVersion: v1
 kind: ConfigMap
@@ -190,8 +190,12 @@ data:
       exit 1
     fi
 
-    # 4) 逐包校验/下载：本地文件 sha256 匹配即视为就位；缺或损坏则 wget -c 断点续传，
+    # 4) 逐包校验/下载：本地文件 sha256 匹配即视为就位；缺或损坏则 wget -c 断点续传下载，
     #    下完再校验，不匹配删除重来（下轮重拉）；任一未就位 -> 本轮不宣告
+    # 改动说明：busybox wget 无 -t 重试选项且默认 90s 读超时，GitHub→国内链路速度波动、
+    # 偶发连接重置(EAGAIN)易致单轮 wget 直接失败（实测坏窗口整晚白等）。改用 shell 重试循环：
+    # -T 25 缩短读超时使 stall 尽快触发重试，-c 断点续传逐段累积，最多 40 次×间隔 3s 死磕到
+    # 传完或触达 activeDeadlineSeconds；去掉原先 `| tail` 管道（那判的是 tail 退出码非 wget）
     MISS=0
     while read -r name hash; do
       [ -n "$name" ] || continue
@@ -199,7 +203,17 @@ data:
         continue
       fi
       log "下载 $name"
-      if ( cd "$DL_DIR" && wget -c "https://github.com/$REPO/releases/download/$TARGET/$name" ); then
+      n=0
+      ok=0
+      while [ "$n" -lt 40 ]; do
+        if ( cd "$DL_DIR" && wget -c -T 25 -q "https://github.com/$REPO/releases/download/$TARGET/$name" ); then
+          ok=1
+          break
+        fi
+        n=$((n + 1))
+        sleep 3
+      done
+      if [ "$ok" = 1 ]; then
         if echo "$hash  $DL_DIR/$name" | sha256sum -c >/dev/null 2>&1; then
           log "完成 $name"
         else
@@ -208,7 +222,7 @@ data:
           MISS=1
         fi
       else
-        log "下载失败 $name，保留断点下轮续传"
+        log "下载失败 $name（重试 $n 次），保留断点下轮续传"
         MISS=1
       fi
     done < "$LISTF"
@@ -232,9 +246,9 @@ metadata:
   name: openfindbearings-apk-sync
   namespace: openfindbearings
 spec:
-  # 每晚 1 点（北京时间）一轮：低峰期同步，慢速下载(~25 分钟)在无人时段完成，
-  # 早上 App 启动即可检测到昨夜发布的新版；单轮含下载，Forbid 防重入
-  schedule: "0 1 * * *"
+  # 每晚 4 点（北京时间）一轮：3-5 点是中国→GitHub 国际出口拥堵谷底，慢速下载/重试在无人
+  # 时段完成，最坏 ~90 分钟也在 5:30 前下完，早上 App 启动即可检测到昨夜发布的新版；Forbid 防重入
+  schedule: "0 4 * * *"
   timeZone: "Asia/Shanghai"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -242,8 +256,9 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 0
-      # 单轮上限 1 小时（20KB/s 下两个 14MB 分包约 25 分钟，留足余量）
-      activeDeadlineSeconds: 3600
+      # 单轮上限 90 分钟：好窗口约 25 分钟下完；坏窗口靠脚本内重试循环死磕，留足余量，
+      # 到点仍下不完则本轮放弃、次日凌晨再续传（不宣告，保证"宣告即下载得到"）
+      activeDeadlineSeconds: 5400
       template:
         spec:
           restartPolicy: Never

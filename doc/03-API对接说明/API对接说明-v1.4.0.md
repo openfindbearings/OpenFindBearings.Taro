@@ -9,7 +9,7 @@ Taro 前端通过 Mobile BFF（`bff.515813.xyz/mobile/*`）访问后端 API，�
 ### v1.4.0 (2026-09-15)
 
 - 分发模式由"CI 推送"改为"集群拉取"：跨境 `kubectl cp` 上行仅 ~50KB/s 且发布时长时间阻塞 CI、需集群凭据，全部删除。CI 回归纯构建 + 传 GitHub Release。
-- 新增 `deploy/apk-server/apk-server.yml` 内 CronJob `openfindbearings-apk-sync`（每晚 1 点北京时间）：从 GitHub Release API 取最新规范版本（按发布时间序）→ 用资产自带 sha256 校验/`wget -c` 断点续传拉取分包到 `/dl` → 两包齐备才 psql 写 `Mobile.AppVersion`（弹窗文案为固定模板"发现新版本 X，建议更新"，Admin 可覆盖）；拉不完不宣告、下轮续传。
+- 新增 `deploy/apk-server/apk-server.yml` 内 CronJob `openfindbearings-apk-sync`（每晚 4 点北京时间）：从 GitHub Release API 取最新规范版本（按发布时间序）→ 用资产自带 sha256 校验/`wget -c` 断点续传拉取分包到 `/dl` → 两包齐备才 psql 写 `Mobile.AppVersion`（弹窗文案为固定模板"发现新版本 X，建议更新"，Admin 可覆盖）；拉不完不宣告、下轮续传。
 - 客户端检查逻辑不变：无论落后多少个版本，只与服务端单一"最新版指针"比较、只下载最新版拼名文件，无逐版本升级概念。
 
 ### v1.3.0 (2026-09-14)
@@ -324,7 +324,7 @@ interface VersionCheckResult {
 | H5 | 服务端部署即最新，仅提示"刷新页面"（`window.location.reload`） |
 | 小程序 | `Taro.getUpdateManager()`：`onUpdateReady` 弹窗重启 `applyUpdate()` |
 
-> 版本号单一来源：tag。发布 GitHub Release（tag `vX.Y.Z` 或 `vX.Y.Z-rc.N`）后 CI 自动：以 tag 反写工作区 package.json（不 commit）→ H5/`__APP_VERSION__`/APK `versionName` 与 tag 单源一致 → 构建 APK 传 Release。此后与集群无关——K3s 侧 CronJob `openfindbearings-apk-sync` 每晚 1 点（北京时间）从 Release 拉最新规范版本的分包到 `/dl`（sha256 校验、断点续传），两包齐才自动改写 `Mobile.AppVersion`、写固定模板 `Mobile.UpdateMessage`；拉不完则不宣告、下轮续。非规范 tag 的 Release 永远不会被同步宣告（纯存档）。仓库里 package.json 允许滞后一个版本；手动改配置仅作为 Admin 兜底手段。
+> 版本号单一来源：tag。发布 GitHub Release（tag `vX.Y.Z` 或 `vX.Y.Z-rc.N`）后 CI 自动：以 tag 反写工作区 package.json（不 commit）→ H5/`__APP_VERSION__`/APK `versionName` 与 tag 单源一致 → 构建 APK 传 Release。此后与集群无关——K3s 侧 CronJob `openfindbearings-apk-sync` 每晚 4 点（北京时间）从 Release 拉最新规范版本的分包到 `/dl`（sha256 校验、断点续传），两包齐才自动改写 `Mobile.AppVersion`、写固定模板 `Mobile.UpdateMessage`；拉不完则不宣告、下轮续。非规范 tag 的 Release 永远不会被同步宣告（纯存档）。仓库里 package.json 允许滞后一个版本；手动改配置仅作为 Admin 兜底手段。
 
 ## 错误处理
 
