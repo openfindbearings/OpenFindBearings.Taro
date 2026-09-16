@@ -33,6 +33,12 @@ module.exports = {
           target: 'https://bff.515813.xyz',
           changeOrigin: true,
           secure: false
+        },
+        // 媒体源独立于 BFF：/media 由媒体服务器直出，开发期同源代理到线上媒体服务
+        '/media': {
+          target: 'https://bff.515813.xyz',
+          changeOrigin: true,
+          secure: false
         }
       }
     }

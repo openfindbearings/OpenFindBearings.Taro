@@ -1,3 +1,11 @@
+// 预置头像本地资源：打进客户端包体，展示与选择不再依赖服务端下发/代理
+import preset1 from '../assets/avatars/p1.png'
+import preset2 from '../assets/avatars/p2.png'
+import preset3 from '../assets/avatars/p3.png'
+import preset4 from '../assets/avatars/p4.png'
+import preset5 from '../assets/avatars/p5.png'
+import preset6 from '../assets/avatars/p6.png'
+
 /** BFF API 配置常量 */
 
 /** API 路径前缀 */
@@ -23,6 +31,19 @@ export function buildQuery(params: Record<string, string | number | boolean | nu
 const BFF_PROD_BASE = 'https://bff.515813.xyz'
 
 /**
+ * 运行时媒体源 base 覆盖值：站点配置 /api/mobile/config 下发 Mobile.MediaBaseUrl 后写入。
+ * 改动说明：媒体源换域名 / 切对象存储时，只改服务端这一配置即可全端跟随，无需发版；
+ * 未加载到配置前为 null，getMediaBase 回落编译期默认（H5 同源 /media，RN 走公网）。
+ */
+let mediaBaseUrlOverride: string | null = null
+
+/** 应用服务端下发的媒体 base（末尾斜杠会被去掉）；供启动引导在拉到站点配置后调用 */
+export function setMediaBaseUrl(url?: string | null): void {
+  const trimmed = (url || '').trim().replace(/\/+$/, '')
+  mediaBaseUrlOverride = trimmed || null
+}
+
+/**
  * 按平台返回请求 base 地址。
  * 改动说明：原实现无条件返回 ''，仅适用于 H5 开发期 webpack proxy；
  * RN 真机/模拟器无 proxy，相对路径会触发 Network request failed，
@@ -38,32 +59,64 @@ export function getBaseUrl(): string {
 }
 
 /**
- * 判断图片地址是否可在 RN 直接加载。
- * 改动说明：API 返回的 image2DUrl/image3DUrl 可能是相对路径（如 /images/bearings/2d/xxx），
- * RN <Image> 加载相对地址会抛 "Warning: Image source ..." 且显示破图。
- * 故仅当为绝对 http(s) 地址时才渲染 <Image>，否则由调用方回退默认占位图标。
+ * 媒体资源公网 base（与业务 API 解耦的独立静态源）。
+ * 改动说明：图片不再经 BFF /mobile/media 逐字节代理（应用不应代理二进制，反模式），
+ * 改由独立 nginx 媒体服务在 /media 路径直出，Sync/API 各自的落盘目录只读挂载进去。
+ * 将来切换对象存储（MinIO/OSS/CDN）只需改此 base（或站点配置下发的 MediaBaseUrl），
+ * 库内相对键不变，故为"轻松切换"的唯一切换点。可用环境变量 TARO_APP_MEDIA_BASE_URL 覆盖。
  */
-export function usableImage(url?: string | null): string {
-  if (!url) return ''
-  if (/^https?:\/\//i.test(url)) return url
-  // 改动说明：相对路径不再直接判死（原来一律回退占位，轴承图/头像全废）。
-  // /mobile/ 开头是 BFF 路由直接拼 base；其余（/images/、/uploads/ 等 API 静态路径）
-  // 走 BFF 媒体代理 /mobile/media/** 转发（API 无公网 ingress）
-  if (url.startsWith('/')) {
-    const base = getBaseUrl()
-    return url.startsWith('/mobile/') ? `${base}${url}` : `${base}/mobile/media${url}`
+export function getMediaBase(): string {
+  // 服务端下发优先（换域名/切对象存储免发版）；未下发时回落编译期默认
+  if (mediaBaseUrlOverride) return mediaBaseUrlOverride
+  const env = process.env.TARO_ENV
+  if (env === 'h5') {
+    // H5 同源 /media：线上由 bff 域名 ingress 把 /media 路由到媒体服务；开发由 devServer 代理
+    return '/media'
   }
-  return ''
+  // RN/小程序无同源概念，走公网绝对地址
+  return `${process.env.TARO_APP_MEDIA_BASE_URL || BFF_PROD_BASE}/media`
 }
 
 /**
- * 预置头像（随 API 镜像构建的静态图，经 BFF 媒体代理访问）。
- * 改动说明：绝对地址在保存时入库（Identity [Url] 校验要求绝对），
- * H5 开发环境 base 为空串走同源代理，保存的是相对地址仅影响本地库。
+ * 预置头像：稳定相对键 -> 客户端本地图片资源的映射。
+ * 改动说明：预置头像是纯客户端静态资源，打包进 app，不再从服务器取；
+ * 库里只存稳定键（如 /avatars/presets/p1.png），展示时经 usableImage 映射回本地图。
  */
-export const PRESET_AVATARS: string[] = [1, 2, 3, 4, 5, 6].map(
-  (n) => `${getBaseUrl()}/mobile/media/avatars/presets/p${n}.png`
-)
+const PRESET_LOCAL_MAP: Record<string, string> = {
+  '/avatars/presets/p1.png': preset1,
+  '/avatars/presets/p2.png': preset2,
+  '/avatars/presets/p3.png': preset3,
+  '/avatars/presets/p4.png': preset4,
+  '/avatars/presets/p5.png': preset5,
+  '/avatars/presets/p6.png': preset6
+}
+
+/** 预置头像稳定键列表（入库用键，展示经 usableImage 解析到本地图） */
+export const PRESET_AVATAR_KEYS: string[] = Object.keys(PRESET_LOCAL_MAP)
+
+/**
+ * 把库内图片地址解析为可渲染的 src。
+ * 改动说明：库内统一只存相对媒体键（/images/...、/uploads/...、/avatars/... 预置键），
+ * 由本函数拼当前媒体源 base；预置键直接映射到客户端本地图；绝对 http(s) 原样返回。
+ * 兼容历史：老数据可能存的是绝对或 /mobile/media 前缀地址，先归一成相对键再解析，
+ * 保证迁移不彻底时也不破图。
+ */
+export function usableImage(url?: string | null): string {
+  if (!url) return ''
+  // 历史绝对地址归一：剥离 scheme://host + /mobile/media 前缀，还原为相对媒体键
+  let key = url
+  const legacy = key.match(/^https?:\/\/[^/]+(\/.*)$/i)
+  if (legacy) key = legacy[1]
+  if (key.startsWith('/mobile/media/')) key = key.slice('/mobile/media'.length)
+  // 预置头像：稳定键直接映射到客户端本地资源（本地 require 结果可能是数字 ID，按 any 透传）
+  if (PRESET_LOCAL_MAP[key]) return PRESET_LOCAL_MAP[key]
+  if (/^https?:\/\//i.test(key)) return key
+  if (key.startsWith('/')) {
+    const base = key.startsWith('/mobile/') ? getBaseUrl() : getMediaBase()
+    return `${base}${key}`
+  }
+  return ''
+}
 
 /** API 路径 */
 export const API = {
