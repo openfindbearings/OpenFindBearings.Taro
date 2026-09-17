@@ -8,7 +8,7 @@
 //          NavBar 返回按向导相位逐级退（form 到 mode 到 search 再退出页面），修复点返回直接退出页面的问题。
 import { useRef, useState } from 'react'
 import { View, Text, Input } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -24,6 +24,8 @@ import {
   getPendingNominations,
   acceptNomination,
   getMerchantDetail,
+  getApplicationDetail,
+  resubmitApplication,
   type ClaimableMerchant,
   type PendingNomination
 } from '../../services/merchant'
@@ -46,6 +48,14 @@ export default function MerchantApplyPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const user = useAuthStore((s) => s.user)
   const fetchApplications = useMerchantStore((s) => s.fetchApplications)
+
+  // 改动说明（v2.6.0）：路由参数带 merchantId 进入本页 = "被拒后修改重提"编辑模式——
+  //   拉申请详情预填、跳过向导步骤、提交走 resubmit；无参数即原三步向导/邀请接受。
+  const router = useRouter()
+  const editMerchantId = (router.params && router.params.merchantId) || ''
+  const [editing, setEditing] = useState(false)
+  // 编辑模式详情只加载一次（useDidShow 每次回页都会触发）
+  const editLoadedRef = useRef(false)
 
   // 改动说明：仅"对外联系人姓名"默认取登录昵称（申请人多半就是首任联系人，仍可改；
   //   userName 可能是账号名/手机号，不适合当联系人姓名故不取）。
@@ -114,9 +124,59 @@ export default function MerchantApplyPage() {
   }
 
   useDidShow(() => {
+    // 编辑模式：首次显示拉申请详情预填，不查提名不刷入驻状态（退出时由商户页自刷）
+    if (editMerchantId) {
+      if (!editLoadedRef.current) void loadApplicationToForm()
+      return
+    }
     loadInvites()
     if (isLoggedIn) fetchApplications().catch(() => { /* 状态拉取失败不阻塞 */ })
   })
+
+  /** 编辑模式预填：拉被拒申请详情，校验渠道/状态后灌入表单并直达表单相位 */
+  const loadApplicationToForm = async () => {
+    editLoadedRef.current = true
+    setClaimLoading(true)
+    try {
+      const d = await getApplicationDetail(editMerchantId)
+      if (!d) {
+        Taro.showToast({ title: '申请不存在或你已不是该商户成员', icon: 'none' })
+        setTimeout(() => Taro.navigateBack(), 900)
+        return
+      }
+      if (d.status !== 'Suspended') {
+        Taro.showToast({ title: '仅被驳回的申请可以修改重提', icon: 'none' })
+        setTimeout(() => Taro.navigateBack(), 900)
+        return
+      }
+      if (d.applicationMode !== 'self' && d.applicationMode !== 'claim') {
+        Taro.showToast({ title: '该申请暂不支持自助修改重提', icon: 'none' })
+        setTimeout(() => Taro.navigateBack(), 900)
+        return
+      }
+      setEditing(true)
+      // 上方守卫已排除 nomination/none，此处仅剩 self|claim 两值，显式断言（babel 构建不做类型窄化检查）
+      setFlow(d.applicationMode as 'self' | 'claim')
+      // 认领单需要 selected 非空才会渲染可编辑表单（复用向导同款表单），回填自身商户信息即可
+      if (d.applicationMode === 'claim') {
+        setSelected({ id: d.merchantId, name: d.merchantName, companyName: d.companyName ?? null })
+      }
+      setForm({
+        name: d.merchantName || '',
+        companyName: d.companyName || '',
+        type: d.type || 0,
+        contactPerson: d.contactPerson || '',
+        phone: d.phone || '',
+        address: d.address || '',
+        unifiedSocialCreditCode: d.unifiedSocialCreditCode || '',
+        description: d.description || ''
+      })
+      setPhase('form')
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '申请详情加载失败', icon: 'none' })
+      setTimeout(() => Taro.navigateBack(), 900)
+    } finally { setClaimLoading(false) }
+  }
 
   /** 关键词输入防抖 400ms 后触发联想 */
   const onSearchInput = (v: string) => {
@@ -238,11 +298,48 @@ export default function MerchantApplyPage() {
       .catch(() => { /* 用户取消选择 */ })
   }
 
+  /** 编辑模式提交：修改资料重新提交被拒申请（Suspended→Pending 重走审核） */
+  const onResubmit = async () => {
+    if (!form.name.trim()) {
+      Taro.showToast({ title: '请填写商家名称', icon: 'none' })
+      return
+    }
+    if (!form.companyName.trim()) {
+      Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
+      return
+    }
+    setSubmitting(true)
+    try {
+      const r = await resubmitApplication(editMerchantId, {
+        name: form.name.trim(),
+        type: form.type || undefined,
+        contactPerson: form.contactPerson.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        address: form.address.trim() || undefined,
+        companyName: form.companyName.trim(),
+        unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
+        description: form.description.trim() || undefined
+      })
+      Taro.showToast({ title: r?.message || '已重新提交，等待审核', icon: 'none' })
+      void fetchApplications()
+      setTimeout(() => Taro.navigateBack(), 800)
+    } catch (e: any) {
+      // 后端守卫失败（状态已变/名称撞他人/必填缺失）文案原样透传
+      Taro.showToast({ title: e?.message || '重新提交失败', icon: 'none' })
+    } finally { setSubmitting(false) }
+  }
+
   /** 统一提交入口：按 flow 分发到认领 / 自营 / 提名三类请求 */
   const onSubmit = async () => {
     if (submitting) return
     if (!isLoggedIn) {
       Taro.showToast({ title: '请先登录后再申请入驻', icon: 'none' })
+      return
+    }
+
+    // 编辑模式直达重提通道（v2.6.0）
+    if (editing) {
+      await onResubmit()
       return
     }
 
@@ -592,9 +689,11 @@ export default function MerchantApplyPage() {
       body = (
         <View>
           <Text style={{ ...fs(13), color: t.textTertiary, marginBottom: 12 }}>
-            {isClaim
-              ? (claimLoading ? '正在载入商家现有资料…' : '以下为商家现有资料，请逐项核对并修正（互联网信息不可信），无误后提交认领。')
-              : '请填写商户资料，提交后等待平台审核。'}
+            {editing
+              ? '已按原申请预填资料，修改后重新提交将再次进入平台审核。'
+              : (isClaim
+                ? (claimLoading ? '正在载入商家现有资料…' : '以下为商家现有资料，请逐项核对并修正（互联网信息不可信），无误后提交认领。')
+                : '请填写商户资料，提交后等待平台审核。')}
           </Text>
           <View style={{ borderRadius: 12, overflow: 'hidden' }}>
             {fieldRow('商家名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="必填，对外展示名称" placeholderClass="auth-ph" onInput={(e) => setField('name', e.detail.value)} />)}
@@ -615,7 +714,7 @@ export default function MerchantApplyPage() {
           </View>
         </View>
       )
-      buttonLabel = isClaim ? '提交认领申请' : '提交入驻申请'
+      buttonLabel = editing ? '重新提交申请' : (isClaim ? '提交认领申请' : '提交入驻申请')
     } else if (flow === 'nominate' && selected) {
       // 提名认领已有商家：展示所选商家 + 被提名人手机号 + 发起人是否入伙
       body = (
@@ -665,13 +764,16 @@ export default function MerchantApplyPage() {
 
     return (
       <View>
-        <View
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
-          onClick={() => setPhase('mode')}
-        >
-          <Icon name="chevron-left" size={16} color={t.textSecondary} />
-          <Text style={{ ...fs(13), color: t.textSecondary }}>返回上一步</Text>
-        </View>
+        {/* 编辑模式无"上一步"（向导相位不适用），返回即退出页面 */}
+        {!editing && (
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+            onClick={() => setPhase('mode')}
+          >
+            <Icon name="chevron-left" size={16} color={t.textSecondary} />
+            <Text style={{ ...fs(13), color: t.textSecondary }}>返回上一步</Text>
+          </View>
+        )}
         {body}
         {submitButton(buttonLabel)}
       </View>
@@ -680,6 +782,8 @@ export default function MerchantApplyPage() {
 
   /** 逐级回退：form(3)→mode(2)→search(1) 返回 true 已消费；search/invite 返回 false 交还系统退出 */
   const stepBack = (): boolean => {
+    // 编辑模式无向导相位可回退，直接交还系统退出页面
+    if (editing) return false
     if (phase === 'form') {
       setPhase('mode')
       return true
@@ -701,11 +805,11 @@ export default function MerchantApplyPage() {
   useHardwareBack(stepBack)
 
   return (
-    <PageLayout nav={<NavBar title="商家入驻" showBack onBack={onWizardBack} />}>
+    <PageLayout nav={<NavBar title={editing ? '修改入驻申请' : '商家入驻'} showBack onBack={onWizardBack} />}>
       <View style={{ padding: 16 }}>
         {phase === 'invite' ? renderInvite() : (
           <View>
-            {stepBar}
+            {!editing && stepBar}
             {phase === 'search' && renderSearch()}
             {phase === 'mode' && renderMode()}
             {phase === 'form' && renderForm()}

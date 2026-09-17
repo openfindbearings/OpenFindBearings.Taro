@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667EEA"/>
+      <stop offset="100%" stop-color="#4A90E2"/>
+    </linearGradient>
+  </defs>
+  
+  <circle cx="512" cy="512" r="512" fill="url(#blueGradient)"/>
+  <circle cx="512" cy="512" r="420" fill="none" stroke="#FFFFFF" stroke-width="40"/>
+  
+  <!-- 7个白色珠子（先画） -->
+  <circle cx="768" cy="256" r="56" fill="#FFFFFF"/>
+  <circle cx="852" cy="512" r="56" fill="#FFFFFF"/>
+  <circle cx="768" cy="768" r="56" fill="#FFFFFF"/>
+  <circle cx="512" cy="852" r="56" fill="#FFFFFF"/>
+  <circle cx="256" cy="768" r="56" fill="#FFFFFF"/>
+  <circle cx="172" cy="512" r="56" fill="#FFFFFF"/>
+  <circle cx="256" cy="256" r="56" fill="#FFFFFF"/>
+  
+  <circle cx="512" cy="512" r="240" fill="#FFFFFF"/>
+  
+  <!-- 指针填充 -->
+  <path d="M512 160 L640 800 L512 720 Z" fill="#FFD700"/>
+  <path d="M512 160 L384 800 L512 720 Z" fill="#FFFFFF"/>
+  
+  <!-- 外边框线条 -->
+  <line x1="512" y1="160" x2="640" y2="800" stroke="#2E86DE" stroke-width="12" stroke-linecap="round"/>
+  <line x1="640" y1="800" x2="512" y2="720" stroke="#2E86DE" stroke-width="12" stroke-linecap="round"/>
+  <line x1="512" y1="160" x2="384" y2="800" stroke="#2E86DE" stroke-width="12" stroke-linecap="round"/>
+  <line x1="384" y1="800" x2="512" y2="720" stroke="#2E86DE" stroke-width="12" stroke-linecap="round"/>
+  
+  <circle cx="512" cy="512" r="50" fill="#4A90E2"/>
+  
+  <!-- 黄色珠子（最上层，盖住指针尖） -->
+  <circle cx="512" cy="172" r="56" fill="#FFD700"/>
+</svg>
