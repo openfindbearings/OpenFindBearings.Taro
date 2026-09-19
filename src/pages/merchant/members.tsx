@@ -9,6 +9,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import {
@@ -41,9 +42,9 @@ export default function MerchantMembersPage() {
   // 修复 B1：busy 状态收敛进 doConfirm 内部统一清理
   // （原实现 doConfirm 无返回值却在调用点链式 .finally，点击操作即运行时 TypeError）
   const doConfirm = (m: MerchantStaff, title: string, content: string, action: () => Promise<any>) => {
-    Taro.showModal({ title, content })
-      .then(async (res) => {
-        if (!res.confirm) return
+    showConfirmDialog({ title, content })
+      .then(async (ok) => {
+        if (!ok) return
         setBusyId(m.id)
         try {
           await action()
@@ -55,7 +56,6 @@ export default function MerchantMembersPage() {
           setBusyId(null)
         }
       })
-      .catch(() => { /* 取消 */ })
   }
 
   const onSuspend = (m: MerchantStaff) => {
