@@ -91,6 +91,29 @@ export interface ApplicationDetail {
   address?: string | null
   description?: string | null
   logoUrl?: string | null
+  /** 随单证照材料（v1.7.0：被拒重提页回显与"缺什么补什么"指引） */
+  documents?: MerchantDocumentItem[] | null
+}
+
+/** 商户证照材料项（对齐 API PendingDocumentDto，1 执照 / 2 品牌授权书 / 3 厂房照） */
+export interface MerchantDocumentItem {
+  id: string
+  merchantId: string
+  merchantName?: string
+  type: number
+  typeName: string
+  fileUrl: string
+  /** Pending 待审核 / Approved 已通过 / Rejected 已拒绝 */
+  status: string
+  submitterName?: string
+  submittedAt?: string
+  reviewComment?: string | null
+}
+
+/** 随单材料提交项（对齐 BFF DocumentInput） */
+export interface DocumentInput {
+  type: number
+  fileUrl: string
 }
 
 /** 入驻申请请求体（对齐 BFF ApplyRequest） */
@@ -107,7 +130,8 @@ export interface ApplyMerchantBody {
   companyName?: string
   unifiedSocialCreditCode?: string
   description?: string
-  licenseUrl?: string
+  /** v1.7.0 材料泛化：随单证照材料集合（原 licenseUrl 单字段废弃） */
+  documents?: DocumentInput[]
 }
 
 /** 提名他人为管理员请求体（对齐 BFF NominateRequest） */
@@ -138,7 +162,8 @@ export interface AcceptNominationBody {
   companyName?: string
   unifiedSocialCreditCode?: string
   description?: string
-  licenseUrl?: string
+  /** v1.7.0 材料泛化：接受提名补资料时随单提交（原 licenseUrl 单字段废弃） */
+  documents?: DocumentInput[]
 }
 
 /** 商户成员项（对齐 BFF MerchantStaffItem） */
@@ -298,26 +323,66 @@ export function takeOffShelf(bearingId: string) {
   return request<OpResult>(API.MERCHANT_BEARING_OFF_SHELF(bearingId), { method: 'POST' })
 }
 
-/** 选择图片并上传营业执照（店铺认证；后端建/更新 LicenseVerification 等待 Admin 审核） */
-export function uploadLicense(): Promise<OpResult> {
+/** 选择图片并按类型上传证照材料（v1.7.0 由"上传营业执照"泛化；建待审记录进 Admin 材料队列） */
+export function submitDocument(type: number): Promise<OpResult> {
   return Taro.chooseImage({ count: 1, sizeType: ['compressed'] }).then((choose) => {
     const token = getToken()
     const path = choose.tempFilePaths[0]
     return new Promise<OpResult>((resolve, reject) => {
       Taro.uploadFile({
-        url: `${getBaseUrl()}${API.MERCHANT_LICENSE}`,
+        url: `${getBaseUrl()}${API.MERCHANT_DOCUMENTS}`,
         filePath: path,
         name: 'file',
-        // 改动说明 G3：执照随当前商户上下文提交
+        // multipart 附带材料类型字段（1 执照 / 2 授权书 / 3 厂房照）
+        formData: { type: String(type) },
+        // 改动说明 G3：材料随当前商户上下文提交
         header: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
         },
         success: (res) => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({ success: true, message: '营业执照已提交，等待审核' })
+            resolve({ success: true, message: '材料已提交，等待审核' })
           } else {
             resolve({ success: false, message: `提交失败（${res.statusCode}）` })
+          }
+        },
+        fail: (err) => reject(err)
+      })
+    })
+  })
+}
+
+/** 当前商户证照材料列表（信息维护页"证照材料"区数据源，v1.7.0 新增） */
+export function getMyDocuments() {
+  return request.get<MerchantDocumentItem[]>(API.MERCHANT_DOCUMENTS)
+}
+
+/** 材料文件预上传（v1.7.0 新增）：入驻申请随单材料先传拿 URL，提交时并入 documents 数组 */
+export function uploadDocumentFile(): Promise<{ url?: string; message?: string }> {
+  return Taro.chooseImage({ count: 1, sizeType: ['compressed'] }).then((choose) => {
+    const token = getToken()
+    const path = choose.tempFilePaths[0]
+    return new Promise<{ url?: string; message?: string }>((resolve, reject) => {
+      Taro.uploadFile({
+        url: `${getBaseUrl()}${API.MERCHANT_DOCUMENTS}/upload`,
+        filePath: path,
+        name: 'file',
+        // 材料也随当前商户上下文（编辑重提场景已绑定商户；新建时无此头不影响）
+        header: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
+        },
+        success: (res) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              const body = JSON.parse(res.data)
+              resolve(body?.success ? { url: body.url } : { message: body?.message || '上传失败' })
+            } catch {
+              resolve({ message: '上传响应解析失败' })
+            }
+          } else {
+            resolve({ message: `上传失败（${res.statusCode}）` })
           }
         },
         fail: (err) => reject(err)
@@ -410,7 +475,7 @@ export function updateMerchantProfile(body: UpdateMerchantProfileBody) {
 
 /**
  * 选择图片并上传商户 Logo：返回可访问绝对 URL（不直接落库，保存资料时随 profile.logoUrl 写入）。
- * 改动说明：仿 uploadLicense 的 multipart 旁路，带 X-Merchant-Id 当前商户上下文头。
+ * 改动说明：仿 submitDocument 的 multipart 旁路，带 X-Merchant-Id 当前商户上下文头。
  */
 export function uploadMerchantLogo(): Promise<{ success: boolean; url?: string; message?: string }> {
   return Taro.chooseImage({ count: 1, sizeType: ['compressed'] }).then((choose) => {

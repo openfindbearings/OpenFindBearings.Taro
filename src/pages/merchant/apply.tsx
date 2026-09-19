@@ -26,8 +26,10 @@ import {
   getMerchantDetail,
   getApplicationDetail,
   resubmitApplication,
+  uploadDocumentFile,
   type ClaimableMerchant,
-  type PendingNomination
+  type PendingNomination,
+  type DocumentInput
 } from '../../services/merchant'
 
 /** 商家类型（对齐后端 MerchantType：1生产厂家 / 2授权经销商 / 3分销商 / 4贸易商） */
@@ -102,6 +104,62 @@ export default function MerchantApplyPage() {
   const [submitting, setSubmitting] = useState(false)
   // 改动说明：认领走可编辑预填表单，进入时需拉取商家详情预填，claimLoading 表示预填拉取中
   const [claimLoading, setClaimLoading] = useState(false)
+
+  // 改动说明（v1.7.0）：入驻随单证照材料（对齐后端 DocumentRequirements 矩阵）——
+  //   license 全类型必备；authorization 授权经销商必备；factory 生产厂家选传。
+  //   existing 标记编辑模式回显的"已批准"材料（不重复提交），rejected 标记被驳回待补传
+  const [docSlots, setDocSlots] = useState<{ license?: string; authorization?: string; factory?: string }>({})
+  const [docExisting, setDocExisting] = useState<{ license?: boolean; authorization?: boolean; factory?: boolean }>({})
+  const [docRejected, setDocRejected] = useState<{ license?: boolean; authorization?: boolean; factory?: boolean }>({})
+
+  /** 清空材料槽位（切换入驻路径/邀请展开时调用，防跨表单串料） */
+  const resetDocs = () => { setDocSlots({}); setDocExisting({}); setDocRejected({}) }
+
+  /** 上传指定槽位材料：预上传只拿 URL，审核记录随申请单统一创建 */
+  const pickDoc = (slot: 'license' | 'authorization' | 'factory', type: number) => {
+    uploadDocumentFile()
+      .then((r) => {
+        if (r.url) {
+          setDocSlots((p) => ({ ...p, [slot]: r.url }))
+          setDocExisting((p) => ({ ...p, [slot]: false }))
+          setDocRejected((p) => ({ ...p, [slot]: false }))
+        } else {
+          Taro.showToast({ title: r.message || '上传失败', icon: 'none' })
+        }
+      })
+      .catch(() => Taro.showToast({ title: '上传取消或失败', icon: 'none' }))
+  }
+
+  /** 材料矩阵校验（与后端 DocumentRequirements 同口径）：返回 null 通过，否则提示语 */
+  const docsError = (type: number): string | null => {
+    if (!type) return '请选择商家类型'
+    if (!docSlots.license) return '请上传营业执照'
+    if (type === 2 && !docSlots.authorization) return '授权经销商必须上传品牌授权书'
+    return null
+  }
+
+  /** 组装本次随单提交的文档项（已批准回显材料不重复提交，后端按存量 Approved 合并判定） */
+  const buildDocs = (): DocumentInput[] | undefined => {
+    const arr: DocumentInput[] = []
+    if (docSlots.license && !docExisting.license) arr.push({ type: 1, fileUrl: docSlots.license })
+    if (docSlots.authorization && !docExisting.authorization) arr.push({ type: 2, fileUrl: docSlots.authorization })
+    if (docSlots.factory && !docExisting.factory) arr.push({ type: 3, fileUrl: docSlots.factory })
+    return arr.length ? arr : undefined
+  }
+
+  /** 材料上传行：槽位标题+必传星号，点击选图上传，显示当前状态（已批准/已上传/被驳回） */
+  const docRow = (label: string, required: boolean, slot: 'license' | 'authorization' | 'factory', type: number, tip?: string) => (
+    fieldRow(`${label}${required ? ' *' : ''}`,
+      <View style={{ flex: 1 }} onClick={() => pickDoc(slot, type)}>
+        <Text style={{ ...fs(14), color: docExisting[slot] ? t.primary : docSlots[slot] ? t.textSecondary : t.primary }}>
+          {docExisting[slot] ? '已批准，无需重传'
+            : docRejected[slot] ? '被驳回，点击重新上传'
+            : docSlots[slot] ? '已上传，点击重新选择'
+            : '点击上传（JPG/PNG）'}
+        </Text>
+        {!!tip && <Text style={{ ...fs(11), color: t.textTertiary }}>{tip}</Text>}
+      </View>)
+  )
   // 自营/认领共用同一份可编辑表单（认领时预填现有资料供逐项核对）
   const blankForm = {
     name: '', companyName: '', type: 0, contactPerson: '',
@@ -171,6 +229,13 @@ export default function MerchantApplyPage() {
         unifiedSocialCreditCode: d.unifiedSocialCreditCode || '',
         description: d.description || ''
       })
+      // 改动说明（v1.7.0）：材料回显——已批准槽位沿用（重提不重复传），被驳回槽位标记补传
+      const docs = d.documents ?? []
+      const approvedOf = (tp: number) => docs.find((x) => x.type === tp && x.status === 'Approved')
+      const rejectedOf = (tp: number) => docs.some((x) => x.type === tp && x.status === 'Rejected')
+      setDocSlots({ license: approvedOf(1)?.fileUrl, authorization: approvedOf(2)?.fileUrl, factory: approvedOf(3)?.fileUrl })
+      setDocExisting({ license: !!approvedOf(1), authorization: !!approvedOf(2), factory: !!approvedOf(3) })
+      setDocRejected({ license: rejectedOf(1), authorization: rejectedOf(2), factory: rejectedOf(3) })
       setPhase('form')
     } catch (e: any) {
       Taro.showToast({ title: e?.message || '申请详情加载失败', icon: 'none' })
@@ -211,6 +276,7 @@ export default function MerchantApplyPage() {
   /** 我当管理员 + 新建：预填对外联系人与客服电话（登录账号手机，均可改）进入自营 */
   const onSelfGo = () => {
     setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
+    resetDocs()
     setFlow('self')
     setPhase('form')
   }
@@ -225,6 +291,7 @@ export default function MerchantApplyPage() {
   const onClaimGo = () => {
     // 改动说明：先以对外联系人+账户手机打底（详情拉取失败时不至于空白），客服电话随后被详情预填覆盖
     setForm({ ...blankForm, contactPerson: selfContactPerson, phone: selfPhone })
+    resetDocs()
     setFlow('claim')
     setPhase('form')
     void prefillClaim()
@@ -257,8 +324,9 @@ export default function MerchantApplyPage() {
   /** 展开或收起一条提名的补资料表单 */
   const onOpenInvite = (item: PendingNomination) => {
     setOpenCode(item.invitationCode === openCode ? null : item.invitationCode)
-    // 改动说明：补资料时对外联系人预填登录昵称、客服电话预填登录账号手机号（均可改）
+    // 改动说明：补资料时对外联系人预填登录昵称、客服电话预填登录账号手机号（均可改）；材料槽位每次展开重清
     setAcceptForm({ companyName: '', creditCode: '', contactPerson: selfContactPerson, mobile: selfPhone, address: '' })
+    resetDocs()
   }
 
   /** 接受提名：补资料提交后提示成功并刷新提名与入驻状态 */
@@ -269,6 +337,12 @@ export default function MerchantApplyPage() {
       Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
       return
     }
+    // 改动说明（v1.7.0）：接受提名补资料同样必传营业执照；若提名的商户类型为授权经销商，
+    //   后端矩阵会再要品牌授权书（400 文案透传引导补传）
+    if (!docSlots.license) {
+      Taro.showToast({ title: '请上传营业执照', icon: 'none' })
+      return
+    }
     setAccepting(true)
     try {
       await acceptNomination(code, {
@@ -276,7 +350,8 @@ export default function MerchantApplyPage() {
         unifiedSocialCreditCode: acceptForm.creditCode.trim() || undefined,
         contactPerson: acceptForm.contactPerson.trim() || undefined,
         mobile: acceptForm.mobile.trim() || undefined,
-        address: acceptForm.address.trim() || undefined
+        address: acceptForm.address.trim() || undefined,
+        documents: buildDocs()
       })
       Taro.showModal({
         title: '提交成功',
@@ -308,6 +383,9 @@ export default function MerchantApplyPage() {
       Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
       return
     }
+    // 改动说明（v1.7.0）：类型必填 + 材料矩阵校验（与后端同口径）
+    const de = docsError(form.type)
+    if (de) { Taro.showToast({ title: de, icon: 'none' }); return }
     setSubmitting(true)
     try {
       const r = await resubmitApplication(editMerchantId, {
@@ -318,7 +396,8 @@ export default function MerchantApplyPage() {
         address: form.address.trim() || undefined,
         companyName: form.companyName.trim(),
         unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
-        description: form.description.trim() || undefined
+        description: form.description.trim() || undefined,
+        documents: buildDocs()
       })
       Taro.showToast({ title: r?.message || '已重新提交，等待审核', icon: 'none' })
       void fetchApplications()
@@ -357,6 +436,9 @@ export default function MerchantApplyPage() {
         Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
         return
       }
+      // 改动说明（v1.7.0）：类型必填 + 随单材料矩阵校验
+      const de = docsError(form.type)
+      if (de) { Taro.showToast({ title: de, icon: 'none' }); return }
       setSubmitting(true)
       try {
         // 改动说明：认领随第三步核对/补全的资料一并提交，后端 ApplyClaim 应用并置 Manual
@@ -370,7 +452,8 @@ export default function MerchantApplyPage() {
           address: form.address.trim() || undefined,
           companyName: form.companyName.trim() || undefined,
           unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
-          description: form.description.trim() || undefined
+          description: form.description.trim() || undefined,
+          documents: buildDocs()
         })
         Taro.showToast({ title: r?.message || '认领申请已提交，可在"商户"页查看进度', icon: 'none' })
         void fetchApplications()
@@ -391,6 +474,9 @@ export default function MerchantApplyPage() {
         Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
         return
       }
+      // 改动说明（v1.7.0）：类型必填 + 随单材料矩阵校验
+      const de = docsError(form.type)
+      if (de) { Taro.showToast({ title: de, icon: 'none' }); return }
       setSubmitting(true)
       try {
         const r = await applyMerchant({
@@ -402,7 +488,8 @@ export default function MerchantApplyPage() {
           address: form.address.trim() || undefined,
           companyName: form.companyName.trim() || undefined,
           unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
-          description: form.description.trim() || undefined
+          description: form.description.trim() || undefined,
+          documents: buildDocs()
         })
         Taro.showToast({ title: r?.message || '入驻申请已提交，可在"商户"页查看进度', icon: 'none' })
         void fetchApplications()
@@ -574,6 +661,10 @@ export default function MerchantApplyPage() {
                   {fieldColumn('联系人', acceptForm.contactPerson, (v) => setAcceptForm((p) => ({ ...p, contactPerson: v })), '您的姓名')}
                   {fieldColumn('客服电话', acceptForm.mobile, (v) => setAcceptForm((p) => ({ ...p, mobile: v })), '顾客可见，可填 400/座机/手机')}
                   {fieldColumn('地址', acceptForm.address, (v) => setAcceptForm((p) => ({ ...p, address: v })), '经营地址（选填）')}
+                {/* v1.7.0 补资料随单材料：执照必传；授权书按被提名商户类型由后端矩阵判定（400 透传引导） */}
+                {docRow('营业执照', true, 'license', 1, '盖章清晰，须与企业名称一致')}
+                {docRow('品牌授权书', false, 'authorization', 2, '被提名商户为授权经销商时必备')}
+                {docRow('厂房照片', false, 'factory', 3, '生产厂家选传')}
                   <View
                     style={{ backgroundColor: accepting ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 11, paddingBottom: 11, alignItems: 'center', marginTop: 4 }}
                     onClick={accepting ? undefined : () => onAccept(item.invitationCode)}
@@ -697,7 +788,7 @@ export default function MerchantApplyPage() {
           </Text>
           <View style={{ borderRadius: 12, overflow: 'hidden' }}>
             {fieldRow('商家名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="必填，对外展示名称" placeholderClass="auth-ph" onInput={(e) => setField('name', e.detail.value)} />)}
-            {fieldRow('商家类型', (
+            {fieldRow('商家类型 *', (
               <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={() => pickType(form.type, (v) => setField('type', v))}>
                 <Text style={{ ...fs(15), color: form.type ? t.textPrimary : t.textTertiary }}>
                   {MERCHANT_TYPES.find((x) => x.value === form.type)?.label || '请选择'}
@@ -711,6 +802,10 @@ export default function MerchantApplyPage() {
             {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="顾客可见，可填 400/座机/手机（选填）" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
             {fieldRow('地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="经营地址（选填）" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}
             {fieldRow('简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍（选填）" placeholderClass="auth-ph" onInput={(e) => setField('description', e.detail.value)} />)}
+            {/* v1.7.0 随单材料区：营业执照全类型必备；授权书随类型 2（授权经销商）条件出现；厂房照随类型 1（生产厂家）可选 */}
+            {docRow('营业执照', true, 'license', 1, '盖章清晰，须与企业名称一致')}
+            {form.type === 2 && docRow('品牌授权书', true, 'authorization', 2, '品牌方授权证明，防假冒授权')}
+            {form.type === 1 && docRow('厂房照片', false, 'factory', 3, '选传，用于认证加分')}
           </View>
         </View>
       )

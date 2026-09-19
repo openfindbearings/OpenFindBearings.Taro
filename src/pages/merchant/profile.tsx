@@ -9,7 +9,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import { getMerchantProfile, updateMerchantProfile, uploadMerchantLogo, type MerchantProfile } from '../../services/merchant'
+import { getMerchantProfile, updateMerchantProfile, uploadMerchantLogo, getMyDocuments, submitDocument, type MerchantProfile, type MerchantDocumentItem } from '../../services/merchant'
 import { useMerchantStore } from '../../stores/merchant'
 import { usableImage } from '../../services/config'
 
@@ -37,6 +37,20 @@ const EMPTY = {
   website: '', description: '', logoUrl: ''
 }
 
+/** 证照材料槽位定义（对齐后端 DocumentType：1 执照 / 2 授权书 / 3 厂房照，v1.7.0 新增） */
+const DOC_SLOTS = [
+  { type: 1, label: '营业执照' },
+  { type: 2, label: '品牌授权书' },
+  { type: 3, label: '厂房照片' }
+]
+
+/** 材料审核状态中文与色调映射（与 API DocumentStatus 对齐） */
+const DOC_STATUS_MAP: Record<string, { label: string; color: 'primary' | 'success' | 'danger' }> = {
+  Pending: { label: '审核中', color: 'primary' },
+  Approved: { label: '已通过', color: 'success' },
+  Rejected: { label: '已驳回', color: 'danger' }
+}
+
 /** 商户信息维护页：载入当前商户资料，逐项可编辑后保存 */
 export default function MerchantProfilePage() {
   const t = useTheme()
@@ -48,11 +62,21 @@ export default function MerchantProfilePage() {
   const [loaded, setLoaded] = useState(false)
   // logo 加载失败回退占位图标
   const [logoFailed, setLogoFailed] = useState(false)
+  // 改动说明（v1.7.0）：证照材料区——当前商户各槽位最新一条材料 + 上传中槽位
+  const [docs, setDocs] = useState<MerchantDocumentItem[]>([])
+  const [docUploading, setDocUploading] = useState<number | null>(null)
+
+  /** 拉取当前商户证照材料列表（X-Merchant-Id 上下文） */
+  const loadDocs = () => {
+    getMyDocuments().then((r) => setDocs(r ?? [])).catch(() => { /* 未选商户或网络异常时留空 */ })
+  }
 
   const setField = (k: keyof typeof form, v: string | number) => setForm((prev) => ({ ...prev, [k]: v }))
 
   /** 首次显示拉取当前商户资料回填（走 X-Merchant-Id 上下文） */
   useDidShow(() => {
+    // 改动说明（v1.7.0）：材料列表每次回页刷新（审核状态由平台变更，需最新视图）
+    loadDocs()
     if (loaded) return
     getMerchantProfile()
       .then((p: MerchantProfile) => {
@@ -93,9 +117,21 @@ export default function MerchantProfilePage() {
       .finally(() => setUploading(false))
   }
 
+  /** 按类型选图提交证照材料（入驻后即时建待审记录，成功后刷新槽位状态，v1.7.0 新增） */
+  const onPickDoc = (tp: number) => {
+    if (docUploading) return
+    setDocUploading(tp)
+    submitDocument(tp)
+      .then((r) => {
+        Taro.showToast({ title: r?.message || (r?.success ? '材料已提交' : '提交失败'), icon: 'none' })
+        if (r?.success) loadDocs()
+      })
+      .catch(() => Taro.showToast({ title: '上传失败', icon: 'none' }))
+      .finally(() => setDocUploading(null))
+  }
+
   /** 商家类型选择（ActionSheet） */
-  const pickType = () => {
-    Taro.showActionSheet({ itemList: MERCHANT_TYPES.map((x) => x.label) })
+  const pickType = () => {    Taro.showActionSheet({ itemList: MERCHANT_TYPES.map((x) => x.label) })
       .then((res) => {
         const item = MERCHANT_TYPES[res.tapIndex]
         if (item) setField('type', item.value)
@@ -184,6 +220,30 @@ export default function MerchantProfilePage() {
         {fieldRow('经营地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}
         {fieldRow('官网', <Input style={inputStyle} value={form.website} maxlength={100} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('website', e.detail.value)} />)}
         {fieldRow('商家简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍" placeholderClass="auth-ph" onInput={(e) => setField('description', e.detail.value)} />)}
+      </View>
+
+      {/* v1.7.0 证照材料区：各槽位最新材料状态 + 补传/换证入口（提交即建待审记录进平台队列） */}
+      <View style={{ backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 4, marginBottom: 12 }}>
+        <Text style={{ ...fs(15), color: t.textPrimary, marginBottom: 4 }}>证照材料</Text>
+        {DOC_SLOTS.map((slot) => {
+          const latest = docs.filter((x) => x.type === slot.type).slice(-1)[0]
+          const st = latest ? DOC_STATUS_MAP[latest.status] : undefined
+          const thumb = latest && latest.status !== 'Rejected' ? usableImage(latest.fileUrl) : ''
+          return (
+            <View key={slot.type} style={{ flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: t.border, paddingTop: 10, paddingBottom: 10 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...fs(14), color: t.textPrimary }}>{slot.label}</Text>
+                <Text style={{ ...fs(12), color: st ? (t as any)[st.color] : t.textTertiary, marginTop: 2 }}>
+                  {st ? `最近提交：${st.label}${latest.reviewComment ? `（${latest.reviewComment}）` : ''}` : '未提交'}
+                </Text>
+              </View>
+              {thumb ? <Image style={{ width: 40, height: 40, borderRadius: 6, marginRight: 10 }} src={thumb} mode="aspectFill" /> : null}
+              <Text style={{ ...fs(13), color: docUploading === slot.type ? t.textTertiary : t.primary }} onClick={() => onPickDoc(slot.type)}>
+                {docUploading === slot.type ? '上传中…' : latest ? '补传/换证' : '上传'}
+              </Text>
+            </View>
+          )
+        })}
       </View>
 
       <View

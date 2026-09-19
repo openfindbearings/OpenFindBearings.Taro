@@ -21,7 +21,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
-import { uploadLicense, withdrawApplication, deleteApplication, type MerchantApplication } from '../../services/merchant'
+import { withdrawApplication, deleteApplication, type MerchantApplication } from '../../services/merchant'
 import { usableImage } from '../../services/config'
 import './index.scss'
 
@@ -200,22 +200,11 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             )}
           </View>
 
-          {/* 认证 / 执照 */}
-          {!m.isVerified ? (
-            <View className='mch-verify-row' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}
-              onClick={async () => {
-                try {
-                  const r = await uploadLicense()
-                  Taro.showToast({ title: r?.message || '已提交', icon: 'none' })
-                  void fetchApplications()
-                } catch { Taro.showToast({ title: '上传失败', icon: 'none' }) }
-              }}
-            >
-              <Text style={{ ...fs(13), color: t.textSecondary }}>上传营业执照，申请商家认证</Text>
-              <Icon name='chevron-right' size={16} color={t.textTertiary} />
-            </View>
-          ) : (
+          {/* 认证状态提示（v1.7.0：上传执照入口移至信息维护页"证照材料"区，卡面只留状态与引导文案） */}
+          {m.isVerified ? (
             <Text style={{ ...fs(12), color: t.success, marginTop: 10 }}>· 商家已认证</Text>
+          ) : (
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 10 }}>· 未认证，可在"信息维护"补齐证照材料后由平台认证</Text>
           )}
         </>
       )}
