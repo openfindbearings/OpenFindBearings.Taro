@@ -14,6 +14,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { useHardwareBack } from '../../hooks/useHardwareBack'
@@ -353,11 +354,11 @@ export default function MerchantApplyPage() {
         address: acceptForm.address.trim() || undefined,
         documents: buildDocs()
       })
-      Taro.showModal({
+      showConfirmDialog({
         title: '提交成功',
         content: '资料已提交，等待平台审核通过后即可开始经营。',
         showCancel: false
-      }).then(() => { loadInvites(); void fetchApplications() }).catch(() => loadInvites())
+      }).then(() => { loadInvites(); void fetchApplications() })
     } catch (e: any) {
       Taro.showToast({ title: e?.message || '接受提名失败', icon: 'none' })
     } finally { setAccepting(false) }
@@ -500,20 +501,19 @@ export default function MerchantApplyPage() {
         if (e?.code === 'MERCHANT_CLAIMABLE_EXISTS' && e?.data?.existingMerchantId) {
           const emId = String(e.data.existingMerchantId)
           const emName = String(e.data.existingName || form.name.trim())
-          Taro.showModal({
+          showConfirmDialog({
             title: '库中已有此商户',
             content: `「${emName}」已存在但尚未被认领，是否改为认领？选"改名新建"可换个名称再自助入驻。`,
             confirmText: '改为认领',
             cancelText: '改名新建'
           })
-            .then((res) => {
-              if (res.confirm) {
+            .then((ok) => {
+              if (ok) {
                 setSelected({ id: emId, name: emName })
                 setFlow('claim')
                 Taro.showToast({ title: '已切换到认领，请核对资料后再次提交', icon: 'none' })
               }
             })
-            .catch(() => { /* 弹窗被系统打断时静默 */ })
         } else {
           Taro.showToast({ title: e?.message || '入驻申请提交失败', icon: 'none' })
         }
@@ -547,11 +547,11 @@ export default function MerchantApplyPage() {
               address: nomAddress.trim() || undefined
             }
       )
-      Taro.showModal({
+      showConfirmDialog({
         title: '提名已发出',
         content: '被提名人接受提名并补全资料后即可提交审核，你也可以稍后在商户页查看进度。',
         showCancel: false
-      }).then(() => Taro.navigateBack()).catch(() => Taro.navigateBack())
+      }).then(() => Taro.navigateBack())
     } catch (e: any) {
       Taro.showToast({ title: e?.message || '提名发送失败，请检查对方手机号是否已注册', icon: 'none' })
     } finally { setSubmitting(false) }

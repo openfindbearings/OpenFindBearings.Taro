@@ -22,6 +22,7 @@ import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
 import { withdrawApplication, deleteApplication, type MerchantApplication } from '../../services/merchant'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { usableImage } from '../../services/config'
 import './index.scss'
 
@@ -96,12 +97,13 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
 
   /** 删除被驳回申请：二次确认后调 BFF，成功后刷新列表（self 卡消失 / claim 退回公共池） */
   const onDelete = () => {
-    Taro.showModal({
+    showConfirmDialog({
       title: '删除被驳回申请',
-      content: '删除后该驳回记录将被清除，之后可重新申请入驻。确定删除？'
+      content: '删除后该驳回记录将被清除，之后可重新申请入驻。确定删除？',
+      confirmColor: '#EF4444'
     })
-      .then(async (res) => {
-        if (!res.confirm) return
+      .then(async (ok) => {
+        if (!ok) return
         try {
           const r = await deleteApplication(m.merchantId)
           Taro.showToast({ title: r?.message || '已删除', icon: 'none' })
@@ -110,7 +112,6 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
           Taro.showToast({ title: (e as { message?: string })?.message || '删除失败', icon: 'none' })
         }
       })
-      .catch(() => { /* 取消 */ })
   }
 
   /** 点击商户卡：生效商户切换为当前；未通过则带商户 id 进"修改并重新提交"编辑页（v2.6.0，原为跳空白向导） */
@@ -124,12 +125,13 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
 
   /** 撤回待审核申请：二次确认后调 BFF，成功后刷新列表（self 卡消失回申请态 / claim 退回公共池） */
   const onWithdraw = () => {
-    Taro.showModal({
+    showConfirmDialog({
       title: '撤回入驻申请',
-      content: '撤回后该待审核申请将被取消，可稍后重新申请。确定撤回？'
+      content: '撤回后该待审核申请将被取消，可稍后重新申请。确定撤回？',
+      confirmColor: '#EF4444'
     })
-      .then(async (res) => {
-        if (!res.confirm) return
+      .then(async (ok) => {
+        if (!ok) return
         try {
           const r = await withdrawApplication(m.merchantId)
           Taro.showToast({ title: r?.message || '已撤回', icon: 'none' })
@@ -138,7 +140,6 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
           Taro.showToast({ title: (e as { message?: string })?.message || '撤回失败', icon: 'none' })
         }
       })
-      .catch(() => { /* 取消 */ })
   }
 
   const card = (
