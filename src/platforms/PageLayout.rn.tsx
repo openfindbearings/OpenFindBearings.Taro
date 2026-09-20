@@ -29,7 +29,8 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true }: Pa
   return (
     <View className='page-layout' style={rootStyle}>
       {nav}
-      <ScrollView className='page-layout-scroll' scrollY={scrollY} contentContainerStyle={{ flexGrow: 1 }}>
+      {/* 改动说明（v1.7.2）：scrollY 为 RN-only prop，Taro 类型未声明，spread as any 过 tsc 门禁 */}
+      <ScrollView className='page-layout-scroll' {...({ scrollY } as any)} contentContainerStyle={{ flexGrow: 1 }}>
         {children}
       </ScrollView>
       {tabbar}

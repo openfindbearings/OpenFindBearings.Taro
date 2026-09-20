@@ -1,4 +1,4 @@
-// RN 端选图实现：react-native-image-picker（活跃维护的标准 RN 库，RN CLI autolinking 零配置，
+﻿// RN 端选图实现：react-native-image-picker（活跃维护的标准 RN 库，RN CLI autolinking 零配置，
 // Android 13+ 使用 READ_MEDIA_IMAGES 细分媒体权限——替代已停更、只申请废弃存储权限的 syan）。
 // 统一语义与 H5 版一致：resolve 图片 uri；取消返回 null；权限被拒/出错 reject（调用方 toast 出真实原因）。
 import Taro from '@tarojs/taro'
@@ -22,7 +22,7 @@ function pickFromLibrary(): Promise<string | null> {
         if (result.didCancel) return resolve(null)
         if (result.errorCode) {
           const msg =
-            result.errorCode === 'permission_denied'
+            (result.errorCode as string) === 'permission'
               ? '相册权限被拒绝，请到系统设置-应用-权限中允许访问照片'
               : result.errorMessage || '打开相册失败'
           return reject(new Error(msg))
@@ -35,14 +35,14 @@ function pickFromLibrary(): Promise<string | null> {
   })
 }
 
-/** 拍照一张（库内部自动申请 CAMERA 权限，被拒时以 permission_denied 错误码回传） */
+/** 拍照一张（库内部自动申请 CAMERA 权限，被拒时以 permission 错误码回传（改动说明 v1.7.2：原比较误写 permission_denied 永不命中，权限文案分支失效）） */
 function pickFromCamera(): Promise<string | null> {
   return new Promise<string | null>((resolve, reject) => {
     launchCamera({ mediaType: 'photo', quality: 0.7, maxWidth: 1600, maxHeight: 1600 }, (result) => {
       if (result.didCancel) return resolve(null)
       if (result.errorCode) {
         const msg =
-          result.errorCode === 'permission_denied'
+          (result.errorCode as string) === 'permission'
             ? '相机权限被拒绝，请到系统设置-应用-权限中允许使用相机'
             : result.errorMessage || '拍照失败'
         return reject(new Error(msg))

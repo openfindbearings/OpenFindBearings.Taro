@@ -117,7 +117,7 @@ export default function MerchantApplyPage() {
   const resetDocs = () => { setDocSlots({}); setDocExisting({}); setDocRejected({}) }
 
   /** 上传指定槽位材料：预上传只拿 URL，审核记录随申请单统一创建 */
-  const pickDoc = (slot: 'license' | 'authorization' | 'factory', type: number) => {
+  const pickDoc = (slot: 'license' | 'authorization' | 'factory', _type: number) => {
     uploadDocumentFile()
       .then((r) => {
         if (r.url) {
@@ -365,7 +365,7 @@ export default function MerchantApplyPage() {
   }
 
   /** 弹出商家类型选择动作面板 */
-  const pickType = (current: number, setter: (v: number) => void) => {
+  const pickType = (_current: number, setter: (v: number) => void) => {
     Taro.showActionSheet({ itemList: MERCHANT_TYPES.map((x) => x.label) })
       .then((res) => {
         const item = MERCHANT_TYPES[res.tapIndex]

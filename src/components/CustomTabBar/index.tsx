@@ -45,7 +45,7 @@ export default function CustomTabBar() {
   // 当前商户：优先 currentMerchantId 命中，回退列表首个
   const current = merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0] ?? null
   const merchantLogo = current?.logoUrl || null
-  const merchantName = current?.merchantName || '商家'
+  // 改动说明（v1.7.2）：merchantName 随 tab 文案固定"商家"后无消费方，删除僵尸变量
 
   useEffect(() => {
     // 根据当前页面路径确定选中 tab
@@ -94,9 +94,10 @@ export default function CustomTabBar() {
     return 'user'
   }
 
-  // 商家 tab 文案：已生效用商户名；仅审核中用"审核中"；否则"入驻"
+  // 商家 tab 文案：固定"商家"（改动说明 v1.7.2：原已生效显示商户名，长名称把 tab 撑爆，
+  //   tab 是导航入口不是身份位，商户名由商户页头部承载；仅审核中提示状态；否则"入驻"）
   const getMerchantText = () => {
-    if (approved) return merchantName
+    if (approved) return '商家'
     if (pendingCount > 0) return '审核中'
     return '入驻'
   }

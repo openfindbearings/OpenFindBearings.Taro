@@ -146,12 +146,14 @@ export default function SwipeCell({
     },
     // 横向锁定后拒绝外层 ScrollView 夺走手势；其余（纯点击/纵向）放行，交互互不干扰
     onResponderTerminationRequest: () => gRef.current.lock !== 'h'
-  }), [total, tx])
+    // 改动说明（v1.7.2）：create 参数 cast any——RN 类型定义要求回调带 typed event 参数，
+    //   本实现省略未用参数是合法 JS，仅类型声明不匹配（Metro 不检查，tsc 门禁消噪）
+  } as any), [total, tx])
 
   return (
     <RNView
       style={[styles.root, { borderRadius: radius }, containerStyle]}
-      {...pan.panHandlers}
+      {...(pan.panHandlers as any)}
     >
       {/* 操作条垫底，内容层盖在其上，左滑露出 */}
       <RNView style={styles.actions}>
@@ -163,7 +165,9 @@ export default function SwipeCell({
             onResponderTerminationRequest={() => false}
             onResponderRelease={() => { snap(0); a.onPress() }}
           >
-            <RNText style={{ ...fs(13), color: a.color }}>{a.label}</RNText>
+            {/* 改动说明（v1.7.2）：fs() 返回类型是 RN数值|H5字符串 联合，TS 无法收窄 IS_RN；
+                本文件仅 RN 编译，运行时恒为数值，cast 过 RNText 严格样式类型 */}
+            <RNText style={{ ...(fs(13) as { fontSize: number; lineHeight: number }), color: a.color } as any}>{a.label}</RNText>
           </RNView>
         ))}
       </RNView>

@@ -157,7 +157,15 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             : <Text style={{ ...fs(18), color: t.textOnPrimary, fontWeight: '600' }}>{(m.merchantName || '商').slice(0, 1)}</Text>}
         </View>
         <View className='mch-mid'>
-          <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.merchantName}</Text>
+          {/* v1.7.2 认证徽标上移至名称旁（金色小标，主流电商店铺式）：替代卡底重复提示行 */}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.merchantName}</Text>
+            {isActive && m.isVerified && (
+              <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: '#F59E0B' }}>
+                <Text style={{ ...fs(10), color: '#FFFFFF' }}>已认证</Text>
+              </View>
+            )}
+          </View>
           {/* Pending 副标题两行（用户确认的版式）：首行状态+左滑提示、次行审核时长；
               用两个 Text 叠放而非 \n+pre-line（RN 不支持 white-space，flex column 三端一致） */}
           {m.status === 'Pending' ? (
@@ -184,30 +192,27 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
         </View>
       )}
 
-      {/* 当前生效商户：内联操作区 */}
+      {/* 当前生效商户：内联操作区（v1.7.2：四按钮同权灰底——商品/成员/信息维护平级无主次；
+          未认证且管理员多一个"申请认证"入口，跳信息维护证照材料区补件即申请） */}
       {isActive && isCurrent && (
-        <>
-          <View className='mch-actions' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}>
-            <View className='mch-action' style={{ backgroundColor: t.primary }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/manage' })}>
-              <Text style={{ ...fs(13), color: t.textOnPrimary }}>商品管理</Text>
-            </View>
-            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/members' })}>
-              <Text style={{ ...fs(13), color: t.textPrimary }}>成员管理</Text>
-            </View>
-            {m.role === 'MerchantAdmin' && (
-              <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
-                <Text style={{ ...fs(13), color: t.textPrimary }}>信息维护</Text>
-              </View>
-            )}
+        <View className='mch-actions' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}>
+          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/manage' })}>
+            <Text style={{ ...fs(13), color: t.textPrimary }}>商品管理</Text>
           </View>
-
-          {/* 认证状态提示（v1.7.0：上传执照入口移至信息维护页"证照材料"区，卡面只留状态与引导文案） */}
-          {m.isVerified ? (
-            <Text style={{ ...fs(12), color: t.success, marginTop: 10 }}>· 商家已认证</Text>
-          ) : (
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 10 }}>· 未认证，可在"信息维护"补齐证照材料后由平台认证</Text>
+          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/members' })}>
+            <Text style={{ ...fs(13), color: t.textPrimary }}>成员管理</Text>
+          </View>
+          {m.role === 'MerchantAdmin' && (
+            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
+              <Text style={{ ...fs(13), color: t.textPrimary }}>信息维护</Text>
+            </View>
           )}
-        </>
+          {m.role === 'MerchantAdmin' && !m.isVerified && (
+            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
+              <Text style={{ ...fs(13), color: t.primary }}>申请认证</Text>
+            </View>
+          )}
+        </View>
       )}
 
       {/* 非当前的生效商户：引导切换 */}

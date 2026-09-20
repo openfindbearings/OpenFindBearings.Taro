@@ -5,6 +5,9 @@ import { getCurrentMerchantId } from './merchantContext'
 import { uploadFileNormalized } from './upload'
 import { pickImagePath } from './pickImage'
 import type { Paged } from './bearing'
+// 改动说明（v1.7.2）：本文件十余处返回类型引用 OpResult 但从未 import（定义在 user.ts），
+//   Metro 不做类型检查所以运行时未爆雷，tsc --noEmit 报 Cannot find name——补 import 消掉
+import type { OpResult } from './user'
 
 /** 搜索结果项（对齐 BFF MerchantItem） */
 export interface Merchant {
@@ -362,8 +365,10 @@ export async function submitDocument(type: number): Promise<OpResult> {
 }
 
 /** 当前商户证照材料列表（信息维护页"证照材料"区数据源，v1.7.0 新增） */
+// 改动说明（v1.7.2 崩溃修复）：request 是普通函数没有 .get 方法——原 request.get(...)
+//   运行时为 undefined，进信息维护页 useDidShow 一调即抛 "undefined is not a function"（RN 红屏根因）
 export function getMyDocuments() {
-  return request.get<MerchantDocumentItem[]>(API.MERCHANT_DOCUMENTS)
+  return request<MerchantDocumentItem[]>(API.MERCHANT_DOCUMENTS, { method: 'GET' })
 }
 
 /** 材料文件预上传（v1.7.0 新增）：入驻申请随单材料先传拿 URL，提交时并入 documents 数组 */
