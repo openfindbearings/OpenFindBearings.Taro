@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "openfindbearings",
   "version": "1.0.0-rc.1",
   "private": true,
@@ -114,6 +114,9 @@
   "pnpm": {
     "overrides": {
       "react-native-reanimated": "3.6.3"
+    },
+    "patchedDependencies": {
+      "react-native-image-picker@7.0.3": "patches/react-native-image-picker@7.0.3.patch"
     }
   }
 }
