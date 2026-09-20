@@ -4,9 +4,9 @@
 # 运行时镜像保持 nginx:alpine（仅托管静态文件，不执行 node，无 musl 问题）。
 FROM node:20-slim AS builder
 WORKDIR /app
-# 改动说明（v1.7.3）：9.15.0 → 10.15.0——pnpm 9 只读 package.json 的 patchedDependencies、
-#   11+ 只读 pnpm-workspace.yaml，唯 v10 双读兼容；镜像构建需应用 react-native-image-picker patch
-RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
+# 改动说明（v1.7.3）：统一 pnpm@12.4.2 与本地一致——patchedDependencies 配置在 pnpm-workspace.yaml（v11+ 读取），
+#   lock 内 patch hash 跨大版本算法不同，CI/本地/Docker 三处版本必须一致否则 frozen 校验失败
+RUN corepack enable && corepack prepare pnpm@12.4.2 --activate
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
