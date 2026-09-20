@@ -4,8 +4,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- 改动说明（v1.7.1）：Android 13+ 已废弃存储权限，拆为细分媒体权限——
+         老权限限 ≤32（兼容 Android 12 及以下真机），13+ 读相册图走 READ_MEDIA_IMAGES；
+         13+ 优先用系统 Photo Picker（expo-image-picker 在 33+ 走该通道，无需权限） -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- 改动说明：版本更新功能——应用内下载 APK 后拉起系统安装界面所需（Android 8+） -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />

@@ -128,7 +128,7 @@ export default function MerchantApplyPage() {
           Taro.showToast({ title: r.message || '上传失败', icon: 'none' })
         }
       })
-      .catch(() => Taro.showToast({ title: '上传取消或失败', icon: 'none' }))
+      .catch(() => Taro.showToast({ title: '上传失败', icon: 'none' }))
   }
 
   /** 材料矩阵校验（与后端 DocumentRequirements 同口径）：返回 null 通过，否则提示语 */

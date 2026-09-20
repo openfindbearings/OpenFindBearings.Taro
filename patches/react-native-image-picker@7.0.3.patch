@@ -1,0 +1,14 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index ab6f320770d132e2b8cb588114fbc26919e6721b..068319ea40b8f4414a2b30910e43e87962808d70 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -8,7 +8,8 @@ if (isNewArchitectureEnabled()) {
+ }
+ 
+ android {
+-    compileSdkVersion 33
++    // patch (v1.7.1): 本机 SDK 缺 Platform 33 且安装目录只读，抬到与主工程一致的 34（仅编译期行为）
++    compileSdkVersion 34
+ 
+     def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+     if (agpVersion.tokenize('.')[0].toInteger() >= 7) {

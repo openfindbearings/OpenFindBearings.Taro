@@ -10,6 +10,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { getProfile, updateProfile, uploadAvatar, type ProfileInfo } from '../../services/user'
+import { pickImagePath } from '../../services/pickImage'
 import { usableImage, PRESET_AVATAR_KEYS } from '../../services/config'
 
 definePageConfig({ disableScroll: true })
@@ -36,34 +37,27 @@ export default function ProfileEditPage() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [uploading, setUploading] = useState(false)
 
-  /** 从相册/相机选图并上传，成功后回填表单头像（保存时统一落库） */
-  const pickFromAlbum = () => {
-    Taro.chooseImage({ count: 1, sizeType: ['compressed'] })
-      .then(async (res) => {
-        const filePath = res.tempFilePaths[0]
-        if (!filePath) return
-        setUploading(true)
-        try {
-          const r = await uploadAvatar(filePath)
-          if (r?.success && r.url) {
-            setField('avatar', r.url)
-            setPickerOpen(false)
-            Taro.showToast({ title: '头像已选择，保存后生效', icon: 'none' })
-          } else {
-            Taro.showToast({ title: r?.message || '上传失败', icon: 'none' })
-          }
-        } catch {
-          Taro.showToast({ title: '上传失败', icon: 'none' })
-        } finally { setUploading(false) }
-      })
-      .catch((e) => {
-        // 改动说明：原静默 catch 把"原生模块缺失"这类真实故障也吞了（Metro 无痕迹难排查），
-        // 现区分输出：用户主动取消无 errMsg，其余打日志并提示
-        if (e && (e as any).errMsg) {
-          console.error('[profile] chooseImage 失败', (e as any).errMsg)
-          Taro.showToast({ title: '打开相册/相机失败', icon: 'none' })
-        }
-      })
+  /** 从相册/相机选图并上传，成功后回填表单头像（保存时统一落库）
+   * 改动说明（v1.7.1）：选图改走 pickImagePath（RN 端 expo-image-picker，适配 Android 13 权限模型；
+   * 取消返回 null 不再走 catch，真实失败统一提示） */
+  const pickFromAlbum = async () => {
+    setUploading(true)
+    try {
+      const filePath = await pickImagePath()
+      if (!filePath) return
+      const r = await uploadAvatar(filePath)
+      if (r?.success && r.url) {
+        setField('avatar', r.url)
+        setPickerOpen(false)
+        Taro.showToast({ title: '头像已选择，保存后生效', icon: 'none' })
+      } else {
+        Taro.showToast({ title: r?.message || '上传失败', icon: 'none' })
+      }
+    } catch (e) {
+      Taro.showToast({ title: (e as { message?: string })?.message || '打开相册失败', icon: 'none' })
+    } finally {
+      setUploading(false)
+    }
   }
 
   /** 拉取聚合资料回填表单（仅首次显示时） */

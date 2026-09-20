@@ -1,8 +1,9 @@
 // 商家服务：搜索、详情、在售轴承、入驻申请与状态（入驻需登录，走 BFF 代理）
-import Taro from '@tarojs/taro'
 import { request, getToken } from './request'
 import { API, buildQuery, getBaseUrl } from './config'
 import { getCurrentMerchantId } from './merchantContext'
+import { uploadFileNormalized } from './upload'
+import { pickImagePath } from './pickImage'
 import type { Paged } from './bearing'
 
 /** 搜索结果项（对齐 BFF MerchantItem） */
@@ -323,34 +324,41 @@ export function takeOffShelf(bearingId: string) {
   return request<OpResult>(API.MERCHANT_BEARING_OFF_SHELF(bearingId), { method: 'POST' })
 }
 
-/** 选择图片并按类型上传证照材料（v1.7.0 由"上传营业执照"泛化；建待审记录进 Admin 材料队列） */
-export function submitDocument(type: number): Promise<OpResult> {
-  return Taro.chooseImage({ count: 1, sizeType: ['compressed'] }).then((choose) => {
-    const token = getToken()
-    const path = choose.tempFilePaths[0]
-    return new Promise<OpResult>((resolve, reject) => {
-      Taro.uploadFile({
-        url: `${getBaseUrl()}${API.MERCHANT_DOCUMENTS}`,
-        filePath: path,
-        name: 'file',
-        // multipart 附带材料类型字段（1 执照 / 2 授权书 / 3 厂房照）
-        formData: { type: String(type) },
-        // 改动说明 G3：材料随当前商户上下文提交
-        header: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
-        },
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({ success: true, message: '材料已提交，等待审核' })
-          } else {
-            resolve({ success: false, message: `提交失败（${res.statusCode}）` })
-          }
-        },
-        fail: (err) => reject(err)
-      })
+/** 带当前商户上下文头的上传请求头 */
+function uploadHeaders(token: string | null): Record<string, string> {
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
+  }
+}
+
+/** 上传失败原因归一化：区分用户取消选图与网络/超时失败（RN 端两类都从 reject 冒出来，文案不能混）
+ * 改动说明（临时诊断）：非取消类失败把原始错误一并带出，真机定位后收敛回友好文案 */
+function uploadFailMessage(e: any): string {
+  const msg = String((e && (e.errMsg || e.message)) || e || '')
+  if (msg.toLowerCase().includes('cancel')) return '已取消'
+  return `上传失败：${msg.slice(0, 120)}`
+}
+
+// 选择图片并按类型上传证照材料（v1.7.0 由"上传营业执照"泛化；建待审记录进 Admin 材料队列）
+// 改动说明（v1.7.1）：选图改走 pickImagePath（RN 端 expo-image-picker，适配 Android 13 权限模型）
+export async function submitDocument(type: number): Promise<OpResult> {
+  try {
+    const path = await pickImagePath()
+    if (!path) return { success: false, message: '已取消' }
+    const r = await uploadFileNormalized({
+      url: `${getBaseUrl()}${API.MERCHANT_DOCUMENTS}`,
+      filePath: path,
+      // multipart 附带材料类型字段（1 执照 / 2 授权书 / 3 厂房照）
+      formData: { type: String(type) },
+      header: uploadHeaders(getToken())
     })
-  })
+    return r.statusCode >= 200 && r.statusCode < 300
+      ? { success: true, message: '材料已提交，等待审核' }
+      : { success: false, message: r.statusCode ? `提交失败（${r.statusCode}）` : '提交失败（响应异常）' }
+  } catch (e) {
+    return { success: false, message: uploadFailMessage(e) }
+  }
 }
 
 /** 当前商户证照材料列表（信息维护页"证照材料"区数据源，v1.7.0 新增） */
@@ -359,70 +367,55 @@ export function getMyDocuments() {
 }
 
 /** 材料文件预上传（v1.7.0 新增）：入驻申请随单材料先传拿 URL，提交时并入 documents 数组 */
-export function uploadDocumentFile(): Promise<{ url?: string; message?: string }> {
-  return Taro.chooseImage({ count: 1, sizeType: ['compressed'] }).then((choose) => {
-    const token = getToken()
-    const path = choose.tempFilePaths[0]
-    return new Promise<{ url?: string; message?: string }>((resolve, reject) => {
-      Taro.uploadFile({
-        url: `${getBaseUrl()}${API.MERCHANT_DOCUMENTS}/upload`,
-        filePath: path,
-        name: 'file',
-        // 材料也随当前商户上下文（编辑重提场景已绑定商户；新建时无此头不影响）
-        header: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
-        },
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            try {
-              const body = JSON.parse(res.data)
-              resolve(body?.success ? { url: body.url } : { message: body?.message || '上传失败' })
-            } catch {
-              resolve({ message: '上传响应解析失败' })
-            }
-          } else {
-            resolve({ message: `上传失败（${res.statusCode}）` })
-          }
-        },
-        fail: (err) => reject(err)
-      })
+export async function uploadDocumentFile(): Promise<{ url?: string; message?: string }> {
+  try {
+    const path = await pickImagePath()
+    if (!path) return { message: '已取消' }
+    const r = await uploadFileNormalized({
+      url: `${getBaseUrl()}${API.MERCHANT_DOCUMENTS}/upload`,
+      filePath: path,
+      header: uploadHeaders(getToken())
     })
-  })
+    if (r.statusCode >= 200 && r.statusCode < 300) {
+      try {
+        const body = JSON.parse(r.data)
+        return body?.success ? { url: body.url } : { message: body?.message || '上传失败' }
+      } catch {
+        return { message: '上传响应解析失败' }
+      }
+    }
+    return { message: r.statusCode ? `上传失败（${r.statusCode}）` : '上传失败（响应异常）' }
+  } catch (e) {
+    return { message: uploadFailMessage(e) }
+  }
 }
 
 /** 上传 Excel 批量导入在售商品（仅商户管理员，multipart 走 BFF 代理到 API 再到 Sync） */
-export function importInventory(filePath: string): Promise<OpResult> {
-  const token = getToken()
-  return new Promise((resolve, reject) => {
-    Taro.uploadFile({
+export async function importInventory(filePath: string): Promise<OpResult> {
+  try {
+    // Excel 链路最长（BFF→API→Sync），给 2 分钟超时
+    const r = await uploadFileNormalized({
       url: `${getBaseUrl()}${API.MERCHANT_INVENTORY_IMPORT}`,
       filePath,
-      name: 'file',
-      // 修复 B5：文件上传旁路同样要带商户上下文头（导入目标是当前选中商户）
-      header: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
-      },
-      success: (res) => {
-        if (res.statusCode !== 200) {
-          resolve({ success: false, message: `上传失败（${res.statusCode}）` })
-          return
-        }
-        try {
-          const d = JSON.parse(res.data)
-          const data = d?.data ?? d
-          resolve({
-            success: true,
-            message: `导入完成：共 ${data?.totalRows ?? '-'} 行，成功 ${data?.succeeded ?? '-'}，失败 ${data?.failed ?? '-'}`
-          })
-        } catch {
-          resolve({ success: true, message: '导入处理完成' })
-        }
-      },
-      fail: (err) => reject(err)
+      timeout: 120000,
+      header: uploadHeaders(getToken())
     })
-  })
+    if (r.statusCode !== 200) {
+      return { success: false, message: `上传失败（${r.statusCode || '响应异常'}）` }
+    }
+    try {
+      const d = JSON.parse(r.data)
+      const data = d?.data ?? d
+      return {
+        success: true,
+        message: `导入完成：共 ${data?.totalRows ?? '-'} 行，成功 ${data?.succeeded ?? '-'}，失败 ${data?.failed ?? '-'}`
+      }
+    } catch {
+      return { success: true, message: '导入处理完成' }
+    }
+  } catch (e) {
+    return { success: false, message: uploadFailMessage(e) }
+  }
 }
 
 /** 商户资料（对齐 BFF MerchantProfile，供信息维护页编辑回填） */
@@ -477,35 +470,27 @@ export function updateMerchantProfile(body: UpdateMerchantProfileBody) {
  * 选择图片并上传商户 Logo：返回可访问绝对 URL（不直接落库，保存资料时随 profile.logoUrl 写入）。
  * 改动说明：仿 submitDocument 的 multipart 旁路，带 X-Merchant-Id 当前商户上下文头。
  */
-export function uploadMerchantLogo(): Promise<{ success: boolean; url?: string; message?: string }> {
-  return Taro.chooseImage({ count: 1, sizeType: ['compressed'] }).then((choose) => {
-    const token = getToken()
-    const path = choose.tempFilePaths[0]
-    return new Promise<{ success: boolean; url?: string; message?: string }>((resolve, reject) => {
-      Taro.uploadFile({
-        url: `${getBaseUrl()}${API.MERCHANT_LOGO}`,
-        filePath: path,
-        name: 'file',
-        header: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(getCurrentMerchantId() ? { 'X-Merchant-Id': getCurrentMerchantId() as string } : {})
-        },
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            try {
-              const d = JSON.parse(res.data)
-              const url = d?.url ?? d?.data?.url
-              if (url) resolve({ success: true, url })
-              else resolve({ success: false, message: d?.message || '上传失败' })
-            } catch {
-              resolve({ success: false, message: '上传响应解析失败' })
-            }
-          } else {
-            resolve({ success: false, message: `上传失败（${res.statusCode}）` })
-          }
-        },
-        fail: (err) => reject(err)
-      })
+export async function uploadMerchantLogo(): Promise<{ success: boolean; url?: string; message?: string }> {
+  try {
+    const path = await pickImagePath()
+    if (!path) return { success: false, message: '已取消' }
+    const r = await uploadFileNormalized({
+      url: `${getBaseUrl()}${API.MERCHANT_LOGO}`,
+      filePath: path,
+      header: uploadHeaders(getToken())
     })
-  })
+    if (r.statusCode >= 200 && r.statusCode < 300) {
+      try {
+        const d = JSON.parse(r.data)
+        const url = d?.url ?? d?.data?.url
+        if (url) return { success: true, url }
+        return { success: false, message: d?.message || '上传失败' }
+      } catch {
+        return { success: false, message: '上传响应解析失败' }
+      }
+    }
+    return { success: false, message: r.statusCode ? `上传失败（${r.statusCode}）` : '上传失败（响应异常）' }
+  } catch (e) {
+    return { success: false, message: uploadFailMessage(e) }
+  }
 }
