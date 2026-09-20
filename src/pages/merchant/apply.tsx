@@ -1,4 +1,4 @@
-﻿// 商家入驻向导页：合并原 apply / nominate / nominations 三页为单页向导
+// 商家入驻向导页：合并原 apply / nominate / nominations 三页为单页向导
 // 进入先查待接受提名：有邀请则直接展示"被邀请的细节"并可补资料接受；无邀请进入三步向导
 //   第一步 查找方式：输入关键词联想库中商家全称（发票式）供选择，或没找到新建
 //   第二步 操作方式：自己直接操作（认领已有 / 新建自营）或邀请别人操作（提名他人为管理员）
@@ -117,7 +117,7 @@ export default function MerchantApplyPage() {
   const resetDocs = () => { setDocSlots({}); setDocExisting({}); setDocRejected({}) }
 
   /** 上传指定槽位材料：预上传只拿 URL，审核记录随申请单统一创建 */
-  const pickDoc = (slot: 'license' | 'authorization' | 'factory', type: number) => {
+  const pickDoc = (slot: 'license' | 'authorization' | 'factory', _type: number) => {
     uploadDocumentFile()
       .then((r) => {
         if (r.url) {
@@ -128,7 +128,7 @@ export default function MerchantApplyPage() {
           Taro.showToast({ title: r.message || '上传失败', icon: 'none' })
         }
       })
-      .catch(() => Taro.showToast({ title: '上传取消或失败', icon: 'none' }))
+      .catch(() => Taro.showToast({ title: '上传失败', icon: 'none' }))
   }
 
   /** 材料矩阵校验（与后端 DocumentRequirements 同口径）：返回 null 通过，否则提示语 */
@@ -365,7 +365,7 @@ export default function MerchantApplyPage() {
   }
 
   /** 弹出商家类型选择动作面板 */
-  const pickType = (current: number, setter: (v: number) => void) => {
+  const pickType = (_current: number, setter: (v: number) => void) => {
     Taro.showActionSheet({ itemList: MERCHANT_TYPES.map((x) => x.label) })
       .then((res) => {
         const item = MERCHANT_TYPES[res.tapIndex]

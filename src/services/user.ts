@@ -2,9 +2,9 @@
  * 个人业务服务层：资料、收藏、关注、浏览历史的查询与写操作。
  * 全部经 BFF /mobile 代理（写操作走 /mobile/me/*，透传用户 access token）。
  */
-import Taro from '@tarojs/taro'
 import { request, ensureAccessToken } from './request'
 import { API, getBaseUrl } from './config'
+import { uploadFileNormalized } from './upload'
 
 /** BFF 分页包装（与 API PagedResult 对齐） */
 export interface Paged<T> {
@@ -99,19 +99,21 @@ export async function updateProfile(body: ProfileUpdateBody) {
 
 /**
  * 上传本地头像图片（相册选图后的临时路径）。
- * 走 Taro.uploadFile multipart 旁路（不经 request 拦截器），
+ * 走 uploadFileNormalized multipart 旁路（不经 request 拦截器），
  * 故先 ensureAccessToken 保证冷启动场景 token 可用。
  */
 export async function uploadAvatar(filePath: string): Promise<OpResult & { url?: string }> {
   const token = await ensureAccessToken()
-  const res = await Taro.uploadFile({
+  // 改动说明（v1.7.1）：改走归一化上传——RN 端 Taro.uploadFile 回调吐原生 fetch Response
+  //   （无 statusCode/data），旧实现 JSON.parse(res.data) 恒抛"上传响应解析失败"
+  const res = await uploadFileNormalized({
     url: `${getBaseUrl()}${API.AVATAR_UPLOAD}`,
     filePath,
-    name: 'file',
+    timeout: 60000,
     header: token ? { Authorization: `Bearer ${token}` } : {}
   })
   try {
-    const data = JSON.parse(res.data as string)
+    const data = JSON.parse(res.data)
     return { success: data.success === true, message: data.message, url: data.url }
   } catch {
     return { success: false, message: '上传响应解析失败' }

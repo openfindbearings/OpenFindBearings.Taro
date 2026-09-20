@@ -4,7 +4,9 @@
 # 运行时镜像保持 nginx:alpine（仅托管静态文件，不执行 node，无 musl 问题）。
 FROM node:20-slim AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+# 改动说明（v1.7.3）：统一 pnpm@12.4.2 与本地一致——patchedDependencies 配置在 pnpm-workspace.yaml（v11+ 读取），
+#   lock 内 patch hash 跨大版本算法不同，CI/本地/Docker 三处版本必须一致否则 frozen 校验失败
+RUN corepack enable && corepack prepare pnpm@12.4.2 --activate
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .

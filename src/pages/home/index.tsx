@@ -229,7 +229,9 @@ export default function HomePage() {
               <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>热门轴承</Text>
             </View>
           </View>
-          <ScrollView className='hot-bearings-scroll' scrollX showsHorizontalScrollIndicator={false}>
+          {/* 改动说明（v1.7.2）：scrollX/showsHorizontalScrollIndicator 为 RN-only props，
+              Taro ScrollView 类型未声明（RN 端运行时支持），spread as any 过 tsc 门禁 */}
+          <ScrollView className='hot-bearings-scroll' {...({ scrollX: true, showsHorizontalScrollIndicator: false } as any)}>
             {home.hotBearings.map((b) => (
               <View
                 key={b.id}
