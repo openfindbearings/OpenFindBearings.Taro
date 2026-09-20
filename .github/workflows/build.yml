@@ -1,4 +1,4 @@
-﻿name: Build Taro
+name: Build Taro
 
 on:
   push:

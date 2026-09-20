@@ -1,4 +1,4 @@
-﻿name: Deploy Taro
+name: Deploy Taro
 
 on:
   workflow_dispatch:

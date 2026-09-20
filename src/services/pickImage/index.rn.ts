@@ -1,4 +1,4 @@
-﻿// RN 端选图实现：react-native-image-picker（活跃维护的标准 RN 库，RN CLI autolinking 零配置，
+// RN 端选图实现：react-native-image-picker（活跃维护的标准 RN 库，RN CLI autolinking 零配置，
 // Android 13+ 使用 READ_MEDIA_IMAGES 细分媒体权限——替代已停更、只申请废弃存储权限的 syan）。
 // 统一语义与 H5 版一致：resolve 图片 uri；取消返回 null；权限被拒/出错 reject（调用方 toast 出真实原因）。
 import Taro from '@tarojs/taro'
