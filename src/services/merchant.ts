@@ -64,6 +64,8 @@ export interface MerchantApplication {
   /** MerchantAdmin / MerchantStaff */
   role?: string
   isVerified: boolean
+  /** 已主动申请认证（v1.7.3：商户卡"申请认证"按钮态，Admin 认证后清除） */
+  verifyRequested?: boolean
   /** 商户 Logo 相对/绝对 URL（改动说明：TabBar/切换器显示当前商户头像） */
   logoUrl?: string | null
 }
@@ -176,6 +178,8 @@ export interface MerchantStaff {
   nickname: string
   avatar?: string | null
   role?: string | null
+  /** 是否当前登录用户本人（v1.7.3：API 权威标记——登录态 id 是 Identity sub 与成员 id 不同源，前端无法自判） */
+  isSelf: boolean
   /** Active / Suspended */
   status: string
 }
@@ -216,6 +220,11 @@ export function getMerchantApplication() {
 /** 申请人自助撤回待审核的入驻申请（self 新建删店 / claim 认领退回公共池） */
 export function withdrawApplication(merchantId: string) {
   return request<OpResult>(API.MERCHANT_WITHDRAW(merchantId), { method: 'POST' })
+}
+
+/** 商户申请认证（v1.7.3，管理员）：材料不齐时后端 400 透传缺项引导文案 */
+export function requestVerifyMerchant(merchantId: string) {
+  return request<OpResult>(API.MERCHANT_VERIFY_REQUEST(merchantId), { method: 'POST' })
 }
 
 /** 查询入驻申请详情（被拒重提表单预填，v1.6.0 新增） */
@@ -272,8 +281,17 @@ export function getMerchantStaff() {
   return request<{ items: MerchantStaff[]; totalCount: number }>(`${API.MERCHANT_STAFF}?page=1&pageSize=100`)
 }
 
-/** 停用成员（管理员） */
-export function suspendMerchantMember(userId: string) {
+/** 移除成员（管理员，v1.7.3：成员操作面板"移除"动作，比停用更彻底） */
+export function removeMerchantMember(userId: string) {
+  return request<OpResult>(API.MERCHANT_MEMBER_REMOVE(userId), { method: 'DELETE' })
+}
+
+/** 添加成员（v1.7.3，管理员）：手机号/邮箱二选一（查注册用户）+ 角色 MerchantAdmin/MerchantStaff */
+export function addMerchantMember(body: { phone?: string; email?: string; role: string }) {
+  return request<OpResult>(API.MERCHANT_STAFF, { method: 'POST', data: body })
+}
+
+/** 停用成员（管理员） */export function suspendMerchantMember(userId: string) {
   return request<OpResult>(API.MERCHANT_MEMBER_SUSPEND(userId), { method: 'POST' })
 }
 
@@ -289,6 +307,8 @@ export function changeMerchantMemberRole(userId: string, role: string) {
 
 /** 自家在售商品项（对齐 BFF MyMerchantBearingItem） */
 export interface MerchantBearingItem {
+  /** 关联主键（v1.7.3：编辑/上下架 busy 态定位用，区别于 bearingId） */
+  id: string
   bearingId: string
   bearingPartNumber: string
   oldNumber?: string | null
@@ -299,6 +319,12 @@ export interface MerchantBearingItem {
   width?: number | null
   price?: string | null
   isOnSale: boolean
+  /** v1.7.3 编辑回填与审核角标（对齐 BFF MyMerchantBearingItem 扩展字段） */
+  priceDescription?: string | null
+  stockDescription?: string | null
+  minOrderDescription?: string | null
+  remarks?: string | null
+  isPendingApproval: boolean
 }
 
 /** 获取自家在售商品列表 */
@@ -313,8 +339,15 @@ export function getMyBearings(params: { page?: number; pageSize?: number; onlyOn
 }
 
 /** 添加在售商品 */
-export function createMyBearing(body: { bearingPartNumber: string; price?: string; stock?: string; minOrder?: string; remarks?: string }) {
+/** 添加在售商品（v1.7.3 断链修复：改为选平台已有型号 bearingId + 四项市场描述，对齐 BFF/API 契约；
+    原 bearingPartNumber/price/stock 字段名与后端完全对不上，提交必失败） */
+export function createMyBearing(body: { bearingId: string; priceDescription?: string; stockDescription?: string; minOrderDescription?: string; remarks?: string }) {
   return request<{ id: string; message?: string }>(API.MERCHANT_BEARINGS_MINE, { method: 'POST', data: body })
+}
+
+/** 编辑在售商品（v1.7.3 新增：改价格/库存/起订量描述与备注，改后重新进审核） */
+export function updateMyBearing(id: string, body: { priceDescription?: string; stockDescription?: string; minOrderDescription?: string; remarks?: string }) {
+  return request<OpResult>(API.MERCHANT_BEARING_UPDATE(id), { method: 'PUT', data: body })
 }
 
 /** 上架在售商品 */

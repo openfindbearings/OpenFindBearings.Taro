@@ -21,7 +21,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
-import { withdrawApplication, deleteApplication, type MerchantApplication } from '../../services/merchant'
+import { withdrawApplication, deleteApplication, requestVerifyMerchant, type MerchantApplication } from '../../services/merchant'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { usableImage } from '../../services/config'
 import './index.scss'
@@ -142,9 +142,18 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
       })
   }
 
+  /** 申请认证（v1.7.3）：后端按材料矩阵校验，缺项 400 文案透传引导去信息维护补件 */
+  const onRequestVerify = () => {
+    requestVerifyMerchant(m.merchantId)
+      .then((r) => {
+        Taro.showToast({ title: r?.message || '认证申请已提交，平台将优先审核', icon: 'none' })
+        void fetchApplications()
+      })
+      .catch((e: any) => Taro.showToast({ title: e?.message || '申请失败', icon: 'none' }))
+  }
+
   const card = (
-    <View
-      className='mch-card'
+    <View      className='mch-card'
       // 改动说明：swipeable 时阴影/下边距上移到 SwipeCell 容器（容器 overflow:hidden 会裁掉卡片自身阴影），
       //   卡片自身置 marginBottom:0 防撑高容器导致操作条底部漏出
       style={{ backgroundColor: t.bgCard, ...(swipeable ? { marginBottom: 0 } : cardShadow) }}
@@ -174,10 +183,11 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
               <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>预计 1–3 个工作日完成审核</Text>
             </>
           ) : (
+            // 改动说明（v1.7.3）：副标题只标"我的角色"——认证状态由名称旁金色徽标唯一承载，
+            //   原"管理员 · 未认证"把角色与商户状态混在一句里，易误读成"管理员未认证"
             <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>
               {isActive
-                ? (m.isVerified ? `${roleLabel(m.role)} · 已认证` : `${roleLabel(m.role)} · 未认证`)
-                // 改动说明（v2.6.0）：被拒副标题改为操作指引（驳回原因已由下方红条展示，不再重复）
+                ? (roleLabel(m.role) || '商户成员')
                 : '审核未通过，点击修改重新提交，左滑可删除'}
             </Text>
           )}
@@ -208,8 +218,19 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             </View>
           )}
           {m.role === 'MerchantAdmin' && !m.isVerified && (
-            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
-              <Text style={{ ...fs(13), color: t.primary }}>申请认证</Text>
+            // 改动说明（v1.7.3）：申请认证从"跳信息维护"升级为真业务动作——
+            //   调 verify-request 端点（材料矩阵后端校验，不齐 400 透传缺项引导）；
+            //   已申请未处理时按钮转"已申请认证"置灰，点击提示等待
+            <View
+              className='mch-action'
+              style={{ backgroundColor: t.bgInput }}
+              onClick={m.verifyRequested
+                ? () => Taro.showToast({ title: '认证申请已提交，平台将优先审核', icon: 'none' })
+                : onRequestVerify}
+            >
+              <Text style={{ ...fs(13), color: m.verifyRequested ? t.textTertiary : t.primary }}>
+                {m.verifyRequested ? '已申请认证' : '申请认证'}
+              </Text>
             </View>
           )}
         </View>

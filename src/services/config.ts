@@ -159,11 +159,14 @@ export const API = {
   MERCHANT_NOMINATIONS_PENDING: `${API_PREFIX}/merchants/nominations/pending`,
   /** 商户成员管理（需登录且为商户成员） */
   MERCHANT_STAFF: `${API_PREFIX}/merchants/staff`,
+  MERCHANT_MEMBER_REMOVE: (id: string) => `${API_PREFIX}/merchants/staff/${id}`,
+  MERCHANT_VERIFY_REQUEST: (id: string) => `${API_PREFIX}/merchants/${id}/verify-request`,
   MERCHANT_MEMBER_SUSPEND: (id: string) => `${API_PREFIX}/merchants/members/${id}/suspend`,
   MERCHANT_MEMBER_ACTIVATE: (id: string) => `${API_PREFIX}/merchants/members/${id}/activate`,
   MERCHANT_MEMBER_ROLE: (id: string) => `${API_PREFIX}/merchants/members/${id}/role`,
   /** 商户商品管理（需登录且为商户成员） */
   MERCHANT_BEARINGS_MINE: `${API_PREFIX}/merchant/bearings`,
+  MERCHANT_BEARING_UPDATE: (id: string) => `${API_PREFIX}/merchant/bearings/${id}`,
   MERCHANT_BEARING_ON_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/onshelf`,
   MERCHANT_BEARING_OFF_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/offshelf`,
   MERCHANT_INVENTORY_IMPORT: `${API_PREFIX}/merchant/inventory/import`,
