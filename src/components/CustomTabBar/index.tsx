@@ -17,10 +17,12 @@ import { showMerchantSwitchSheet, MerchantSwitchItem } from '../MerchantSwitchSh
 import { usableImage } from '../../services/config'
 import './index.scss'
 
-/** TabBar 配置 */
+/** TabBar 配置（v1.7.5 五格：首页 | 发现 | 商家 | 商城 | 我的；发现/商城为占位页） */
 const tabs = [
   { key: 'home', text: '首页', pagePath: '/pages/home/index' },
+  { key: 'discover', text: '发现', pagePath: '/pages/discover/index' },
   { key: 'merchant', text: '入驻', pagePath: '/pages/merchant/index' },
+  { key: 'mall', text: '商城', pagePath: '/pages/mall/index' },
   { key: 'my', text: '我的', pagePath: '/pages/my/index' }
 ]
 
@@ -77,20 +79,23 @@ export default function CustomTabBar() {
       }
       return
     }
-    if (selected !== 1) Taro.redirectTo({ url: '/pages/merchant/index' })
+    if (selected !== 2) Taro.redirectTo({ url: '/pages/merchant/index' })
   }
 
   const handleSwitch = (index: number, path: string) => {
-    if (index === 1) { void onMerchantTap(); return }
+    // 改动说明（v1.7.5）：五格改造后商家 tab 下标 1→2
+    if (index === 2) { void onMerchantTap(); return }
     if (index === selected) return
     // 自绘 TabBar 无原生 switchTab，用 redirectTo（H5/RN 均为 replace 语义）切换
     Taro.redirectTo({ url: path })
   }
 
-  /** TabBar key 到 Icon name 的映射（跨端统一用 Icon 抽象层） */
+  /** TabBar key 到 Icon name 的映射（跨端统一用 Icon 抽象层；v1.7.5 加 discover/mall） */
   function getIconName(key: string): string {
     if (key === 'home') return 'home'
+    if (key === 'discover') return 'compass'
     if (key === 'merchant') return 'store'
+    if (key === 'mall') return 'gift'
     return 'user'
   }
 
@@ -140,10 +145,12 @@ export default function CustomTabBar() {
               // 已入驻：56dp 大圆 + 48dp logo；无 logo 或加载失败回退 28dp store 图标
               <View className='highlight-circle' style={highlightStyle}>
                 {logoSrc ? (
+                  // 改动说明（v1.7.4）：aspectFill 裁切非正方形 logo 致视觉偏心，改 aspectFit+白底圆
                   <Image
                     src={logoSrc}
                     className='merchant-logo'
-                    mode='aspectFill'
+                    mode='aspectFit'
+                    style={{ backgroundColor: '#FFFFFF' }}
                     onError={() => setLogoFailed(true)}
                   />
                 ) : (
