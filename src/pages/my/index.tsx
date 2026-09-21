@@ -16,6 +16,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import { useAuthStore } from '../../stores/auth'
+import { useNotificationStore } from '../../stores/notification'
 import './index.scss'
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
@@ -43,10 +44,14 @@ export default function MyPage() {
   // 主题色板（会员卡渐变/用户区底/图标底/文字随模式）+ 全局字号
   const t = useTheme()
   const fs = useFs()
+  // 未读消息数（铃铛红点，与 TabBar 角标同源 store）
+  const unreadCount = useNotificationStore((s) => s.unreadCount)
 
   useDidShow(() => {
     // 每次显示时补拉一次资料（若已登录），保证昵称/手机号/头像跟随后端变更
     if (isLoggedIn) void useAuthStore.getState().fetchProfile()
+    // 改动说明（v1.7.8）：补拉未读消息数——铃铛红点与 TabBar 角标同源同步（store 单例）
+    void useNotificationStore.getState().fetchUnread()
   })
 
   const handleMenuClick = (key: string) => {
@@ -69,9 +74,10 @@ export default function MyPage() {
     Taro.showToast({ title: '功能暂未上线', icon: 'none' })
   }
 
-  // 改动说明：未上线占位统一"暂未上线"停用文案（与设置页开关停用态一致）
+  // 改动说明（v1.7.8）：铃铛从"暂未上线"占位改为跳转消息中心（页面早已存在，此前漏接线）；
+  //   红点与 TabBar"我的"角标同源（notification store），点开消息即消
   const handleBellClick = () => {
-    Taro.showToast({ title: '消息中心暂未上线', icon: 'none' })
+    Taro.navigateTo({ url: '/pages/notifications/index' })
   }
 
   const handleSettingsClick = () => {
@@ -97,7 +103,7 @@ export default function MyPage() {
   // 规避 Taro RN className 文件作用域限制（此前在本文件写 navbar-icon 类，
   // 编译期按 my 页样式表查不到该类，图标触控框/间距全丢，导致两图标紧贴）。
   const rightIcons = [
-    { name: 'bell', onClick: handleBellClick },
+    { name: 'bell', onClick: handleBellClick, badge: unreadCount },
     { name: 'settings', onClick: handleSettingsClick }
   ]
 

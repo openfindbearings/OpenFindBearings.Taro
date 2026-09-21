@@ -24,7 +24,7 @@ interface NavBarProps {
    * 规避 Taro RN className 文件作用域限制（调用方传入的 rightSlot JSX 用 navbar-icon 不生效）。
    * 多图标自动加 navbar-icon-gap 间隔。
    */
-  rightIcons?: Array<{ name: string; onClick: () => void; size?: number }>
+  rightIcons?: Array<{ name: string; onClick: () => void; size?: number; badge?: number }>
   /** 右侧自定义 slot（复杂内容用；简单图标优先用 rightIcons） */
   rightSlot?: React.ReactNode
   /** 搜索模式：中间栏放搜索框，左右栏缩窄、整体增高到 48dp */
@@ -95,8 +95,15 @@ export default function NavBar({
                   key={ic.name}
                   className='navbar-right-icon'
                   onClick={ic.onClick}
+                  // 改动说明（v1.7.8）：badge 支持——消息铃铛未读红点（与 TabBar 角标同源 store）
+                  style={{ position: 'relative' }}
                 >
                   <Icon name={ic.name} size={ic.size ?? 24} color={t.navBarText} />
+                  {!!ic.badge && (
+                    <View style={{ position: 'absolute', top: -2, right: -6, minWidth: 15, height: 15, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingLeft: 4, paddingRight: 4 }}>
+                      <Text style={{ fontSize: 10, lineHeight: 13, color: '#FFFFFF' }}>{ic.badge > 99 ? '99+' : ic.badge}</Text>
+                    </View>
+                  )}
                 </View>
               ))}
             {rightSlot}

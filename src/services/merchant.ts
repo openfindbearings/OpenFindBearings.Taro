@@ -191,6 +191,10 @@ export interface MerchantStaff {
   status: string
   /** 待确认邀请行的邀请ID（撤销用；成员行为 null） */
   invitationId?: string | null
+  /** 手机号（v1.7.8 成员详情面板展示；列表行不显示，同商户成员互见） */
+  mobile?: string | null
+  /** 加入时间（成员行；邀请行为 null，详情面板展示） */
+  joinedAt?: string | null
 }
 
 /** 搜索商家 */

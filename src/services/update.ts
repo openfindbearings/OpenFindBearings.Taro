@@ -137,10 +137,14 @@ async function performUpdate(result: VersionCheckResult): Promise<void> {
   const fileName = `app-${tag}-${getMainAbi()}.apk`
   const url = `${base}/${fileName}`
 
+  // 改动说明（v1.7.8 经典两段式）：原文案"正在下载…将自动拉起安装"是下载态描述，
+  //   却配"取消/开始下载"确认按钮——文案与按钮语义矛盾。改为标准更新确认弹窗
+  //   （发现新版本 + 以后再说/立即更新），点"立即更新"后才进入下载 loading 与进度
   const confirmed = await showConfirmDialog({
-    title: '下载更新',
-    content: `正在下载 ${latestVersion}，下载完成后将自动拉起安装`,
-    confirmText: '开始下载',
+    title: `发现新版本 ${latestVersion}`,
+    content: result.updateMessage || '新版本已发布，下载完成后将自动进入安装。',
+    confirmText: '立即更新',
+    cancelText: '以后再说',
     // 改动说明：强制更新时不给取消机会（后端 ForceUpdate 开且低于 MinVersion 才为 true）
     showCancel: !result.isForceUpdate
   })
