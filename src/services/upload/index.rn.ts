@@ -5,17 +5,22 @@
 // 保留真实文件名；语义与 H5 版一致，resolve 标准 {statusCode,data}。
 import type { NormalizedUploadResult } from './index'
 
-/** 按扩展名给 MIME（相机/相册产物均为图片，pdf 兜底） */
+/** 按扩展名给 MIME（图片为主，pdf/xlsx/xls 兜底） */
 function mimeFromName(name: string): string {
   const ext = name.toLowerCase().split('.').pop() || ''
   if (ext === 'png') return 'image/png'
   if (ext === 'pdf') return 'application/pdf'
+  // 改动说明（v1.7.7）：Excel 导入接入，补办公文档 MIME（后端 GetSafeExtension 同表）
+  if (ext === 'xlsx') return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  if (ext === 'xls') return 'application/vnd.ms-excel'
   return 'image/jpeg'
 }
 
 /**
  * 上传单个文件（字段名固定 file），带超时控制。
  * 用户取消/网络失败 reject（errMsg 含 cancel 供上层归一化文案）。
+ * 改动说明（v1.7.7）：fileName/fileType 由调用方显式传入（document-picker 返回真实名与 MIME），
+ *   未传时回退 uri 末段 + 扩展名推断。
  */
 export async function uploadFileNormalized(opts: {
   url: string
@@ -23,6 +28,8 @@ export async function uploadFileNormalized(opts: {
   header?: Record<string, string>
   formData?: Record<string, string>
   timeout?: number
+  fileName?: string
+  fileType?: string
 }): Promise<NormalizedUploadResult> {
   const fd = new FormData()
   if (opts.formData) {
@@ -30,9 +37,9 @@ export async function uploadFileNormalized(opts: {
   }
   // 取 uri 末段作为真实文件名（保留扩展名，上游类型校验依赖它）
   const clean = opts.filePath.replace(/^file:\/\//, '')
-  const name = clean.substring(clean.lastIndexOf('/') + 1) || 'file.jpg'
+  const name = opts.fileName || clean.substring(clean.lastIndexOf('/') + 1) || 'file.jpg'
   // RN FormData 文件对象约定（Metro 网络层识别 {uri,name,type}）
-  fd.append('file', { uri: opts.filePath, name, type: mimeFromName(name) } as any)
+  fd.append('file', { uri: opts.filePath, name, type: opts.fileType || mimeFromName(name) } as any)
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), opts.timeout ?? 60000)

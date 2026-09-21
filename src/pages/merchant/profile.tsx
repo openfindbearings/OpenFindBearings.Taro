@@ -130,14 +130,7 @@ export default function MerchantProfilePage() {
       .finally(() => setDocUploading(null))
   }
 
-  /** 商家类型选择（ActionSheet） */
-  const pickType = () => {    Taro.showActionSheet({ itemList: MERCHANT_TYPES.map((x) => x.label) })
-      .then((res) => {
-        const item = MERCHANT_TYPES[res.tapIndex]
-        if (item) setField('type', item.value)
-      })
-      .catch(() => { /* 用户取消 */ })
-  }
+  // 改动说明（v1.7.7）：pickType 已移除——商家类型 Active 后锁定（后端守卫），选择器成死代码
 
   /** 保存：仅提交非空可编辑字段（后端 null/undefined 保留原值），成功后返回 */
   const onSave = async () => {
@@ -150,8 +143,8 @@ export default function MerchantProfilePage() {
     try {
       const r = await updateMerchantProfile({
         name: form.name.trim(),
-        type: form.type || undefined,
-        companyName: form.companyName.trim() || undefined,
+        // 改动说明（v1.7.7）：type 不再回传（商家类型锁定，原回传同值属噪音）
+        // 信用代码：仅历史空值时提交补录（非空锁定，后端同口径）
         unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
         contactPerson: form.contactPerson.trim() || undefined,
         phone: form.phone.trim() || undefined,
@@ -203,20 +196,20 @@ export default function MerchantProfilePage() {
 
       <View style={{ marginBottom: 12 }}>
         {fieldRow('商户名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="对外展示名称" placeholderClass="auth-ph" onInput={(e) => setField('name', e.detail.value)} />)}
+        {/* 改动说明（v1.7.7）：商家类型只读——类型决定材料矩阵与认证标准，后端 Active 后锁定，
+            自助改类型是假动作（原 UpdateType 未接通）且绕过审核，变更走平台人工 */}
         {fieldRow('商家类型', (
-          <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={pickType}>
-            <Text style={{ ...fs(15), color: form.type ? t.textPrimary : t.textTertiary }}>
-              {MERCHANT_TYPES.find((x) => x.value === form.type)?.label || '请选择'}
-            </Text>
-            <Icon name="chevron-right" size={16} color={t.textTertiary} />
-          </View>
+          <Text style={inputStyle}>{MERCHANT_TYPES.find((x) => x.value === form.type)?.label || '-'}</Text>
         ))}
-        {/* 改动说明（v1.7.4 字段锁定）：企业名称/信用代码与营业执照绑定，入驻生效后只读
-            （后端 UpdateMerchant 同步守卫），换主体须走平台人工通道 */}
+        {/* 改动说明（v1.7.4 字段锁定）：企业名称与执照绑定，入驻生效后只读（后端 UpdateMerchant 同步守卫） */}
         {fieldRow('企业名称', <Text style={inputStyle}>{form.companyName || '-'}</Text>)}
-        {fieldRow('信用代码', <Text style={inputStyle}>{form.unifiedSocialCreditCode || '-'}</Text>)}
+        {/* 改动说明（v1.7.7）：信用代码"空可补录一次、非空锁定"（后端同口径）——
+            历史选填时代入驻的商户在此补录，补录后不可再改 */}
+        {form.unifiedSocialCreditCode
+          ? fieldRow('信用代码', <Text style={inputStyle}>{form.unifiedSocialCreditCode}</Text>)
+          : fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="补录18位代码（见营业执照）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
         <View style={{ backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 10 }}>
-          <Text style={{ ...fs(11), color: t.textTertiary }}>企业主体信息以营业执照为准，入驻后不可自助修改；如需变更请联系平台。</Text>
+          <Text style={{ ...fs(11), color: t.textTertiary }}>企业主体信息以营业执照为准，入驻后不可自助修改；商家类型决定认证材料标准，如需变更请联系平台。</Text>
         </View>
         {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
         {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="对外公开，可填400/座机/手机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}

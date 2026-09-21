@@ -1,8 +1,9 @@
 // 商户商品管理页（v1.7.3 重构）
 // 列表 + 行内添加/编辑表单 + 上下架；Excel 导入降级为管理员二级入口。
 // 改动说明：
-//   1. 原顶部整行大蓝按钮（Excel 导入）观感差且在 H5/RN 是死路（chooseMessageFile 仅小程序存在）——
-//      改为操作栏两枚小按钮：＋添加商品（成员均可）、Excel 导入（仅管理员，非小程序端给出通道说明）；
+//   1. 原顶部整行大蓝按钮（Excel 导入）观感差——改为操作栏两枚小按钮：
+//      ＋添加商品（成员均可）、Excel 导入（仅管理员；v1.7.7 三端打通：
+//      小程序会话文件 / H5 input file / RN document-picker，RN 需重装 APK 生效）；
 //   2. 添加商品改为"搜索选平台已有型号 + 填市场描述"（1688 上架同款交互）——
 //      原 createMyBearing 传 bearingPartNumber/price/stock 与后端 BearingId/PriceDescription 契约完全对不上，提交必失败；
 //   3. 行新增"编辑"（价格/库存/起订量/备注四项描述，PUT 后重新进审核）；
@@ -21,6 +22,8 @@ import {
   type MerchantBearingItem
 } from '../../services/merchant'
 import { searchBearings, type Bearing } from '../../services/bearing'
+// Excel 文件选择平台分派（Metro 按 .rn 后缀解析 RN 版，H5/小程序走 index.ts）
+import { chooseExcelFile } from '../../services/importExcel'
 
 const PAGE_SIZE = 20
 
@@ -119,29 +122,26 @@ export default function MerchantManagePage() {
       .finally(() => setBusyId(null))
   }
 
-  /** Excel 批量导入（管理员）：小程序走会话文件选择；其余平台本期未接文档选择器（T4），给出说明 */
-  const onImport = () => {
+  /** Excel 批量导入（管理员，v1.7.7 三端打通）：chooseExcelFile 平台分派
+   *  （小程序会话文件 / H5 input file / RN document-picker），选中后走 multipart 上传 */
+  const onImport = async () => {
     if (importing) return
-    // @ts-ignore 仅小程序存在
-    if (!Taro.chooseMessageFile) {
-      Taro.showToast({ title: 'Excel 导入暂仅支持微信小程序端', icon: 'none' })
+    let picked
+    try {
+      picked = await chooseExcelFile()
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message?.includes('cancel') ? '已取消选择' : '无法打开文件选择', icon: 'none' })
       return
     }
-    // @ts-ignore
-    Taro.chooseMessageFile({ count: 1, type: 'file', extension: ['xlsx', 'xls'] })
-      .then(async (res: any) => {
-        const file = res.tempFiles?.[0]
-        if (!file) return
-        setImporting(true)
-        try {
-          const r = await importInventory(file.path)
-          Taro.showToast({ title: r?.message || '导入完成', icon: 'none', duration: 2500 })
-          load(1, false)
-        } catch {
-          Taro.showToast({ title: '导入失败', icon: 'none' })
-        } finally { setImporting(false) }
-      })
-      .catch(() => { /* 用户取消 */ })
+    if (!picked) return
+    setImporting(true)
+    try {
+      const r = await importInventory(picked.path, picked.name, picked.mimeType)
+      Taro.showToast({ title: r?.message || '导入完成', icon: 'none', duration: 2500 })
+      load(1, false)
+    } catch {
+      Taro.showToast({ title: '导入失败', icon: 'none' })
+    } finally { setImporting(false) }
   }
 
   /** 型号搜索输入（300ms 防抖，命中显示可点选结果） */

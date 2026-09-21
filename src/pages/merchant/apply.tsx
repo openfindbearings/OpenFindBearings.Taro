@@ -139,6 +139,15 @@ export default function MerchantApplyPage() {
     return null
   }
 
+  /** 统一社会信用代码校验（v1.7.7 必填，与后端 DocumentRequirements.ValidateCreditCode 同口径）：
+   *  非空 + 18 位执照字符集（数字与大写字母，剔除易混 I/O/Z/S/V） */
+  const creditCodeError = (code: string): string | null => {
+    const v = code.trim().toUpperCase()
+    if (!v) return '请填写统一社会信用代码（见营业执照）'
+    if (!/^[0-9A-HJ-NP-RT-UWXY]{18}$/.test(v)) return '统一社会信用代码应为18位（营业执照上的数字与大写字母组合）'
+    return null
+  }
+
   /** 组装本次随单提交的文档项（已批准回显材料不重复提交，后端按存量 Approved 合并判定） */
   const buildDocs = (): DocumentInput[] | undefined => {
     const arr: DocumentInput[] = []
@@ -349,6 +358,12 @@ export default function MerchantApplyPage() {
       Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
       return
     }
+    // 改动说明（v1.7.7）：信用代码填了就必须合法（留空交给后端按"提名已代填值合并"判定，
+    //   合并后仍为空/非法后端 400 透传引导）
+    if (acceptForm.creditCode.trim()) {
+      const ccAccept = creditCodeError(acceptForm.creditCode)
+      if (ccAccept) { Taro.showToast({ title: ccAccept, icon: 'none' }); return }
+    }
     // 改动说明（v1.7.0）：接受提名补资料同样必传营业执照；若提名的商户类型为授权经销商，
     //   后端矩阵会再要品牌授权书（400 文案透传引导补传）
     if (!docSlots.license) {
@@ -395,6 +410,9 @@ export default function MerchantApplyPage() {
       Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
       return
     }
+    // 改动说明（v1.7.7）：信用代码必填（后端同口径）
+    const ccResub = creditCodeError(form.unifiedSocialCreditCode)
+    if (ccResub) { Taro.showToast({ title: ccResub, icon: 'none' }); return }
     // 改动说明（v1.7.0）：类型必填 + 材料矩阵校验（与后端同口径）
     const de = docsError(form.type)
     if (de) { Taro.showToast({ title: de, icon: 'none' }); return }
@@ -486,6 +504,9 @@ export default function MerchantApplyPage() {
         Taro.showToast({ title: '请填写企业名称（营业执照全称）', icon: 'none' })
         return
       }
+      // 改动说明（v1.7.7）：信用代码必填（后端同口径，Active 后仅空值可补录一次）
+      const ccSelf = creditCodeError(form.unifiedSocialCreditCode)
+      if (ccSelf) { Taro.showToast({ title: ccSelf, icon: 'none' }); return }
       // 改动说明（v1.7.0）：类型必填 + 随单材料矩阵校验
       const de = docsError(form.type)
       if (de) { Taro.showToast({ title: de, icon: 'none' }); return }
@@ -814,7 +835,7 @@ export default function MerchantApplyPage() {
               </View>
             ))}
             {fieldRow('企业名称 *', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="必填，营业执照上的企业名称" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
-            {fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={30} placeholder="18位统一社会信用代码（选填）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
+            {fieldRow('信用代码*', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="18位统一社会信用代码（见营业执照）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
             {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
             {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="顾客可见，可填 400/座机/手机（选填）" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
             {fieldRow('地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="经营地址（选填）" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}

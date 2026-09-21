@@ -467,13 +467,16 @@ export async function uploadDocumentFile(): Promise<{ url?: string; message?: st
   }
 }
 
-/** 上传 Excel 批量导入在售商品（仅商户管理员，multipart 走 BFF 代理到 API 再到 Sync） */
-export async function importInventory(filePath: string): Promise<OpResult> {
+/** 上传 Excel 批量导入在售商品（仅商户管理员，multipart 走 BFF 代理到 API 再到 Sync）
+ *  改动说明（v1.7.7）：fileName/fileType 透传（H5 blob 无扩展名/RN content URI 场景携带真实文件名与 MIME） */
+export async function importInventory(filePath: string, fileName?: string, fileType?: string): Promise<OpResult> {
   try {
     // Excel 链路最长（BFF→API→Sync），给 2 分钟超时
     const r = await uploadFileNormalized({
       url: `${getBaseUrl()}${API.MERCHANT_INVENTORY_IMPORT}`,
       filePath,
+      fileName,
+      fileType,
       timeout: 120000,
       header: uploadHeaders(getToken())
     })
