@@ -29,8 +29,21 @@ export interface VersionCheckResult {
 const LAST_CHECK_KEY = 'last_version_check_ts'
 /** 一天毫秒数 */
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
+/** 启动自动检查开关存储键（设备级本地设置，默认开；改动说明：v1.7.6 设置页新增开关项） */
+const AUTO_CHECK_KEY = 'auto_update_check'
 /** 当前 TARO_ENV */
 const ENV = process.env.TARO_ENV
+
+/** 读取"启动时自动检查更新"开关（未设置过默认开启） */
+export async function isAutoUpdateEnabled(): Promise<boolean> {
+  const v = await getItem(AUTO_CHECK_KEY).catch(() => null)
+  return v !== 'false'
+}
+
+/** 设置"启动时自动检查更新"开关 */
+export async function setAutoUpdateEnabled(on: boolean): Promise<void> {
+  await setItem(AUTO_CHECK_KEY, on ? 'true' : 'false')
+}
 
 /**
  * 向后端请求版本检查
@@ -183,6 +196,8 @@ function stopProgressTracking(): void {
  */
 export async function checkUpdateOnLaunch(): Promise<void> {
   if (ENV === 'h5') return
+  // 改动说明（v1.7.6）：设置页"启动时自动检查更新"关闭时跳过（手动检查不受影响）
+  if (!(await isAutoUpdateEnabled())) return
   const consent = await getItem('privacy_consent').catch(() => null)
   if (consent !== 'true') return
   if (ENV === 'weapp') {
