@@ -24,7 +24,7 @@ import { useFs } from '../../hooks/useFontScale'
 import { useAuthStore } from '../../stores/auth'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import { checkUpdateManually } from '../../services/update'
+import { checkUpdateManually, isAutoUpdateEnabled, setAutoUpdateEnabled } from '../../services/update'
 import { getAppVersion } from '../../utils/version'
 import './settings.scss'
 
@@ -56,6 +56,8 @@ export default function SettingsPage() {
     soundEnabled: true,
     vibrateEnabled: true
   })
+  // 启动时自动检查更新（设备级本地开关，默认开；v1.7.6 新增）
+  const [autoUpdate, setAutoUpdate] = useState(true)
   // 登录态：控制"注销账户/退出登录"显隐，以及"简洁首页模式"的登录门槛
   // 改动说明：由本地 useState + useDidShow 读 storage，改为订阅 auth store（唯一事实源）——
   // 登录成功返回、登出、冷启动 init 恢复均即时响应，不再依赖页面显示时序与 storage 读取
@@ -84,6 +86,8 @@ export default function SettingsPage() {
         setSettings({ ...saved, homeMode })
       }
     }).catch(() => { /* 默认值 */ })
+    // 改动说明（v1.7.6）：启动自动检查开关为设备级本地设置（services/update 存储），单独读取
+    isAutoUpdateEnabled().then(setAutoUpdate).catch(() => { /* 默认开 */ })
   })
 
   // 保存设置（纯存储，无 DOM 操作——RN 无 document）
@@ -380,6 +384,19 @@ export default function SettingsPage() {
                 <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
               </View>
               <Switch checked={false} disabled onChange={(v) => save({ vibrateEnabled: v })} />
+          </View>
+          {/* 改动说明（v1.7.6）：启动自动检查开关——关闭后开屏不再静默检查（设置页手动检查不受影响） */}
+          <View className='list-item' style={{ borderBottomColor: t.border }}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="refresh-cw" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>启动时自动检查更新</Text>
+            </View>
+            <Switch
+              checked={autoUpdate}
+              onChange={(v) => { setAutoUpdate(v); void setAutoUpdateEnabled(v) }}
+            />
           </View>
           <View className='list-item list-item-last' onClick={checkVersion}>
             <View className='list-left'>
