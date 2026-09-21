@@ -1,11 +1,13 @@
-// 商户成员管理页（v1.7.3 重构，对标抖店/美团移动端）
+// 商户成员管理页（v1.7.3 重构 + v1.7.4 邀请确认制，对标抖店/美团移动端）
 // 列表行 = 头像 + 昵称（本人标"我"）+ 角色/状态徽标；管理员点他人行 → 底部操作面板
 //   （设为管理员/降级、停用/恢复、移除），替代原行内挤压小按钮。
 // 改动说明：
 //   1. isSelf 改用后端权威标记（m.isSelf）——原 m.id === userId 比较的是 API 成员 id 与
 //      Identity sub 两套不同源 id，恒 false，本人行错误露出停用/降级按钮（后端守卫会拒但 UI 误导）；
 //   2. 新增"移除成员"（DELETE /staff/{userId}，BFF v1.6.3 代理），比停用更彻底；
-//   3. 手机号不在列表展示（主流隐私做法，联系走站内渠道）。
+//   3. 手机号不在列表展示（主流隐私做法，联系走站内渠道）；
+//   4. v1.7.4 邀请确认制：添加成员转为发邀请（对方同意后入伙），列表合并"已邀请"行
+//      （Status=Invited，无成员 id，key 用 invitationId），点行仅可撤销邀请。
 // 守卫由后端执行：最后一名在职管理员不可被停用/降级/移除，不能操作自己
 import { useState } from 'react'
 import { View, Text, Image, Input } from '@tarojs/components'
@@ -18,7 +20,7 @@ import NavBar from '../../components/NavBar'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useMerchantStore } from '../../stores/merchant'
 import {
-  getMerchantStaff, suspendMerchantMember, activateMerchantMember, changeMerchantMemberRole, removeMerchantMember, addMerchantMember,
+  getMerchantStaff, suspendMerchantMember, activateMerchantMember, changeMerchantMemberRole, removeMerchantMember, addMerchantMember, revokeStaffInvitation,
   type MerchantStaff
 } from '../../services/merchant'
 import { usableImage } from '../../services/config'
@@ -63,7 +65,8 @@ export default function MerchantMembersPage() {
       role: addRole
     })
       .then((r) => {
-        Taro.showToast({ title: r?.message || '成员已添加', icon: 'none' })
+        // 改动说明（v1.7.4 邀请确认制）：后端 message 已是真实文案（邀请已发送/已是在职成员），兜底同步语义
+        Taro.showToast({ title: r?.message || '邀请已发送，对方同意后加入', icon: 'none' })
         setAdding(false); setContact(''); setAddRole('MerchantStaff')
         load()
       })
@@ -78,7 +81,8 @@ export default function MerchantMembersPage() {
     showConfirmDialog({ title, content })
       .then(async (ok) => {
         if (!ok) return
-        setBusyId(m.id)
+        // 改动说明（v1.7.4）：邀请行无成员 id，busy 标记用 invitationId
+        setBusyId(m.invitationId || m.id)
         try {
           await action()
           Taro.showToast({ title: '操作成功', icon: 'success' })
@@ -101,6 +105,11 @@ export default function MerchantMembersPage() {
 
   const onRemove = (m: MerchantStaff) => {
     doConfirm(m, '移除成员', `移除后「${m.nickname}」不再属于本商户，需重新添加。确认移除？`, () => removeMerchantMember(m.id))
+  }
+
+  /** 撤销待确认邀请（v1.7.4 邀请确认制：管理员撤回，对方不再能接受） */
+  const onRevoke = (m: MerchantStaff) => {
+    doConfirm(m, '撤销邀请', `撤销后「${m.nickname}」将不能再接受此邀请。确认撤销？`, () => revokeStaffInvitation(m.invitationId || ''))
   }
 
   const onChangeRole = (m: MerchantStaff, targetRole: 'MerchantAdmin' | 'MerchantStaff') => {
@@ -187,18 +196,22 @@ export default function MerchantMembersPage() {
           <View style={{ borderRadius: 12, overflow: 'hidden' }}>
             {members.map((m) => {
               // 改动说明（v1.7.3）：isSelf 用后端标记（前端 id 不同源无法自判，原比较恒 false）
+              // 改动说明（v1.7.4 邀请确认制）：Invited 行为待确认邀请（无成员 id），
+              //   key 用 invitationId 防多邀请行 id 全空冲突；点击进面板仅可撤销
               const isSelf = m.isSelf
+              const isInvited = m.status === 'Invited'
               const mSuspended = m.status === 'Suspended'
+              const rowKey = m.invitationId || m.id
               return (
                 <View
-                  key={m.id}
-                  style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === m.id ? 0.5 : 1 }}
-                  onClick={isAdmin && !isSelf ? () => setTarget(m) : undefined}
+                  key={rowKey}
+                  style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === rowKey ? 0.5 : 1 }}
+                  onClick={isAdmin && (isInvited || !isSelf) ? () => setTarget(m) : undefined}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 12 }}>
                     {usableImage(m.avatar)
                       ? <Image style={{ width: 40, height: 40 }} src={usableImage(m.avatar)} mode="aspectFill" />
-                      : <Icon name="user" size={20} color={t.textTertiary} />}
+                      : <Icon name={isInvited ? 'mail' : 'user'} size={20} color={t.textTertiary} />}
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -211,8 +224,13 @@ export default function MerchantMembersPage() {
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                       <View style={{ borderRadius: 4, backgroundColor: t.bgInput, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, marginRight: 8 }}>
-                        <Text style={{ ...fs(11), color: m.role === '管理员' ? t.primary : t.textSecondary }}>{m.role || '员工'}</Text>
+                        <Text style={{ ...fs(11), color: m.role === '管理员' ? t.primary : t.textSecondary }}>{isInvited ? (m.role || '待确认') : (m.role || '员工')}</Text>
                       </View>
+                      {isInvited && (
+                        <View style={{ backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1 }}>
+                          <Text style={{ ...fs(11), color: '#FFFFFF' }}>已邀请</Text>
+                        </View>
+                      )}
                       {mSuspended && (
                         <View style={{ backgroundColor: t.textTertiary, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1 }}>
                           <Text style={{ ...fs(11), color: t.textOnPrimary }}>已停用</Text>
@@ -220,7 +238,7 @@ export default function MerchantMembersPage() {
                       )}
                     </View>
                   </View>
-                  {isAdmin && !isSelf && <Icon name="chevron-right" size={16} color={t.textTertiary} />}
+                  {isAdmin && (isInvited || !isSelf) && <Icon name="chevron-right" size={16} color={t.textTertiary} />}
                 </View>
               )
             })}
@@ -238,10 +256,17 @@ export default function MerchantMembersPage() {
             <Text style={{ ...fs(13), color: t.textTertiary, textAlign: 'center', marginBottom: 12 }}>
               {target.nickname}（{target.role || '员工'}）
             </Text>
-            {!suspended && sheetAction(targetIsAdmin ? '降级为员工' : '设为管理员', t.textPrimary, () => onChangeRole(target, targetIsAdmin ? 'MerchantStaff' : 'MerchantAdmin'))}
-            {!suspended && sheetAction('停用成员', '#DC2626', () => onSuspend(target))}
-            {suspended && sheetAction('恢复成员', t.primary, () => onActivate(target))}
-            {sheetAction('移除成员', '#DC2626', () => onRemove(target))}
+            {/* 改动说明（v1.7.4 邀请确认制）：Invited 行仅可撤销邀请，成员行保留角色/停用/移除操作 */}
+            {target.status === 'Invited'
+              ? sheetAction('撤销邀请', '#DC2626', () => onRevoke(target))
+              : (
+                <>
+                  {!suspended && sheetAction(targetIsAdmin ? '降级为员工' : '设为管理员', t.textPrimary, () => onChangeRole(target, targetIsAdmin ? 'MerchantStaff' : 'MerchantAdmin'))}
+                  {!suspended && sheetAction('停用成员', '#DC2626', () => onSuspend(target))}
+                  {suspended && sheetAction('恢复成员', t.primary, () => onActivate(target))}
+                  {sheetAction('移除成员', '#DC2626', () => onRemove(target))}
+                </>
+              )}
             {sheetAction('取消', t.textSecondary, () => setTarget(null))}
           </View>
         </View>

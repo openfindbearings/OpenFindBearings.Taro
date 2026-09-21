@@ -211,8 +211,13 @@ export default function MerchantProfilePage() {
             <Icon name="chevron-right" size={16} color={t.textTertiary} />
           </View>
         ))}
-        {fieldRow('企业名称', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="营业执照企业名称" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
-        {fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="18位统一社会信用代码" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
+        {/* 改动说明（v1.7.4 字段锁定）：企业名称/信用代码与营业执照绑定，入驻生效后只读
+            （后端 UpdateMerchant 同步守卫），换主体须走平台人工通道 */}
+        {fieldRow('企业名称', <Text style={inputStyle}>{form.companyName || '-'}</Text>)}
+        {fieldRow('信用代码', <Text style={inputStyle}>{form.unifiedSocialCreditCode || '-'}</Text>)}
+        <View style={{ backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 10 }}>
+          <Text style={{ ...fs(11), color: t.textTertiary }}>企业主体信息以营业执照为准，入驻后不可自助修改；如需变更请联系平台。</Text>
+        </View>
         {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
         {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="对外公开，可填400/座机/手机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
         {fieldRow('手机号', <Input style={inputStyle} value={form.mobile} maxlength={20} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('mobile', e.detail.value)} />)}

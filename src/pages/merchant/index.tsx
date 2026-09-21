@@ -21,7 +21,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
-import { withdrawApplication, deleteApplication, requestVerifyMerchant, type MerchantApplication } from '../../services/merchant'
+import { withdrawApplication, deleteApplication, requestVerifyMerchant, getPendingStaffInvitations, acceptStaffInvitation, declineStaffInvitation, type MerchantApplication, type PendingStaffInvitation } from '../../services/merchant'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { usableImage } from '../../services/config'
 import './index.scss'
@@ -162,7 +162,9 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
       <View className='mch-card-row'>
         <View className='mch-avatar' style={{ backgroundColor: t.primary }}>
           {src
-            ? <Image className='mch-avatar' src={src} mode='aspectFill' style={{ width: 44, height: 44 }} />
+            // 改动说明（v1.7.4）：aspectFill 会把非正方形 logo 裁切导致视觉偏心，改 aspectFit+白底
+            //   （主流店铺头像做法：完整展示商标，留白由白底吸收），首字占位仍用主题色圆
+            ? <Image className='mch-avatar' src={src} mode='aspectFit' style={{ width: 44, height: 44, backgroundColor: '#FFFFFF' }} />
             : <Text style={{ ...fs(18), color: t.textOnPrimary, fontWeight: '600' }}>{(m.merchantName || '商').slice(0, 1)}</Text>}
         </View>
         <View className='mch-mid'>
@@ -280,9 +282,40 @@ export default function MerchantPage() {
   // 左滑互斥：全页同时只允许一张卡处于展开态，记录展开卡的 merchantId
   const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null)
 
+  // 改动说明（v1.7.4 邀请确认制）：发给我的待确认商户邀请，横幅展示、同意/拒绝后就地移除
+  const [invitations, setInvitations] = useState<PendingStaffInvitation[]>([])
+  const [inviteBusy, setInviteBusy] = useState(false)
+
   useDidShow(() => {
-    if (isLoggedIn) fetchApplications().catch(() => { /* 拉取失败保持当前状态 */ })
+    if (isLoggedIn) {
+      fetchApplications().catch(() => { /* 拉取失败保持当前状态 */ })
+      // 邀请列表拉取失败静默（横幅属增强信息，不打扰主流程）
+      getPendingStaffInvitations().then(setInvitations).catch(() => { /* 忽略 */ })
+    }
   })
+
+  /** 接受/拒绝邀请：成功后刷新邀请列表与商户列表（入伙后"我的商户"会多一家） */
+  const onInviteDecision = (inv: PendingStaffInvitation, accept: boolean) => {
+    if (inviteBusy) return
+    const action = accept ? acceptStaffInvitation : declineStaffInvitation
+    showConfirmDialog({
+      title: accept ? '接受邀请' : '拒绝邀请',
+      content: accept ? `接受后你将以${inv.role === 'MerchantAdmin' ? '管理员' : '员工'}身份加入「${inv.merchantName}」。` : `确定拒绝「${inv.merchantName}」的邀请？`
+    }).then(async (ok) => {
+      if (!ok) return
+      setInviteBusy(true)
+      try {
+        const r = await action(inv.invitationId)
+        Taro.showToast({ title: r?.message || (accept ? '已接受邀请' : '已拒绝邀请'), icon: accept ? 'success' : 'none' })
+        setInvitations((list) => list.filter((x) => x.invitationId !== inv.invitationId))
+        fetchApplications().catch(() => { /* 忽略 */ })
+      } catch (e: any) {
+        Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
+      } finally {
+        setInviteBusy(false)
+      }
+    })
+  }
 
   const goApply = () => {
     if (!isLoggedIn) { Taro.showToast({ title: '请先登录', icon: 'none' }); return }
@@ -315,6 +348,36 @@ export default function MerchantPage() {
             </Text>
           </View>
         </View>
+
+        {/* 待确认商户邀请横幅（v1.7.4 邀请确认制） */}
+        {invitations.length > 0 && (
+          <View style={{ marginTop: 12 }}>
+            {invitations.map((inv) => (
+              <View key={inv.invitationId} style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 14, marginBottom: 10, ...cardShadow }}>
+                <Text style={{ ...fs(14), color: t.textPrimary }}>
+                  {inv.invitedByName ? `${inv.invitedByName} 邀请你` : '你收到一条邀请'}加入「{inv.merchantName}」
+                </Text>
+                <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
+                  身份：{inv.role === 'MerchantAdmin' ? '管理员' : '员工'}
+                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 }}>
+                  <View
+                    style={{ borderRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 6, paddingBottom: 6, marginRight: 10, backgroundColor: t.bgInput }}
+                    onClick={() => onInviteDecision(inv, false)}
+                  >
+                    <Text style={{ ...fs(13), color: t.textSecondary }}>拒绝</Text>
+                  </View>
+                  <View
+                    style={{ borderRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 6, paddingBottom: 6, backgroundColor: inviteBusy ? t.textTertiary : t.primary }}
+                    onClick={() => onInviteDecision(inv, true)}
+                  >
+                    <Text style={{ ...fs(13), color: t.textOnPrimary }}>接受</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* 未登录引导 */}
         {!isLoggedIn ? (

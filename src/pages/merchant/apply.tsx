@@ -262,8 +262,19 @@ export default function MerchantApplyPage() {
     } catch { setResults([]) } finally { setSearching(false) }
   }
 
-  /** 选中一个已有商家，进入操作方式选择（自我认领 / 邀请他人认领） */
+  /** 选中一个已有商家，进入操作方式选择（自我认领 / 邀请他人认领）
+   *  改动说明（v1.7.4 全量发现搜索）：结果含已入驻/审核中商户，仅"可认领"可选；
+   *  "我的商户"回商户页管理；其余点击提示，从搜索阶段就阻断重复新建 */
   const onPick = (m: ClaimableMerchant) => {
+    if (m.isMine) {
+      Taro.showToast({ title: '你已是该商户成员，去商户页管理', icon: 'none' })
+      setTimeout(() => Taro.navigateBack(), 900)
+      return
+    }
+    if (!m.isClaimable) {
+      Taro.showToast({ title: `该商户${m.statusText || '已被入驻'}，无需重复申请`, icon: 'none' })
+      return
+    }
     setSelected(m)
     setPhase('mode')
   }
@@ -712,22 +723,28 @@ export default function MerchantApplyPage() {
             <Text style={{ ...fs(13), color: t.textTertiary }}>未找到相关商家，可在下方新建</Text>
           </View>
         )}
-        {results.map((item) => (
-          <View
-            key={item.id}
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, padding: 12, marginBottom: 8 }}
-            onClick={() => onPick(item)}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{ ...fs(15), color: t.textPrimary }}>{item.name}</Text>
-              {item.companyName ? <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>{item.companyName}</Text> : null}
+        {results.map((item) => {
+          // 改动说明（v1.7.4）：状态徽标——可认领蓝、我的商户绿、其余灰（不可点选）
+          const badgeColor = item.isMine ? '#16A34A' : item.isClaimable ? t.primary : t.textTertiary
+          return (
+            <View
+              key={item.id}
+              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, padding: 12, marginBottom: 8 }}
+              onClick={() => onPick(item)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...fs(15), color: t.textPrimary }}>{item.name}</Text>
+                {item.companyName ? <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>{item.companyName}</Text> : null}
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 6 }}>{item.type}</Text>
+                <View style={{ borderRadius: 4, borderWidth: 1, borderColor: badgeColor, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1 }}>
+                  <Text style={{ ...fs(11), color: badgeColor }}>{item.statusText || '可认领'}</Text>
+                </View>
+              </View>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 6 }}>{item.type}</Text>
-              <Icon name="chevron-right" size={16} color={t.textTertiary} />
-            </View>
-          </View>
-        ))}
+          )
+        })}
       </View>
       {/* 新建入口：改为带"+"的描边按钮，去掉原 borderTopWidth 横线（修复：横线易被误认为输入位置） */}
       <View style={{ marginTop: 18 }}>

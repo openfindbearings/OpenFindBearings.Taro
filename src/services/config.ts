@@ -164,6 +164,11 @@ export const API = {
   MERCHANT_MEMBER_SUSPEND: (id: string) => `${API_PREFIX}/merchants/members/${id}/suspend`,
   MERCHANT_MEMBER_ACTIVATE: (id: string) => `${API_PREFIX}/merchants/members/${id}/activate`,
   MERCHANT_MEMBER_ROLE: (id: string) => `${API_PREFIX}/merchants/members/${id}/role`,
+  /** 员工邀请确认制（v1.7.4）：待我确认列表 + 接受/拒绝/撤销 */
+  MERCHANT_STAFF_INVITATIONS_PENDING: `${API_PREFIX}/merchants/staff/invitations/pending`,
+  MERCHANT_STAFF_INVITATION_ACCEPT: (id: string) => `${API_PREFIX}/merchants/staff/invitations/${id}/accept`,
+  MERCHANT_STAFF_INVITATION_DECLINE: (id: string) => `${API_PREFIX}/merchants/staff/invitations/${id}/decline`,
+  MERCHANT_STAFF_INVITATION_REVOKE: (id: string) => `${API_PREFIX}/merchants/staff/invitations/${id}/revoke`,
   /** 商户商品管理（需登录且为商户成员） */
   MERCHANT_BEARINGS_MINE: `${API_PREFIX}/merchant/bearings`,
   MERCHANT_BEARING_UPDATE: (id: string) => `${API_PREFIX}/merchant/bearings/${id}`,

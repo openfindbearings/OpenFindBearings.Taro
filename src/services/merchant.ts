@@ -70,12 +70,19 @@ export interface MerchantApplication {
   logoUrl?: string | null
 }
 
-/** 可认领爬虫商家项（对齐 BFF ClaimableMerchantItem） */
+/** 入驻发现搜索项（对齐 BFF ClaimableMerchantItem；v1.7.4 全量匹配 + 认领可行性标记）
+ *  改动说明：三个标记字段仅搜索结果列表消费；认领流程手工构造"选中商户"时可省略，故设为可选 */
 export interface ClaimableMerchant {
   id: string
   name: string
   companyName?: string | null
   type?: string
+  /** 可认领（未认证+无在职成员+无提名锁定） */
+  isClaimable?: boolean
+  /** 当前用户已是该商户在职成员（去管理入口） */
+  isMine?: boolean
+  /** 状态文案：可认领 / 我的商户 / 已入驻 / 审核中 / 已认证 */
+  statusText?: string
 }
 
 /** 入驻申请详情（对齐 BFF ApplicationDetailItem，v1.6.0 新增：被拒重提表单预填源） */
@@ -180,8 +187,10 @@ export interface MerchantStaff {
   role?: string | null
   /** 是否当前登录用户本人（v1.7.3：API 权威标记——登录态 id 是 Identity sub 与成员 id 不同源，前端无法自判） */
   isSelf: boolean
-  /** Active / Suspended */
+  /** Active / Suspended / Invited（v1.7.4 邀请确认制：待确认邀请行） */
   status: string
+  /** 待确认邀请行的邀请ID（撤销用；成员行为 null） */
+  invitationId?: string | null
 }
 
 /** 搜索商家 */
@@ -286,9 +295,39 @@ export function removeMerchantMember(userId: string) {
   return request<OpResult>(API.MERCHANT_MEMBER_REMOVE(userId), { method: 'DELETE' })
 }
 
-/** 添加成员（v1.7.3，管理员）：手机号/邮箱二选一（查注册用户）+ 角色 MerchantAdmin/MerchantStaff */
+/** 添加成员（v1.7.4 邀请确认制）：手机号/邮箱二选一，已注册用户转为待确认邀请（message 透传后端文案） */
 export function addMerchantMember(body: { phone?: string; email?: string; role: string }) {
   return request<OpResult>(API.MERCHANT_STAFF, { method: 'POST', data: body })
+}
+
+/** 待我确认的员工邀请项（对齐 BFF PendingStaffInvitationItem，v1.7.4） */
+export interface PendingStaffInvitation {
+  invitationId: string
+  merchantId: string
+  merchantName: string
+  role: string
+  invitedByName?: string | null
+  createdAt: string
+}
+
+/** 待我确认的员工邀请列表（v1.7.4：商户页横幅消费，按登录手机号匹配） */
+export function getPendingStaffInvitations() {
+  return request<PendingStaffInvitation[]>(API.MERCHANT_STAFF_INVITATIONS_PENDING)
+}
+
+/** 接受员工邀请（v1.7.4：建成员行入伙） */
+export function acceptStaffInvitation(invitationId: string) {
+  return request<OpResult>(API.MERCHANT_STAFF_INVITATION_ACCEPT(invitationId), { method: 'POST' })
+}
+
+/** 拒绝员工邀请（v1.7.4） */
+export function declineStaffInvitation(invitationId: string) {
+  return request<OpResult>(API.MERCHANT_STAFF_INVITATION_DECLINE(invitationId), { method: 'POST' })
+}
+
+/** 撤销员工邀请（v1.7.4，管理员对"已邀请"行操作） */
+export function revokeStaffInvitation(invitationId: string) {
+  return request<OpResult>(API.MERCHANT_STAFF_INVITATION_REVOKE(invitationId), { method: 'POST' })
 }
 
 /** 停用成员（管理员） */export function suspendMerchantMember(userId: string) {
