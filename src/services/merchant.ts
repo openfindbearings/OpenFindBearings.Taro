@@ -255,7 +255,7 @@ export function deleteApplication(merchantId: string) {
   return request<OpResult>(API.MERCHANT_DELETE_APPLICATION(merchantId), { method: 'POST' })
 }
 
-/** 认领搜索爬虫商家 */
+/** 认领搜索互联网数据商家 */
 export function searchClaimableMerchants(params: { keyword?: string; page?: number; pageSize?: number }) {
   const qs = buildQuery({
     keyword: params.keyword,

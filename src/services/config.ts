@@ -185,8 +185,11 @@ export const API = {
   // 改动说明：站内信（消息中心列表/未读数/已读标记），代理 BFF /mobile/notifications/*
   NOTIFICATIONS: `${API_PREFIX}/notifications`,
   NOTIFICATIONS_UNREAD_COUNT: `${API_PREFIX}/notifications/unread-count`,
-  NOTIFICATION_READ: (id: string) => `${API_PREFIX}/notifications/${id}/read`,
-  NOTIFICATIONS_READ_ALL: `${API_PREFIX}/notifications/read-all`,
+NOTIFICATION_READ: (id: string) => `${API_PREFIX}/notifications/${id}/read`,
+NOTIFICATIONS_READ_ALL: `${API_PREFIX}/notifications/read-all`,
+// 改动说明（v1.7.9）：消息删除两路径（单条左滑删除 / 清空已读批量出口）
+NOTIFICATION_ITEM: (id: string) => `${API_PREFIX}/notifications/${id}`,
+NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,

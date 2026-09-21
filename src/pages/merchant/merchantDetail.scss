@@ -50,22 +50,7 @@
   min-width: 0;
 }
 
-.md-badge {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  border-radius: $radius-sm;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  padding-left: $space-2;
-  padding-right: $space-2;
-  margin-left: $space-2;
-}
-
-.md-badge-text {
-  font-weight: bold;
-  margin-left: 3px;
-}
+// 改动说明（v1.7.11）：md-badge/md-badge-text 僵尸类删除（徽标改 tsx 内联金色样式，与商户页统一）
 
 .md-sub {
   margin-top: 4px;

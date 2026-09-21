@@ -79,9 +79,11 @@ export default function MerchantDetailPage() {
             <View className='md-name-row'>
               <Text className='md-name' style={{ ...fs(18), color: t.textPrimary }} numberOfLines={1}>{detail?.name || '—'}</Text>
               {detail?.isVerified && (
-                <View className='md-badge' style={{ backgroundColor: t.primaryLight }}>
-                  <Icon name="badge-check" size={12} color={t.primaryText} />
-                  <Text className='md-badge-text' style={{ ...fs(11), color: t.primaryText }}>入驻商家</Text>
+                // 改动说明（v1.7.11）：文案"入驻商家"是认证等级上线前的旧词已失真（入驻=已生效是另一回事），
+                //   统一为与商户页同款金色"已认证"徽标（主流：徽标在所有露出点一致）
+                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: '#F59E0B', flexDirection: 'row', alignItems: 'center' }}>
+                  <Icon name="badge-check" size={11} color="#FFFFFF" />
+                  <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>已认证</Text>
                 </View>
               )}
             </View>

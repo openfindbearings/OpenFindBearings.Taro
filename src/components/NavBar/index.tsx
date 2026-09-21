@@ -29,6 +29,14 @@ interface NavBarProps {
   rightSlot?: React.ReactNode
   /** 搜索模式：中间栏放搜索框，左右栏缩窄、整体增高到 48dp */
   searchMode?: boolean
+  /**
+   * 背景覆盖（v1.7.11 沉浸式头部）：传 'transparent' 则导航透明融入内容；缺省走主题 navBarBg
+   */
+  background?: string
+  /** 图标/标题色覆盖（v1.7.11）：渐变深底上传 '#FFFFFF'；缺省走主题 navBarText */
+  contentColor?: string
+  /** 是否显示底部分隔线（v1.7.11 透明态不需要），缺省 true */
+  showBorder?: boolean
 }
 
 export default function NavBar({
@@ -38,7 +46,10 @@ export default function NavBar({
   onBack,
   rightIcons,
   rightSlot,
-  searchMode = false
+  searchMode = false,
+  background,
+  contentColor,
+  showBorder = true
 }: NavBarProps) {
   // 默认返回行为：调用 Taro.navigateBack()
   const handleBack = () => {
@@ -55,6 +66,8 @@ export default function NavBar({
   const fs = useFs()
   // 主题色板：导航栏背景/标题/返回图标随模式
   const t = useTheme()
+  // 改动说明（v1.7.11 沉浸式）：文字/图标色与背景可被调用方覆盖（渐变深底上白色、透明态无色）
+  const fg = contentColor ?? t.navBarText
 
   // 搜索模式（真机修复）：首页无返回/右侧内容时不渲染 96dp 侧栏，
   // 否则中间栏被两侧共吃掉 192dp，搜索框只剩一小截（京东/淘宝是搜索框铺满整栏）
@@ -64,7 +77,7 @@ export default function NavBar({
   return (
     <View
       className={`navbar ${searchMode ? 'navbar-search' : ''}`}
-      style={{ paddingTop: top, backgroundColor: t.navBarBg, borderBottomColor: t.border }}
+      style={{ paddingTop: top, backgroundColor: background ?? t.navBarBg, borderBottomColor: showBorder ? t.border : 'transparent' }}
     >
       {/* 内层内容行：固定基准高，垂直居中 */}
       <View className={`navbar-inner ${searchMode ? 'navbar-inner-search' : ''}`}>
@@ -73,7 +86,7 @@ export default function NavBar({
           <View className='navbar-left'>
             {showBack && (
               <View className='navbar-icon' onClick={handleBack}>
-                <Icon name="arrow_left" size={24} color={t.navBarText} />
+                <Icon name="arrow_left" size={24} color={fg} />
               </View>
             )}
           </View>
@@ -81,7 +94,7 @@ export default function NavBar({
 
         {/* 中间栏：搜索框（centerSlot）或标题 */}
         <View className='navbar-center'>
-          {centerSlot || <Text className='navbar-title' style={{ ...fs(17), color: t.navBarText }}>{title}</Text>}
+          {centerSlot || <Text className='navbar-title' style={{ ...fs(17), color: fg }}>{title}</Text>}
         </View>
 
         {/* 右侧栏：优先渲染声明式 rightIcons（类名在本文件作用域，稳定生效），
@@ -98,7 +111,7 @@ export default function NavBar({
                   // 改动说明（v1.7.8）：badge 支持——消息铃铛未读红点（与 TabBar 角标同源 store）
                   style={{ position: 'relative' }}
                 >
-                  <Icon name={ic.name} size={ic.size ?? 24} color={t.navBarText} />
+                  <Icon name={ic.name} size={ic.size ?? 24} color={fg} />
                   {!!ic.badge && (
                     <View style={{ position: 'absolute', top: -2, right: -6, minWidth: 15, height: 15, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingLeft: 4, paddingRight: 4 }}>
                       <Text style={{ fontSize: 10, lineHeight: 13, color: '#FFFFFF' }}>{ic.badge > 99 ? '99+' : ic.badge}</Text>
