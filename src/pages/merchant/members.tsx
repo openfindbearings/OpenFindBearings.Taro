@@ -1,13 +1,15 @@
-// 商户成员管理页（v1.7.3 重构 + v1.7.4 邀请确认制，对标抖店/美团移动端）
-// 列表行 = 头像 + 昵称（本人标"我"）+ 角色/状态徽标；管理员点他人行 → 底部操作面板
-//   （设为管理员/降级、停用/恢复、移除），替代原行内挤压小按钮。
+// 商户成员管理页（v1.7.3 重构 + v1.7.4 邀请确认制 + v1.7.8 详情面板，对标抖店/美团移动端）
+// 列表行 = 头像 + 昵称（本人标"我"）+ 角色/状态徽标；点行 → 底部**详情面板**
+//   （昵称/角色/状态/手机号，钉钉成员详情同款），管理员在详情下追加操作区
+//   （设为管理员/降级、停用/恢复、移除），本人行只可看不可操作。
 // 改动说明：
 //   1. isSelf 改用后端权威标记（m.isSelf）——原 m.id === userId 比较的是 API 成员 id 与
 //      Identity sub 两套不同源 id，恒 false，本人行错误露出停用/降级按钮（后端守卫会拒但 UI 误导）；
 //   2. 新增"移除成员"（DELETE /staff/{userId}，BFF v1.6.3 代理），比停用更彻底；
-//   3. 手机号不在列表展示（主流隐私做法，联系走站内渠道）；
+//   3. 手机号不在列表行展示（隐私），点开详情面板可见（v1.7.8，同商户成员互见是协作刚需）；
 //   4. v1.7.4 邀请确认制：添加成员转为发邀请（对方同意后入伙），列表合并"已邀请"行
-//      （Status=Invited，无成员 id，key 用 invitationId），点行仅可撤销邀请。
+//      （Status=Invited，无成员 id，key 用 invitationId），详情面板仅管理员可撤销；
+//   5. v1.7.8 标题按角色：管理员="成员管理"、员工="员工列表"（员工无操作权，名实相符）。
 // 守卫由后端执行：最后一名在职管理员不可被停用/降级/移除，不能操作自己
 import { useState } from 'react'
 import { View, Text, Image, Input } from '@tarojs/components'
@@ -24,6 +26,7 @@ import {
   type MerchantStaff
 } from '../../services/merchant'
 import { usableImage } from '../../services/config'
+import { formatTime } from '../../utils/format'
 
 export default function MerchantMembersPage() {
   const t = useTheme()
@@ -131,7 +134,7 @@ export default function MerchantMembersPage() {
   const targetIsAdmin = target?.role === '管理员'
 
   return (
-    <PageLayout nav={<NavBar title="成员管理" showBack />}>
+    <PageLayout nav={<NavBar title={isAdmin ? '成员管理' : '员工列表'} showBack />}>
       <View style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 12 }}>
         {/* v1.7.3 操作栏：管理员可添加成员（对标主流店铺员工管理） */}
         {isAdmin && (
@@ -206,7 +209,7 @@ export default function MerchantMembersPage() {
                 <View
                   key={rowKey}
                   style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === rowKey ? 0.5 : 1 }}
-                  onClick={isAdmin && (isInvited || !isSelf) ? () => setTarget(m) : undefined}
+                  onClick={() => setTarget(m)}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 12 }}>
                     {usableImage(m.avatar)
@@ -238,7 +241,8 @@ export default function MerchantMembersPage() {
                       )}
                     </View>
                   </View>
-                  {isAdmin && (isInvited || !isSelf) && <Icon name="chevron-right" size={16} color={t.textTertiary} />}
+                  {/* 改动说明（v1.7.8）：所有行可点开详情（原仅管理员可点操作行），chevron 常显 */}
+                  <Icon name="chevron-right" size={16} color={t.textTertiary} />
                 </View>
               )
             })}
@@ -246,28 +250,52 @@ export default function MerchantMembersPage() {
         )}
       </View>
 
-      {/* 底部操作面板（自绘覆盖层，absolute 于页面根；RN 无 fixed） */}
+      {/* 底部详情+操作面板（自绘覆盖层，absolute 于页面根；RN 无 fixed）
+          改动说明（v1.7.8）：升级为成员详情面板（钉钉同款）——头像/昵称/角色/状态/手机号，
+          管理员在非本人行下方追加操作区；员工只可查看详情 */}
       {target && (
         <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,.45)' }} onClick={() => setTarget(null)}>
           <View
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.bgPage, paddingTop: 16, paddingLeft: 16, paddingRight: 16, paddingBottom: 24, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Text style={{ ...fs(13), color: t.textTertiary, textAlign: 'center', marginBottom: 12 }}>
-              {target.nickname}（{target.role || '员工'}）
-            </Text>
-            {/* 改动说明（v1.7.4 邀请确认制）：Invited 行仅可撤销邀请，成员行保留角色/停用/移除操作 */}
-            {target.status === 'Invited'
-              ? sheetAction('撤销邀请', '#DC2626', () => onRevoke(target))
-              : (
-                <>
-                  {!suspended && sheetAction(targetIsAdmin ? '降级为员工' : '设为管理员', t.textPrimary, () => onChangeRole(target, targetIsAdmin ? 'MerchantStaff' : 'MerchantAdmin'))}
-                  {!suspended && sheetAction('停用成员', '#DC2626', () => onSuspend(target))}
-                  {suspended && sheetAction('恢复成员', t.primary, () => onActivate(target))}
-                  {sheetAction('移除成员', '#DC2626', () => onRemove(target))}
-                </>
-              )}
-            {sheetAction('取消', t.textSecondary, () => setTarget(null))}
+            {/* 详情头部：头像 + 昵称 + 角色徽标 */}
+            <View style={{ alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {usableImage(target.avatar)
+                  ? <Image style={{ width: 56, height: 56 }} src={usableImage(target.avatar)} mode="aspectFill" />
+                  : <Icon name={target.status === 'Invited' ? 'mail' : 'user'} size={26} color={t.textTertiary} />}
+              </View>
+              <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', marginTop: 8 }}>{target.nickname || '未命名'}</Text>
+              <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>
+                {target.role || '员工'}{target.isSelf ? '（我）' : ''}
+                {target.status === 'Invited' ? ' · 待对方确认' : target.status === 'Suspended' ? ' · 已停用' : ''}
+              </Text>
+            </View>
+            {/* 详情字段行：手机号（邀请行显示被邀联系方式；无值显示未留） */}
+            {([
+              ['手机号', target.mobile || '未留'],
+              ['加入时间', target.joinedAt ? formatTime(target.joinedAt).slice(0, 10) : '-']
+            ] as [string, string][]).map(([k, v]) => (
+              <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: t.bgCard, borderRadius: 10, paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, marginBottom: 8 }}>
+                <Text style={{ ...fs(14), color: t.textSecondary }}>{k}</Text>
+                <Text style={{ ...fs(14), color: t.textPrimary }}>{v}</Text>
+              </View>
+            ))}
+            {/* 操作区：仅管理员，且本人行不显示（后端守卫拒绝自操作）；Invited 行仅撤销 */}
+            {isAdmin && !target.isSelf && (
+              target.status === 'Invited'
+                ? sheetAction('撤销邀请', '#DC2626', () => onRevoke(target))
+                : (
+                  <>
+                    {!suspended && sheetAction(targetIsAdmin ? '降级为员工' : '设为管理员', t.textPrimary, () => onChangeRole(target, targetIsAdmin ? 'MerchantStaff' : 'MerchantAdmin'))}
+                    {!suspended && sheetAction('停用成员', '#DC2626', () => onSuspend(target))}
+                    {suspended && sheetAction('恢复成员', t.primary, () => onActivate(target))}
+                    {sheetAction('移除成员', '#DC2626', () => onRemove(target))}
+                  </>
+                )
+            )}
+            {sheetAction(target.isSelf || !isAdmin ? '关闭' : '取消', t.textSecondary, () => setTarget(null))}
           </View>
         </View>
       )}

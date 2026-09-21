@@ -191,6 +191,10 @@ export interface MerchantStaff {
   status: string
   /** 待确认邀请行的邀请ID（撤销用；成员行为 null） */
   invitationId?: string | null
+  /** 手机号（v1.7.8 成员详情面板展示；列表行不显示，同商户成员互见） */
+  mobile?: string | null
+  /** 加入时间（成员行；邀请行为 null，详情面板展示） */
+  joinedAt?: string | null
 }
 
 /** 搜索商家 */
@@ -251,7 +255,7 @@ export function deleteApplication(merchantId: string) {
   return request<OpResult>(API.MERCHANT_DELETE_APPLICATION(merchantId), { method: 'POST' })
 }
 
-/** 认领搜索爬虫商家 */
+/** 认领搜索互联网数据商家 */
 export function searchClaimableMerchants(params: { keyword?: string; page?: number; pageSize?: number }) {
   const qs = buildQuery({
     keyword: params.keyword,

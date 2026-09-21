@@ -42,3 +42,13 @@ export function markNotificationRead(id: string) {
 export function markAllNotificationsRead() {
   return request<{ success: boolean }>(API.NOTIFICATIONS_READ_ALL, { method: 'POST' })
 }
+
+/** 删除单条站内信（v1.7.9 左滑删除，硬删） */
+export function deleteNotification(id: string) {
+  return request<{ success: boolean }>(API.NOTIFICATION_ITEM(id), { method: 'DELETE' })
+}
+
+/** 清空全部已读（v1.7.9，未读保留） */
+export function clearReadNotifications() {
+  return request<{ success: boolean }>(API.NOTIFICATIONS_CLEAR_READ, { method: 'DELETE' })
+}

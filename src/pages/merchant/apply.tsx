@@ -325,14 +325,14 @@ export default function MerchantApplyPage() {
     try {
       const d = await getMerchantDetail(selected.id)
       if (d) {
-        // 改动说明：联系人默认取登录昵称（可改），其余字段含客服电话预填爬虫值供核对
+        // 改动说明：联系人默认取登录昵称（可改），其余字段含客服电话预填互联网数据值供核对
         //   （客服电话是商户对外公开号，不是申请人手机，故不覆盖为账户值）
         setForm({
           name: d.name || selected.name || '',
           companyName: d.companyName || '',
           type: MERCHANT_TYPES.find((x) => x.label === d.type)?.value ?? 0,
           contactPerson: selfContactPerson || d.contactPerson || '',
-          // 改动说明：客服电话优先商户已有对外电话（爬虫值供核对），无值时回退登录账号手机号
+          // 改动说明：客服电话优先商户已有对外电话（互联网数据值供核对），无值时回退登录账号手机号
           phone: d.phone || d.mobile || selfPhone,
           address: d.address || '',
           unifiedSocialCreditCode: '',

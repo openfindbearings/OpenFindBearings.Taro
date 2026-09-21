@@ -17,6 +17,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
+import { useNotificationStore } from '../../stores/notification'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
@@ -164,7 +165,8 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
           {src
             // 改动说明（v1.7.4）：aspectFill 会把非正方形 logo 裁切导致视觉偏心，改 aspectFit+白底
             //   （主流店铺头像做法：完整展示商标，留白由白底吸收），首字占位仍用主题色圆
-            ? <Image className='mch-avatar' src={src} mode='aspectFit' style={{ width: 44, height: 44, backgroundColor: '#FFFFFF' }} />
+            // 改动说明（v1.7.8）：尺寸改走 .mch-avatar-img 类（100%），原内联 44 与 scss 换算不同步致偏心
+            ? <Image className='mch-avatar-img' src={src} mode='aspectFit' />
             : <Text style={{ ...fs(18), color: t.textOnPrimary, fontWeight: '600' }}>{(m.merchantName || '商').slice(0, 1)}</Text>}
         </View>
         <View className='mch-mid'>
@@ -212,7 +214,8 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             <Text style={{ ...fs(13), color: t.textPrimary }}>商品管理</Text>
           </View>
           <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/members' })}>
-            <Text style={{ ...fs(13), color: t.textPrimary }}>成员管理</Text>
+            {/* 改动说明（v1.7.8）：员工无管理权限，入口按角色显示"员工列表"（名实相符，页面标题同步） */}
+            <Text style={{ ...fs(13), color: t.textPrimary }}>{m.role === 'MerchantAdmin' ? '成员管理' : '员工列表'}</Text>
           </View>
           {m.role === 'MerchantAdmin' && (
             <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
@@ -309,6 +312,9 @@ export default function MerchantPage() {
         Taro.showToast({ title: r?.message || (accept ? '已接受邀请' : '已拒绝邀请'), icon: accept ? 'success' : 'none' })
         setInvitations((list) => list.filter((x) => x.invitationId !== inv.invitationId))
         fetchApplications().catch(() => { /* 忽略 */ })
+        // 改动说明（v1.7.8）：服务端处理邀请时已核销对应站内信（标已读），
+        //   此处立即刷新未读计数，"我的"角标同步消减不残留
+        void useNotificationStore.getState().fetchUnread()
       } catch (e: any) {
         Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
       } finally {

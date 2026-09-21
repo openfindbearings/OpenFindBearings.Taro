@@ -6,6 +6,9 @@
 import Icon from '../../components/Icon'
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
+// 改动说明（v1.7.11 沉浸式渐变头部）：useState 管滚动浮现度；useSafeArea 供渐变内容避让状态栏
+import { useState } from 'react'
+import { useSafeArea } from '../../utils/use-safe-area'
 // 改动说明：原直接 import react-native-linear-gradient 会让 H5 webpack 打包 RN 原生模块而报
 // ModuleParseError；改用平台分文件的 Gradient 组件（RN 走原生、H5/小程序走 CSS 渐变），JSX 用法不变。
 import LinearGradient from '../../components/Gradient'
@@ -16,6 +19,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import { useAuthStore } from '../../stores/auth'
+import { useNotificationStore } from '../../stores/notification'
 import './index.scss'
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
@@ -43,10 +47,14 @@ export default function MyPage() {
   // 主题色板（会员卡渐变/用户区底/图标底/文字随模式）+ 全局字号
   const t = useTheme()
   const fs = useFs()
+  // 未读消息数（铃铛红点，与 TabBar 角标同源 store）
+  const unreadCount = useNotificationStore((s) => s.unreadCount)
 
   useDidShow(() => {
     // 每次显示时补拉一次资料（若已登录），保证昵称/手机号/头像跟随后端变更
     if (isLoggedIn) void useAuthStore.getState().fetchProfile()
+    // 改动说明（v1.7.8）：补拉未读消息数——铃铛红点与 TabBar 角标同源同步（store 单例）
+    void useNotificationStore.getState().fetchUnread()
   })
 
   const handleMenuClick = (key: string) => {
@@ -69,9 +77,10 @@ export default function MyPage() {
     Taro.showToast({ title: '功能暂未上线', icon: 'none' })
   }
 
-  // 改动说明：未上线占位统一"暂未上线"停用文案（与设置页开关停用态一致）
+  // 改动说明（v1.7.8）：铃铛从"暂未上线"占位改为跳转消息中心（页面早已存在，此前漏接线）；
+  //   红点与 TabBar"我的"角标同源（notification store），点开消息即消
   const handleBellClick = () => {
-    Taro.showToast({ title: '消息中心暂未上线', icon: 'none' })
+    Taro.navigateTo({ url: '/pages/notifications/index' })
   }
 
   const handleSettingsClick = () => {
@@ -97,83 +106,118 @@ export default function MyPage() {
   // 规避 Taro RN className 文件作用域限制（此前在本文件写 navbar-icon 类，
   // 编译期按 my 页样式表查不到该类，图标触控框/间距全丢，导致两图标紧贴）。
   const rightIcons = [
-    { name: 'bell', onClick: handleBellClick },
+    { name: 'bell', onClick: handleBellClick, badge: unreadCount },
     { name: 'settings', onClick: handleSettingsClick }
   ]
 
   // 会员卡阴影：Taro 不转 Android elevation，inline 补。
   // 类型断言原因：shadow*/elevation 是 RN 专有样式属性，Taro 的 CSSProperties 类型未声明
-  const memberCardStyle = {
-    shadowColor: 'rgba(2, 132, 199, 0.3)',
+  const cardShadow = {
+    shadowColor: 'rgba(0, 0, 0, 0.10)',
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
     shadowOpacity: 1,
     elevation: 3
   } as any
 
-  return (
-    <PageLayout nav={<NavBar title="我的" rightIcons={rightIcons} />} tabbar={<CustomTabBar />}>
-      {/* 用户信息区 */}
-      <View className='user-section'>
-        {isLoggedIn ? (
-          <View className='user-info' style={{ backgroundColor: t.primary }} onClick={handleProfileClick}>
-            <View className='avatar'>
-              {avatar ? (
-                <Image className='avatar-img' src={avatar} mode='aspectFill' />
-              ) : (
-                <Icon name="user" size={32} color={t.textOnPrimary} />
-              )}
-            </View>
-            <View className='user-detail'>
-              <Text className='nickname' style={{ ...fs(17), color: t.textOnPrimary }}>{authUser?.nickname || authUser?.userName || '已登录用户'}</Text>
-              {authUser?.phoneNumber && <Text className='phone' style={{ ...fs(13), color: t.textOnPrimary }}>{authUser.phoneNumber}</Text>}
-            </View>
-          </View>
-        ) : (
-          <View className='user-info' style={{ backgroundColor: t.primary }} onClick={() => Taro.navigateTo({ url: '/pages/auth/login' })}>
-            <View className='avatar'>
-              <Icon name="log_in" size={28} color={t.textOnPrimary} />
-            </View>
-            <View className='user-detail'>
-              <Text className='nickname' style={{ ...fs(17), color: t.textOnPrimary }}>点击登录</Text>
-              <Text className='phone' style={{ ...fs(13), color: t.textOnPrimary }}>登录后享受更多功能</Text>
-            </View>
-          </View>
-        )}
-      </View>
+  // 改动说明（v1.7.11 沉浸式渐变头部）：滚动 40→120px 区间线性求导航浮现度，
+  //   双层 nav 交叉淡入——白图标透明层（1-fade）与白底标题深色层（fade）互换透明度
+  const [scrollY, setScrollY] = useState(0)
+  const fade = Math.min(1, Math.max(0, (scrollY - 40) / 80))
+  // 状态栏安全区：渐变延伸到顶，内容需吃 paddingTop 避让透明 nav
+  const { top: safeTop } = useSafeArea()
 
-      {/* 会员卡（美团风格渐变）：顶部积分大数字 + 收支明细入口，底部积分兑换按钮。
-          背景用 react-native-linear-gradient 标准原生渐变（主题蓝天蓝系），
-          替代之前"RN 不支持渐变"妥协的单一纯色实现——RN 端原生组件可直接使用。 */}
+  return (
+    <PageLayout
+      immersive
+      onScrollY={setScrollY}
+      tabbar={<CustomTabBar />}
+      nav={
+        <View style={{ position: 'relative' }}>
+          {/* 底层：透明沉浸（渐变深底上白色图标，无标题） */}
+          <View style={{ opacity: 1 - fade }}>
+            <NavBar
+              background='transparent'
+              contentColor='#FFFFFF'
+              showBorder={false}
+              rightIcons={rightIcons}
+            />
+          </View>
+          {/* 浮现层：白底 + "我的"标题 + 深色图标（滚动后淡入） */}
+          <View style={{ position: 'absolute', left: 0, right: 0, top: 0, opacity: fade }}>
+            <NavBar title='我的' rightIcons={rightIcons} />
+          </View>
+        </View>
+      }
+    >
+      {/* 渐变头部容器（v1.7.11）：主题渐变铺满状态栏下，含用户信息 + 四宫格；
+          白色内容板（积分卡）负 margin 上浮叠在渐变底部——美团/携程同款层次 */}
       <LinearGradient
         colors={[t.memberGradientFrom, t.memberGradientTo]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className='member-card'
-        style={memberCardStyle}
+        end={{ x: 0.7, y: 1 }}
+        className='header-gradient'
       >
-        <View className='member-head'>
-          <Text className='member-head-title' style={{ ...fs(13), color: t.textOnPrimary }}>我的积分</Text>
-          <View className='member-detail' onClick={handlePointsDetail}>
-            <Text className='member-detail-text' style={{ ...fs(13), color: t.textOnPrimary }}>收支明细</Text>
-            <Icon name="chevron_right" size={14} color={t.textOnPrimary} />
+        <View style={{ paddingTop: safeTop + 8 }}>
+          {/* 用户信息区（渐变深底：白字白描边） */}
+          <View className='user-section'>
+            {isLoggedIn ? (
+              <View className='user-info' onClick={handleProfileClick}>
+                <View className='avatar' style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' }}>
+                  {avatar ? (
+                    <Image className='avatar-img' src={avatar} mode='aspectFill' />
+                  ) : (
+                    <Icon name="user" size={30} color="#FFFFFF" />
+                  )}
+                </View>
+                <View className='user-detail'>
+                  <Text className='nickname' style={{ ...fs(19), color: '#FFFFFF' }}>{authUser?.nickname || authUser?.userName || '已登录用户'}</Text>
+                  {authUser?.phoneNumber && <Text className='phone' style={{ ...fs(13), color: 'rgba(255,255,255,0.85)' }}>{authUser.phoneNumber}</Text>}
+                </View>
+                <Icon name="chevron-right" size={18} color="rgba(255,255,255,0.85)" />
+              </View>
+            ) : (
+              <View className='user-info' onClick={() => Taro.navigateTo({ url: '/pages/auth/login' })}>
+                <View className='avatar' style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' }}>
+                  <Icon name="log_in" size={26} color="#FFFFFF" />
+                </View>
+                <View className='user-detail'>
+                  <Text className='nickname' style={{ ...fs(19), color: '#FFFFFF' }}>点击登录</Text>
+                  <Text className='phone' style={{ ...fs(13), color: 'rgba(255,255,255,0.85)' }}>登录后享受更多功能</Text>
+                </View>
+                <Icon name="chevron-right" size={18} color="rgba(255,255,255,0.85)" />
+              </View>
+            )}
           </View>
-        </View>
 
-        <View className='member-main'>
-          <Text className='member-points' style={{ ...fs(32), color: t.textOnPrimary }}>0</Text>
-          <Text className='member-points-label' style={{ ...fs(13), color: t.textOnPrimary }}>积分</Text>
-        </View>
-
-        <View className='member-foot'>
-          <Text className='member-foot-tip' style={{ ...fs(12), color: t.textOnPrimary }}>积分可兑换现金</Text>
-          <View className='member-redeem' style={{ backgroundColor: t.textOnPrimary + '22' }} onClick={handleRedeem}>
-            <Text className='member-redeem-text' style={{ ...fs(13), color: t.textOnPrimary }}>去兑换</Text>
-          </View>
+          {/* 改动说明（v1.7.11 二次调整）：四宫格从渐变区移出，还原为白卡片放积分卡下方 */}
         </View>
       </LinearGradient>
 
-      {/* 功能卡 - 横向四宫格 */}
+      {/* 积分卡（v1.7.11 改白卡）：原渐变背景上移给头部后，此卡回归普通白卡——
+          负 margin 上浮叠在渐变底部，顶部大圆角。
+          改动说明：文案"积分可兑换现金"违反积分合规红线（不可兑现），改"兑换精选礼品" */}
+      <View className='member-card-white' style={{ ...cardShadow, backgroundColor: t.bgCard }}>
+        <View className='member-head'>
+          <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的积分</Text>
+          <View className='member-detail' onClick={handlePointsDetail}>
+            <Text style={{ ...fs(13), color: t.textSecondary }}>收支明细</Text>
+            <Icon name="chevron_right" size={14} color={t.textTertiary} />
+          </View>
+        </View>
+        <View className='member-main'>
+          <Text style={{ ...fs(30), color: t.primary, fontWeight: 'bold' }}>0</Text>
+          <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6, marginBottom: 4 }}>积分</Text>
+        </View>
+        <View className='member-foot'>
+          <Text style={{ ...fs(12), color: t.textTertiary }}>活跃赚积分，可兑换精选礼品</Text>
+          <View className='member-redeem' style={{ backgroundColor: t.primary }} onClick={handleRedeem}>
+            <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去兑换</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 功能卡 - 横向四宫格（白卡样式，v1.7.11 调整到积分卡下方） */}
       <View className='menu-grid' style={{ backgroundColor: t.bgCard }}>
         {menuItems.map((item) => (
           <View

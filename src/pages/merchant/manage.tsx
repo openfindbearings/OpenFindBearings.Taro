@@ -400,7 +400,7 @@ export default function MerchantManagePage() {
       )}
       {isAdmin && (
         <Text style={{ ...fs(11), color: t.textTertiary, paddingLeft: 14, paddingRight: 14, marginBottom: 20 }}>
-          Excel 导入模板列：轴承型号 / 品牌 / 价格 / 库存数量 / 最小起订量；导入数据为商户自管，爬虫不覆盖
+          Excel 导入模板列：轴承型号 / 品牌 / 价格 / 库存数量 / 最小起订量；导入数据为商户自管，互联网数据不覆盖
         </Text>
       )}
     </PageLayout>

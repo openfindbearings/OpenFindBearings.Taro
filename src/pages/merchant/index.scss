@@ -83,6 +83,14 @@
   overflow: hidden;
   margin-right: 12px;
 }
+/* 改动说明（v1.7.8）：logo 图专用类——原 Image 复用 .mch-avatar 并内联 width:44，
+   内联数字是原始 dp 而 scss 的 44px 经 Taro 按设计稿 750 换算（约 21dp），
+   两套单位不同步导致图比容器大、被裁切视觉偏心；100% 随容器换算天然居中 */
+.mch-avatar-img {
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+}
 .mch-mid {
   flex: 1;
   display: flex;

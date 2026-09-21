@@ -8,21 +8,20 @@
   padding: $space-4 $space-4 0 $space-4;
 }
 
+// 改动说明（v1.7.10 美团式头部）：去蓝底卡片圈围——无背景/圆角/阴影，直接融入页面；
+// 头像占位底与文字色由 tsx 内联主题 token 提供，scss 仅留布局与中性兜底
 .user-info {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: $primary;
-  border-radius: $radius-lg;
-  padding: $space-5;
-  box-shadow: $shadow-md;
+  padding: $space-4 $space-1;
 }
 
 .avatar {
   width: 56px;
   height: 56px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #E5E6EB;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -50,37 +49,27 @@
   font-size: $font-size-lg;
   line-height: $line-height-lg;
   font-weight: bold;
-  color: #FFFFFF;
+  color: #1D2129;
   margin-bottom: $space-1;
 }
 
 .phone {
   font-size: $font-size-sm;
   line-height: $line-height-sm;
-  color: rgba(255, 255, 255, 0.85);
+  color: #86909C;
 }
 
 // ============ 会员卡（美团风格：积分大数字 + 收支明细入口 + 兑换按钮） ============
 // 背景渐变由 <LinearGradient> 组件（react-native-linear-gradient）在 tsx 里提供，
 // 此处只负责圆角/内边距/外边距/纵向布局；不再写 background（LinearGradient 用 colors prop 自绘，CSS background 无效）。
-.member-card {
+// ============ 积分卡（v1.7.11 改白卡：渐变背景已上移给头部） ============
+// 负 margin 上浮叠在渐变底部，顶部圆角衔接；配色走 tsx 内联主题 token
+.member-card-white {
   display: flex;
   flex-direction: column;
   border-radius: $radius-lg;
   padding: $space-4;
-  margin: $space-3 $space-4 0 $space-4;
-  overflow: hidden;   // 裁掉超出圆角的装饰圆
-}
-
-// 右上装饰半透明圆（美团式氛围），绝对定位
-.member-overlay {
-  position: absolute;
-  top: -30px;
-  right: -20px;
-  width: 120px;
-  height: 120px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  margin: -36px $space-4 0 $space-4;
 }
 
 // 头部行：左标题，右"收支明细 >"
@@ -91,23 +80,10 @@
   justify-content: space-between;
 }
 
-.member-head-title {
-  font-size: $font-size-sm;
-  line-height: $line-height-sm;
-  color: rgba(255, 255, 255, 0.9);
-}
-
 .member-detail {
   display: flex;
   flex-direction: row;
   align-items: center;
-}
-
-.member-detail-text {
-  font-size: $font-size-xs;
-  line-height: $line-height-xs;
-  color: rgba(255, 255, 255, 0.85);
-  margin-right: 2px;
 }
 
 // 中部：大数字 + 单位
@@ -116,21 +92,6 @@
   flex-direction: row;
   align-items: flex-end;
   margin-top: $space-2;
-}
-
-.member-points {
-  font-size: $font-size-4xl;
-  line-height: $line-height-4xl;
-  font-weight: bold;
-  color: #FFFFFF;
-}
-
-.member-points-label {
-  font-size: $font-size-sm;
-  line-height: $line-height-sm;
-  color: rgba(255, 255, 255, 0.85);
-  margin-left: $space-2;
-  margin-bottom: $space-2;
 }
 
 // 底部行：左提示文字，右"去兑换"胶囊按钮
@@ -142,14 +103,9 @@
   margin-top: $space-3;
 }
 
-.member-foot-tip {
-  font-size: $font-size-xs;
-  line-height: $line-height-xs;
-  color: rgba(255, 255, 255, 0.75);
-}
-
+// 改动说明（v1.7.11）：foot 提示文字与兑换按钮文字色改 tsx 内联主题 token，
+// 此类只留胶囊几何；按钮底色（primary）也内联
 .member-redeem {
-  background: rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   padding: 6px 16px;
   display: flex;
@@ -158,17 +114,19 @@
   justify-content: center;
 }
 
-.member-redeem-text {
-  font-size: $font-size-sm;
-  line-height: $line-height-sm;
-  color: #FFFFFF;
+// ============ 渐变头部容器（v1.7.11 沉浸式改版） ============
+// 主题渐变铺满状态栏下（paddingTop 由 tsx 内联 safeTop+52 避让透明 nav），
+// 底部留 48px 给白色积分卡负 margin 上浮叠压
+.header-gradient {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 48px;
 }
 
-// ============ 功能卡 - 横向四宫格 ============
+// ============ 功能卡 - 横向四宫格（v1.7.11 调整：白卡样式，置于积分卡下方） ============
 .menu-grid {
   display: flex;
   flex-direction: row;
-  background: $bg-card;
   margin: $space-3 $space-4 0 $space-4;
   padding: $space-4 0;
   border-radius: $radius-lg;
@@ -197,7 +155,6 @@
 .grid-label {
   font-size: $font-size-sm;
   line-height: $line-height-sm;
-  color: $text-secondary;
 }
 
 // ============ 版本信息行（v1.7.0 新建） ============
