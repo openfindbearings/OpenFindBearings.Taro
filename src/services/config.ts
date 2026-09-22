@@ -209,6 +209,11 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   HISTORY_RECORD_BEARING: (id: string) => `${API_PREFIX}/me/history/bearings/${id}`,
   HISTORY_RECORD_MERCHANT: (id: string) => `${API_PREFIX}/me/history/merchants/${id}`,
   HISTORY_CLEAR: `${API_PREFIX}/me/history/clear`,
+    // 信息纠错（v1.7.14）：字段清单/提交/我的列表（BFF /mobile/me/corrections/* 代理 API /api/me/corrections/*）
+    CORRECTION_FIELDS: (targetType: string, targetId: string) => `${API_PREFIX}/me/corrections/fields/${targetType}/${targetId}`,
+    CORRECTION_SUBMIT_BEARING: (id: string) => `${API_PREFIX}/me/corrections/bearings/${id}`,
+    CORRECTION_SUBMIT_MERCHANT: (id: string) => `${API_PREFIX}/me/corrections/merchants/${id}`,
+    MY_CORRECTIONS: `${API_PREFIX}/me/corrections`,
     PROFILE_UPDATE: `${API_PREFIX}/me/profile`,
     // 注销账户（v1.7.12）：真注销——服务端守卫+关系清理+Identity 禁用吊销（原为纯本地清缓存假注销）
     ACCOUNT_DEACTIVATE: `${API_PREFIX}/me/deactivate`,

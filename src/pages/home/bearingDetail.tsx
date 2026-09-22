@@ -1,6 +1,7 @@
 // 轴承详情页：基本信息 + 参数 + 在售商家 + 替代品。收藏/纠错为登录门槛（未登录提示，登录功能后续接入）。
 // 数据来自 BFF public 端点：/bearings/{id}、/bearings/{id}/merchants、/bearings/{id}/interchanges。
 import { useState } from 'react'
+import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
@@ -31,6 +32,8 @@ export default function BearingDetailPage() {
   // 旧写法恒判未登录；store 订阅同时保证登录后返回本页即时可操作
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [isFav, setIsFav] = useState(false)
+  // 改动说明（v1.7.14）：纠错面板可见态（结构化纠错 CorrectionSheet）
+  const [correctVisible, setCorrectVisible] = useState(false)
 
   useDidShow(() => {
     if (!id) return
@@ -64,7 +67,8 @@ export default function BearingDetailPage() {
       Taro.showToast({ title: res?.message || '操作失败，请稍后重试', icon: 'none' })
     }
   }
-  const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); Taro.showToast({ title: '纠错暂未上线', icon: 'none' }) }
+  // 改动说明（v1.7.14）：纠错从占位 toast 改为打开结构化纠错面板（选字段/核对当前值/填应改为）
+  const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); setCorrectVisible(true) }
   const goMerchant = (mid: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${mid}` })
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
 
@@ -165,6 +169,7 @@ export default function BearingDetailPage() {
           </View>
         </View>
       </View>
+      <CorrectionSheet visible={correctVisible} targetType='Bearing' targetId={id} onClose={() => setCorrectVisible(false)} />
     </PageLayout>
   )
 }

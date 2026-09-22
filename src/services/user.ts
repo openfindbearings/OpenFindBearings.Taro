@@ -209,3 +209,42 @@ export async function deleteMerchantHistory(merchantId: string) {
 export async function clearHistory() {
   return request<OpResult>(API.HISTORY_CLEAR, { method: 'DELETE' })
 }
+// ============ 信息纠错（v1.7.14） ============
+
+/** 可纠错字段选项（键+中文名+当前值，后端与审批可应用字段严格一致） */
+export interface CorrectionFieldOption {
+  key: string
+  label: string
+  currentValue: string | null
+}
+
+/** 我的纠错条目 */
+export interface CorrectionItem {
+  id: string
+  targetType: string
+  targetDisplay: string
+  fieldName: string
+  fieldDisplayName: string
+  originalValue: string | null
+  suggestedValue: string
+  reason: string | null
+  submittedAt: string
+  status: string
+  reviewComment: string | null
+}
+
+/** 拉取目标实体的可纠错字段清单（纠错表单数据源） */
+export async function getCorrectionFields(targetType: 'Bearing' | 'Merchant', targetId: string) {
+  return request<CorrectionFieldOption[]>(API.CORRECTION_FIELDS(targetType, targetId))
+}
+
+/** 提交纠错（轴承/商家共用体，返回 success+message，去重/校验失败原因经 message 透传） */
+export async function submitCorrection(targetType: 'Bearing' | 'Merchant', targetId: string, body: { fieldName: string; suggestedValue: string; reason?: string }) {
+  const url = targetType === 'Bearing' ? API.CORRECTION_SUBMIT_BEARING(targetId) : API.CORRECTION_SUBMIT_MERCHANT(targetId)
+  return request<OpResult>(url, { method: 'POST', data: body })
+}
+
+/** 我的纠错列表（分页） */
+export async function getMyCorrections(page = 1, pageSize = 20) {
+  return request<Paged<CorrectionItem>>(`${API.MY_CORRECTIONS}?page=${page}&pageSize=${pageSize}`)
+}

@@ -18,6 +18,7 @@ export default defineAppConfig({
     'pages/my/favorites',
     'pages/my/followed',
     'pages/my/history',
+    'pages/my/corrections',
     'pages/my/profile-edit',
     'pages/common/doc',
     'pages/auth/login',
