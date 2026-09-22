@@ -329,7 +329,9 @@ export default function MerchantApplyPage() {
         //   （客服电话是商户对外公开号，不是申请人手机，故不覆盖为账户值）
         setForm({
           name: d.name || selected.name || '',
-          companyName: d.companyName || '',
+          // 改动说明（v1.7.12）：企业名称预填商家名称兜底——互联网数据抓来的商家名多为执照全称，
+          //   预填后由认领人对照执照核对修正（主流认领做法），省去从零输入；无值时仍留空必填
+          companyName: d.companyName || d.name || '',
           type: MERCHANT_TYPES.find((x) => x.label === d.type)?.value ?? 0,
           contactPerson: selfContactPerson || d.contactPerson || '',
           // 改动说明：客服电话优先商户已有对外电话（互联网数据值供核对），无值时回退登录账号手机号

@@ -72,11 +72,14 @@ export default function CustomTabBar() {
       const r = await showMerchantSwitchSheet(items, currentMerchantId)
       if (r.action === 'switch' && r.merchantId) {
         await switchMerchant(r.merchantId)
-        // 切换后落到商户页，各管理页随 currentMerchantId 刷新
-        Taro.redirectTo({ url: '/pages/merchant/index' })
       } else if (r.action === 'add') {
         Taro.navigateTo({ url: '/pages/merchant/apply' })
+        return
       }
+      // 改动说明（v1.7.12）：多商户点中间 tab = "切换器 + 进商户页"二合一——无论切了商户、
+      //   取消选择还是维持原商户，都要落到商户页（tab 基本语义，取消弹窗不能把切 tab 也吞了）；
+      //   已在商户页时不重复跳转，仅随 store 刷新
+      if (selected !== 2) Taro.redirectTo({ url: '/pages/merchant/index' })
       return
     }
     if (selected !== 2) Taro.redirectTo({ url: '/pages/merchant/index' })

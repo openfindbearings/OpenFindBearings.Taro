@@ -25,6 +25,7 @@ import { useAuthStore } from '../../stores/auth'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { checkUpdateManually, isAutoUpdateEnabled, setAutoUpdateEnabled } from '../../services/update'
+import { deactivateAccount } from '../../services/user'
 import { getAppVersion } from '../../utils/version'
 import './settings.scss'
 
@@ -162,17 +163,39 @@ export default function SettingsPage() {
     })
   }
 
+  // 注销账户（v1.7.12）：真注销——先调服务端（守卫+关系清理+Identity 禁用吊销），
+  // 成功后再清本地登录态。原实现仅 clearStorage 属"假注销"（服务端账号完好），文案与行为不符。
+  // 唯一管理员商户被拦截时，服务端 message（含商户名与转让指引）弹窗原样呈现
   const handleDeleteAccount = () => {
     showConfirmDialog({
       title: '注销账户',
-      content: '注销后所有数据将被清除且无法恢复，确定继续？',
+      content: '注销后账号将无法登录，收藏/关注/消息等个人数据将被清除；30 天冷静期内可联系客服撤销，期满数据匿名化不可恢复。若仍是某商户唯一管理员，需先转让管理员。',
       confirmText: '确认注销',
       confirmColor: '#EF4444'
-    }).then((ok) => {
-      if (ok) {
-        Taro.clearStorage()
-        Taro.showToast({ title: '账户已注销', icon: 'success' })
-        setTimeout(() => Taro.reLaunch({ url: '/pages/home/index' }), 1500)
+    }).then(async (ok) => {
+      if (!ok) return
+      try {
+        const r = await deactivateAccount()
+        if (r?.success) {
+          // 服务端已禁用账号并吊销全部令牌；本地清登录态并回首页
+          await useAuthStore.getState().logout()
+          Taro.showToast({ title: '账户已注销', icon: 'success' })
+          setTimeout(() => Taro.reLaunch({ url: '/pages/home/index' }), 1500)
+        } else {
+          showConfirmDialog({
+            title: '无法注销',
+            content: r?.message || '注销失败，请稍后重试',
+            confirmText: '知道了',
+            showCancel: false
+          })
+        }
+      } catch (e: any) {
+        showConfirmDialog({
+          title: '无法注销',
+          content: e?.message || '注销失败，请稍后重试',
+          confirmText: '知道了',
+          showCancel: false
+        })
       }
     })
   }
@@ -443,14 +466,12 @@ export default function SettingsPage() {
         </View>
       </View>
 
-      {/* 退出登录：仅登录后可见 */}
+      {/* 退出登录：仅登录后可见。改动说明（v1.7.12）：由红字列表项改主题色全宽按钮——
+          与"注销账户"（红字危险项）拉开视觉层级，防误点，对齐主流设置页退出按钮惯例 */}
       {isLoggedIn && (
         <View className='section'>
-          <View className='list' style={{ backgroundColor: t.bgCard }}>
-            <View className='list-item list-item-last list-item-center' onClick={handleLogout}>
-              <Icon name="log_out" size={18} color={t.danger} />
-              <Text className='list-label-danger logout-text' style={{ ...fs(15), color: t.danger }}>退出登录</Text>
-            </View>
+          <View className='logout-btn' style={{ backgroundColor: t.primary }} onClick={handleLogout}>
+            <Text style={{ ...fs(16), color: '#FFFFFF', fontWeight: '600' }}>退出登录</Text>
           </View>
         </View>
       )}

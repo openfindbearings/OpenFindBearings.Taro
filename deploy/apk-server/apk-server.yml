@@ -166,14 +166,24 @@ data:
     get() { echo "$CONN" | tr ';' '\n' | grep -m1 -i "^$1=" | cut -d= -f2-; }
     export PGHOST="$(get Host)" PGPORT="$(get Port)" PGDATABASE="$(get Database)" PGUSER="$(get Username)" PGPASSWORD="$(get Password)"
 
-    # 1) 取最新规范版本：/releases 按发布时间倒序返回，过滤规范格式后取第一条即最新发布。
-    #    （不用 sort -V 排版本序：busybox sort -V 把 v1.0.0-rc.12 排在正式版 v1.0.0 之后，
-    #    违反 SemVer prerelease 规则；发布时间序与"发布即宣告最新"的业务语义天然一致）
+    # 1) 取最新规范版本（按 published_at 比较，不信 API 返回顺序）
+    #    改动说明（rc.10 事故）：GitHub /releases 列表不保证按发布时间排序，实测按 tag 名
+    #    字符串序——"rc.10" 逐字符比较排在 "rc.7" 之后（'1'<'7'），旧实现 head -n1 取首条
+    #    在版本号进入两位数后永远误判为 rc.9。现改为 awk 按 release 分组提取
+    #    (published_at, tag, 是否带 arm64 分包)，sort -r 按 ISO 时间字典序取最新（时间序=字典序），
+    #    无包/草稿（published_at 为 null）的 Release 自动跳过回退次新。
+    #    （不用 sort -V：busybox sort -V 把 v1.0.0-rc.12 排在正式版 v1.0.0 之后，违反 SemVer）
     TARGET=$(wget -qO- "$API/releases?per_page=15" \
-      | grep -o 'https://github.com/[^"]*app-v[^"]*-arm64-v8a\.apk' \
-      | sed -E 's#.*app-(v.+)-arm64-v8a\.apk#\1#' \
-      | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$' \
-      | head -n1)
+      | awk -F'"' '
+          /"tag_name"/{ flush() }
+          /"published_at"/{ pub=$4 }
+          /"browser_download_url"/{ if ($4 ~ /app-v.*-arm64-v8a\.apk$/) apk=1 }
+          END{ flush() }
+          function flush() {
+            if (tag != "" && pub != "" && apk && tag ~ /^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$/) print pub, tag
+            tag=$4; pub=""; apk=0
+          }' \
+      | sort -r | head -n1 | cut -d" " -f2)
     if [ -z "$TARGET" ]; then
       log "无规范版本 Release（或 API 不可达），本轮跳过"
       exit 0
