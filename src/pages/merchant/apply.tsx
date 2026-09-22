@@ -830,7 +830,7 @@ export default function MerchantApplyPage() {
             {editing
               ? '已按原申请预填资料，修改后重新提交将再次进入平台审核。'
               : (isClaim
-                ? (claimLoading ? '正在载入商家现有资料…' : '以下为商家现有资料，请逐项核对并修正（互联网信息不可信），无误后提交认领。')
+                ? (claimLoading ? '正在载入商家现有资料…' : '以下为商家现有资料，请逐项核对并修正（互联网信息不可信），无误后提交认领。认领后互联网来源的在售商品与旧申请材料将被清空，由您在"商品管理"中自行维护。')
                 : '请填写商户资料，提交后等待平台审核。')}
           </Text>
           <View style={{ borderRadius: 12, overflow: 'hidden' }}>
