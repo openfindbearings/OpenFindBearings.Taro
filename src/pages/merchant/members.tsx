@@ -14,6 +14,7 @@
 import { useState } from 'react'
 import { View, Text, Image, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
+import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -88,6 +89,8 @@ export default function MerchantMembersPage() {
         setBusyId(m.invitationId || m.id)
         try {
           await action()
+          // 改动说明（v1.7.13）：成员操作成功触感反馈
+          void vibrateSuccess()
           Taro.showToast({ title: '操作成功', icon: 'success' })
           load()
         } catch (e: any) {

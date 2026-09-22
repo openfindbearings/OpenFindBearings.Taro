@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { View, Text, Input, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
+import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
@@ -115,6 +116,8 @@ export default function MerchantManagePage() {
     const action = item.isOnSale ? takeOffShelf : putOnShelf
     action(item.bearingId)
       .then(() => {
+        // 改动说明（v1.7.13）：上下架成功触感反馈
+        void vibrateSuccess()
         Taro.showToast({ title: '操作成功', icon: 'success' })
         load(page, false)
       })

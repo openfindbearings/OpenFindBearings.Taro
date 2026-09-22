@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { View, Text, Input, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
+import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -159,6 +160,8 @@ export default function MerchantProfilePage() {
         logoUrl: form.logoUrl.trim() || undefined
       })
       if (r?.success) {
+        // 改动说明（v1.7.13）：保存成功触感反馈（应用级震动开关内建）
+        void vibrateSuccess()
         // 重拉入驻状态，TabBar/商户页随当前商户资料刷新（logo/名称）
         void useMerchantStore.getState().fetchApplications()
         Taro.showToast({ title: r.message || '资料已更新', icon: 'success' })

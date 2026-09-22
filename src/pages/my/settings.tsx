@@ -26,6 +26,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { checkUpdateManually, isAutoUpdateEnabled, setAutoUpdateEnabled } from '../../services/update'
 import { deactivateAccount } from '../../services/user'
+import { vibrateTap } from '../../utils/haptics'
 import { getAppVersion } from '../../utils/version'
 import './settings.scss'
 
@@ -41,6 +42,7 @@ interface AppSettings {
   simpleHome: boolean
   pushEnabled: boolean
   adEnabled: boolean
+  // 改动说明（v1.7.13）：音效开关真实生效（新消息轮询提醒），恢复为正式字段
   soundEnabled: boolean
   vibrateEnabled: boolean
 }
@@ -378,7 +380,10 @@ export default function SettingsPage() {
         </View>
       </View>
 
-      {/* 通用：音效（底层未接入，标注暂未上线）/ 震动（真实生效）/ 版本更新 */}
+      {/* 通用：音效（新消息轮询提醒，三端分策：H5 合成音/小程序 wav/RN 以震动替代）/
+          震动（应用级触感开关）/ 版本更新。
+          改动说明（v1.7.13）：两开关均真实生效——即使系统声音/触感开启，用户也可在本 App 内
+          强制静音/静震（iOS 键盘触感同思路）；原"暂未上线"占位态移除 */}
       <View className='section'>
         <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>通用</Text>
         <View className='list' style={{ backgroundColor: t.bgCard }}>
@@ -388,25 +393,17 @@ export default function SettingsPage() {
                 <Icon name="volume_2" size={20} color={t.primary} />
               </View>
               <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>音效</Text>
-              <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
             </View>
-            {/* 改动说明：音效底层未接入，停用且恒关（与广告设置一致） */}
-            <Switch
-              checked={false}
-              disabled
-              onChange={(v) => save({ soundEnabled: v })}
-            />
+            <Switch checked={settings.soundEnabled} onChange={(v) => save({ soundEnabled: v })} />
           </View>
           <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
                 <Icon name="vibrate" size={20} color={t.primary} />
               </View>
-                <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>震动</Text>
-                {/* 改动说明：震动按需求与广告设置统一为"停用未选择"态（原真实生效，暂停用） */}
-                <Text className='list-badge' style={{ ...fs(13), color: t.textTertiary, backgroundColor: t.bgInput }}>暂未上线</Text>
-              </View>
-              <Switch checked={false} disabled onChange={(v) => save({ vibrateEnabled: v })} />
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>震动</Text>
+            </View>
+            <Switch checked={settings.vibrateEnabled} onChange={(v) => { save({ vibrateEnabled: v }); if (v) void vibrateTap() }} />
           </View>
           {/* 改动说明（v1.7.6）：启动自动检查开关——关闭后开屏不再静默检查（设置页手动检查不受影响） */}
           <View className='list-item' style={{ borderBottomColor: t.border }}>

@@ -7,6 +7,7 @@
 import { View as RNView, Text as RNText, Animated, PanResponder, StyleSheet, Easing } from 'react-native'
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useFs } from '../../hooks/useFontScale'
+import { vibrateTap } from '../../utils/haptics'
 
 /** 右侧滑出的单个操作 */
 export interface SwipeCellAction {
@@ -82,6 +83,8 @@ export default function SwipeCell({
     }).start()
     const open = target !== 0
     setIsOpened(open)
+    // 改动说明（v1.7.13）：滑出动作菜单时轻震反馈（应用级震动开关内建，关则无感）
+    if (open) void vibrateTap()
     onOpenCbRef.current?.(open)
   }
 

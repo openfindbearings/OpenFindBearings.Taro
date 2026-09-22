@@ -18,6 +18,7 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { useHardwareBack } from '../../hooks/useHardwareBack'
+import { vibrateSuccess } from '../../utils/haptics'
 import {
   applyMerchant,
   searchClaimableMerchants,
@@ -382,6 +383,8 @@ export default function MerchantApplyPage() {
         address: acceptForm.address.trim() || undefined,
         documents: buildDocs()
       })
+      // 改动说明（v1.7.13）：关键操作成功触感反馈（应用级震动开关内建）
+      void vibrateSuccess()
       showConfirmDialog({
         title: '提交成功',
         content: '资料已提交，等待平台审核通过后即可开始经营。',
@@ -487,6 +490,8 @@ export default function MerchantApplyPage() {
           description: form.description.trim() || undefined,
           documents: buildDocs()
         })
+        // 改动说明（v1.7.13）：提交成功触感反馈
+        void vibrateSuccess()
         Taro.showToast({ title: r?.message || '认领申请已提交，可在"商户"页查看进度', icon: 'none' })
         void fetchApplications()
         setTimeout(() => Taro.navigateBack(), 800)
@@ -526,6 +531,8 @@ export default function MerchantApplyPage() {
           description: form.description.trim() || undefined,
           documents: buildDocs()
         })
+        // 改动说明（v1.7.13）：提交成功触感反馈
+        void vibrateSuccess()
         Taro.showToast({ title: r?.message || '入驻申请已提交，可在"商户"页查看进度', icon: 'none' })
         void fetchApplications()
         setTimeout(() => Taro.navigateBack(), 800)
