@@ -98,6 +98,15 @@ export async function updateProfile(body: ProfileUpdateBody) {
 }
 
 /**
+ * 注销账户（v1.7.12）：服务端真注销——唯一管理员商户拦截（message 带商户名引导先转让）、
+ * 其余成员关系清理、待确认邀请作废、通知清空、Identity 禁用与全设备令牌吊销；
+ * 成功后本地仍需 logout 清缓存。30 天冷静期后数据匿名化。
+ */
+export async function deactivateAccount() {
+  return request<OpResult>(API.ACCOUNT_DEACTIVATE, { method: 'POST' })
+}
+
+/**
  * 上传本地头像图片（相册选图后的临时路径）。
  * 走 uploadFileNormalized multipart 旁路（不经 request 拦截器），
  * 故先 ensureAccessToken 保证冷启动场景 token 可用。

@@ -209,7 +209,9 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   HISTORY_RECORD_BEARING: (id: string) => `${API_PREFIX}/me/history/bearings/${id}`,
   HISTORY_RECORD_MERCHANT: (id: string) => `${API_PREFIX}/me/history/merchants/${id}`,
   HISTORY_CLEAR: `${API_PREFIX}/me/history/clear`,
-  PROFILE_UPDATE: `${API_PREFIX}/me/profile`,
+    PROFILE_UPDATE: `${API_PREFIX}/me/profile`,
+    // 注销账户（v1.7.12）：真注销——服务端守卫+关系清理+Identity 禁用吊销（原为纯本地清缓存假注销）
+    ACCOUNT_DEACTIVATE: `${API_PREFIX}/me/deactivate`,
   /** 头像上传（multipart，BFF 代理到 API 落盘并返回绝对 URL） */
   AVATAR_UPLOAD: `${API_PREFIX}/me/avatar`,
 
