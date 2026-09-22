@@ -9,6 +9,7 @@ import { initFontSize } from './stores/fontSize'
 import { initTheme } from './stores/theme'
 import { initThemeColor } from './hooks/useThemeColor'
 import { useAuthStore } from './stores/auth'
+import { useNotificationStore } from './stores/notification'
 import { checkUpdateOnLaunch } from './services/update'
 import { applySiteConfigOnLaunch } from './services/config-api'
 
@@ -64,6 +65,9 @@ export function bootOnce() {
   initTheme()
   initThemeColor()
   void useAuthStore.getState().init()
+  // 改动说明（v1.7.13）：未读消息 60s 轮询（App 启动起一次；fetchUnread 内部未登录自动跳过，
+  //   未读数增加时经音效/震动提醒，设置页可关）
+  useNotificationStore.getState().startPolling()
   // 改动说明：拉站点配置应用媒体源 base（换域名/切对象存储免发版），失败回落编译期默认，不阻塞启动
   void applySiteConfigOnLaunch()
   // 改动说明：版本更新启动静默检查（每日节流、隐私门槛在服务内部处理），延迟错开首帧渲染，
