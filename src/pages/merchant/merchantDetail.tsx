@@ -1,6 +1,7 @@
 // 商家详情页：商家信息（含 Logo）+ 在售轴承。关注/纠错为登录门槛（未登录提示）。
 // 数据来自 BFF public 端点：/merchants/{id}、/merchants/{id}/bearings。
 import { useState } from 'react'
+import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
@@ -26,6 +27,8 @@ export default function MerchantDetailPage() {
   // 改动说明：登录态改订阅 auth store（同轴承详情页，access 只存内存旧写法恒判未登录）
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [isFollowed, setIsFollowed] = useState(false)
+  // 改动说明（v1.7.14）：纠错面板可见态（结构化纠错 CorrectionSheet）
+  const [correctVisible, setCorrectVisible] = useState(false)
 
   useDidShow(() => {
     if (!id) return
@@ -56,7 +59,8 @@ export default function MerchantDetailPage() {
       Taro.showToast({ title: res?.message || '操作失败，请稍后重试', icon: 'none' })
     }
   }
-  const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); Taro.showToast({ title: '纠错暂未上线', icon: 'none' }) }
+  // 改动说明（v1.7.14）：纠错从占位 toast 改为打开结构化纠错面板
+  const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); setCorrectVisible(true) }
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
   const callPhone = (p?: string | null) => { if (p) Taro.makePhoneCall({ phoneNumber: p }).catch(() => {}) }
 
@@ -162,6 +166,7 @@ export default function MerchantDetailPage() {
           </View>
         </View>
       </View>
+      <CorrectionSheet visible={correctVisible} targetType='Merchant' targetId={id} onClose={() => setCorrectVisible(false)} />
     </PageLayout>
   )
 }
