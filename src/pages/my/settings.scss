@@ -131,8 +131,16 @@
   margin-right: $space-1;
 }
 
-.logout-text {
-  margin-left: $space-2;
+// 退出登录大按钮（v1.7.12）：主题色全宽圆角，替代原红字列表项（与注销账户拉开层级防误点）
+.logout-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding-top: $space-3;
+  padding-bottom: $space-3;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
 }
 
 // ============ 开关：改用 Taro 标准 <Switch>（RN 原生控件），删除自绘 .toggle 样式 ============

@@ -443,14 +443,12 @@ export default function SettingsPage() {
         </View>
       </View>
 
-      {/* 退出登录：仅登录后可见 */}
+      {/* 退出登录：仅登录后可见。改动说明（v1.7.12）：由红字列表项改主题色全宽按钮——
+          与"注销账户"（红字危险项）拉开视觉层级，防误点，对齐主流设置页退出按钮惯例 */}
       {isLoggedIn && (
         <View className='section'>
-          <View className='list' style={{ backgroundColor: t.bgCard }}>
-            <View className='list-item list-item-last list-item-center' onClick={handleLogout}>
-              <Icon name="log_out" size={18} color={t.danger} />
-              <Text className='list-label-danger logout-text' style={{ ...fs(15), color: t.danger }}>退出登录</Text>
-            </View>
+          <View className='logout-btn' style={{ backgroundColor: t.primary }} onClick={handleLogout}>
+            <Text style={{ ...fs(16), color: '#FFFFFF', fontWeight: '600' }}>退出登录</Text>
           </View>
         </View>
       )}
