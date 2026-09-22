@@ -25,10 +25,14 @@ export interface VersionCheckResult {
   downloadUrl?: string | null
 }
 
-/** 每日节流存储键 */
-const LAST_CHECK_KEY = 'last_version_check_ts'
-/** 一天毫秒数 */
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
+/**
+ * "以后再说"已忽略版本存储键（v1.7.14）：节流从"请求层"挪到"弹窗层"——
+ * 启动检查每次都查（一个轻量 GET 可忽略，主流 App 均如此），仅对"用户明确忽略过的
+ * 同一版本"不再重复弹窗；服务端宣告更新版本即重新提醒。
+ * 改动说明（v1.7.14 修根因）：原 24h 时间戳节流有两个坑：① 宣告新版本后最长 24h 才提示；
+ *   ② 手动检查（force）也会写时间戳，把随后的启动检查堵死（实测 rc.11 宣告当天不弹即此因）
+ */
+const DISMISSED_VERSION_KEY = 'update_dismissed_version'
 /** 启动自动检查开关存储键（设备级本地设置，默认开；改动说明：v1.7.6 设置页新增开关项） */
 const AUTO_CHECK_KEY = 'auto_update_check'
 /** 当前 TARO_ENV */
@@ -47,22 +51,16 @@ export async function setAutoUpdateEnabled(on: boolean): Promise<void> {
 
 /**
  * 向后端请求版本检查
- * @param force 手动检查（true 时忽略每日节流）
+ * 改动说明（v1.7.14）：移除 force 参数与 24h 时间戳节流——启动检查每次真实查询，
+ * 重复打扰问题改由"已忽略版本"在弹窗层拦截（见 DISMISSED_VERSION_KEY 注释）
  */
-async function fetchVersionCheck(force: boolean): Promise<VersionCheckResult | null> {
-  // 每日节流：非手动检查时，距上次不足一天直接跳过
-  if (!force) {
-    const last = Number(await getItem(LAST_CHECK_KEY)) || 0
-    if (last && Date.now() - last < ONE_DAY_MS) return null
-  }
+async function fetchVersionCheck(): Promise<VersionCheckResult | null> {
   try {
     const url = `${API.VERSION_CHECK}?${buildQuery({
       currentVersion: getAppVersion(),
       platform: getAppPlatform()
     })}`
-    const res = await request<VersionCheckResult>(url, { auth: false })
-    await setItem(LAST_CHECK_KEY, String(Date.now()))
-    return res
+    return await request<VersionCheckResult>(url, { auth: false })
   } catch {
     // 版本检查失败静默，不打扰用户
     return null
@@ -148,7 +146,12 @@ async function performUpdate(result: VersionCheckResult): Promise<void> {
     // 改动说明：强制更新时不给取消机会（后端 ForceUpdate 开且低于 MinVersion 才为 true）
     showCancel: !result.isForceUpdate
   })
-  if (!confirmed) return
+  if (!confirmed) {
+    // 改动说明（v1.7.14）：用户点"以后再说"→ 记录已忽略版本，启动检查对该版本静默
+    //   （强制更新不记录——不给取消机会，理论不可达，防御性排除）
+    if (!result.isForceUpdate) await setItem(DISMISSED_VERSION_KEY, latestVersion).catch(() => {})
+    return
+  }
 
   trackDownloadProgress()
   try {
@@ -194,7 +197,7 @@ function stopProgressTracking(): void {
 }
 
 /**
- * 启动时静默检查：仅发现更新才弹窗，不阻塞、不打扰（每日一次）
+ * 启动时静默检查：仅发现更新才弹窗，不阻塞、不打扰（v1.7.14 起每次启动都查，仅对已忽略版本静默）
  * 改动说明：H5 部署即最新无需检查；小程序走原生 updateManager（微信自检测，不经后端）。
  * 未同意隐私政策前不发网络请求（合规），且避免与首启隐私弹窗争用同一弹窗总线
  */
@@ -208,8 +211,11 @@ export async function checkUpdateOnLaunch(): Promise<void> {
     setupWeappUpdate()
     return
   }
-  const result = await fetchVersionCheck(false)
+  const result = await fetchVersionCheck()
   if (result && result.hasUpdate) {
+    // 改动说明（v1.7.14）：用户此前对同一版本点过"以后再说"则启动静默（新版本自动恢复提醒）
+    const dismissed = await getItem(DISMISSED_VERSION_KEY).catch(() => null)
+    if (dismissed && (dismissed === result.latestVersion || `v${dismissed}` === result.latestVersion)) return
     await performUpdate(result)
   }
 }
@@ -242,7 +248,7 @@ export async function checkUpdateManually(): Promise<void> {
   }
 
   Taro.showLoading({ title: '检查中', mask: true })
-  const result = await fetchVersionCheck(true)
+    const result = await fetchVersionCheck()
   Taro.hideLoading()
   if (!result) {
     Taro.showToast({ title: '检查失败，请稍后重试', icon: 'none' })
