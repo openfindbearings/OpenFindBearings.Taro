@@ -143,16 +143,18 @@ export default function MerchantProfilePage() {
     try {
       const r = await updateMerchantProfile({
         name: form.name.trim(),
+        // 改动说明（v1.7.12）：联系方式/简介/官网等字段直传空串=清除（后端 null=保留、''=写入清除）——
+        //   原 `|| undefined` 让爬虫残留值（如邮箱列存着地址）永远删不掉，是死路；现在清空输入框保存即可删
         // 改动说明（v1.7.7）：type 不再回传（商家类型锁定，原回传同值属噪音）
         // 信用代码：仅历史空值时提交补录（非空锁定，后端同口径）
         unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
-        contactPerson: form.contactPerson.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-        mobile: form.mobile.trim() || undefined,
-        email: form.email.trim() || undefined,
-        address: form.address.trim() || undefined,
-        website: form.website.trim() || undefined,
-        description: form.description.trim() || undefined,
+        contactPerson: form.contactPerson.trim(),
+        phone: form.phone.trim(),
+        mobile: form.mobile.trim(),
+        email: form.email.trim(),
+        address: form.address.trim(),
+        website: form.website.trim(),
+        description: form.description.trim(),
         // 改动说明：logoUrl 有值才提交（后端 null=保留），支持上传后落库
         logoUrl: form.logoUrl.trim() || undefined
       })
@@ -181,15 +183,17 @@ export default function MerchantProfilePage() {
 
   return (
     <PageLayout nav={<NavBar title="信息维护" showBack />}>
-      {/* Logo 预览：点击上传，仅绝对/相对可解析地址渲染，失败回退 store 图标 */}
+      {/* Logo 预览：点击上传，仅绝对/相对可解析地址渲染，失败回退 store 图标。
+          改动说明（v1.7.12）：72 圆形 aspectFill 会把非方形 logo 裁掉边角——改 96 圆角白底
+          aspectFit 完整自适应显示（与商户列表卡 mch-avatar-img 同口径） */}
       <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 20, backgroundColor: t.bgCard, marginBottom: 12 }}>
         <View
-          style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+          style={{ width: 96, height: 96, borderRadius: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: t.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
           onClick={uploading ? undefined : onPickLogo}
         >
           {logoSrc
-            ? <Image style={{ width: 72, height: 72 }} src={logoSrc} mode="aspectFill" onError={() => setLogoFailed(true)} />
-            : <Icon name="store" size={36} color={t.textTertiary} />}
+            ? <Image style={{ width: 96, height: 96 }} src={logoSrc} mode="aspectFit" onError={() => setLogoFailed(true)} />
+            : <Icon name="store" size={40} color={t.textTertiary} />}
         </View>
         <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>{uploading ? '上传中…' : '点击上传商户 Logo'}</Text>
       </View>
