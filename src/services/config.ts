@@ -147,6 +147,8 @@ export const API = {
   MERCHANT_APPLICATION: `${API_PREFIX}/merchants/application`,
   /** 申请人自助撤回待审核申请（self 新建删店 / claim 认领退回公共池） */
   MERCHANT_WITHDRAW: (id: string) => `${API_PREFIX}/merchants/${id}/withdraw`,
+  /** 商户自助关店（v1.7.15）：认领商户退回公开信息池 / 自建商户直接删除 */
+  MERCHANT_CLOSE: (id: string) => `${API_PREFIX}/merchants/${id}/close`,
   /** 入驻申请详情（被拒重提表单预填，v1.6.0 新增） */
   MERCHANT_APPLICATION_DETAIL: (id: string) => `${API_PREFIX}/merchants/${id}/application`,
   /** 被拒后修改资料重新提交（v1.6.0 新增） */

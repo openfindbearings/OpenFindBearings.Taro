@@ -171,7 +171,7 @@ export default function SettingsPage() {
   const handleDeleteAccount = () => {
     showConfirmDialog({
       title: '注销账户',
-      content: '注销后账号将无法登录，收藏/关注/消息等个人数据将被清除；30 天冷静期内可联系客服撤销，期满数据匿名化不可恢复。若仍是某商户唯一管理员，需先转让管理员。',
+      content: '注销后账号将无法登录，收藏/关注/消息等个人数据将被清除；30 天冷静期内可联系客服撤销，期满数据匿名化不可恢复。若仍是某商户唯一管理员，需先在信息维护页关闭店铺或转让管理员。',
       confirmText: '确认注销',
       confirmColor: '#EF4444'
     }).then(async (ok) => {
