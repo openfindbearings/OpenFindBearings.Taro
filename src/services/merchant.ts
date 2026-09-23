@@ -235,6 +235,11 @@ export function withdrawApplication(merchantId: string) {
   return request<OpResult>(API.MERCHANT_WITHDRAW(merchantId), { method: 'POST' })
 }
 
+/** 商户自助关店（v1.7.15，任一在职管理员）：上游守卫文案（非管理员/状态不符）400 透传 */
+export function closeMerchant(merchantId: string) {
+  return request<OpResult>(API.MERCHANT_CLOSE(merchantId), { method: 'POST' })
+}
+
 /** 商户申请认证（v1.7.3，管理员）：材料不齐时后端 400 透传缺项引导文案 */
 export function requestVerifyMerchant(merchantId: string) {
   return request<OpResult>(API.MERCHANT_VERIFY_REQUEST(merchantId), { method: 'POST' })

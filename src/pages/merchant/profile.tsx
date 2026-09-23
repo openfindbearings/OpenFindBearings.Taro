@@ -10,7 +10,8 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import { getMerchantProfile, updateMerchantProfile, uploadMerchantLogo, getMyDocuments, submitDocument, type MerchantProfile, type MerchantDocumentItem } from '../../services/merchant'
+import { getMerchantProfile, updateMerchantProfile, uploadMerchantLogo, getMyDocuments, submitDocument, closeMerchant, type MerchantProfile, type MerchantDocumentItem } from '../../services/merchant'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useMerchantStore } from '../../stores/merchant'
 import { usableImage } from '../../services/config'
 
@@ -66,6 +67,8 @@ export default function MerchantProfilePage() {
   // 改动说明（v1.7.0）：证照材料区——当前商户各槽位最新一条材料 + 上传中槽位
   const [docs, setDocs] = useState<MerchantDocumentItem[]>([])
   const [docUploading, setDocUploading] = useState<number | null>(null)
+  // 关店进行中标记（v1.7.15 危险区，防重复提交）
+  const [closing, setClosing] = useState(false)
 
   /** 拉取当前商户证照材料列表（X-Merchant-Id 上下文） */
   const loadDocs = () => {
@@ -174,6 +177,38 @@ export default function MerchantProfilePage() {
     } finally { setSaving(false) }
   }
 
+  /**
+   * 关店（v1.7.15 危险区，任一在职管理员）：认领/提名已有商户退回公开信息池
+   * （商品/证照/成员清空，资料随互联网数据自然更新，可再认领）；
+   * 自建/提名新建商户直接删除（无公海数据可回，粉丝一并清除不可恢复）。
+   * 成功后重拉入驻状态（store 自动清当前商户上下文）并回商户页空态。
+   */
+  const onCloseShop = async () => {
+    const merchantId = useMerchantStore.getState().currentMerchantId
+    if (!merchantId || closing) return
+    const ok = await showConfirmDialog({
+      title: '关闭店铺',
+      content: '关店后商品、证照与成员关系将全部清空：认领的商户退回公开信息池（资料随互联网数据自然更新，之后可再次认领）；自建的商户将直接删除且不可恢复。确定关闭？',
+      confirmColor: '#EF4444'
+    })
+    if (!ok) return
+    setClosing(true)
+    try {
+      const r = await closeMerchant(merchantId)
+      if (r?.success) {
+        void vibrateSuccess()
+        await useMerchantStore.getState().fetchApplications()
+        Taro.showToast({ title: '店铺已关闭', icon: 'success' })
+        setTimeout(() => Taro.navigateBack(), 700)
+      } else {
+        // 上游守卫文案（非管理员/状态不符）原样呈现
+        Taro.showToast({ title: r?.message || '关店失败', icon: 'none' })
+      }
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '关店失败，请检查网络', icon: 'none' })
+    } finally { setClosing(false) }
+  }
+
   /** 单行字段：左标题 + 右输入 */
   const fieldRow = (label: string, node: any) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
@@ -260,6 +295,13 @@ export default function MerchantProfilePage() {
       <Text style={{ ...fs(12), color: t.textTertiary, textAlign: 'center', marginTop: 10 }}>
         仅商户管理员可维护资料；留空字段保存后保持原值不变
       </Text>
+
+      {/* 关店危险区（v1.7.15）：红字与主操作保存按钮拉开层级，防误点；确认弹窗承担二次拦截 */}
+      <View style={{ marginTop: 22, marginBottom: 34 }} onClick={closing ? undefined : onCloseShop}>
+        <Text style={{ ...fs(14), color: '#EF4444', textAlign: 'center' }}>
+          {closing ? '正在关闭…' : '关闭店铺（危险操作）'}
+        </Text>
+      </View>
     </PageLayout>
   )
 }
