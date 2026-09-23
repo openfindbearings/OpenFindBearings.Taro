@@ -77,7 +77,7 @@ export default function CorrectionSheet({ visible, targetType, targetId, onClose
     <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }} onClick={onClose}>
       <View
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16 }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={process.env.TARO_ENV === 'rn' ? undefined : (e) => e?.stopPropagation?.()}
       >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Text style={{ ...fs(17), fontWeight: 'bold', color: t.textPrimary }}>信息纠错</Text>

@@ -260,7 +260,7 @@ export default function MerchantMembersPage() {
         <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,.45)' }} onClick={() => setTarget(null)}>
           <View
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.bgPage, paddingTop: 16, paddingLeft: 16, paddingRight: 16, paddingBottom: 24, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={process.env.TARO_ENV === 'rn' ? undefined : (e) => e?.stopPropagation?.()}
           >
             {/* 详情头部：头像 + 昵称 + 角色徽标 */}
             <View style={{ alignItems: 'center', marginBottom: 14 }}>

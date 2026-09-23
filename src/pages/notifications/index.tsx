@@ -232,7 +232,7 @@ export default function NotificationsPage() {
         >
           <View
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.bgPage, paddingTop: 18, paddingLeft: 16, paddingRight: 16, paddingBottom: 30, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={process.env.TARO_ENV === 'rn' ? undefined : (e) => e?.stopPropagation?.()}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
