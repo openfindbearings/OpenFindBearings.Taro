@@ -19,6 +19,7 @@ export default defineAppConfig({
     'pages/my/followed',
     'pages/my/history',
     'pages/my/corrections',
+'pages/my/points',
     'pages/my/profile-edit',
     'pages/common/doc',
     'pages/auth/login',

@@ -20,6 +20,9 @@ import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
+// 改动说明（v1.7.17 积分底座）：账户/签到服务 + 签到成功长震反馈
+import { getPointAccount, dailyCheckin, type PointAccount } from '../../services/points'
+import { vibrateSuccess } from '../../utils/haptics'
 import './index.scss'
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
@@ -49,12 +52,16 @@ export default function MyPage() {
   const fs = useFs()
   // 未读消息数（铃铛红点，与 TabBar 角标同源 store）
   const unreadCount = useNotificationStore((s) => s.unreadCount)
+  // v1.7.17 积分账户（未登录零值兜底）
+  const [points, setPoints] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
 
   useDidShow(() => {
     // 每次显示时补拉一次资料（若已登录），保证昵称/手机号/头像跟随后端变更
     if (isLoggedIn) void useAuthStore.getState().fetchProfile()
     // 改动说明（v1.7.8）：补拉未读消息数——铃铛红点与 TabBar 角标同源同步（store 单例）
     void useNotificationStore.getState().fetchUnread()
+    // v1.7.17：补拉积分账户（签到状态跨天刷新）
+    if (isLoggedIn) void getPointAccount().then(setPoints)
   })
 
   const handleMenuClick = (key: string) => {
@@ -93,9 +100,29 @@ export default function MyPage() {
     Taro.navigateTo({ url: '/pages/my/profile-edit' })
   }
 
-  // 会员卡（美团风格）：收支明细入口与去兑换按钮暂为占位
+  // 会员卡（v1.7.17）：收支明细接积分流水页；去兑换仍占位（商城 P8 未上线）
   const handlePointsDetail = () => {
-    Taro.showToast({ title: '收支明细暂未上线', icon: 'none' })
+    Taro.navigateTo({ url: '/pages/my/points' })
+  }
+
+  // 每日签到：成功长震+toast 报分值，同日重复提示已签
+  const handleCheckin = async () => {
+    if (!isLoggedIn) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    const r = await dailyCheckin()
+    if (!r) {
+      Taro.showToast({ title: '签到失败，请稍后重试', icon: 'none' })
+      return
+    }
+    if (r.alreadyCheckedIn) {
+      Taro.showToast({ title: '今日已签到', icon: 'none' })
+    } else {
+      void vibrateSuccess()
+      Taro.showToast({ title: `签到成功 +${r.amount} 积分`, icon: 'none' })
+    }
+    setPoints(await getPointAccount())
   }
 
   const handleRedeem = () => {
@@ -206,11 +233,29 @@ export default function MyPage() {
           </View>
         </View>
         <View className='member-main'>
-          <Text style={{ ...fs(30), color: t.primary, fontWeight: 'bold' }}>0</Text>
+          {/* v1.7.17：余额接真数据（原写死 0） */}
+          <Text style={{ ...fs(30), color: t.primary, fontWeight: 'bold' }}>{points.balance}</Text>
           <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6, marginBottom: 4 }}>积分</Text>
+          {/* v1.7.17 签到按钮：描边胶囊，已签置灰（状态来自账户接口） */}
+          <View
+            className='member-checkin'
+            style={{
+              marginLeft: 'auto', borderWidth: 1, borderColor: points.todayCheckedIn ? t.border : t.primary,
+              borderRadius: 16, paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5,
+              backgroundColor: points.todayCheckedIn ? 'transparent' : t.primary,
+            }}
+            onClick={handleCheckin}
+          >
+            <Text style={{ ...fs(13), color: points.todayCheckedIn ? t.textTertiary : '#FFFFFF' }}>
+              {points.todayCheckedIn ? '已签到' : '签到'}
+            </Text>
+          </View>
         </View>
         <View className='member-foot'>
-          <Text style={{ ...fs(12), color: t.textTertiary }}>活跃赚积分，可兑换精选礼品</Text>
+          {/* v1.7.17：连续签到天数提示（未签时引导阶梯收益） */}
+          <Text style={{ ...fs(12), color: t.textTertiary }}>
+            {points.consecutiveDays > 0 ? `已连续签到 ${points.consecutiveDays} 天，` : ''}活跃赚积分，可兑换精选礼品
+          </Text>
           <View className='member-redeem' style={{ backgroundColor: t.primary }} onClick={handleRedeem}>
             <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去兑换</Text>
           </View>

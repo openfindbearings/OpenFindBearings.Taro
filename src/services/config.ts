@@ -193,6 +193,11 @@ NOTIFICATIONS_READ_ALL: `${API_PREFIX}/notifications/read-all`,
 NOTIFICATION_ITEM: (id: string) => `${API_PREFIX}/notifications/${id}`,
 NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
 
+  // 改动说明（v1.7.17 积分底座）：账户/签到/流水三路径，代理 BFF /mobile/points/*
+  POINTS_ACCOUNT: `${API_PREFIX}/points/account`,
+  POINTS_CHECKIN: `${API_PREFIX}/points/checkin`,
+  POINTS_TRANSACTIONS: `${API_PREFIX}/points/transactions`,
+
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,
   FAVORITES: `${API_PREFIX}/favorites`,
