@@ -73,6 +73,10 @@ export interface PointTask {
   ladder?: number[] | null
   daily: boolean
   done: boolean
+  /** 今日完成次数（daily 有意义；v1.7.21 任务计数展示） */
+  count?: number
+  /** 每日上限（0=不限；v1.7.21） */
+  limit?: number
 }
 
 /** 赚分任务清单（任务中心数据源；失败返回空数组） */

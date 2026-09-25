@@ -127,7 +127,7 @@ export default function ConfirmDialog() {
               style={{ minWidth: 72, display: 'flex', alignItems: 'center', paddingTop: 9, paddingBottom: 9, paddingLeft: 18, paddingRight: 18, borderRadius: 8, marginLeft: 12, backgroundColor: t.primaryLight }}
               onClick={() => settle(false)}
             >
-              <Text style={{ fontSize: 15, lineHeight: '20px', color: '#374151' }}>{opts.cancelText ?? '取消'}</Text>
+              <Text style={{ fontSize: 15, lineHeight: '20px', color: t.textPrimary }}>{opts.cancelText ?? '取消'}</Text>
             </View>
           ) : null}
           <View

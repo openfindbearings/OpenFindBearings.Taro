@@ -155,6 +155,26 @@ export function getSourcingDetail(id: string) {
   return request<SourcingDetail>(`${API.SOURCING_DEMANDS}/${id}`)
 }
 
+/** 额度条单项（与 API /quota 口径一致：免费额度/今日已用/硬上限/积分单价） */
+export interface QuotaItem {
+  freeLimit: number
+  todayUsed: number
+  hardLimit: number
+  pointsPrice: number
+}
+
+/** 寻货额度聚合响应（v1.7.21 额度可见化：额度条与按钮三态数据源） */
+export interface SourcingQuota {
+  publish: QuotaItem
+  respond: QuotaItem
+  balance: number
+}
+
+/** 拉取额度聚合（需登录；失败由调用方静默降级——额度条隐藏，撞墙协议仍兜底） */
+export function getSourcingQuota(): Promise<SourcingQuota> {
+  return request<SourcingQuota>(API.SOURCING_QUOTA)
+}
+
 /** 写操作统一包装：成功 {success:true}，失败捕获 ApiError 透传 message（NEED_POINTS 协议靠它） */
 async function opWrap(fn: () => Promise<unknown>): Promise<SourcingOpResult> {
   try {

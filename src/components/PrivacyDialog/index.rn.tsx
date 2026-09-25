@@ -49,7 +49,7 @@ function settle(agree: boolean) {
   pendingResolve = null
 }
 
-const createStyles = (primary: string, primaryLight: string) =>
+const createStyles = (t: Record<string, string>) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
@@ -59,7 +59,7 @@ const createStyles = (primary: string, primaryLight: string) =>
     },
     card: {
       width: '84%',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: t.bgCard,
       borderRadius: 12,
       paddingTop: 22,
       paddingBottom: 16,
@@ -70,18 +70,18 @@ const createStyles = (primary: string, primaryLight: string) =>
       fontSize: 18,
       fontWeight: '600',
       textAlign: 'center',
-      color: '#111827'
+      color: t.textPrimary
     },
     body: {
       fontSize: 15,
       lineHeight: 22,
-      color: '#374151',
+      color: t.textSecondary,
       marginTop: 14
     },
     link: {
       fontSize: 15,
       lineHeight: 22,
-      color: primary
+      color: t.primary
     },
     footer: {
       flexDirection: 'row',
@@ -97,15 +97,15 @@ const createStyles = (primary: string, primaryLight: string) =>
       paddingRight: 18,
       borderRadius: 8,
       marginLeft: 12,
-      backgroundColor: primaryLight
+      backgroundColor: t.primaryLight
     },
     btnPrimary: {
-      backgroundColor: primary
+      backgroundColor: t.primary
     },
     btnText: {
       fontSize: 15,
       lineHeight: 20,
-      color: '#374151'
+      color: t.textPrimary
     },
     btnPrimaryText: {
       color: '#FFFFFF'
@@ -116,7 +116,7 @@ const createStyles = (primary: string, primaryLight: string) =>
 export default function PrivacyDialog() {
   const [visible, setVisible] = useState(false)
   const t = useTheme()
-  const styles = createStyles(t.primary, t.primaryLight)
+  const styles = createStyles(t as unknown as Record<string, string>)
 
   useEffect(() => subscribeVisible(setVisible), [])
 
