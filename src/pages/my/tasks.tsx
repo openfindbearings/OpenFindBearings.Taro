@@ -10,6 +10,7 @@ import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
+import LoginGuide from '../../components/LoginGuide'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { vibrateSuccess } from '../../utils/haptics'
@@ -131,6 +132,9 @@ export default function TasksPage() {
     <PageLayout>
       <NavBar title='任务中心' showBack onBack={() => Taro.navigateBack()} />
       <ScrollView style={{ flex: 1 }}>
+        {!isLoggedIn && <LoginGuide icon='gift' text='登录后可签到赚积分' />}
+        {isLoggedIn && (
+        <>
         {/* 顶部余额条 */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
@@ -250,6 +254,8 @@ export default function TasksPage() {
         <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 4, marginBottom: 24 }}>
           积分不可充值、不可提现、不可转让
         </Text>
+        </>
+        )}
       </ScrollView>
     </PageLayout>
   )

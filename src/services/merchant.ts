@@ -408,6 +408,12 @@ export function takeOffShelf(bearingId: string) {
   return request<OpResult>(API.MERCHANT_BEARING_OFF_SHELF(bearingId), { method: 'POST' })
 }
 
+/** 置为补货中（v1.7.21 三态）：有该型号暂时缺货，买家侧仍展示带徽标；eta 为预计到货自由文本 */
+export function restockBearing(bearingId: string, eta?: string) {
+  const qs = eta ? `?eta=${encodeURIComponent(eta)}` : ''
+  return request<OpResult>(`${API.MERCHANT_BEARING_RESTOCK(bearingId)}${qs}`, { method: 'POST' })
+}
+
 /** 带当前商户上下文头的上传请求头 */
 function uploadHeaders(token: string | null): Record<string, string> {
   return {

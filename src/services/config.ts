@@ -176,6 +176,8 @@ export const API = {
   MERCHANT_BEARING_UPDATE: (id: string) => `${API_PREFIX}/merchant/bearings/${id}`,
   MERCHANT_BEARING_ON_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/onshelf`,
   MERCHANT_BEARING_OFF_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/offshelf`,
+  // v1.7.21 三态销售状态：置为补货中（eta 走 query）
+  MERCHANT_BEARING_RESTOCK: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/restock`,
   MERCHANT_INVENTORY_IMPORT: `${API_PREFIX}/merchant/inventory/import`,
   /** 营业执照上传（店铺认证） */
   // v1.7.0 材料泛化：执照单轨升级为证照材料多类型（GET 列表 / POST 上传带 type）
@@ -203,6 +205,9 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   SOURCING_DEMANDS: `${API_PREFIX}/sourcing/demands`,
   // v1.7.21 额度可见化：发布/应答额度条与按钮三态数据源
   SOURCING_QUOTA: `${API_PREFIX}/sourcing/quota`,
+  // v1.7.21 应答预填（我的在售同款）与需求信号（反向导购横幅）
+  SOURCING_MY_OFFERING: `${API_PREFIX}/sourcing/my-offering`,
+  SOURCING_OPPORTUNITIES: `${API_PREFIX}/sourcing/opportunities`,
   SOURCING_MY_DEMANDS: `${API_PREFIX}/sourcing/my/demands`,
   SOURCING_MY_RESPONSES: `${API_PREFIX}/sourcing/my/responses`,
 

@@ -160,7 +160,7 @@ export default function MerchantMembersPage() {
               style={{ ...fs(14), color: t.textPrimary, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8 }}
               value={contact}
               placeholder="手机号 / 邮箱"
-              placeholderClass="auth-ph"
+              placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
               onInput={(e) => setContact(e.detail.value)}
             />
             <View style={{ flexDirection: 'row', marginTop: 10 }}>

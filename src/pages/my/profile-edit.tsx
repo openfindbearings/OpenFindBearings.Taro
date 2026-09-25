@@ -1,4 +1,4 @@
-﻿// 个人信息编辑页：昵称/头像/职业/公司/行业。保存经 BFF PUT /mobile/profile（双写 Identity + 业务库），
+// 个人信息编辑页：昵称/头像/职业/公司/行业。保存经 BFF PUT /mobile/profile（双写 Identity + 业务库），
 // 成功后 store 重拉 profile，全站昵称/资料即时更新。手机号为登录账号不可改（Identity 无自助换绑端点）。
 import { useState } from 'react'
 import { View, Text, Input, Image } from '@tarojs/components'
@@ -170,7 +170,7 @@ export default function ProfileEditPage() {
 
       <View style={{ marginBottom: 12 }}>
         {fieldRow('手机号', <Text style={{ ...fs(15), color: t.textTertiary }}>{phone || '未绑定'}</Text>)}
-        {fieldRow('昵称', <Input style={inputStyle} value={form.nickname} maxlength={30} placeholder="请输入昵称" placeholderClass="auth-ph" onInput={(e) => setField('nickname', e.detail.value)} />)}
+        {fieldRow('昵称', <Input style={inputStyle} value={form.nickname} maxlength={30} placeholder="请输入昵称" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('nickname', e.detail.value)} />)}
         {/* 改动说明：删除"头像地址"输入行——头像由上方预览直接展示，URL 编辑体验差；
             form.avatar 仍随资料回填与保存透传，不清空已存头像 */}
         {fieldRow('职业', (
@@ -181,8 +181,8 @@ export default function ProfileEditPage() {
             <Icon name="chevron-right" size={16} color={t.textTertiary} />
           </View>
         ))}
-        {fieldRow('公司名称', <Input style={inputStyle} value={form.companyName} maxlength={50} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
-        {fieldRow('所属行业', <Input style={inputStyle} value={form.industry} maxlength={30} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('industry', e.detail.value)} />)}
+        {fieldRow('公司名称', <Input style={inputStyle} value={form.companyName} maxlength={50} placeholder="选填" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('companyName', e.detail.value)} />)}
+        {fieldRow('所属行业', <Input style={inputStyle} value={form.industry} maxlength={30} placeholder="选填" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('industry', e.detail.value)} />)}
       </View>
 
       <View

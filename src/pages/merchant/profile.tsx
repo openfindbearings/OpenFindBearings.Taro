@@ -237,7 +237,7 @@ export default function MerchantProfilePage() {
       </View>
 
       <View style={{ marginBottom: 12 }}>
-        {fieldRow('商户名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="对外展示名称" placeholderClass="auth-ph" onInput={(e) => setField('name', e.detail.value)} />)}
+        {fieldRow('商户名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="对外展示名称" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('name', e.detail.value)} />)}
         {/* 改动说明（v1.7.7）：商家类型只读——类型决定材料矩阵与认证标准，后端 Active 后锁定，
             自助改类型是假动作（原 UpdateType 未接通）且绕过审核，变更走平台人工 */}
         {fieldRow('商家类型', (
@@ -249,17 +249,17 @@ export default function MerchantProfilePage() {
             历史选填时代入驻的商户在此补录，补录后不可再改 */}
         {form.unifiedSocialCreditCode
           ? fieldRow('信用代码', <Text style={inputStyle}>{form.unifiedSocialCreditCode}</Text>)
-          : fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="补录18位代码（见营业执照）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
+          : fieldRow('信用代码', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="补录18位代码（见营业执照）" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
         <View style={{ backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 10 }}>
           <Text style={{ ...fs(11), color: t.textTertiary }}>企业主体信息以营业执照为准，入驻后不可自助修改；商家类型决定认证材料标准，如需变更请联系平台。</Text>
         </View>
-        {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
-        {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="对外公开，可填400/座机/手机" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
-        {fieldRow('手机号', <Input style={inputStyle} value={form.mobile} maxlength={20} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('mobile', e.detail.value)} />)}
-        {fieldRow('邮箱', <Input style={inputStyle} value={form.email} maxlength={50} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('email', e.detail.value)} />)}
-        {fieldRow('经营地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}
-        {fieldRow('官网', <Input style={inputStyle} value={form.website} maxlength={100} placeholder="选填" placeholderClass="auth-ph" onInput={(e) => setField('website', e.detail.value)} />)}
-        {fieldRow('商家简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍" placeholderClass="auth-ph" onInput={(e) => setField('description', e.detail.value)} />)}
+        {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('contactPerson', e.detail.value)} />)}
+        {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="对外公开，可填400/座机/手机" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('phone', e.detail.value)} />)}
+        {fieldRow('手机号', <Input style={inputStyle} value={form.mobile} maxlength={20} placeholder="选填" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('mobile', e.detail.value)} />)}
+        {fieldRow('邮箱', <Input style={inputStyle} value={form.email} maxlength={50} placeholder="选填" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('email', e.detail.value)} />)}
+        {fieldRow('经营地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="选填" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('address', e.detail.value)} />)}
+        {fieldRow('官网', <Input style={inputStyle} value={form.website} maxlength={100} placeholder="选填" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('website', e.detail.value)} />)}
+        {fieldRow('商家简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('description', e.detail.value)} />)}
       </View>
 
       {/* v1.7.0 证照材料区：各槽位最新材料状态 + 补传/换证入口（提交即建待审记录进平台队列） */}
