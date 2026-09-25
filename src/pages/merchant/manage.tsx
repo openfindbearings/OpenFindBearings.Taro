@@ -10,7 +10,7 @@
 //   4. 待审核商品显示"审核中"角标（isPendingApproval），支持"审核中"筛选。
 import { useState } from 'react'
 import { View, Text, Input, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
 import PageLayout from '../../platforms/PageLayout'
@@ -19,7 +19,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useMerchantStore } from '../../stores/merchant'
 import {
-  getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, importInventory,
+  getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing, importInventory,
   type MerchantBearingItem
 } from '../../services/merchant'
 import { searchBearings, type Bearing } from '../../services/bearing'
@@ -85,8 +85,19 @@ export default function MerchantManagePage() {
       .finally(() => setLoading(false))
   }
 
+  // 改动说明（v1.7.21 成交回流）：商家寻货应答页『已被选定』行跳入时带 addPart 参数——
+  // 自动展开添加表单并预填型号搜索词，把撮合结果沉淀为结构化在售商品
+  const router = useRouter()
+  const prefilledRef = { current: false }
+
   useDidShow(() => {
     load(1, false)
+    const addPart = router.params.addPart
+    if (addPart && !prefilledRef.current) {
+      prefilledRef.current = true
+      setAdding(true)
+      onSearchInput(decodeURIComponent(addPart))
+    }
   })
 
   /** 切换筛选并重查 */
@@ -112,17 +123,41 @@ export default function MerchantManagePage() {
   }
 
   const onToggleShelf = (item: MerchantBearingItem) => {
-    setBusyId(item.id)
-    const action = item.isOnSale ? takeOffShelf : putOnShelf
-    action(item.bearingId)
-      .then(() => {
-        // 改动说明（v1.7.13）：上下架成功触感反馈
-        void vibrateSuccess()
-        Taro.showToast({ title: '操作成功', icon: 'success' })
-        load(page, false)
+    // 改动说明（v1.7.21 三态销售状态）：上/下架二选一升级为 ActionSheet 三态——
+    // 在售 / 补货中（可选填预计到货）/ 下架；补货中在买家侧商家列表仍展示带徽标
+    Taro.showActionSheet({ itemList: ['置为在售', '置为补货中', '置为下架'] })
+      .then(async (res) => {
+        if (res.tapIndex < 0) return
+        setBusyId(item.id)
+        try {
+          if (res.tapIndex === 0) {
+            await putOnShelf(item.bearingId)
+          } else if (res.tapIndex === 1) {
+            // eta 可选：showModal editable（H5/小程序支持编辑；RN 端不支持 editable，
+            // Taro 类型未声明该字段——cast 绕过，RN 上退化为确认框、eta 留空）
+            let eta = ''
+            const m: any = await (Taro.showModal as any)({
+              title: '置为补货中',
+              content: '可填写预计到货时间（可空）',
+              editable: true,
+              placeholderText: '如：一周内',
+            }).catch(() => null)
+            if (!m || !m.confirm) { setBusyId(null); return }
+            eta = (m.content || '').trim()
+            await restockBearing(item.bearingId, eta || undefined)
+          } else {
+            await takeOffShelf(item.bearingId)
+          }
+          void vibrateSuccess()
+          Taro.showToast({ title: '操作成功', icon: 'success' })
+          load(page, false)
+        } catch (e: any) {
+          Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
+        } finally {
+          setBusyId(null)
+        }
       })
-      .catch((e: any) => Taro.showToast({ title: e?.message || '操作失败', icon: 'none' }))
-      .finally(() => setBusyId(null))
+      .catch(() => { /* 取消 */ })
   }
 
   /** Excel 批量导入（管理员，v1.7.7 三端打通）：chooseExcelFile 平台分派
@@ -374,7 +409,7 @@ export default function MerchantManagePage() {
                     style={{ backgroundColor: t.bgInput, borderRadius: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6 }}
                     onClick={() => onToggleShelf(item)}
                   >
-                    <Text style={{ ...fs(12), color: t.primary }}>{item.isOnSale ? '下架' : '上架'}</Text>
+                    <Text style={{ ...fs(12), color: t.primary }}>状态</Text>
                   </View>
                 </View>
                 {/* 编辑表单（行内展开） */}

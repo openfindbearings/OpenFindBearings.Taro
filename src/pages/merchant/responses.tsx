@@ -10,9 +10,10 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useMerchantStore } from '../../stores/merchant'
 import {
-  getMySourcingResponses, responseStatusText,
-  RESPONSE_STATUS, type SourcingMerchantResponse,
+  getMySourcingResponses, responseStatusText, getOpportunities,
+  RESPONSE_STATUS, type SourcingMerchantResponse, type OpportunityItem,
 } from '../../services/sourcing'
+import { setItem } from '../../utils/storage'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
 definePageConfig({ disableScroll: true })
@@ -23,9 +24,14 @@ export default function MerchantResponsesPage() {
   const fs = useFs()
   const currentMerchant = useMerchantStore((s) => s.currentMerchant())
   const [items, setItems] = useState<SourcingMerchantResponse[]>([])
+  // 需求信号（v1.7.21 反向导购）：在售型号中被寻货且未应答的聚合，失败静默隐藏
+  const [opps, setOpps] = useState<OpportunityItem[]>([])
 
   useDidShow(() => {
-    if (currentMerchant) void getMySourcingResponses().then((r) => setItems(r || []))
+    if (currentMerchant) {
+      void getMySourcingResponses().then((r) => setItems(r || []))
+      void getOpportunities().then(setOpps)
+    }
   })
 
   return (
@@ -35,6 +41,31 @@ export default function MerchantResponsesPage() {
         {!currentMerchant && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Text style={{ ...fs(14), color: t.textTertiary }}>请先在商家 Tab 选择当前商户</Text>
+          </View>
+        )}
+        {/* 需求信号横幅（v1.7.21 反向导购）：你在售的型号正被寻货且无人应答 */}
+        {currentMerchant && opps.length > 0 && (
+          <View style={{ display: 'flex', flexDirection: 'column', marginLeft: 12, marginRight: 12, marginTop: 12, padding: 12, backgroundColor: t.bgCard, borderRadius: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="trending-up" size={16} color={t.warning} />
+              <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600', marginLeft: 6 }}>
+                你的在售型号有 {opps.reduce((s, o) => s + o.demandCount, 0)} 条寻货待应答
+              </Text>
+            </View>
+            {opps.slice(0, 5).map((o) => (
+              <View
+                key={o.partNumber}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}
+                onClick={() => {
+                  // switchTab 不能带 query——搜索词经 storage 传给发现页消费
+                  void setItem('sourcing_search_kw', o.partNumber)
+                  void Taro.switchTab({ url: '/pages/discover/index' })
+                }}
+              >
+                <Text style={{ ...fs(13), color: t.primary }}>{o.partNumber}</Text>
+                <Text style={{ ...fs(12), color: t.textTertiary }}>{o.demandCount} 条寻货 · 去应答 ›</Text>
+              </View>
+            ))}
           </View>
         )}
         {currentMerchant && items.length === 0 && (
@@ -65,7 +96,21 @@ export default function MerchantResponsesPage() {
                 {[item.price != null ? `¥${item.price}/只` : null, item.stock ? `库存 ${item.stock}` : null, item.leadTime ? `交期 ${item.leadTime}` : null].filter(Boolean).join(' · ') || item.remark}
               </Text>
               {adopted && (
-                <Text style={{ ...fs(12), color: t.primary, marginTop: 4 }}>已被选定，进详情查看需求方联系方式</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                  <Text style={{ ...fs(12), color: t.primary, flex: 1 }}>已被选定，进详情查看需求方联系方式</Text>
+                  {/* 成交回流（v1.7.21）：跳商品管理并预填型号——撮合成功沉淀为结构化在售 */}
+                  <View
+                    style={{ paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 6, backgroundColor: t.primaryLight }}
+                    onClick={(e) => {
+                      e?.stopPropagation?.()
+                      if (item.partNumber) {
+                        void Taro.navigateTo({ url: `/pages/merchant/manage?addPart=${encodeURIComponent(item.partNumber)}` })
+                      }
+                    }}
+                  >
+                    <Text style={{ ...fs(12), color: t.primary }}>挂在售</Text>
+                  </View>
+                </View>
               )}
             </View>
           )

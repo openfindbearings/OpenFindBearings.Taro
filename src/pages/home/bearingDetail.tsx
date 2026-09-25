@@ -133,7 +133,12 @@ export default function BearingDetailPage() {
                 <Icon name="store" size={18} color={t.primary} />
               </View>
               <View className='bd-list-main'>
-                <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
+                  {m.isRestocking ? (
+                    <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
+                  ) : null}
+                </View>
                 {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{m.price}</Text> : null}
               </View>
               <Icon name="chevron_right" size={18} color={t.textTertiary} />

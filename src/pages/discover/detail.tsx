@@ -16,7 +16,7 @@ import { useMerchantStore } from '../../stores/merchant'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
   getSourcingDetail, respondDemand, selectResponse, cancelDemand,
-  parseNeedPoints, demandStatusText, responseStatusText, getSourcingQuota,
+  parseNeedPoints, demandStatusText, responseStatusText, getSourcingQuota, getMyOffering,
   DEMAND_STATUS, RESPONSE_STATUS,
   type SourcingDetail, type RespondDemandBody, type SourcingQuota,
 } from '../../services/sourcing'
@@ -50,6 +50,8 @@ export default function SourcingDetailPage() {
   // 改动说明（v1.7.21 额度可见化）：应答额度前置展示（商户维度），失败静默——
   // NEED_POINTS 撞墙协议仍是最终兜底
   const [quota, setQuota] = useState<SourcingQuota | null>(null)
+  // 预填来源提示（v1.7.21）：非空时表单顶部显示"已取自在售商品"行
+  const [prefilledFrom, setPrefilledFrom] = useState<string | null>(null)
 
   const load = async () => {
     const d = await getSourcingDetail(id)
@@ -124,6 +126,22 @@ export default function SourcingDetailPage() {
     } else {
       Taro.showToast({ title: r.message || '取消失败', icon: 'none' })
     }
+  }
+
+  /** 展开应答表单并预填在售同款（v1.7.21）：已有应答不覆盖手改内容 */
+  const openRespond = async (): Promise<void> => {
+    setRespondOpen(true)
+    if (detail.myResponse) return
+    const off = await getMyOffering(detail.bearingId || null, detail.partNumber)
+    if (!off || !off.found) return
+    // 仅填当前为空的字段（用户可能已抢先输入）
+    if (off.price != null) setRPrice((v) => v || String(off.price))
+    else if (off.priceDescription) setRPrice((v) => v || off.priceDescription!)
+    setRStock((v) => v || off.stock || '')
+    if (off.isRestocking) {
+      setRLead((v) => v || `补货中，预计${off.restockEta || '近期'}到货`)
+    }
+    setPrefilledFrom(off.isRestocking ? '补货中商品' : '在售商品')
   }
 
   /** 商户：提交应答（NEED_POINTS 协议自动确认后重提交） */
@@ -278,7 +296,7 @@ export default function SourcingDetailPage() {
             </Text>
             <Text style={{ ...fs(13), color: t.textPrimary, marginTop: 2, lineHeight: 19 }}>{detail.myResponse.remark}</Text>
             {isOpen && detail.myResponse.status === RESPONSE_STATUS.pending && (
-              <Text style={{ ...fs(13), color: t.primary, marginTop: 8 }} onClick={() => setRespondOpen(true)}>修改应答</Text>
+              <Text style={{ ...fs(13), color: t.primary, marginTop: 8 }} onClick={() => { void openRespond() }}>修改应答</Text>
             )}
           </View>
         )}
@@ -287,7 +305,7 @@ export default function SourcingDetailPage() {
         {isOpen && !detail.isPublisher && isLoggedIn && currentMerchant && !detail.myResponse && (
           <View
             style={{ margin: 12, marginTop: 4, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary }}
-            onClick={() => setRespondOpen(true)}
+            onClick={() => { void openRespond() }}
           >
             <Text style={{ ...fs(16), color: '#FFFFFF', fontWeight: '600' }}>我要应答</Text>
           </View>
@@ -314,6 +332,9 @@ export default function SourcingDetailPage() {
         {respondOpen && (
           <View style={{ margin: 12, marginTop: 4, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', marginBottom: 4 }}>应答「{detail.partNumber}」</Text>
+            {prefilledFrom ? (
+              <Text style={{ ...fs(11), color: t.success, marginBottom: 6 }}>已按你的{prefilledFrom}预填，可修改</Text>
+            ) : null}
             {/* 应答额度条（v1.7.21 额度可见化，商户维度）：quota 拉取失败整条隐藏 */}
             {quota ? (() => {
               const rq = quota.respond

@@ -41,6 +41,10 @@ export interface BearingMerchant {
   merchantName: string
   price?: string | null
   isOnSale: boolean
+  /** 补货中（v1.7.21 三态：商家有该型号但当前无货，仍展示带徽标） */
+  isRestocking?: boolean
+  /** 补货预计到货时间（自由文本） */
+  restockEta?: string | null
 }
 
 /** 轴承替代品项（对齐 BFF InterchangeItem） */

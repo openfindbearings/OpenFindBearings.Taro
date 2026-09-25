@@ -48,6 +48,8 @@ export interface SourcingMyResponse {
 export interface SourcingDetail {
   id: string
   partNumber: string
+  /** v1.7.21 应答预填精确匹配键（可空=自由文本型号） */
+  bearingId?: string | null
   brand?: string | null
   quantity?: string | null
   expectedDelivery?: string | null
@@ -175,6 +177,45 @@ export function getSourcingQuota(): Promise<SourcingQuota> {
   return request<SourcingQuota>(API.SOURCING_QUOTA)
 }
 
+/** 我的在售同款（v1.7.21 应答预填）：当前商户对该型号的在售/补货中条目 */
+export interface MyOffering {
+  found: boolean
+  isOnSale?: boolean
+  isRestocking?: boolean
+  price?: number | null
+  priceDescription?: string | null
+  stock?: string | null
+  minOrder?: string | null
+  restockEta?: string | null
+  remarks?: string | null
+}
+
+/** 拉取我的在售同款（失败返回 null，应答表单退化为纯手填） */
+export async function getMyOffering(bearingId: string | null, partNumber: string): Promise<MyOffering | null> {
+  const qs = `?bearingId=${encodeURIComponent(bearingId || '')}&partNumber=${encodeURIComponent(partNumber)}`
+  try {
+    return await request<MyOffering>(`${API.SOURCING_MY_OFFERING}${qs}`)
+  } catch {
+    return null
+  }
+}
+
+/** 需求信号行（v1.7.21 反向导购）：商户在售型号中被寻货且未应答的聚合 */
+export interface OpportunityItem {
+  partNumber: string
+  demandCount: number
+  latestAt: string
+}
+
+/** 拉取需求信号（失败返回空数组，横幅隐藏） */
+export async function getOpportunities(): Promise<OpportunityItem[]> {
+  try {
+    const r = await request<OpportunityItem[]>(API.SOURCING_OPPORTUNITIES)
+    return r || []
+  } catch {
+    return []
+  }
+}
 /** 写操作统一包装：成功 {success:true}，失败捕获 ApiError 透传 message（NEED_POINTS 协议靠它） */
 async function opWrap(fn: () => Promise<unknown>): Promise<SourcingOpResult> {
   try {

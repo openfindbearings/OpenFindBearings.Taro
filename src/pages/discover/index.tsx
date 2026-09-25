@@ -12,6 +12,7 @@ import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import { useAuthStore } from '../../stores/auth'
 import { getSourcingFeed, type SourcingFeedItem } from '../../services/sourcing'
+import { getItem, removeItem } from '../../utils/storage'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
 definePageConfig({ disableScroll: true })
@@ -53,7 +54,20 @@ export default function DiscoverPage() {
   }
 
   // 进入页面刷新（发布/应答后返回列表即时更新）
-  useDidShow(() => { void load(1, keyword) })
+  // 改动说明（v1.7.21 反向导购）：消费商家寻货页"需求信号"跳转时经 storage 传递的搜索词
+  // （tabBar 页 switchTab 不能带 query，storage 是三端一致的传参通道）
+  useDidShow(() => {
+    void (async () => {
+      const kw = await getItem('sourcing_search_kw')
+      if (kw) {
+        await removeItem('sourcing_search_kw')
+        setKeyword(kw)
+        void load(1, kw)
+      } else {
+        void load(1, keyword)
+      }
+    })()
+  })
 
   const goDetail = (id: string) => Taro.navigateTo({ url: `/pages/discover/detail?id=${id}` })
 
