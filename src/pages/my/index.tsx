@@ -81,9 +81,10 @@ export default function MyPage() {
       favorites: '/pages/my/favorites',
       followed: '/pages/my/followed',
       history: '/pages/my/history',
-      // v1.7.18：任务中心/设置/我的纠错直跳页面；寻货无映射走"暂未上线"占位
+      // v1.7.18：任务中心/设置/我的纠错直跳页面；v1.7.19：我的寻货转正（原占位 toast）
       tasks: '/pages/my/tasks',
       corrections: '/pages/my/corrections',
+      sourcing: '/pages/my/sourcing',
       settings: '/pages/my/settings'
     }
     if (menuUrls[key]) {
