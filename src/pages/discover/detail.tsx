@@ -16,9 +16,9 @@ import { useMerchantStore } from '../../stores/merchant'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
   getSourcingDetail, respondDemand, selectResponse, cancelDemand,
-  parseNeedPoints, demandStatusText, responseStatusText,
+  parseNeedPoints, demandStatusText, responseStatusText, getSourcingQuota,
   DEMAND_STATUS, RESPONSE_STATUS,
-  type SourcingDetail, type RespondDemandBody,
+  type SourcingDetail, type RespondDemandBody, type SourcingQuota,
 } from '../../services/sourcing'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
@@ -47,6 +47,9 @@ export default function SourcingDetailPage() {
   const [rStock, setRStock] = useState('')
   const [rLead, setRLead] = useState('')
   const [rRemark, setRRemark] = useState('')
+  // 改动说明（v1.7.21 额度可见化）：应答额度前置展示（商户维度），失败静默——
+  // NEED_POINTS 撞墙协议仍是最终兜底
+  const [quota, setQuota] = useState<SourcingQuota | null>(null)
 
   const load = async () => {
     const d = await getSourcingDetail(id)
@@ -59,7 +62,12 @@ export default function SourcingDetailPage() {
       setRRemark(d.myResponse.remark || '')
     }
   }
-  useDidShow(() => { void load() })
+  useDidShow(() => {
+    void load()
+    if (isLoggedIn) {
+      getSourcingQuota().then(setQuota).catch(() => { /* 额度条隐藏 */ })
+    }
+  })
 
   if (!detail) {
     return (
@@ -306,6 +314,21 @@ export default function SourcingDetailPage() {
         {respondOpen && (
           <View style={{ margin: 12, marginTop: 4, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', marginBottom: 4 }}>应答「{detail.partNumber}」</Text>
+            {/* 应答额度条（v1.7.21 额度可见化，商户维度）：quota 拉取失败整条隐藏 */}
+            {quota ? (() => {
+              const rq = quota.respond
+              const left = Math.max(rq.freeLimit - rq.todayUsed, 0)
+              return (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 7, paddingBottom: 7, backgroundColor: t.primaryLight, borderRadius: 8 }}>
+                  <Text style={{ ...fs(11), color: t.primary }}>
+                    {left > 0 ? `商户今日免费应答剩 ${left}/${rq.freeLimit} 条` : '今日免费应答已用完'}
+                  </Text>
+                  <Text style={{ ...fs(11), color: t.textSecondary }}>
+                    {left > 0 ? `用后可花 ${rq.pointsPrice} 积分/条` : `本条花 ${rq.pointsPrice} 积分 · 余额 ${quota.balance}`}
+                  </Text>
+                </View>
+              )
+            })() : null}
             {rField('报价', rPrice, setRPrice, '元/只（可空，电话聊也行）')}
             {rField('库存', rStock, setRStock, '如 现货 2000（可空）')}
             {rField('交期', rLead, setRLead, '如 3 天内发货（可空）')}
@@ -315,7 +338,7 @@ export default function SourcingDetailPage() {
                 <Text style={{ ...fs(15), color: t.textSecondary }}>取消</Text>
               </View>
               <View style={{ flex: 1, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: busy ? t.textTertiary : t.primary }} onClick={() => { void doRespond(false) }}>
-                <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>{busy ? '提交中…' : '提交应答'}</Text>
+                <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>{busy ? '提交中…' : (quota && quota.respond.todayUsed >= quota.respond.freeLimit ? `花  积分应答` : '提交应答')}</Text>
               </View>
             </View>
           </View>

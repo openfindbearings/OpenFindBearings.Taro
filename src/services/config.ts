@@ -201,6 +201,8 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   POINTS_TASKS: `${API_PREFIX}/points/tasks`,
   // v1.7.19 寻货：feed/详情/发布/应答/选定/取消/我的列表（BFF /mobile/sourcing/*）
   SOURCING_DEMANDS: `${API_PREFIX}/sourcing/demands`,
+  // v1.7.21 额度可见化：发布/应答额度条与按钮三态数据源
+  SOURCING_QUOTA: `${API_PREFIX}/sourcing/quota`,
   SOURCING_MY_DEMANDS: `${API_PREFIX}/sourcing/my/demands`,
   SOURCING_MY_RESPONSES: `${API_PREFIX}/sourcing/my/responses`,
 

@@ -61,7 +61,7 @@ $tabbar-icon-size:        24px;   // 图标视觉尺寸（触控由整个 tab-it
 $tabbar-icon-size-active: 24px;
 $tabbar-text-size:        12px;   // 旧 11→12
 $tabbar-highlight-size:   56px;   // 商家大圆（旧 52→56）
-$tabbar-logo-size:        48px;   // 大圆内 logo
+$tabbar-logo-size:        52px;   // 大圆内 logo（旧 48→52：主题色环 4dp 收窄到 2dp，用户反馈边框偏粗）
 $tabbar-highlight-offset: 14px;   // 大圆上移量
 
 // ============ NavBar 度量（dp） ============

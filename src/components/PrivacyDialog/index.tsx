@@ -88,8 +88,8 @@ export default function PrivacyDialog() {
         justifyContent: 'center'
       }}
     >
-      <View style={{ width: '84%', backgroundColor: '#FFFFFF', borderRadius: 12, paddingTop: 22, paddingBottom: 16, paddingLeft: 20, paddingRight: 20 }}>
-        <Text style={{ display: 'block', width: '100%', fontSize: 18, fontWeight: '600', textAlign: 'center', color: '#111827' }}>
+      <View style={{ width: '84%', backgroundColor: t.bgCard, borderRadius: 12, paddingTop: 22, paddingBottom: 16, paddingLeft: 20, paddingRight: 20 }}>
+        <Text style={{ display: 'block', width: '100%', fontSize: 18, fontWeight: '600', textAlign: 'center', color: t.textPrimary }}>
           隐私保护提示
         </Text>
         <Text style={{ display: 'block', width: '100%', fontSize: 15, lineHeight: '24px', color: '#374151', marginTop: 14 }}>
@@ -99,18 +99,18 @@ export default function PrivacyDialog() {
           <Text style={{ fontSize: 15, lineHeight: '24px', color: t.primary }} onClick={() => openDoc('user-agreement')}>
             《用户协议》
           </Text>
-          <Text style={{ fontSize: 15, lineHeight: '24px', color: '#374151' }}>与</Text>
+          <Text style={{ fontSize: 15, lineHeight: '24px', color: t.textSecondary }}>与</Text>
           <Text style={{ fontSize: 15, lineHeight: '24px', color: t.primary }} onClick={() => openDoc('privacy-policy')}>
             《隐私政策》
           </Text>
-          <Text style={{ fontSize: 15, lineHeight: '24px', color: '#374151' }}>后再使用登录、收藏、入驻等功能。</Text>
+          <Text style={{ fontSize: 15, lineHeight: '24px', color: t.textSecondary }}>后再使用登录、收藏、入驻等功能。</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
           <View
             style={{ minWidth: 72, display: 'flex', alignItems: 'center', paddingTop: 9, paddingBottom: 9, paddingLeft: 18, paddingRight: 18, borderRadius: 8, marginLeft: 12, backgroundColor: t.primaryLight }}
             onClick={() => settle(false)}
           >
-            <Text style={{ fontSize: 15, lineHeight: '20px', color: '#374151' }}>暂不</Text>
+            <Text style={{ fontSize: 15, lineHeight: '20px', color: t.textSecondary }}>暂不</Text>
           </View>
           <View
             style={{ minWidth: 72, display: 'flex', alignItems: 'center', paddingTop: 9, paddingBottom: 9, paddingLeft: 18, paddingRight: 18, borderRadius: 8, marginLeft: 12, backgroundColor: t.primary }}

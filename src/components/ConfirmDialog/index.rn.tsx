@@ -66,7 +66,10 @@ function settle(confirmed: boolean) {
   pendingResolve = null
 }
 
-const createStyles = (primaryLight: string, confirmColor: string) =>
+// 改动说明（v1.7.21）：createStyles 从"只传两个色"改为整主题入参——
+// 卡片/标题/正文/取消按钮文字此前硬编码浅色值，深色主题下灰底深字看不清、
+// 白卡突兀；全部换用主题 token 后弹窗随主题切换（全站弹窗统一走本组件，改这一处即全生效）
+const createStyles = (t: Record<string, string>, confirmColor: string) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
@@ -76,7 +79,7 @@ const createStyles = (primaryLight: string, confirmColor: string) =>
     },
     card: {
       width: '84%',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: t.bgCard,
       borderRadius: 12,
       paddingTop: 22,
       paddingBottom: 16,
@@ -87,12 +90,12 @@ const createStyles = (primaryLight: string, confirmColor: string) =>
       fontSize: 18,
       fontWeight: '600',
       textAlign: 'center',
-      color: '#111827'
+      color: t.textPrimary
     },
     content: {
       fontSize: 15,
       lineHeight: 22,
-      color: '#374151',
+      color: t.textSecondary,
       marginTop: 14,
       textAlign: 'center'
     },
@@ -110,7 +113,7 @@ const createStyles = (primaryLight: string, confirmColor: string) =>
       paddingRight: 18,
       borderRadius: 8,
       marginLeft: 12,
-      backgroundColor: primaryLight
+      backgroundColor: t.primaryLight
     },
     btnPrimary: {
       backgroundColor: confirmColor
@@ -118,7 +121,7 @@ const createStyles = (primaryLight: string, confirmColor: string) =>
     btnText: {
       fontSize: 15,
       lineHeight: 20,
-      color: '#374151'
+      color: t.textPrimary
     },
     btnPrimaryText: {
       color: '#FFFFFF'
@@ -130,7 +133,7 @@ export default function ConfirmDialog() {
   const [visible, setVisible] = useState(false)
   const [opts, setOpts] = useState<ConfirmDialogOptions>({ content: '' })
   const t = useTheme()
-  const styles = createStyles(t.primaryLight, opts.confirmColor ?? t.primary)
+  const styles = createStyles(t as unknown as Record<string, string>, opts.confirmColor ?? t.primary)
 
   // 订阅显隐：弹出时同步最新内容；关闭时复位
   useEffect(() => {

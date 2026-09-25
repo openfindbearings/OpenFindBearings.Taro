@@ -142,6 +142,20 @@ export default function TasksPage() {
           </Text>
         </View>
 
+        {/* 积分用途说明卡（v1.7.21 额度可见化）：让赚的分有明确消费认知——
+            当前真实用途是寻货超额度加量，商城兑换预告 */}
+        <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
+          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>积分能做什么</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>寻货加量：超出每日免费额度后，花积分继续发布/应答</Text>
+            <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/discover/index' })}>去寻货</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>积分商城：兑换精选礼品</Text>
+            <Text style={{ ...fs(13), color: t.textTertiary }}>即将上线</Text>
+          </View>
+        </View>
+
         {/* 卡片 1：每日签到日期条 */}
         <View style={{ display: 'flex', flexDirection: 'column', margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>每日签到</Text>
@@ -212,7 +226,7 @@ export default function TasksPage() {
               </View>
               {task.done ? (
                 <View style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5, borderRadius: 14, backgroundColor: t.bgInput }}>
-                  <Text style={{ ...fs(12), color: t.textTertiary }}>{task.daily ? '今日已完成' : '已完成'}</Text>
+                  <Text style={{ ...fs(12), color: t.textTertiary }}>{task.daily ? (task.count && task.count > 1 ? `今日已完成  次` : '今日已完成') : '已完成'}</Text>
                 </View>
               ) : taskAction(task.grantType) ? (
                 <View style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5, borderRadius: 14, backgroundColor: t.primary }} onClick={() => runTask(task)}>

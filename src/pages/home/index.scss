@@ -190,9 +190,12 @@
   margin-bottom: $space-2;
 }
 
+// 改动说明（v1.7.21）：line-height 由无单位倍数改 18px。根因——无单位 1.5 在 RN
+// 被当作 1.5dp 行高，文字挤成一条且贴顶（用户所见"标签文字偏上"）；18px 数值行高
+// 两端语义一致（H5 同值、RN 合法），26px 定高 flex 居中后视觉归正
 .history-tag-text {
   font-size: $font-size-base;
-  line-height: $line-height-base;
+  line-height: 18px;
   color: $text-secondary;
 }
 
