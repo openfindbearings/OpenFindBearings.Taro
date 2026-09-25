@@ -1,4 +1,4 @@
-﻿// 我的收藏轴承页：分页列表 + 行内取消收藏。数据经 BFF /mobile/favorites（API /api/me/favorites/bearings）。
+// 我的收藏轴承页：分页列表 + 行内取消收藏。数据经 BFF /mobile/favorites（API /api/me/favorites/bearings）。
 // 登录态订阅 auth store；未登录展示引导登录空态（页面自身兜底，入口不再弹窗拦截）。
 import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
@@ -9,6 +9,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { formatTime } from '../../utils/format'
 import PageLayout from '../../platforms/PageLayout'
+import LoginGuide from '../../components/LoginGuide'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { getFavorites, toggleFavorite, type FavoriteItem } from '../../services/user'
@@ -65,18 +66,7 @@ export default function FavoritesPage() {
 
   return (
     <PageLayout nav={<NavBar title="我的收藏" showBack />}>
-      {!isLoggedIn && (
-        <View style={{ alignItems: 'center', paddingTop: 80 }}>
-          <Icon name="heart" size={48} color={t.textTertiary} />
-          <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>登录后可查看收藏</Text>
-          <View
-            style={{ backgroundColor: t.primary, borderRadius: 20, paddingLeft: 24, paddingRight: 24, paddingTop: 8, paddingBottom: 8, marginTop: 16 }}
-            onClick={() => Taro.navigateTo({ url: '/pages/auth/login' })}
-          >
-            <Text style={{ ...fs(15), color: t.textOnPrimary }}>去登录</Text>
-          </View>
-        </View>
-      )}
+      {!isLoggedIn && <LoginGuide icon='heart' text='登录后可查看收藏' />}
       {isLoggedIn && items.length === 0 && !loading && (
         <View style={{ alignItems: 'center', paddingTop: 80 }}>
           <Icon name="heart" size={48} color={t.textTertiary} />

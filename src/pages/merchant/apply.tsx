@@ -740,7 +740,7 @@ export default function MerchantApplyPage() {
           style={{ flex: 1, ...fs(15), color: t.textPrimary, marginLeft: 8, paddingTop: 11, paddingBottom: 11, minHeight: 42, lineHeight: 22 }}
           value={keyword}
           placeholder="输入关键字，如：人本 / 光洋 / 轴承"
-          placeholderClass="auth-ph"
+          placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
           onInput={(e) => onSearchInput(e.detail.value)}
           confirmType="search"
           onConfirm={() => { void doSearch(keyword) }}
@@ -834,7 +834,7 @@ export default function MerchantApplyPage() {
                 : '请填写商户资料，提交后等待平台审核。')}
           </Text>
           <View style={{ borderRadius: 12, overflow: 'hidden' }}>
-            {fieldRow('商家名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="必填，对外展示名称" placeholderClass="auth-ph" onInput={(e) => setField('name', e.detail.value)} />)}
+            {fieldRow('商家名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="必填，对外展示名称" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('name', e.detail.value)} />)}
             {fieldRow('商家类型 *', (
               <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={() => pickType(form.type, (v) => setField('type', v))}>
                 <Text style={{ ...fs(15), color: form.type ? t.textPrimary : t.textTertiary }}>
@@ -843,12 +843,12 @@ export default function MerchantApplyPage() {
                 <Icon name="chevron-right" size={16} color={t.textTertiary} />
               </View>
             ))}
-            {fieldRow('企业名称 *', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="必填，营业执照上的企业名称" placeholderClass="auth-ph" onInput={(e) => setField('companyName', e.detail.value)} />)}
-            {fieldRow('信用代码*', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="18位统一社会信用代码（见营业执照）" placeholderClass="auth-ph" onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
-            {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" onInput={(e) => setField('contactPerson', e.detail.value)} />)}
-            {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="顾客可见，可填 400/座机/手机（选填）" placeholderClass="auth-ph" onInput={(e) => setField('phone', e.detail.value)} />)}
-            {fieldRow('地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="经营地址（选填）" placeholderClass="auth-ph" onInput={(e) => setField('address', e.detail.value)} />)}
-            {fieldRow('简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍（选填）" placeholderClass="auth-ph" onInput={(e) => setField('description', e.detail.value)} />)}
+            {fieldRow('企业名称 *', <Input style={inputStyle} value={form.companyName} maxlength={100} placeholder="必填，营业执照上的企业名称" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('companyName', e.detail.value)} />)}
+            {fieldRow('信用代码*', <Input style={inputStyle} value={form.unifiedSocialCreditCode} maxlength={18} placeholder="18位统一社会信用代码（见营业执照）" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('unifiedSocialCreditCode', e.detail.value)} />)}
+            {fieldRow('联系人', <Input style={inputStyle} value={form.contactPerson} maxlength={30} placeholder="负责人姓名" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('contactPerson', e.detail.value)} />)}
+            {fieldRow('客服电话', <Input style={inputStyle} value={form.phone} maxlength={20} placeholder="顾客可见，可填 400/座机/手机（选填）" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('phone', e.detail.value)} />)}
+            {fieldRow('地址', <Input style={inputStyle} value={form.address} maxlength={100} placeholder="经营地址（选填）" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('address', e.detail.value)} />)}
+            {fieldRow('简介', <Input style={inputStyle} value={form.description} maxlength={200} placeholder="一句话介绍（选填）" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('description', e.detail.value)} />)}
             {/* v1.7.0 随单材料区：营业执照全类型必备；授权书随类型 2（授权经销商）条件出现；厂房照随类型 1（生产厂家）可选 */}
             {docRow('营业执照', true, 'license', 1, '盖章清晰，须与企业名称一致')}
             {form.type === 2 && docRow('品牌授权书', true, 'authorization', 2, '品牌方授权证明，防假冒授权')}

@@ -8,6 +8,7 @@ import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
+import LoginGuide from '../../components/LoginGuide'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { getMyCorrections, type CorrectionItem } from '../../services/user'
@@ -58,7 +59,8 @@ export default function MyCorrectionsPage() {
         style={{ flex: 1 }}
         onScrollToLower={() => { if (hasMore && !loading) load(page + 1, true) }}
       >
-        {items.length === 0 && !loading && (
+        {!isLoggedIn && <LoginGuide icon='file_text' text='登录后可查看我的纠错' />}
+        {isLoggedIn && items.length === 0 && !loading && (
           <View style={{ alignItems: 'center', paddingTop: 120 }}>
             <Icon name="edit" size={48} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>

@@ -12,6 +12,7 @@ import { useFs } from '../../hooks/useFontScale'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
 import PageLayout from '../../platforms/PageLayout'
+import LoginGuide from '../../components/LoginGuide'
 import NavBar from '../../components/NavBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
@@ -168,9 +169,7 @@ export default function NotificationsPage() {
       >
         <View style={{ padding: 16 }}>
           {!isLoggedIn ? (
-            <View style={{ alignItems: 'center', paddingTop: 60 }}>
-              <Text style={{ ...fs(14), color: t.textSecondary }}>登录后查看消息</Text>
-            </View>
+            <LoginGuide icon='bell' text='登录后可查看消息' />
           ) : items.length === 0 && !loading ? (
             <View style={{ alignItems: 'center', paddingTop: 60 }}>
               <Icon name='bell' size={40} color={t.textTertiary} />

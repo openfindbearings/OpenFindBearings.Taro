@@ -67,7 +67,9 @@ export function useTheme(): ThemePalette {
       textPrimary: '#F1F5F9',
       textSecondary: '#CBD5E1',
       textTertiary: '#94A3B8',
-      textOnPrimary: '#0B1220',
+      // 改动说明（v1.7.21）：深色主题主色底文字由近黑 #0B1220 改白色——
+      // 用户反馈"保存"等主色按钮文字深色下应为白字（对齐主流 App 深色模式按钮白字惯例）
+      textOnPrimary: '#FFFFFF',
       border: '#334155',
       borderLight: '#1E293B',
       primary: preset.primaryDark,

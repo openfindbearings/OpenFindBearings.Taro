@@ -14,12 +14,16 @@ import './all-features.scss'
 definePageConfig({ disableScroll: true })
 
 // 全部功能列表
+// 改动说明（v1.7.21）：补齐任务中心/积分明细/我的寻货三个新功能（此前只列了旧四项）
 const featureList = [
   { key: 'favorites', label: '收藏轴承', desc: '我收藏的轴承型号', icon: 'heart', color: '#EF4444' },
   { key: 'followed', label: '关注商家', desc: '我关注的商家', icon: 'users', color: '#0EA5E9' },
   { key: 'history', label: '浏览历史', desc: '最近浏览记录', icon: 'clock', color: '#10B981' },
-    { key: 'corrections', label: '我的纠错', desc: '提交记录与审核结果', icon: 'edit', color: '#8B5CF6' },
-  { key: 'messages', label: '消息中心', desc: '系统通知与消息', icon: 'bell', color: '#F59E0B' },
+  { key: 'corrections', label: '我的纠错', desc: '提交记录与审核结果', icon: 'edit', color: '#8B5CF6' },
+  { key: 'tasks', label: '任务中心', desc: '签到与赚积分任务', icon: 'gift', color: '#F59E0B' },
+  { key: 'points', label: '积分明细', desc: '积分收支流水', icon: 'list', color: '#14B8A6' },
+  { key: 'sourcing', label: '我的寻货', desc: '我发布的寻货需求', icon: 'compass', color: '#3B82F6' },
+  { key: 'messages', label: '消息中心', desc: '系统通知与消息', icon: 'bell', color: '#F97316' },
   { key: 'settings', label: '设置', desc: '通用设置与隐私', icon: 'settings', color: '#64748B' }
 ]
 
@@ -38,7 +42,10 @@ export default function AllFeaturesPage() {
       favorites: '/pages/my/favorites',
       followed: '/pages/my/followed',
       history: '/pages/my/history',
-    corrections: '/pages/my/corrections',
+      corrections: '/pages/my/corrections',
+      tasks: '/pages/my/tasks',
+      points: '/pages/my/points',
+      sourcing: '/pages/my/sourcing',
       messages: '/pages/notifications/index'
     }
     if (urls[key]) {

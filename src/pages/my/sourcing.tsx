@@ -7,6 +7,7 @@ import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
+import LoginGuide from '../../components/LoginGuide'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { getMySourcingDemands, demandStatusText, DEMAND_STATUS, type SourcingMyDemand } from '../../services/sourcing'
@@ -29,11 +30,7 @@ export default function MySourcingPage() {
     <PageLayout>
       <NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />
       <ScrollView style={{ flex: 1 }}>
-        {!isLoggedIn && (
-          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
-            <Text style={{ ...fs(14), color: t.textTertiary }}>登录后查看我发布的寻货</Text>
-          </View>
-        )}
+        {!isLoggedIn && <LoginGuide icon="compass" text="登录后可查看我发布的寻货" />}
         {isLoggedIn && items.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />

@@ -227,7 +227,7 @@ export default function MerchantManagePage() {
         style={{ ...fs(14), color: t.textPrimary, flex: 1, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6 }}
         value={form[key]}
         placeholder={placeholder}
-        placeholderClass="auth-ph"
+        placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
         onInput={(e) => setForm((prev) => ({ ...prev, [key]: e.detail.value }))}
       />
     </View>
@@ -288,7 +288,7 @@ export default function MerchantManagePage() {
             style={{ ...fs(14), color: t.textPrimary, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8 }}
             value={searchKw}
             placeholder="输入型号关键词搜索平台轴承库"
-            placeholderClass="auth-ph"
+            placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
             onInput={(e) => onSearchInput(e.detail.value)}
           />
           {picked && (
