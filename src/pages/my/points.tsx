@@ -45,7 +45,7 @@ export default function PointsPage() {
 
   return (
     <PageLayout>
-      <NavBar title='积分明细' onBack={() => Taro.navigateBack()} />
+      <NavBar title='积分明细' showBack onBack={() => Taro.navigateBack()} />
       <ScrollView style={{ flex: 1 }} onScrollToLower={() => void loadMore()}>
         {/* 余额概览卡 */}
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, alignItems: 'center' }}>

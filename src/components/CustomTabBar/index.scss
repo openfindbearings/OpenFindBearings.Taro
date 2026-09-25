@@ -1,4 +1,4 @@
-﻿// CustomTabBar 组件样式（v1.7.0 度量重构，纯 RN 基准）
+// CustomTabBar 组件样式（v1.7.0 度量重构，纯 RN 基准）
 // 改动说明：
 //   1. 删除 position:absolute 底部定位——TabBar 改为 PageLayout flex column 的普通末子项，
 //      位置由骨架保证（RN 不支持 fixed，absolute 与 flex 混用在不同页面表现不稳）；
@@ -20,7 +20,6 @@
   height: $tabbar-height;
   background: $tabbar-bg;
   border-top-width: 1px;
-  border-top-style: solid;
   border-top-color: $tabbar-border;
 }
 
