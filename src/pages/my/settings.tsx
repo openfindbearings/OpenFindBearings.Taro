@@ -25,6 +25,8 @@ import { useAuthStore } from '../../stores/auth'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { checkUpdateManually, isAutoUpdateEnabled, setAutoUpdateEnabled } from '../../services/update'
+// 改动说明（v1.7.18）：关于组展示 ICP 备案号，取站点配置（Admin 系统配置可改）
+import { getSiteConfig } from '../../services/config-api'
 import { deactivateAccount } from '../../services/user'
 import { vibrateTap } from '../../utils/haptics'
 import { getAppVersion } from '../../utils/version'
@@ -61,6 +63,8 @@ export default function SettingsPage() {
   })
   // 启动时自动检查更新（设备级本地开关，默认开；v1.7.6 新增）
   const [autoUpdate, setAutoUpdate] = useState(true)
+  // v1.7.18 关于组：ICP 备案号（站点配置下发，拉失败留空不显示该行）
+  const [beian, setBeian] = useState('')
   // 登录态：控制"注销账户/退出登录"显隐，以及"简洁首页模式"的登录门槛
   // 改动说明：由本地 useState + useDidShow 读 storage，改为订阅 auth store（唯一事实源）——
   // 登录成功返回、登出、冷启动 init 恢复均即时响应，不再依赖页面显示时序与 storage 读取
@@ -91,6 +95,8 @@ export default function SettingsPage() {
     }).catch(() => { /* 默认值 */ })
     // 改动说明（v1.7.6）：启动自动检查开关为设备级本地设置（services/update 存储），单独读取
     isAutoUpdateEnabled().then(setAutoUpdate).catch(() => { /* 默认开 */ })
+    // v1.7.18：拉站点配置取备案号（公开接口，失败静默——无备案字段则隐藏该行）
+    getSiteConfig().then((c) => setBeian(c?.siteBeiAn || '')).catch(() => { /* 不显示 */ })
   })
 
   // 保存设置（纯存储，无 DOM 操作——RN 无 document）
@@ -335,7 +341,7 @@ export default function SettingsPage() {
               onChange={(v) => save({ pushEnabled: v })}
             />
           </View>
-          <View className='list-item list-item-last'>
+          <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
                 <Icon name="megaphone" size={20} color={t.primary} />
@@ -348,6 +354,26 @@ export default function SettingsPage() {
               disabled
               onChange={(v) => save({ adEnabled: v })}
             />
+          </View>
+          {/* 改动说明（v1.7.18）：音效/震动从"通用"组挪入"消息"组——二者本质是新消息提醒的
+              声音/触感通道（v1.7.13 轮询提醒接入后成型），语义归位；开关真实生效逻辑不变 */}
+          <View className='list-item' style={{ borderBottomColor: t.border }}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="volume_2" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>音效</Text>
+            </View>
+            <Switch checked={settings.soundEnabled} onChange={(v) => save({ soundEnabled: v })} />
+          </View>
+          <View className='list-item list-item-last'>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="vibrate" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>震动</Text>
+            </View>
+            <Switch checked={settings.vibrateEnabled} onChange={(v) => { save({ vibrateEnabled: v }); if (v) void vibrateTap() }} />
           </View>
         </View>
       </View>
@@ -380,45 +406,42 @@ export default function SettingsPage() {
         </View>
       </View>
 
-      {/* 通用：音效（新消息轮询提醒，三端分策：H5 合成音/小程序 wav/RN 以震动替代）/
-          震动（应用级触感开关）/ 版本更新。
-          改动说明（v1.7.13）：两开关均真实生效——即使系统声音/触感开启，用户也可在本 App 内
-          强制静音/静震（iOS 键盘触感同思路）；原"暂未上线"占位态移除 */}
+      {/* 权限（v1.7.18 新增）：本 App 用到的系统权限清单与授权管理入口 */}
       <View className='section'>
-        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>通用</Text>
+        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>权限</Text>
         <View className='list' style={{ backgroundColor: t.bgCard }}>
-          <View className='list-item' style={{ borderBottomColor: t.border }}>
+          <View className='list-item list-item-last' onClick={() => Taro.navigateTo({ url: '/pages/my/permissions' })}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
-                <Icon name="volume_2" size={20} color={t.primary} />
+                <Icon name="shield" size={20} color={t.primary} />
               </View>
-              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>音效</Text>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>权限管理</Text>
             </View>
-            <Switch checked={settings.soundEnabled} onChange={(v) => save({ soundEnabled: v })} />
+            <Icon name="chevron_right" size={18} color={t.textTertiary} />
           </View>
-          <View className='list-item' style={{ borderBottomColor: t.border }}>
-            <View className='list-left'>
-              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
-                <Icon name="vibrate" size={20} color={t.primary} />
-              </View>
-              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>震动</Text>
-            </View>
-            <Switch checked={settings.vibrateEnabled} onChange={(v) => { save({ vibrateEnabled: v }); if (v) void vibrateTap() }} />
-          </View>
+        </View>
+      </View>
+
+      {/* 关于：自动更新 / 版本更新 / ICP 备案。
+          改动说明（v1.7.18）：原"通用"组重排——音效/震动挪"消息"组（提醒语义归位），
+          启动检查开关简称"自动更新"，新增备案行（站点配置下发，点击跳工信部查询页） */}
+      <View className='section'>
+        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>关于</Text>
+        <View className='list' style={{ backgroundColor: t.bgCard }}>
           {/* 改动说明（v1.7.6）：启动自动检查开关——关闭后开屏不再静默检查（设置页手动检查不受影响） */}
           <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
                 <Icon name="refresh-cw" size={20} color={t.primary} />
               </View>
-              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>启动时自动检查更新</Text>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>自动更新</Text>
             </View>
             <Switch
               checked={autoUpdate}
               onChange={(v) => { setAutoUpdate(v); void setAutoUpdateEnabled(v) }}
             />
           </View>
-          <View className='list-item list-item-last' onClick={checkVersion}>
+          <View className='list-item' style={{ borderBottomColor: t.border }} onClick={checkVersion}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
                 <Icon name="info" size={20} color={t.primary} />
@@ -431,6 +454,22 @@ export default function SettingsPage() {
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           </View>
+          {/* ICP 备案号：站点配置下发（Admin 系统配置可改）。点击复制并提示去工信部查询——
+              外链跳转在小程序被禁，复制是跨端最稳的主流做法 */}
+          {beian ? (
+            <View
+              className='list-item list-item-last'
+              onClick={() => { Taro.setClipboardData({ data: beian }); Taro.showToast({ title: '备案号已复制', icon: 'none' }) }}
+            >
+              <View className='list-left'>
+                <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                  <Icon name="shield" size={20} color={t.primary} />
+                </View>
+                <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>ICP 备案</Text>
+              </View>
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>{beian}</Text>
+            </View>
+          ) : null}
         </View>
       </View>
 

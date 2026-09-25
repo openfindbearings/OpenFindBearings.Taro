@@ -197,6 +197,8 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   POINTS_ACCOUNT: `${API_PREFIX}/points/account`,
   POINTS_CHECKIN: `${API_PREFIX}/points/checkin`,
   POINTS_TRANSACTIONS: `${API_PREFIX}/points/transactions`,
+  // v1.7.18 任务中心：赚分任务清单（规则+完成态，daily 任务每日自动刷新）
+  POINTS_TASKS: `${API_PREFIX}/points/tasks`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,
