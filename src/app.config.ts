@@ -27,6 +27,7 @@ export default defineAppConfig({
 'pages/my/points',
 'pages/my/tasks',
 'pages/my/permissions',
+'pages/my/about',
     'pages/my/profile-edit',
     'pages/common/doc',
     'pages/auth/login',

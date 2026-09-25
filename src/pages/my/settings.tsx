@@ -24,9 +24,8 @@ import { useFs } from '../../hooks/useFontScale'
 import { useAuthStore } from '../../stores/auth'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import { checkUpdateManually, isAutoUpdateEnabled, setAutoUpdateEnabled } from '../../services/update'
-// 改动说明（v1.7.18）：关于组展示 ICP 备案号，取站点配置（Admin 系统配置可改）
-import { getSiteConfig } from '../../services/config-api'
+
+import { isAutoUpdateEnabled, setAutoUpdateEnabled } from '../../services/update'
 import { deactivateAccount } from '../../services/user'
 import { vibrateTap } from '../../utils/haptics'
 import { getAppVersion } from '../../utils/version'
@@ -61,13 +60,11 @@ export default function SettingsPage() {
     soundEnabled: true,
     vibrateEnabled: true
   })
-  // 启动时自动检查更新（设备级本地开关，默认开；v1.7.6 新增）
-  const [autoUpdate, setAutoUpdate] = useState(true)
-  // v1.7.18 关于组：ICP 备案号（站点配置下发，拉失败留空不显示该行）
-  const [beian, setBeian] = useState('')
   // 登录态：控制"注销账户/退出登录"显隐，以及"简洁首页模式"的登录门槛
   // 改动说明：由本地 useState + useDidShow 读 storage，改为订阅 auth store（唯一事实源）——
   // 登录成功返回、登出、冷启动 init 恢复均即时响应，不再依赖页面显示时序与 storage 读取
+  // 自动更新开关（v1.7.6，留在设置页；关于页仅手动检查）
+  const [autoUpdate, setAutoUpdate] = useState(true)
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   // 改动说明：未登录时首页模式一律显示"普通"（与首页 effectiveMode 降级一致），
   // 登录态变化即时响应；已存的个性化模式在登录后恢复显示
@@ -93,10 +90,8 @@ export default function SettingsPage() {
         setSettings({ ...saved, homeMode })
       }
     }).catch(() => { /* 默认值 */ })
-    // 改动说明（v1.7.6）：启动自动检查开关为设备级本地设置（services/update 存储），单独读取
+    // v1.7.6：启动自动检查开关（设备级本地设置）
     isAutoUpdateEnabled().then(setAutoUpdate).catch(() => { /* 默认开 */ })
-    // v1.7.18：拉站点配置取备案号（公开接口，失败静默——无备案字段则隐藏该行）
-    getSiteConfig().then((c) => setBeian(c?.siteBeiAn || '')).catch(() => { /* 不显示 */ })
   })
 
   // 保存设置（纯存储，无 DOM 操作——RN 无 document）
@@ -209,11 +204,6 @@ export default function SettingsPage() {
   }
 
   // 改动说明：原硬编码"已是最新版本"占位，接入后端版本检查（BFF /mobile/version/check）。
-  // 三端策略与启动检查共用 services/update：RN 真实比较+应用内下载安装，H5/小程序给确定性指引
-  const checkVersion = () => {
-    void checkUpdateManually()
-  }
-
   const callHotline = () => {
     showConfirmDialog({ title: '服务热线', content: '拨打 400-xxx-xxxx？' }).then((ok) => {
       if (ok) Taro.makePhoneCall({ phoneNumber: '400-xxx-xxxx' }).catch(() => {})
@@ -387,10 +377,10 @@ export default function SettingsPage() {
             { icon: 'file_text', label: '隐私政策', type: 'privacy-policy' },
             { icon: 'user', label: '个人信息收集清单', type: 'info-collection' },
             { icon: 'users', label: '第三方信息共享清单', type: 'third-party-share' }
-          ].map((item, i, arr) => (
+          ].map((item) => (
             <View
               key={item.label}
-              className={i === arr.length - 1 ? 'list-item list-item-last' : 'list-item'}
+              className='list-item'
               style={{ borderBottomColor: t.border }}
               onClick={() => Taro.navigateTo({ url: `/pages/common/doc?type=${item.type}` })}
             >
@@ -403,17 +393,11 @@ export default function SettingsPage() {
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           ))}
-        </View>
-      </View>
-
-      {/* 权限（v1.7.18 新增）：本 App 用到的系统权限清单与授权管理入口 */}
-      <View className='section'>
-        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>权限</Text>
-        <View className='list' style={{ backgroundColor: t.bgCard }}>
+          {/* 改动说明（v1.7.19）：权限管理从独立"权限"组合并进隐私组（授权管理属隐私语义） */}
           <View className='list-item list-item-last' onClick={() => Taro.navigateTo({ url: '/pages/my/permissions' })}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
-                <Icon name="shield" size={20} color={t.primary} />
+                <Icon name="key_round" size={20} color={t.primary} />
               </View>
               <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>权限管理</Text>
             </View>
@@ -422,13 +406,13 @@ export default function SettingsPage() {
         </View>
       </View>
 
-      {/* 关于：自动更新 / 版本更新 / ICP 备案。
-          改动说明（v1.7.18）：原"通用"组重排——音效/震动挪"消息"组（提醒语义归位），
-          启动检查开关简称"自动更新"，新增备案行（站点配置下发，点击跳工信部查询页） */}
+      {/* 帮助（v1.7.19 重组）：服务热线 + 关于二级页入口。
+          改动说明：原"权限"组并入隐私组；原"关于"组（自动更新/版本更新/备案）
+          整体升级为"关于"二级页（软件信息集中），设置页只留入口 */}
       <View className='section'>
-        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>关于</Text>
+        <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>帮助</Text>
         <View className='list' style={{ backgroundColor: t.bgCard }}>
-          {/* 改动说明（v1.7.6）：启动自动检查开关——关闭后开屏不再静默检查（设置页手动检查不受影响） */}
+          {/* 自动更新开关（v1.7.6）：关闭后开屏不再静默检查；手动检查在关于页，不受此开关影响 */}
           <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
@@ -441,42 +425,7 @@ export default function SettingsPage() {
               onChange={(v) => { setAutoUpdate(v); void setAutoUpdateEnabled(v) }}
             />
           </View>
-          <View className='list-item' style={{ borderBottomColor: t.border }} onClick={checkVersion}>
-            <View className='list-left'>
-              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
-                <Icon name="info" size={20} color={t.primary} />
-              </View>
-              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>版本更新</Text>
-            </View>
-            <View className='list-right'>
-              {/* 改动说明：版本号从单一来源 utils/version 读取（RN 安装包 versionName / H5 编译常量），不再写死 */}
-              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>v{getAppVersion()}</Text>
-              <Icon name="chevron_right" size={18} color={t.textTertiary} />
-            </View>
-          </View>
-          {/* ICP 备案号：站点配置下发（Admin 系统配置可改）。点击复制并提示去工信部查询——
-              外链跳转在小程序被禁，复制是跨端最稳的主流做法 */}
-          {beian ? (
-            <View
-              className='list-item list-item-last'
-              onClick={() => { Taro.setClipboardData({ data: beian }); Taro.showToast({ title: '备案号已复制', icon: 'none' }) }}
-            >
-              <View className='list-left'>
-                <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
-                  <Icon name="shield" size={20} color={t.primary} />
-                </View>
-                <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>ICP 备案</Text>
-              </View>
-              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>{beian}</Text>
-            </View>
-          ) : null}
-        </View>
-      </View>
-
-      {/* 其他：服务热线；注销账户仅登录后可见（个人信息入口已移至"我的"页头像） */}
-      <View className='section'>
-        <View className='list' style={{ backgroundColor: t.bgCard }}>
-          <View className={isLoggedIn ? 'list-item' : 'list-item list-item-last'} style={{ borderBottomColor: t.border }} onClick={callHotline}>
+          <View className='list-item' style={{ borderBottomColor: t.border }} onClick={callHotline}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
                 <Icon name="phone" size={20} color={t.primary} />
@@ -488,8 +437,26 @@ export default function SettingsPage() {
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           </View>
-          {isLoggedIn && (
-            <View className='list-item list-item-last' onClick={handleDeleteAccount}>
+          <View className='list-item list-item-last' onClick={() => Taro.navigateTo({ url: '/pages/my/about' })}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="info" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>关于</Text>
+            </View>
+            <View className='list-right'>
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>v{getAppVersion()}</Text>
+              <Icon name="chevron_right" size={18} color={t.textTertiary} />
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* 其他：注销账户仅登录后可见（v1.7.19：服务热线挪"帮助"组；退出登录按钮在下方） */}
+      {isLoggedIn && (
+      <View className='section'>
+        <View className='list' style={{ backgroundColor: t.bgCard }}>
+          <View className='list-item list-item-last' onClick={handleDeleteAccount}>
               <View className='list-left'>
                 <View className='list-icon list-icon-danger' style={{ backgroundColor: t.danger + '22' }}>
                   <Icon name="trash" size={20} color={t.danger} />
@@ -498,9 +465,9 @@ export default function SettingsPage() {
               </View>
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
-          )}
         </View>
       </View>
+      )}
 
       {/* 退出登录：仅登录后可见。改动说明（v1.7.12）：由红字列表项改主题色全宽按钮——
           与"注销账户"（红字危险项）拉开视觉层级，防误点，对齐主流设置页退出按钮惯例 */}
