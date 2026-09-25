@@ -35,7 +35,7 @@ export default function AboutPage() {
       <ScrollView style={{ flex: 1 }}>
         {/* 品牌区：直接用 app 图标位图（mipmap ic_launcher 拷入 assets，三端 Image 一致；
             改动说明：此前纯 View 手绘指针三角在 RN 渲染变形，位图方案根治且与桌面图标完全同源） */}
-        <View style={{ alignItems: 'center', paddingTop: 44, paddingBottom: 20 }}>
+        <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 44, paddingBottom: 20 }}>
           <Image src={require('../../assets/icon/app-icon.png')} style={{ width: 80, height: 80, borderRadius: 40 }} />
           <Text style={{ ...fs(19), color: t.textPrimary, fontWeight: '600', marginTop: 14 }}>OpenFindBearings</Text>
           <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 4 }}>版本 v{getAppVersion()}</Text>

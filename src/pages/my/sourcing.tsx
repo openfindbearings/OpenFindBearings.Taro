@@ -30,12 +30,12 @@ export default function MySourcingPage() {
       <NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />
       <ScrollView style={{ flex: 1 }}>
         {!isLoggedIn && (
-          <View style={{ alignItems: 'center', paddingTop: 100 }}>
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Text style={{ ...fs(14), color: t.textTertiary }}>登录后查看我发布的寻货</Text>
           </View>
         )}
         {isLoggedIn && items.length === 0 && (
-          <View style={{ alignItems: 'center', paddingTop: 100 }}>
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>还没有发布过寻货，去"发现"页发一条吧</Text>
           </View>

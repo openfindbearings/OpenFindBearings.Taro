@@ -110,7 +110,7 @@ export default function DiscoverPage() {
 
       <ScrollView style={{ flex: 1 }} onScrollToLower={() => { if (hasMore) void load(page + 1, keyword) }}>
         {shown.length === 0 && !loading && (
-          <View style={{ alignItems: 'center', paddingTop: 80 }}>
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
               {keyword ? '没有找到相关寻货' : '还没有进行中的寻货，点右上角发布第一条'}

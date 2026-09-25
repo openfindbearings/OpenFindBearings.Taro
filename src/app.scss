@@ -5,3 +5,15 @@
 //   2. 本轮 RN：页面底色由 PageLayout（$bg-page）、文字色由各页 token 提供，
 //      全局层不再兜底；第二阶段做 H5 时再按平台追加全局样式（rem 基准/系统字体栈/CSS 变量主题）。
 // 约束：本文件被 RN Metro 解析，禁止 var()/媒体查询/属性选择器/:root/无单位行高。
+
+/* ============ 跨端布局拉齐（v1.7.20）============ */
+/* 改动说明：RN 的 View 默认 flex column，而 H5(taro-view-core)/小程序(view) 默认 block——
+   子级 Text/图标是 inline，混排时图标与文字横向飘位（关于页/寻货页 H5 布局乱的根因）。
+   全局把 View 拉齐为 flex column，与 RN 基准一致（本项目"RN 优先"规则的样式层兑现）；
+   需要横向的既有页面均已显式声明 flex-direction: row（class 优先级高于标签选择器，正常覆盖）；
+   RN Metro 忽略标签选择器，本规则对 RN 端无副作用 */
+view,
+taro-view-core {
+  display: flex;
+  flex-direction: column;
+}

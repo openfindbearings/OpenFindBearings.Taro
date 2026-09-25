@@ -33,12 +33,12 @@ export default function MerchantResponsesPage() {
       <NavBar title='寻货应答' onBack={() => Taro.navigateBack()} showBack />
       <ScrollView style={{ flex: 1 }}>
         {!currentMerchant && (
-          <View style={{ alignItems: 'center', paddingTop: 100 }}>
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Text style={{ ...fs(14), color: t.textTertiary }}>请先在商家 Tab 选择当前商户</Text>
           </View>
         )}
         {currentMerchant && items.length === 0 && (
-          <View style={{ alignItems: 'center', paddingTop: 100 }}>
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
               还没有应答过寻货，去"发现"页看看有没有能供的货
