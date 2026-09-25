@@ -1,4 +1,4 @@
-﻿// 设置页样式（v1.7.0 度量重构，纯 RN 基准）
+// 设置页样式（v1.7.0 度量重构，纯 RN 基准）
 // 改动说明：删 .settings-page/.settings-scroll（骨架由 PageLayout 提供）与全部 inline 色板；
 // 颜色/尺寸走 _rn.scss 编译期 token；组合类（.indent/.on/.danger/.active）全部拆独立类
 // （RN 忽略 .a.b 组合选择器）；border 简写拆三属性；行高落 dp。
@@ -36,7 +36,6 @@
   padding-left: $space-4;
   padding-right: $space-4;
   border-bottom-width: 1px;
-  border-bottom-style: solid;
   border-bottom-color: $border;
 }
 

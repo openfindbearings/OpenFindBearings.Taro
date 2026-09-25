@@ -137,8 +137,7 @@
 .search-tabs {
   display: flex;
   flex-direction: row;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
+  border-bottom-width: 1px; // RN 不支持 border-style（默认 solid），删除避免 transform 警告
   margin-top: $space-3;
 }
 
@@ -198,8 +197,7 @@
   height: 40px;
   padding-left: $space-3;
   padding-right: $space-3;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
+  border-bottom-width: 1px; // RN 不支持 border-style（默认 solid），删除避免 transform 警告
 }
 
 .sort-item {

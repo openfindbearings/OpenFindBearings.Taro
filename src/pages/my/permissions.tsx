@@ -34,7 +34,7 @@ export default function PermissionsPage() {
 
   return (
     <PageLayout>
-      <NavBar title='权限管理' onBack={() => Taro.navigateBack()} />
+      <NavBar title='权限管理' showBack onBack={() => Taro.navigateBack()} />
       <ScrollView style={{ flex: 1 }}>
         <Text style={{ fontSize: 13, color: t.textTertiary, marginTop: 12, marginBottom: 4, paddingLeft: 16, paddingRight: 16 }}>
           以下权限仅在您使用对应功能时才会请求，可随时在系统中关闭。

@@ -30,9 +30,11 @@ const menuItems = [
   { key: 'favorites', label: '收藏轴承', icon: 'heart', color: '#EF4444' },
   { key: 'followed', label: '关注商家', icon: 'users', color: '#0EA5E9' },
   { key: 'history', label: '浏览历史', icon: 'clock', color: '#10B981' },
-  // v1.7.18 第二行：任务中心（赚分）、我的寻货（占位）、设置、全部功能兜底
-  { key: 'tasks', label: '任务中心', icon: 'gift', color: '#F59E0B' },
+  // v1.7.18 补：我的纠错上第一行（此前实施遗漏）
+  { key: 'corrections', label: '我的纠错', icon: 'file_text', color: '#EF4444' },
+  // v1.7.18 第二行：我的寻货（占位）、任务中心（赚分）、设置、全部功能兜底（寻货与任务中心按需求换序）
   { key: 'sourcing', label: '我的寻货', icon: 'search', color: '#0EA5E9' },
+  { key: 'tasks', label: '任务中心', icon: 'gift', color: '#F59E0B' },
   { key: 'settings', label: '设置', icon: 'settings', color: '#64748B' },
   { key: 'all_features', label: '全部功能', icon: 'layout_grid', color: '#6366F1' }
 ]
@@ -79,8 +81,9 @@ export default function MyPage() {
       favorites: '/pages/my/favorites',
       followed: '/pages/my/followed',
       history: '/pages/my/history',
-      // v1.7.18：任务中心/设置直跳页面；寻货无映射走"暂未上线"占位
+      // v1.7.18：任务中心/设置/我的纠错直跳页面；寻货无映射走"暂未上线"占位
       tasks: '/pages/my/tasks',
+      corrections: '/pages/my/corrections',
       settings: '/pages/my/settings'
     }
     if (menuUrls[key]) {

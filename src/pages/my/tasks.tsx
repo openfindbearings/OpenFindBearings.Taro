@@ -49,7 +49,10 @@ function taskAction(grantType: string): 'checkin' | 'home' | 'merchant' | null {
   switch (grantType) {
     case 'daily_checkin': return 'checkin'
     case 'correction_adopted': return 'home'
-    case 'merchant_approved': return 'merchant'
+    // v1.34.0：资料完善/首件上架都跳商家 Tab（商户管理页内完成动作）
+    case 'merchant_approved':
+    case 'merchant_profile_complete':
+    case 'merchant_first_product': return 'merchant'
     default: return null
   }
 }
@@ -126,7 +129,7 @@ export default function TasksPage() {
 
   return (
     <PageLayout>
-      <NavBar title='任务中心' onBack={() => Taro.navigateBack()} />
+      <NavBar title='任务中心' showBack onBack={() => Taro.navigateBack()} />
       <ScrollView style={{ flex: 1 }}>
         {/* 顶部余额条 */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>
@@ -214,7 +217,11 @@ export default function TasksPage() {
               ) : taskAction(task.grantType) ? (
                 <View style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5, borderRadius: 14, backgroundColor: t.primary }} onClick={() => runTask(task)}>
                   <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>
-                    {task.grantType === 'daily_checkin' ? '去签到' : task.grantType === 'correction_adopted' ? '去纠错' : '去入驻'}
+                    {task.grantType === 'daily_checkin' ? '去签到'
+                      : task.grantType === 'correction_adopted' ? '去纠错'
+                      : task.grantType === 'merchant_profile_complete' ? '去维护'
+                      : task.grantType === 'merchant_first_product' ? '去上架'
+                      : '去入驻'}
                   </Text>
                 </View>
               ) : (
