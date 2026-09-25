@@ -65,7 +65,7 @@ export default function SourcingDetailPage() {
     return (
       <PageLayout>
         <NavBar title='寻货详情' onBack={() => Taro.navigateBack()} showBack />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ ...fs(14), color: t.textTertiary }}>加载中…</Text>
         </View>
       </PageLayout>
@@ -227,7 +227,7 @@ export default function SourcingDetailPage() {
 
         {/* 发布人：全部应答列表（比价视图） */}
         {detail.isPublisher && detail.responses && detail.responses.length > 0 && (
-          <View style={{ margin: 12, marginTop: 4, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
+          <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 4, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>商户应答（{detail.responses.length}）</Text>
             {detail.responses.map((r, i) => (
               <View key={r.id} style={{ marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border }}>

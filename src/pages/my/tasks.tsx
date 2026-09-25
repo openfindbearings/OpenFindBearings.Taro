@@ -143,7 +143,7 @@ export default function TasksPage() {
         </View>
 
         {/* 卡片 1：每日签到日期条 */}
-        <View style={{ margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
+        <View style={{ display: 'flex', flexDirection: 'column', margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>每日签到</Text>
           <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>连续签到天数越多，单日积分越高</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 }}>
@@ -179,7 +179,7 @@ export default function TasksPage() {
         </View>
 
         {/* 卡片 2：赚分任务列表 */}
-        <View style={{ margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
+        <View style={{ display: 'flex', flexDirection: 'column', margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>赚积分任务</Text>
           {tasks.length === 0 && (
             <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 12 }}>
