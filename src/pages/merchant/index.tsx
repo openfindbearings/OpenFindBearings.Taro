@@ -217,6 +217,10 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             {/* 改动说明（v1.7.8）：员工无管理权限，入口按角色显示"员工列表"（名实相符，页面标题同步） */}
             <Text style={{ ...fs(13), color: t.textPrimary }}>{m.role === 'MerchantAdmin' ? '成员管理' : '员工列表'}</Text>
           </View>
+          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/responses' })}>
+            {/* v1.7.19 寻货：应答是商家行为（员工也可代商户应答），全员可见入口 */}
+            <Text style={{ ...fs(13), color: t.textPrimary }}>寻货应答</Text>
+          </View>
           {m.role === 'MerchantAdmin' && (
             <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
               <Text style={{ ...fs(13), color: t.textPrimary }}>信息维护</Text>

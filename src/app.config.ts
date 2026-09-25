@@ -2,6 +2,11 @@ export default defineAppConfig({
   pages: [
     'pages/home/index',
     'pages/discover/index',
+    // v1.7.19 寻货：详情/发布 + 我的寻货 + 商家应答
+    'pages/discover/detail',
+    'pages/discover/publish',
+    'pages/my/sourcing',
+    'pages/merchant/responses',
     'pages/merchant/index',
     'pages/mall/index',
     'pages/merchant/apply',

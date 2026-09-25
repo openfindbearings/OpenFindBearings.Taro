@@ -199,6 +199,10 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   POINTS_TRANSACTIONS: `${API_PREFIX}/points/transactions`,
   // v1.7.18 任务中心：赚分任务清单（规则+完成态，daily 任务每日自动刷新）
   POINTS_TASKS: `${API_PREFIX}/points/tasks`,
+  // v1.7.19 寻货：feed/详情/发布/应答/选定/取消/我的列表（BFF /mobile/sourcing/*）
+  SOURCING_DEMANDS: `${API_PREFIX}/sourcing/demands`,
+  SOURCING_MY_DEMANDS: `${API_PREFIX}/sourcing/my/demands`,
+  SOURCING_MY_RESPONSES: `${API_PREFIX}/sourcing/my/responses`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,
