@@ -21,8 +21,7 @@ import CustomTabBar from '../../components/CustomTabBar'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
 // 改动说明（v1.7.17 积分底座）：账户/签到服务 + 签到成功长震反馈
-import { getPointAccount, dailyCheckin, type PointAccount } from '../../services/points'
-import { vibrateSuccess } from '../../utils/haptics'
+import { getPointAccount, type PointAccount } from '../../services/points'
 import './index.scss'
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
@@ -31,6 +30,10 @@ const menuItems = [
   { key: 'favorites', label: '收藏轴承', icon: 'heart', color: '#EF4444' },
   { key: 'followed', label: '关注商家', icon: 'users', color: '#0EA5E9' },
   { key: 'history', label: '浏览历史', icon: 'clock', color: '#10B981' },
+  // v1.7.18 第二行：任务中心（赚分）、我的寻货（占位）、设置、全部功能兜底
+  { key: 'tasks', label: '任务中心', icon: 'gift', color: '#F59E0B' },
+  { key: 'sourcing', label: '我的寻货', icon: 'search', color: '#0EA5E9' },
+  { key: 'settings', label: '设置', icon: 'settings', color: '#64748B' },
   { key: 'all_features', label: '全部功能', icon: 'layout_grid', color: '#6366F1' }
 ]
 
@@ -75,7 +78,10 @@ export default function MyPage() {
     const menuUrls: Record<string, string> = {
       favorites: '/pages/my/favorites',
       followed: '/pages/my/followed',
-      history: '/pages/my/history'
+      history: '/pages/my/history',
+      // v1.7.18：任务中心/设置直跳页面；寻货无映射走"暂未上线"占位
+      tasks: '/pages/my/tasks',
+      settings: '/pages/my/settings'
     }
     if (menuUrls[key]) {
       Taro.navigateTo({ url: menuUrls[key] })
@@ -103,26 +109,6 @@ export default function MyPage() {
   // 会员卡（v1.7.17）：收支明细接积分流水页；去兑换仍占位（商城 P8 未上线）
   const handlePointsDetail = () => {
     Taro.navigateTo({ url: '/pages/my/points' })
-  }
-
-  // 每日签到：成功长震+toast 报分值，同日重复提示已签
-  const handleCheckin = async () => {
-    if (!isLoggedIn) {
-      Taro.showToast({ title: '请先登录', icon: 'none' })
-      return
-    }
-    const r = await dailyCheckin()
-    if (!r) {
-      Taro.showToast({ title: '签到失败，请稍后重试', icon: 'none' })
-      return
-    }
-    if (r.alreadyCheckedIn) {
-      Taro.showToast({ title: '今日已签到', icon: 'none' })
-    } else {
-      void vibrateSuccess()
-      Taro.showToast({ title: `签到成功 +${r.amount} 积分`, icon: 'none' })
-    }
-    setPoints(await getPointAccount())
   }
 
   const handleRedeem = () => {
@@ -233,29 +219,12 @@ export default function MyPage() {
           </View>
         </View>
         <View className='member-main'>
-          {/* v1.7.17：余额接真数据（原写死 0） */}
+          {/* v1.7.18：余额保留真数据；签到胶囊撤除（一行摆不下显示不全），赚分动作收进任务中心 */}
           <Text style={{ ...fs(30), color: t.primary, fontWeight: 'bold' }}>{points.balance}</Text>
           <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6, marginBottom: 4 }}>积分</Text>
-          {/* v1.7.17 签到按钮：描边胶囊，已签置灰（状态来自账户接口） */}
-          <View
-            className='member-checkin'
-            style={{
-              marginLeft: 'auto', borderWidth: 1, borderColor: points.todayCheckedIn ? t.border : t.primary,
-              borderRadius: 16, paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5,
-              backgroundColor: points.todayCheckedIn ? 'transparent' : t.primary,
-            }}
-            onClick={handleCheckin}
-          >
-            <Text style={{ ...fs(13), color: points.todayCheckedIn ? t.textTertiary : '#FFFFFF' }}>
-              {points.todayCheckedIn ? '已签到' : '签到'}
-            </Text>
-          </View>
         </View>
         <View className='member-foot'>
-          {/* v1.7.17：连续签到天数提示（未签时引导阶梯收益） */}
-          <Text style={{ ...fs(12), color: t.textTertiary }}>
-            {points.consecutiveDays > 0 ? `已连续签到 ${points.consecutiveDays} 天，` : ''}活跃赚积分，可兑换精选礼品
-          </Text>
+          <Text style={{ ...fs(12), color: t.textTertiary }}>活跃赚积分，可兑换精选礼品</Text>
           <View className='member-redeem' style={{ backgroundColor: t.primary }} onClick={handleRedeem}>
             <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去兑换</Text>
           </View>

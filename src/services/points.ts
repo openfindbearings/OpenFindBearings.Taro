@@ -62,3 +62,25 @@ export function dailyCheckin() {
 export function getPointTransactions(page = 1, pageSize = 20) {
   return request<Paged<PointTransaction>>(`${API.POINTS_TRANSACTIONS}?page=${page}&pageSize=${pageSize}`)
 }
+
+/** 赚分任务项（对齐 BFF PointTaskItem；daily=每日刷新，done 按今日/历史口径） */
+export interface PointTask {
+  grantType: string
+  displayName: string
+  amount: number
+  description?: string | null
+  /** 连续阶梯数组（签到类非空，可展示"最高 X 分"） */
+  ladder?: number[] | null
+  daily: boolean
+  done: boolean
+}
+
+/** 赚分任务清单（任务中心数据源；失败返回空数组） */
+export async function getPointTasks(): Promise<PointTask[]> {
+  try {
+    const r = await request<PointTask[]>(API.POINTS_TASKS)
+    return r ?? []
+  } catch {
+    return []
+  }
+}

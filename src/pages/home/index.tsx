@@ -104,13 +104,13 @@ export default function HomePage() {
   // 搜索框（普通模式放 NavBar 中间；简洁模式放内容区居中处）
   const searchBox = (
     <View className='search-input-wrap' style={{ backgroundColor: t.bgInput }}>
-      <Icon name="scan_line" size={20} color='#64748B' />
+      <Icon name="scan_line" size={20} color={t.textSecondary} />
       <Input
         className='search-input'
         style={{ color: t.textPrimary }}
         type='text'
         placeholder='搜索轴承型号、品牌...'
-        placeholderTextColor='#94A3B8'
+        placeholderTextColor={t.textTertiary}
         value={keyword}
         onInput={(e) => setKeyword(e.detail.value)}
         onConfirm={handleSearch}
@@ -118,10 +118,13 @@ export default function HomePage() {
       />
       <View className='search-actions'>
         <View className='action-icon' onClick={handleVoicePlaceholder}>
-          <Icon name='mic' size={22} color='#475569' />
+          {/* 改动说明（v1.7.18）：搜索框内图标/占位色由硬编码灰改主题色——深色模式下
+              原 #475569/#64748B 在深底上几乎不可见；快捷三钮的渐变底+白图标保留
+              （品牌色语义，主流 App 深色模式同样不变色） */}
+          <Icon name='mic' size={22} color={t.textSecondary} />
         </View>
         <View className='action-icon' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
-          <Icon name="camera" size={22} color='#475569' />
+          <Icon name="camera" size={22} color={t.textSecondary} />
         </View>
       </View>
     </View>
