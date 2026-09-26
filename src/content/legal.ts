@@ -28,7 +28,9 @@ export type DocType =
 
 const APP_NAME = 'OpenFindBearings（轴承查询）'
 const OPERATOR = 'OpenFindBearings 运营团队'
-const CONTACT = '服务热线 400-xxx-xxxx'
+// 改动说明（v1.7.24 客服电话接线）：法务文本为静态模板不便注入运行时配置，
+// 原硬编码占位号码 400-xxx-xxxx 改为指向应用内实时入口（设置→服务热线读 Site.CustomerService）
+const CONTACT = '应用内"设置→服务热线"页面展示的客服电话'
 const UPDATED = '2026年9月7日'
 
 /** 隐私政策（完整版） */

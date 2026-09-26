@@ -29,6 +29,9 @@ import { isAutoUpdateEnabled, setAutoUpdateEnabled } from '../../services/update
 import { deactivateAccount } from '../../services/user'
 import { vibrateTap } from '../../utils/haptics'
 import { getAppVersion } from '../../utils/version'
+// 改动说明（v1.7.24 客服电话接线）：热线号码从硬编码占位改为站点配置 Site.CustomerService
+// （Admin 系统配置填号即时生效，不发版）；优先读启动缓存，缓存缺失时兜底拉一次
+import { getCachedSiteConfig, getSiteConfig } from '../../services/config-api'
 import './settings.scss'
 
 const SETTINGS_KEY = 'app_settings'
@@ -65,6 +68,8 @@ export default function SettingsPage() {
   // 登录成功返回、登出、冷启动 init 恢复均即时响应，不再依赖页面显示时序与 storage 读取
   // 自动更新开关（v1.7.6，留在设置页；关于页仅手动检查）
   const [autoUpdate, setAutoUpdate] = useState(true)
+  // 客服热线（站点配置 Site.CustomerService，Admin 填号即时生效；空=未配置）
+  const [hotline, setHotline] = useState(getCachedSiteConfig()?.customerService || '')
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   // 改动说明：未登录时首页模式一律显示"普通"（与首页 effectiveMode 降级一致），
   // 登录态变化即时响应；已存的个性化模式在登录后恢复显示
@@ -92,6 +97,10 @@ export default function SettingsPage() {
     }).catch(() => { /* 默认值 */ })
     // v1.7.6：启动自动检查开关（设备级本地设置）
     isAutoUpdateEnabled().then(setAutoUpdate).catch(() => { /* 默认开 */ })
+    // 改动说明（v1.7.24）：启动缓存没拉到客服号时进页兜底再拉一次（Admin 配置即时生效路径）
+    if (!hotline) {
+      getSiteConfig().then((c) => setHotline(c?.customerService || '')).catch(() => { /* 保持空 */ })
+    }
   })
 
   // 保存设置（纯存储，无 DOM 操作——RN 无 document）
@@ -203,10 +212,15 @@ export default function SettingsPage() {
     })
   }
 
-  // 改动说明：原硬编码"已是最新版本"占位，接入后端版本检查（BFF /mobile/version/check）。
+  // 改动说明（v1.7.24 客服电话接线）：原硬编码 400-xxx-xxxx 占位改读站点配置；
+  // 未配置时不发起拨号，提示管理员尚未设置
   const callHotline = () => {
-    showConfirmDialog({ title: '服务热线', content: '拨打 400-xxx-xxxx？' }).then((ok) => {
-      if (ok) Taro.makePhoneCall({ phoneNumber: '400-xxx-xxxx' }).catch(() => {})
+    if (!hotline) {
+      Taro.showToast({ title: '暂未设置客服电话', icon: 'none' })
+      return
+    }
+    showConfirmDialog({ title: '服务热线', content: `拨打 ${hotline}？` }).then((ok) => {
+      if (ok) Taro.makePhoneCall({ phoneNumber: hotline }).catch(() => {})
     })
   }
 
@@ -433,7 +447,7 @@ export default function SettingsPage() {
               <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>服务热线</Text>
             </View>
             <View className='list-right'>
-              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>400-xxx-xxxx</Text>
+              <Text className='list-value' style={{ ...fs(13), color: t.textTertiary }}>{hotline || '暂未设置'}</Text>
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           </View>

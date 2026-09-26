@@ -12,7 +12,7 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { checkUpdateManually } from '../../services/update'
-import { getSiteConfig } from '../../services/config-api'
+import { getSiteConfig, getBeiAnForPlatform } from '../../services/config-api'
 import { getAppVersion } from '../../utils/version'
 import './settings.scss'
 
@@ -26,7 +26,8 @@ export default function AboutPage() {
   const [beian, setBeian] = useState('')
 
   useDidShow(() => {
-    getSiteConfig().then((c) => setBeian(c?.siteBeiAn || '')).catch(() => { /* 无备案则隐藏该行 */ })
+    // 改动说明（v1.7.24 备案拆分）：App/小程序/网站备案独立出号，按运行平台取对应键
+    getSiteConfig().then((c) => setBeian(getBeiAnForPlatform(c))).catch(() => { /* 无备案则隐藏该行 */ })
   })
 
   return (
