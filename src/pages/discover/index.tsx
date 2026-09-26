@@ -91,7 +91,7 @@ export default function DiscoverPage() {
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', height: 38, borderRadius: 19, backgroundColor: t.bgInput, paddingLeft: 12, paddingRight: 12 }}>
           <Icon name='search' size={16} color={t.textTertiary} />
           <Input
-            style={{ flex: 1, marginLeft: 6, marginRight: 6, color: t.textPrimary }}
+            style={{ ...fs(15), flex: 1, marginLeft: 6, marginRight: 6, color: t.textPrimary }}
             placeholder='搜索型号，如 6205'
             placeholderTextColor={t.textTertiary}
             value={keyword}
