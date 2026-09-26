@@ -31,8 +31,7 @@ export default function AboutPage() {
   })
 
   return (
-    <PageLayout>
-      <NavBar title='关于' onBack={() => Taro.navigateBack()} showBack />
+    <PageLayout nav={<NavBar title='关于' onBack={() => Taro.navigateBack()} showBack />}>
       <ScrollView style={{ flex: 1 }}>
         {/* 品牌区：直接用 app 图标位图（mipmap ic_launcher 拷入 assets，三端 Image 一致；
             改动说明：此前纯 View 手绘指针三角在 RN 渲染变形，位图方案根治且与桌面图标完全同源） */}

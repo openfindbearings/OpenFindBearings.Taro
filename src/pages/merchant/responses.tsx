@@ -35,8 +35,7 @@ export default function MerchantResponsesPage() {
   })
 
   return (
-    <PageLayout>
-      <NavBar title='寻货应答' onBack={() => Taro.navigateBack()} showBack />
+    <PageLayout nav={<NavBar title='寻货应答' onBack={() => Taro.navigateBack()} showBack />}>
       <ScrollView style={{ flex: 1 }}>
         {!currentMerchant && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>

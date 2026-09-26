@@ -136,8 +136,7 @@ export default function TasksPage() {
   }
 
   return (
-    <PageLayout>
-      <NavBar title='任务中心' showBack onBack={() => Taro.navigateBack()} />
+    <PageLayout nav={<NavBar title='任务中心' showBack onBack={() => Taro.navigateBack()} />}>
       <ScrollView style={{ flex: 1 }}>
         {!isLoggedIn && <LoginGuide icon='gift' text='登录后可签到赚积分' />}
         {isLoggedIn && (
