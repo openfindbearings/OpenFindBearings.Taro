@@ -27,8 +27,7 @@ export default function MySourcingPage() {
   })
 
   return (
-    <PageLayout>
-      <NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />
+    <PageLayout nav={<NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />}>
       <ScrollView style={{ flex: 1 }}>
         {!isLoggedIn && <LoginGuide icon="compass" text="登录后可查看我发布的寻货" />}
         {isLoggedIn && items.length === 0 && (

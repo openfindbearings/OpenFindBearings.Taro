@@ -73,8 +73,7 @@ export default function SourcingDetailPage() {
 
   if (!detail) {
     return (
-      <PageLayout>
-        <NavBar title='寻货详情' onBack={() => Taro.navigateBack()} showBack />
+      <PageLayout nav={<NavBar title='寻货详情' onBack={() => Taro.navigateBack()} showBack />}>
         <View style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ ...fs(14), color: t.textTertiary }}>加载中…</Text>
         </View>
@@ -197,8 +196,7 @@ export default function SourcingDetailPage() {
   ]
 
   return (
-    <PageLayout>
-      <NavBar title='寻货详情' onBack={() => Taro.navigateBack()} showBack />
+    <PageLayout nav={<NavBar title='寻货详情' onBack={() => Taro.navigateBack()} showBack />}>
       <ScrollView style={{ flex: 1 }}>
         {/* 需求卡 */}
         <View style={{ margin: 12, paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>

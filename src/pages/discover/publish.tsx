@@ -104,8 +104,7 @@ export default function PublishSourcingPage() {
   const insufficient = overFree && !!pq && !!quota && quota.balance < pq.pointsPrice
 
   return (
-    <PageLayout>
-      <NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />
+    <PageLayout nav={<NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />}>
       <ScrollView style={{ flex: 1 }}>
         {/* 额度条（v1.7.21 额度可见化）：常驻展示今日剩余免费额度与超限单价，
             不再"撞墙才可见"；quota 拉取失败（未登录等）整条隐藏 */}
