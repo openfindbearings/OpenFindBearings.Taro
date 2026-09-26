@@ -25,9 +25,12 @@ definePageConfig({ disableScroll: true })
 /** 日期条窗口：今天前后各 3 天 */
 const STRIDE_DAYS = 3
 
-/** UTC 日期串（与后端 bizId/createdAt 的 UTC 口径一致） */
-function utcDateKey(d: Date): string {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+/** 业务日期串：后端日任务按业务日界切日（BusinessClock，偏移由 /points/account 的
+ *  tzOffsetHours 下发，缺省 +8 北京），前端同口径换算——UTC 早上偏移前的动作归前一天
+ *  会导致对勾/今日态错位 */
+function bizDateKey(d: Date, offsetHours: number): string {
+  const b = new Date(d.getTime() + offsetHours * 3600000)
+  return `${b.getUTCFullYear()}-${String(b.getUTCMonth() + 1).padStart(2, '0')}-${String(b.getUTCDate()).padStart(2, '0')}`
 }
 
 /** 星期短标（一二三四五六日） */
@@ -64,19 +67,22 @@ export default function TasksPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [account, setAccount] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
   const [tasks, setTasks] = useState<PointTask[]>([])
-  // 已签到日集合（UTC 日期串，来自流水过滤 daily_checkin）
+  // 已签到日集合（业务日期串，来自流水过滤 daily_checkin，按后端下发偏移换算）
   const [checkedDates, setCheckedDates] = useState<Set<string>>(new Set())
   const [checking, setChecking] = useState(false)
 
   // 拉取账户+任务+签到历史（进入/签到后刷新）
   const refresh = async () => {
     if (!isLoggedIn) return
-    setAccount(await getPointAccount())
+    const acc = await getPointAccount()
+    setAccount(acc)
+    // 日界偏移取后端下发值（缺省 +8 兜底），与 BusinessClock 实时对齐
+    const off = acc.tzOffsetHours ?? 8
     setTasks(await getPointTasks())
     const paged = await getPointTransactions(1, 50)
     const set = new Set<string>()
     for (const it of paged?.items || []) {
-      if (it.grantType === 'daily_checkin') set.add(utcDateKey(new Date(it.createdAt)))
+      if (it.grantType === 'daily_checkin') set.add(bizDateKey(new Date(it.createdAt), off))
     }
     setCheckedDates(set)
   }
@@ -113,12 +119,13 @@ export default function TasksPage() {
     }
   }
 
-  // 7 格日期条数据：今天居中，前后各 3 天
-  const today = new Date()
+  // 7 格日期条数据：今天居中，前后各 3 天（偏移按后端下发 tzOffsetHours，与 bizDateKey 同口径）
+  const tzOff = account.tzOffsetHours ?? 8
+  const today = new Date(Date.now() + tzOff * 3600000)
   const cells: { key: string; label: string; dayNum: number; state: 'done' | 'missed' | 'today' | 'future' }[] = []
   for (let offset = -STRIDE_DAYS; offset <= STRIDE_DAYS; offset++) {
     const d = new Date(today.getTime() + offset * 86400000)
-    const key = utcDateKey(d)
+    const key = bizDateKey(d, tzOff)
     const done = checkedDates.has(key)
     cells.push({
       key,

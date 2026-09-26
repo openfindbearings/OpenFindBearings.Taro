@@ -12,6 +12,8 @@ export interface PointAccount {
   todayCheckedIn: boolean
   /** 当前连续签到天数（阶梯展示用） */
   consecutiveDays: number
+  /** 业务日界偏移小时数（v1.36.1 后端下发，对应 BusinessClock 配置；缺省按 +8 北京兜底） */
+  tzOffsetHours?: number
 }
 
 /** 签到结果（对齐 BFF CheckinResponse） */
@@ -41,6 +43,10 @@ export const GRANT_TYPE_LABELS: Record<string, string> = {
   register_bonus: '新用户注册奖励',
   correction_adopted: '纠错被采纳',
   merchant_approved: '商户入驻通过',
+  merchant_profile_complete: '完善商户资料',
+  merchant_first_product: '首件商品上架',
+  sourcing_publish_bonus: '寻货发布加量',
+  sourcing_respond_bonus: '寻货应答加量',
 }
 
 /** 拉取积分账户（失败返回零值兜底，不打扰页面） */
