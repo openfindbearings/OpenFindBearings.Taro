@@ -185,7 +185,7 @@ export default function SourcingDetailPage() {
   const rField = (label: string, value: string, setValue: (v: string) => void, placeholder: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 44, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(14), color: t.textSecondary, width: 64 }}>{label}</Text>
-      <Input style={{ flex: 1, color: t.textPrimary }} placeholder={placeholder} placeholderTextColor={t.textTertiary} value={value} onInput={(e) => setValue(e.detail.value)} />
+      <Input style={{ ...fs(15), flex: 1, color: t.textPrimary }} placeholder={placeholder} placeholderTextColor={t.textTertiary} value={value} onInput={(e) => setValue(e.detail.value)} />
     </View>
   )
 

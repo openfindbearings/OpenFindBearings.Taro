@@ -88,7 +88,7 @@ export default function PublishSourcingPage() {
         {label}{required ? ' *' : ''}
       </Text>
       <Input
-        style={{ flex: 1, color: t.textPrimary }}
+        style={{ ...fs(15), flex: 1, color: t.textPrimary }}
         placeholder={placeholder}
         placeholderTextColor={t.textTertiary}
         value={form[key]}
@@ -128,7 +128,7 @@ export default function PublishSourcingPage() {
           <View style={{ flexDirection: 'row', minHeight: 72, paddingTop: 12 }}>
             <Text style={{ ...fs(14), color: t.textSecondary, width: 76 }}>补充说明</Text>
             <Input
-              style={{ flex: 1, color: t.textPrimary }}
+              style={{ ...fs(15), flex: 1, color: t.textPrimary }}
               placeholder='成色要求、可否验货等（可空）'
               placeholderTextColor={t.textTertiary}
               value={form.description}

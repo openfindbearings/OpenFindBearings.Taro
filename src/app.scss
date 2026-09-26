@@ -17,3 +17,12 @@ taro-view-core {
   display: flex;
   flex-direction: column;
 }
+
+/* 改动说明（v1.7.23 H5 输入框修复）：H5 的 Input 宿主自定义元素拿到 height 后，
+   内部原生 input 不继承宿主高度（仍按行高收缩贴顶），登录框/搜索框文字上浮、
+   与垂直居中的图标错位。把内层拉满宿主高度——原生单行 input 自身垂直居中文字；
+   RN Metro 忽略标签选择器，本规则对 RN 端无副作用 */
+taro-input-core input,
+taro-textarea-core textarea {
+  height: 100%;
+}
