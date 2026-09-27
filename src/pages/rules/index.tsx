@@ -1,0 +1,105 @@
+// 积分与商家金规则页（v2.10.1）：?kind=points 显示个人积分规则，?kind=gold 显示商家金规则。
+// 内容对齐 API 实际实现（发放规则表/汇率配置/集体任务种子），运营改配置后本页文案属"约"值需随文档同步。
+// RN 约束：仅 flex、无 fixed、Text 包裹、数值 lineHeight。
+import { View, Text, ScrollView } from '@tarojs/components'
+import Taro, { useRouter } from '@tarojs/taro'
+import { useTheme } from '../../hooks/useTheme'
+import { useFs } from '../../hooks/useFontScale'
+import PageLayout from '../../platforms/PageLayout'
+import NavBar from '../../components/NavBar'
+
+definePageConfig({ disableScroll: true })
+
+/** 规则小节：标题 + 行列表（行=左文案右数值，value 可空） */
+function RuleSection({ title, rows, t, fs }: {
+  title: string
+  rows: Array<{ label: string; value?: string; note?: string }>
+  t: any; fs: (n: number) => any
+}) {
+  return (
+    <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
+      <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>{title}</Text>
+      {rows.map((r, i) => (
+        <View key={i} style={{ marginTop: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>{r.label}</Text>
+            {r.value ? <Text style={{ ...fs(13), color: t.primary, fontWeight: '600' }}>{r.value}</Text> : null}
+          </View>
+          {r.note ? <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{r.note}</Text> : null}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+/** 规则页（个人积分 / 商家金双内容） */
+export default function RulesPage() {
+  const t = useTheme()
+  const fs = useFs()
+  const router = useRouter()
+  const isGold = router.params.kind === 'gold'
+
+  return (
+    <PageLayout nav={<NavBar title={isGold ? '商家金规则' : '积分规则'} showBack />}>
+      <ScrollView style={{ flex: 1 }}>
+        {isGold ? (
+          <>
+            <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
+              <Text style={{ ...fs(13), color: t.textTertiary, lineHeight: 20 }}>
+                商家金是店铺经营账本（金库）里的货币，与个人积分是两套独立账本，互不转账。只有商户管理员可支配，用于平台内经营支出。
+              </Text>
+            </View>
+            <RuleSection t={t} fs={fs} title='怎么赚' rows={[
+              { label: '成员上供', value: '赚分 ×10%', note: '成员获得审核/交易类积分时自动滴给在职店铺；签到登录等被动分不参与；店铺每日限 50、每月限 1000' },
+              { label: '挂礼成交', value: '全额入账', note: '买家兑换礼品确认收货（或发货 7 天自动确认）后，货款全额结算进金库' },
+              { label: '集体任务', value: '+100/周', note: '如"本周新上架 5 款"达成奖励金库 100（任务清单见商家主页）' },
+            ]} />
+            <RuleSection t={t} fs={fs} title='怎么花' rows={[
+              { label: '商品置顶卡', value: '原价支付', note: '在售商品在型号商家列表置顶 24/72 小时，管理员默认走金库' },
+              { label: '其他平台权益', value: '陆续开放', note: '金库只能在平台内消费' },
+            ]} />
+            <RuleSection t={t} fs={fs} title='与个人积分的关系' rows={[
+              { label: '个人代付折算', value: '1 金 = 2 分', note: '管理员也可用个人积分代付商品置顶，按汇率折算多付（汇率平台可调）；这是个人消费，不会变成金库余额' },
+              { label: '成员赚分上供', value: '10% 滴入', note: '个人赚分不受影响，金库只是同步攒下的一小部分' },
+            ]} />
+            <RuleSection t={t} fs={fs} title='红线' rows={[
+              { label: '不可提现 / 折现 / 转让', note: '平台无现金结算，商家金只能在平台内使用' },
+              { label: '成员不能支取金库', value: '仅管理员', note: '防止店铺资金被个人掏空；多管理员共管' },
+              { label: '闭店清空', note: '店铺退出经营时金库余额作废燃烧，不折算给任何个人' },
+            ]} />
+          </>
+        ) : (
+          <>
+            <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
+              <Text style={{ ...fs(13), color: t.textTertiary, lineHeight: 20 }}>
+                积分是个人行为货币：靠日常贡献赚取，用于超额寻货与商城兑换。不可充值、不可提现、不可转让，与商家金是两套账本。
+              </Text>
+            </View>
+            <RuleSection t={t} fs={fs} title='怎么赚' rows={[
+              { label: '每日签到', value: '+2~+5', note: '连签阶梯 2/3/4/5/5 封顶；受最佳商家 buff 加成（最高 +3）' },
+              { label: '每日登录', value: '+1', note: '每天首次请求自动发放；buff 加成 +1' },
+              { label: '纠错被采纳', value: '+20/条', note: '平台审核采纳后到账，每日上限 100；buff 加成最高 ×1.25' },
+              { label: '每日三件套', value: '+30', note: '同一天完成签到+纠错被采纳+寻货应答各至少一次，额外奖励' },
+              { label: '集体任务成员奖', value: '+20~+50', note: '店铺达成集体任务（如周纠错 5 条）时每位在职成员得奖' },
+              { label: '成就解锁', value: '+5~+10', note: '点亮勋章的小额甜头（勋章点另计、不可花）' },
+              { label: '一次性里程碑', value: '+50~+100', note: '完善资料 +50、首次上架 +20、入驻审批通过 +100' },
+              { label: '积分暴击', value: '10% ×2', note: '签到等主动赚分有 10% 概率双倍、2% 概率传说 ×5（服务端判定，仍受日上限约束）' },
+            ]} />
+            <RuleSection t={t} fs={fs} title='怎么花' rows={[
+              { label: '寻货超额', value: '20/次', note: '发布/应答超出免费额度（每日 3 发布 / 20 应答）后按次扣积分；硬上限 10/50 积分也买不到' },
+              { label: '商城兑换', value: '见标价', note: '寻货置顶卡、权益包、商家挂礼等，兑换即扣' },
+              { label: '商品置顶代付', value: '×2 折算', note: '店铺管理员可用个人积分代付商品置顶（按商家金汇率折算多付）' },
+            ]} />
+            <RuleSection t={t} fs={fs} title='规则与边界' rows={[
+              { label: '每日上限', note: '各赚分场景有日上限（如纠错 100/日），防刷分' },
+              { label: '切日口径', value: '东八区', note: '"每天"按北京时间零点切分' },
+              { label: '不过期', note: '当前积分无过期时间；平台保留后续引入过期策略的可能' },
+              { label: '不可提现转让', note: '积分不能换钱、不能转给他人（含店铺），唯一去向是平台内消费' },
+            ]} />
+          </>
+        )}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </PageLayout>
+  )
+}

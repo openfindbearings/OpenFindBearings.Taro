@@ -1,4 +1,6 @@
-// 商家金库与挂礼页（v2.4.0 商家经济）：金库余额/流水 + 挂礼申请与管理 + 礼品订单发货。
+// 商家挂礼管理页（v2.4.0 商家经济）：挂礼申请与管理 + 礼品订单发货。
+// 改动说明（v2.10.1）：金库流水拆到独立"收支明细"页（pages/merchant/treasury），
+// 本页只留余额卡与管理职能，与商家主页宫格双入口各司其职。
 // 合规三纪律：金库积分只平台内流通（置顶卡等权益），不可提现/转让/折现；
 // 挂礼走"商家申请→平台定档→买家托管兑换→确认收货结算"，杜绝定向转移。
 // RN 约束：仅 flex 布局、无 fixed、Text 包裹、Input 显式字号、lineHeight 数值。
@@ -16,10 +18,10 @@ import { usableImage } from '../../services/config'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
-  getTreasury, getTreasuryTransactions, getMyGifts, createGift, offShelfGift,
-  uploadGiftImage, getGiftOrders, shipGiftOrder, treasurySceneText,
+  getTreasury, getMyGifts, createGift, offShelfGift,
+  uploadGiftImage, getGiftOrders, shipGiftOrder,
   GIFT_AUDIT, SHIP_STATUS,
-  type TreasuryAccount, type TreasuryTx, type MyGift, type GiftOrder
+  type TreasuryAccount, type MyGift, type GiftOrder
 } from '../../services/gifts'
 import type { Paged } from '../../services/bearing'
 import { formatTime } from '../../utils/format'
@@ -41,7 +43,6 @@ export default function MerchantGiftsPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
 
   const [treasury, setTreasury] = useState<TreasuryAccount | null>(null)
-  const [txs, setTxs] = useState<TreasuryTx[]>([])
   const [gifts, setGifts] = useState<MyGift[]>([])
   const [orders, setOrders] = useState<GiftOrder[]>([])
   const [orderFilter, setOrderFilter] = useState<number>(SHIP_STATUS.PENDING)
@@ -60,7 +61,6 @@ export default function MerchantGiftsPage() {
 
   const reload = () => {
     void getTreasury().then((r) => setTreasury(r || null)).catch(() => { /* 静默 */ })
-    void getTreasuryTransactions(1, 8).then((r) => setTxs(r?.items || [])).catch(() => { /* 静默 */ })
     void getMyGifts().then((r) => setGifts(r || [])).catch(() => { /* 静默 */ })
     void getGiftOrders(orderFilter, 1, 20).then((r) => setOrders((r as Paged<GiftOrder> | null)?.items || [])).catch(() => { /* 静默 */ })
   }
@@ -141,7 +141,17 @@ export default function MerchantGiftsPage() {
   const inputStyle: any = { backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 9, paddingBottom: 9, marginTop: 8, color: t.textPrimary }
 
   return (
-    <PageLayout nav={<NavBar title='金库挂礼' showBack />}>
+    <PageLayout nav={
+      <NavBar
+        title='金库挂礼'
+        showBack
+        rightSlot={
+          <View onClick={() => Taro.navigateTo({ url: '/pages/rules/index?kind=gold' })}>
+            <Text style={{ ...fs(13), color: t.primary }}>商家金规则</Text>
+          </View>
+        }
+      />
+    }>
       {!isLoggedIn && <LoginGuide icon='gift' text='登录后管理商家金库与挂礼' />}
       {isLoggedIn && (
         <ScrollView style={{ flex: 1 }}>
@@ -167,23 +177,8 @@ export default function MerchantGiftsPage() {
             </Text>
           </View>
 
-          {/* 金库流水 */}
-          {txs.length > 0 && (
-            <View style={{ marginLeft: 12, marginRight: 12, marginTop: 12 }}>
-              <Text style={{ ...fs(13), color: t.textSecondary }}>金库流水</Text>
-              {txs.map((tx, i) => (
-                <View key={i} style={{ backgroundColor: t.bgCard, borderRadius: 10, padding: 12, marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ ...fs(13), color: t.textPrimary }}>{treasurySceneText(tx.scene)}</Text>
-                    <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 3 }}>{tx.remark || ''} {formatTime(tx.createdAt)}</Text>
-                  </View>
-                  <Text style={{ ...fs(15), color: tx.direction === 1 ? '#16A34A' : '#EF4444', fontWeight: '600' }}>
-                    {tx.direction === 1 ? '+' : '-'}{tx.amount}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
+          {/* 改动说明（v2.10.1）：金库流水区块拆至独立"收支明细"页（pages/merchant/treasury），
+              本页专注挂礼管理；余额卡保留作管理时的余额前置可见 */}
 
           {/* 挂礼管理 */}
           <View style={{ marginLeft: 12, marginRight: 12, marginTop: 16 }}>
