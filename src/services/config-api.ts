@@ -13,6 +13,8 @@ export interface SiteConfig {
   customerService?: string
   /** 媒体源公网 base（末尾无斜杠），拉到后写入运行时覆盖 */
   mediaBaseUrl?: string
+  /** v2.10.0 商家金：商品置顶个人代付汇率（1 商家金=N 积分，缺省 2） */
+  merchantGoldPayRate?: number
 }
 
 /** 获取站点配置（公开接口） */

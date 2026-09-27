@@ -154,12 +154,16 @@ export default function MerchantGiftsPage() {
                 <Text style={{ ...fs(10), color: '#8B5CF6', backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
               ) : null}
             </View>
-            <Text style={{ ...fs(28), color: t.primary, fontWeight: '700', marginTop: 2 }}>{treasury?.balance ?? 0}</Text>
+            <Text style={{ ...fs(28), color: t.primary, fontWeight: '700', marginTop: 2 }}>
+              {treasury?.balance ?? 0}
+              {/* 改动说明（v2.10.0 商家金）：金库货币定名"商家金"，与个人积分彻底区分 */}
+              <Text style={{ ...fs(13), color: t.textTertiary }}> 商家金</Text>
+            </Text>
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>
               累计入账 {treasury?.totalEarned ?? 0} · 累计支出 {treasury?.totalSpent ?? 0}
             </Text>
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>
-              成员赚分上供与礼品结算入此金库，可用于置顶卡等平台权益，不可提现或转让
+              成员赚分上供与礼品结算入此金库，可用于商品置顶等经营支出，不可提现或转让
             </Text>
           </View>
 

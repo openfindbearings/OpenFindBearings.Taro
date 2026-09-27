@@ -145,6 +145,13 @@ export default function DiscoverPage() {
               <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>
                 寻 {item.partNumber}
               </Text>
+              {/* 改动说明（v2.10.0 寻货置顶）：置顶期需求带醒目金色角标（服务端已按置顶排序） */}
+              {item.isPinned && (
+                <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.warning, marginRight: 6 }}>
+                  <Icon name='arrow-up-circle' size={10} color='#FFFFFF' />
+                  <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '700' }}>置顶</Text>
+                </View>
+              )}
               {item.isMine && (
                 <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 6 }}>
                   <Text style={{ ...fs(11), color: t.primary }}>我发布</Text>

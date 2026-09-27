@@ -56,10 +56,16 @@ export default function MallPage() {
   })
 
   /** 置顶卡兑换入口：跳商品管理页选具体商品（无在职商户则引导入驻） */
-  const goPin = () => {
+  // 改动说明（v2.10.0 寻货置顶）：置顶卡按对象类型分流——
+  // 需求卡（targetKind=2）去"我的寻货"选需求兑换（个人积分）；商品卡进商家管理选在售商品
+  const goPin = (item: MallItem) => {
+    if ((item.targetKind ?? 1) === 2) {
+      Taro.navigateTo({ url: '/pages/my/sourcing' })
+      return
+    }
     const m = useMerchantStore.getState().currentMerchant()
     if (!m) {
-      Taro.showToast({ title: '入驻商户后才能买置顶', icon: 'none' })
+      Taro.showToast({ title: '入驻商户后才能置顶', icon: 'none' })
       return
     }
     Taro.navigateTo({ url: '/pages/merchant/manage' })
@@ -232,7 +238,10 @@ export default function MallPage() {
                   ) : null}
                   <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                     <Text style={{ ...fs(15), color: t.primary, fontWeight: '700' }}>{item.price}</Text>
-                    <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 4 }}>积分</Text>
+                    {/* 改动说明（v2.10.0 商家金）：商品置顶卡按商家金定价（金库支付），其余权益仍是个人积分 */}
+                    <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 4 }}>
+                      {item.category === MALL_CATEGORY.PIN_CARD && (item.targetKind ?? 1) === 1 ? '商家金' : '积分'}
+                    </Text>
                     {item.flashing && item.originalPrice != null && (
                       <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 6, textDecoration: 'line-through' }}>原价 {item.originalPrice}</Text>
                     )}
@@ -248,7 +257,7 @@ export default function MallPage() {
                   }}
                   onClick={() => {
                     if (item.soldOut) return
-                    if (item.category === MALL_CATEGORY.PIN_CARD) goPin()
+                    if (item.category === MALL_CATEGORY.PIN_CARD) goPin(item)
                     else if (item.category === MALL_CATEGORY.GIFT) openGift(item)
                     else Taro.showToast({ title: '该权益即将上线', icon: 'none' })
                   }}
