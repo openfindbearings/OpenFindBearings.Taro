@@ -66,7 +66,7 @@ export default function MerchantHomePage() {
     { url: '/pages/merchant/responses', icon: 'search', label: '寻货应答' },
     ...(isAdmin
       ? [
-          { url: '/pages/merchant/gifts', icon: 'safe', label: '金库挂礼' },
+          { url: '/pages/merchant/gifts', icon: 'vault', label: '金库挂礼' },
           { url: '/pages/merchant/profile', icon: 'file_text', label: '信息维护' },
         ]
       : []),
