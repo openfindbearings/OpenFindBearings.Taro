@@ -63,6 +63,11 @@ export default function MyPage() {
   const [points, setPoints] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
   // v2.1.0 成就子系统：已解锁个人徽章排（积分卡下方横向徽章条）
   const [myAch, setMyAch] = useState<AchievementWall | null>(null)
+  // v2.6.0 勋章卡改版：最近解锁优先露出前 12 枚（unlockedAt 为 ISO 串，字典序即时间序）
+  const medalItems = (myAch?.items ?? [])
+    .slice()
+    .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
+    .slice(0, 12)
 
   useDidShow(() => {
     // 每次显示时拉一次资料，保证登录成功 navigateBack 后昵称/手机/头像立即刷新
@@ -243,26 +248,6 @@ export default function MyPage() {
       </View>
 
       {/* 功能卡 - 横向四宫格（白卡样式，v1.7.11 调整到积分卡下方） */}
-      {/* v2.1.0 成就子系统：个人徽章排（GitHub 成就条/军功章感），横向滚动，整条点进成就墙；
-          仅已解锁>0 时显示，未登录/无徽章不占位 */}
-      {myAch && myAch.unlockedCount > 0 && (
-        <View
-          style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginBottom: 12, borderRadius: 12, paddingTop: 8, paddingBottom: 8, paddingLeft: 10, paddingRight: 10 }}
-          onClick={() => Taro.navigateTo({ url: '/pages/my/achievements' })}
-        >
-          <ScrollView scrollX style={{ height: 44 }}>
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-              {myAch.items.slice(0, 12).map((b) => (
-                <View key={b.key} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
-                  <Icon name={b.icon || 'award'} size={18} color='#FFFFFF' />
-                </View>
-              ))}
-              <Text style={{ ...fs(12), color: t.textTertiary }}>{myAch.unlockedCount} 枚</Text>
-            </View>
-          </ScrollView>
-        </View>
-      )}
-
       <View className='menu-grid' style={{ backgroundColor: t.bgCard }}>
         {menuItems.map((item) => (
           <View
@@ -276,6 +261,45 @@ export default function MyPage() {
             <Text className='grid-label' style={{ ...fs(13), color: t.textSecondary }}>{item.label}</Text>
           </View>
         ))}
+      </View>
+
+      {/* v2.6.0 勋章卡改版（承 v2.1.0 徽章条）：头部"我的勋章 + 共 N 枚 ›"，
+          主体横向勋章排——rare 金环/普通主题色环双色描边模拟金属感，下方勋章名一行；
+          整卡点进成就墙；改动说明（用户定案）：卡片常驻显示不再判断 >0，0 枚显示引导；
+          位置调整（用户定案）：移到功能四宫格下方（积分→功能→勋章 三段递进） */}
+      <View
+        // 改动说明：左右 16px 对齐 menu-grid/积分卡的 $space-4 栅格（原 12 比功能卡宽 8px）
+        style={{ backgroundColor: t.bgCard, marginLeft: 16, marginRight: 16, marginTop: 12, marginBottom: 16, borderRadius: 12, padding: 14 }}
+        onClick={() => Taro.navigateTo({ url: '/pages/my/achievements' })}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>我的勋章</Text>
+          <Text style={{ ...fs(13), color: t.textTertiary }}>共 {myAch?.unlockedCount ?? 0} 枚 ›</Text>
+        </View>
+        {medalItems.length === 0 ? (
+          <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>
+            {isLoggedIn ? '签到、纠错、寻货都能点亮勋章，从第一枚开始攒' : '登录后查看你的勋章墙'}
+          </Text>
+        ) : (
+        <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+            {medalItems.map((b) => {
+              const ring = b.rare ? '#F59E0B' : t.primary
+              return (
+                <View key={b.key} style={{ width: 64, alignItems: 'center', marginRight: 6 }}>
+                  {/* 外环+内底双层圆模拟勋章金属边框（RN 无 box-shadow 依赖） */}
+                  <View style={{ width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: ring, alignItems: 'center', justifyContent: 'center', backgroundColor: b.rare ? 'rgba(245,158,11,0.12)' : t.primaryLight }}>
+                    <Icon name={b.icon || 'award'} size={22} color={ring} />
+                  </View>
+                  <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4, lineHeight: 13 }} numberOfLines={1}>
+                    {b.name}
+                  </Text>
+                </View>
+              )
+            })}
+          </View>
+        </ScrollView>
+        )}
       </View>
     </PageLayout>
   )

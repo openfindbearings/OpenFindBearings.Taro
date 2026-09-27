@@ -51,6 +51,8 @@ export const GRANT_TYPE_LABELS: Record<string, string> = {
   sourcing_respond_bonus: '寻货应答加量',
   // v2.6.0 M3：商家集体任务 Job 达标结算发放
   merchant_task: '商家集体任务奖励',
+  // 名词统一（成就/徽章→勋章）：勋章点亮解锁的一次性甜头
+  achievement_unlock: '勋章解锁奖励',
 }
 
 /** 拉取积分账户（失败返回零值兜底，不打扰页面） */
@@ -135,10 +137,12 @@ export interface MerchantTasksResult {
   completedTotal: number
 }
 
-/** 任务板数据（失败返回空清单，不打扰页面） */
-export async function getMerchantTasks(): Promise<MerchantTasksResult> {
+/** 任务板数据（失败返回空清单，不打扰页面）；
+ *  v2.6.0 商家主页：传 merchantId 查指定商家（后端校验在职成员），缺省走最佳商户口径 */
+export async function getMerchantTasks(merchantId?: string): Promise<MerchantTasksResult> {
   try {
-    const r = await request<MerchantTasksResult>(API.POINTS_MERCHANT_TASKS)
+    const url = merchantId ? `${API.POINTS_MERCHANT_TASKS}?merchantId=${merchantId}` : API.POINTS_MERCHANT_TASKS
+    const r = await request<MerchantTasksResult>(url)
     return r ?? { merchantId: null, merchantName: null, tasks: [], completedTotal: 0 }
   } catch {
     return { merchantId: null, merchantName: null, tasks: [], completedTotal: 0 }

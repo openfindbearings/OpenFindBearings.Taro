@@ -206,32 +206,15 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
         </View>
       )}
 
-      {/* 当前生效商户：内联操作区（v1.7.2：四按钮同权灰底——商品/成员/信息维护平级无主次；
-          未认证且管理员多一个"申请认证"入口，跳信息维护证照材料区补件即申请） */}
+      {/* 当前生效商户：内联操作区
+          改动说明（v2.6.0 双体系重组）：商品/成员/寻货应答/信息维护/金库挂礼五个跳转
+          收拢进"进入商家主页"（商家详情页成员区统一管理宫格+集体任务板），
+          tab 页回归"商家列表+我的商家快捷"本职；申请认证是业务动作非跳转，保留原位 */}
       {isActive && isCurrent && (
         <View className='mch-actions' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}>
-          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/manage' })}>
-            <Text style={{ ...fs(13), color: t.textPrimary }}>商品管理</Text>
+          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${m.merchantId}` })}>
+            <Text style={{ ...fs(13), color: t.textPrimary }}>进入商家主页</Text>
           </View>
-          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/members' })}>
-            {/* 改动说明（v1.7.8）：员工无管理权限，入口按角色显示"员工列表"（名实相符，页面标题同步） */}
-            <Text style={{ ...fs(13), color: t.textPrimary }}>{m.role === 'MerchantAdmin' ? '成员管理' : '员工列表'}</Text>
-          </View>
-          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/responses' })}>
-            {/* v1.7.19 寻货：应答是商家行为（员工也可代商户应答），全员可见入口 */}
-            <Text style={{ ...fs(13), color: t.textPrimary }}>寻货应答</Text>
-          </View>
-          {m.role === 'MerchantAdmin' && (
-            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/profile' })}>
-              <Text style={{ ...fs(13), color: t.textPrimary }}>信息维护</Text>
-            </View>
-          )}
-          {m.role === 'MerchantAdmin' && (
-            // v2.4.0 商家经济：金库+挂礼+礼品发货集中入口（仅管理员，员工不经手钱货）
-            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/gifts' })}>
-              <Text style={{ ...fs(13), color: t.textPrimary }}>金库挂礼</Text>
-            </View>
-          )}
           {m.role === 'MerchantAdmin' && !m.isVerified && (
             // 改动说明（v1.7.3）：申请认证从"跳信息维护"升级为真业务动作——
             //   调 verify-request 端点（材料矩阵后端校验，不齐 400 透传缺项引导）；

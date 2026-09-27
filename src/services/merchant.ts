@@ -40,6 +40,12 @@ export interface MerchantDetail {
   followerCount: number
   productCount: number
   logoUrl?: string | null
+  /** v2.6.0 商家主页：当前用户是否该商家在职成员（成员区渲染依据；匿名/非成员=false） */
+  isMerchantMember?: boolean
+  /** v2.6.0 商家主页：本人角色（MerchantAdmin/MerchantStaff；非成员=null） */
+  memberRole?: string | null
+  /** v2.6.0 商家主页：集体任务累计达成次数（勋章园卡"通关史"） */
+  completedTaskCount?: number
 }
 
 /** 商家在售轴承项（对齐 BFF MerchantBearingItem） */
