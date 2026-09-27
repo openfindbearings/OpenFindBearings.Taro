@@ -1,5 +1,6 @@
-// 积分与商家金规则页（v2.10.1）：?kind=points 显示个人积分规则，?kind=gold 显示商家金规则。
-// 内容对齐 API 实际实现（发放规则表/汇率配置/集体任务种子），运营改配置后本页文案属"约"值需随文档同步。
+// 轴承币与商家金规则页（v2.10.1）：?kind=points 显示个人"轴承币"规则，?kind=gold 显示"商家金"规则。
+// 改动说明（v2.11.0 定名）：个人积分对外定名"轴承币"（与"荣誉分/商家金"彻底区分），
+// 代码与接口仍用 points 内部口径，仅展示层改名。内容对齐 API 实际实现，运营改配置后需随文档同步。
 // RN 约束：仅 flex、无 fixed、Text 包裹、数值 lineHeight。
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
@@ -32,7 +33,7 @@ function RuleSection({ title, rows, t, fs }: {
   )
 }
 
-/** 规则页（个人积分 / 商家金双内容） */
+/** 规则页（轴承币 / 商家金双内容） */
 export default function RulesPage() {
   const t = useTheme()
   const fs = useFs()
@@ -40,17 +41,17 @@ export default function RulesPage() {
   const isGold = router.params.kind === 'gold'
 
   return (
-    <PageLayout nav={<NavBar title={isGold ? '商家金规则' : '积分规则'} showBack />}>
+    <PageLayout nav={<NavBar title={isGold ? '商家金规则' : '轴承币规则'} showBack />}>
       <ScrollView style={{ flex: 1 }}>
         {isGold ? (
           <>
             <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
               <Text style={{ ...fs(13), color: t.textTertiary, lineHeight: 20 }}>
-                商家金是店铺经营账本（金库）里的货币，与个人积分是两套独立账本，互不转账。只有商户管理员可支配，用于平台内经营支出。
+                商家金是店铺经营账本（金库）里的货币，与个人轴承币是两套独立账本，互不转账。只有商户管理员可支配，用于平台内经营支出。
               </Text>
             </View>
             <RuleSection t={t} fs={fs} title='怎么赚' rows={[
-              { label: '成员上供', value: '赚分 ×10%', note: '成员获得审核/交易类积分时自动滴给在职店铺；签到登录等被动分不参与；店铺每日限 50、每月限 1000' },
+              { label: '成员上供', value: '赚币 ×10%', note: '成员获得审核/交易类轴承币时自动滴给在职店铺；签到登录等被动收益不参与；店铺每日限 50、每月限 1000' },
               { label: '挂礼成交', value: '全额入账', note: '买家兑换礼品确认收货（或发货 7 天自动确认）后，货款全额结算进金库' },
               { label: '集体任务', value: '+100/周', note: '如"本周新上架 5 款"达成奖励金库 100（任务清单见商家主页）' },
             ]} />
@@ -58,9 +59,9 @@ export default function RulesPage() {
               { label: '商品置顶卡', value: '原价支付', note: '在售商品在型号商家列表置顶 24/72 小时，管理员默认走金库' },
               { label: '其他平台权益', value: '陆续开放', note: '金库只能在平台内消费' },
             ]} />
-            <RuleSection t={t} fs={fs} title='与个人积分的关系' rows={[
-              { label: '个人代付折算', value: '1 金 = 2 分', note: '管理员也可用个人积分代付商品置顶，按汇率折算多付（汇率平台可调）；这是个人消费，不会变成金库余额' },
-              { label: '成员赚分上供', value: '10% 滴入', note: '个人赚分不受影响，金库只是同步攒下的一小部分' },
+            <RuleSection t={t} fs={fs} title='与轴承币的关系' rows={[
+              { label: '个人代付折算', value: '1 金 = 2 币', note: '管理员也可用个人轴承币代付商品置顶，按汇率折算多付（汇率平台可调）；这是个人消费，不会变成金库余额' },
+              { label: '成员赚币上供', value: '10% 滴入', note: '个人赚币不受影响，金库只是同步攒下的一小部分' },
             ]} />
             <RuleSection t={t} fs={fs} title='红线' rows={[
               { label: '不可提现 / 折现 / 转让', note: '平台无现金结算，商家金只能在平台内使用' },
@@ -72,7 +73,7 @@ export default function RulesPage() {
           <>
             <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
               <Text style={{ ...fs(13), color: t.textTertiary, lineHeight: 20 }}>
-                积分是个人行为货币：靠日常贡献赚取，用于超额寻货与商城兑换。不可充值、不可提现、不可转让，与商家金是两套账本。
+                轴承币是个人行为货币：靠日常贡献赚取，用于超额寻货与商城兑换。不可充值、不可提现、不可转让，与商家金是两套账本。
               </Text>
             </View>
             <RuleSection t={t} fs={fs} title='怎么赚' rows={[
@@ -80,21 +81,22 @@ export default function RulesPage() {
               { label: '每日登录', value: '+1', note: '每天首次请求自动发放；buff 加成 +1' },
               { label: '纠错被采纳', value: '+20/条', note: '平台审核采纳后到账，每日上限 100；buff 加成最高 ×1.25' },
               { label: '每日三件套', value: '+30', note: '同一天完成签到+纠错被采纳+寻货应答各至少一次，额外奖励' },
+              { label: '小游戏胜利', value: '+5/局', note: '轴承连连看等平台小游戏，每日上限 10 币' },
               { label: '集体任务成员奖', value: '+20~+50', note: '店铺达成集体任务（如周纠错 5 条）时每位在职成员得奖' },
-              { label: '成就解锁', value: '+5~+10', note: '点亮勋章的小额甜头（勋章点另计、不可花）' },
+              { label: '成就解锁甜头', value: '+5~+10', note: '点亮勋章附发的小额奖励（荣誉分为独立值、不可消费）' },
               { label: '一次性里程碑', value: '+50~+100', note: '完善资料 +50、首次上架 +20、入驻审批通过 +100' },
-              { label: '积分暴击', value: '10% ×2', note: '签到等主动赚分有 10% 概率双倍、2% 概率传说 ×5（服务端判定，仍受日上限约束）' },
+              { label: '赚币暴击', value: '10% ×2', note: '签到等主动赚币有 10% 概率双倍、2% 概率传说 ×5（服务端判定，仍受日上限约束）' },
             ]} />
             <RuleSection t={t} fs={fs} title='怎么花' rows={[
-              { label: '寻货超额', value: '20/次', note: '发布/应答超出免费额度（每日 3 发布 / 20 应答）后按次扣积分；硬上限 10/50 积分也买不到' },
+              { label: '寻货超额', value: '20/次', note: '发布/应答超出免费额度（每日 3 发布 / 20 应答）后按次扣币；硬上限 10/50 币也买不到' },
               { label: '商城兑换', value: '见标价', note: '寻货置顶卡、权益包、商家挂礼等，兑换即扣' },
-              { label: '商品置顶代付', value: '×2 折算', note: '店铺管理员可用个人积分代付商品置顶（按商家金汇率折算多付）' },
+              { label: '商品置顶代付', value: '×2 折算', note: '店铺管理员可用个人轴承币代付商品置顶（按商家金汇率折算多付）' },
             ]} />
             <RuleSection t={t} fs={fs} title='规则与边界' rows={[
-              { label: '每日上限', note: '各赚分场景有日上限（如纠错 100/日），防刷分' },
+              { label: '每日上限', note: '各赚币场景有日上限（如纠错 100/日），防刷分' },
               { label: '切日口径', value: '东八区', note: '"每天"按北京时间零点切分' },
-              { label: '不过期', note: '当前积分无过期时间；平台保留后续引入过期策略的可能' },
-              { label: '不可提现转让', note: '积分不能换钱、不能转给他人（含店铺），唯一去向是平台内消费' },
+              { label: '不过期', note: '当前轴承币无过期时间；平台保留后续引入过期策略的可能' },
+              { label: '不可提现转让', note: '轴承币不能换钱、不能转给他人（含店铺），唯一去向是平台内消费' },
             ]} />
           </>
         )}

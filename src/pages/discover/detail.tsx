@@ -171,8 +171,8 @@ export default function SourcingDetailPage() {
     if (needPoints !== null) {
       const ok = await showConfirmDialog({
         title: '今日免费应答额度已用完',
-        content: `继续应答需花费 ${needPoints} 积分，确认应答？`,
-        confirmText: '花积分应答',
+        content: `继续应答需花费 ${needPoints} 轴承币，确认应答？`,
+        confirmText: '花轴承币应答',
       })
       if (ok) await doRespond(true)
       return
@@ -343,7 +343,7 @@ export default function SourcingDetailPage() {
                     {left > 0 ? `商户今日免费应答剩 ${left}/${rq.freeLimit} 条` : '今日免费应答已用完'}
                   </Text>
                   <Text style={{ ...fs(11), color: t.textSecondary }}>
-                    {left > 0 ? `用后可花 ${rq.pointsPrice} 积分/条` : `本条花 ${rq.pointsPrice} 积分 · 余额 ${quota.balance}`}
+                    {left > 0 ? `用后可花 ${rq.pointsPrice} 轴承币/条` : `本条花 ${rq.pointsPrice} 轴承币 · 余额 ${quota.balance}`}
                   </Text>
                 </View>
               )
@@ -357,7 +357,7 @@ export default function SourcingDetailPage() {
                 <Text style={{ ...fs(15), color: t.textSecondary }}>取消</Text>
               </View>
               <View style={{ flex: 1, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: busy ? t.textTertiary : t.primary }} onClick={() => { void doRespond(false) }}>
-                <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>{busy ? '提交中…' : (quota && quota.respond.todayUsed >= quota.respond.freeLimit ? `花  积分应答` : '提交应答')}</Text>
+                <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>{busy ? '提交中…' : (quota && quota.respond.todayUsed >= quota.respond.freeLimit ? `花  轴承币应答` : '提交应答')}</Text>
               </View>
             </View>
           </View>

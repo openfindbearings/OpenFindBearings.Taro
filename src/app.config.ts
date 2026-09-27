@@ -14,6 +14,8 @@ export default defineAppConfig({
     'pages/merchant/manage',
     'pages/merchant/gifts',
   'pages/merchant/treasury',
+  'pages/games/index',
+  'pages/games/linkup',
   'pages/rules/index',
     'pages/merchant/profile',
     'pages/notifications/index',

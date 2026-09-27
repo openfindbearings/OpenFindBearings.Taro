@@ -1,6 +1,6 @@
 // 我的页（Tab 根页）
 // v1.7.0 度量重构：接入 PageLayout（删 rnHeight hack）；补审核 P2-8 缺失元素——
-// 会员信息卡（积分/余额占位，纯色主色底）与版本信息行；NavBar 右侧图标 20→24dp。
+// 会员信息卡（轴承币/余额占位，纯色主色底）与版本信息行；NavBar 右侧图标 20→24dp。
 // NavBar：标题居中"我的"，右侧 Bell（消息中心）+ Settings（设置入口）
 // 内容：用户信息区 + 会员卡 + 功能卡（收藏/关注/历史/全部功能 四横钮）
 import Icon from '../../components/Icon'
@@ -21,9 +21,9 @@ import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
-// 改动说明（v1.7.17 积分底座）：账户/签到服务 + 签到成功长震反馈
+// 改动说明（v1.7.17 轴承币底座）：账户/签到服务 + 签到成功长震反馈
 import { getPointAccount, type PointAccount } from '../../services/points'
-// v2.1.0 成就子系统：个人徽章排（我的页积分卡下方横向徽章条）
+// v2.1.0 成就子系统：个人徽章排（我的页轴承币卡下方横向徽章条）
 import { getMyAchievements, getMyTitles, type AchievementWall } from '../../services/achievements'
 import './index.scss'
 
@@ -38,7 +38,8 @@ const menuItems = [
   // v1.7.18 第二行：我的寻货（占位）、任务中心（赚分）、设置、全部功能兜底（寻货与任务中心按需求换序）
   { key: 'sourcing', label: '我的寻货', icon: 'search', color: '#0EA5E9' },
   { key: 'tasks', label: '任务中心', icon: 'gift', color: '#F59E0B' },
-  { key: 'settings', label: '设置', icon: 'settings', color: '#64748B' },
+  // 改动说明（v2.10.1 游戏中心）：宫格"设置"位换成"游戏中心"（设置入口保留在 NavBar 右上角不丢）
+  { key: 'games', label: '游戏中心', icon: 'puzzle', color: '#0EA5E9' },
   { key: 'all_features', label: '全部功能', icon: 'layout_grid', color: '#6366F1' }
 ]
 
@@ -60,9 +61,9 @@ export default function MyPage() {
   const fs = useFs()
   // 未读消息数（铃铛红点，与 TabBar 角标同源 store）
   const unreadCount = useNotificationStore((s) => s.unreadCount)
-  // v1.7.17 积分账户（未登录零值兜底）
+  // v1.7.17 轴承币账户（未登录零值兜底）
   const [points, setPoints] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
-  // v2.1.0 成就子系统：已解锁个人徽章排（积分卡下方横向徽章条）
+  // v2.1.0 成就子系统：已解锁个人徽章排（轴承币卡下方横向徽章条）
   const [myAch, setMyAch] = useState<AchievementWall | null>(null)
   // v2.6.0 勋章卡改版：最近解锁优先露出前 12 枚（unlockedAt 为 ISO 串，字典序即时间序）
   const medalItems = (myAch?.items ?? [])
@@ -77,7 +78,7 @@ export default function MyPage() {
     if (isLoggedIn) void useAuthStore.getState().fetchProfile()
     // 改动说明（v1.7.8）：拉取未读消息数，与消息中心页、TabBar 角标同源同刷（store 单例）
     void useNotificationStore.getState().fetchUnread()
-    // v1.7.17：积分账户与签到状态随页刷新
+    // v1.7.17：轴承币账户与签到状态随页刷新
     if (isLoggedIn) void getPointAccount().then(setPoints)
     // v2.1.0：徽章排随页刷新（未登录清空）
     if (isLoggedIn) void getMyAchievements().then((r) => setMyAch(r || null)).catch(() => setMyAch(null))
@@ -103,7 +104,8 @@ export default function MyPage() {
       tasks: '/pages/my/tasks',
       corrections: '/pages/my/corrections',
       sourcing: '/pages/my/sourcing',
-      settings: '/pages/my/settings'
+      settings: '/pages/my/settings',
+      games: '/pages/games/index'
     }
     if (menuUrls[key]) {
       Taro.navigateTo({ url: menuUrls[key] })
@@ -128,13 +130,13 @@ export default function MyPage() {
     Taro.navigateTo({ url: '/pages/my/profile-edit' })
   }
 
-  // 会员卡（v1.7.17）：收支明细接积分流水页；去兑换仍占位（商城 P8 未上线）
+  // 会员卡（v1.7.17）：收支明细接轴承币流水页；去兑换仍占位（商城 P8 未上线）
   const handlePointsDetail = () => {
     Taro.navigateTo({ url: '/pages/my/points' })
   }
 
   const handleRedeem = () => {
-    Taro.showToast({ title: '积分兑换暂未上线', icon: 'none' })
+    Taro.showToast({ title: '轴承币兑换暂未上线', icon: 'none' })
   }
 
   // NavBar 右侧：Bell + Settings。改用声明式 rightIcons 交给 NavBar 内部渲染——
@@ -186,7 +188,7 @@ export default function MyPage() {
       }
     >
       {/* 渐变头部容器（v1.7.11）：主题渐变铺满状态栏下，含用户信息 + 四宫格；
-          白色内容板（积分卡）负 margin 上浮叠在渐变底部——美团/携程同款层次 */}
+          白色内容板（轴承币卡）负 margin 上浮叠在渐变底部——美团/携程同款层次 */}
       <LinearGradient
         colors={[t.memberGradientFrom, t.memberGradientTo]}
         start={{ x: 0, y: 0 }}
@@ -233,18 +235,18 @@ export default function MyPage() {
             )}
           </View>
 
-          {/* 改动说明（v1.7.11 二次调整）：四宫格从渐变区移出，还原为白卡片放积分卡下方 */}
+          {/* 改动说明（v1.7.11 二次调整）：四宫格从渐变区移出，还原为白卡片放轴承币卡下方 */}
         </View>
       </LinearGradient>
 
-      {/* 积分卡（v1.7.11 改白卡）：原渐变背景上移给头部后，此卡回归普通白卡——
+      {/* 轴承币卡（v1.7.11 改白卡）：原渐变背景上移给头部后，此卡回归普通白卡——
           负 margin 上浮叠在渐变底部，顶部大圆角。
-          改动说明：文案"积分可兑换现金"违反积分合规红线（不可兑现），改"兑换精选礼品" */}
+          改动说明：文案"轴承币可兑换现金"违反轴承币合规红线（不可兑现），改"兑换精选礼品" */}
       <View className='member-card-white' style={{ ...cardShadow, backgroundColor: t.bgCard }}>
         <View className='member-head'>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的积分</Text>
-            {/* v2.7.0 G7：用户积分等级徽章（按累计获得积分落档，纯展示无特权）；后端缺省等级 1 */}
+            <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的轴承币</Text>
+            {/* v2.7.0 G7：用户轴承币等级徽章（按累计获得轴承币落档，纯展示无特权）；后端缺省等级 1 */}
             {points.level != null && points.level > 1 && (
               <View style={{ marginLeft: 8, backgroundColor: t.primary, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
                 <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>Lv.{points.level} {points.levelName ?? ''}</Text>
@@ -259,17 +261,17 @@ export default function MyPage() {
         <View className='member-main'>
           {/* v1.7.18：余额保留真数据；签到胶囊撤除（一行摆不下显示不全），赚分动作收进任务中心 */}
           <Text style={{ ...fs(30), color: t.primary, fontWeight: 'bold' }}>{points.balance}</Text>
-          <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6, marginBottom: 4 }}>积分</Text>
+          <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6, marginBottom: 4 }}>轴承币</Text>
         </View>
         <View className='member-foot'>
-          <Text style={{ ...fs(12), color: t.textTertiary }}>活跃赚积分，可兑换精选礼品</Text>
+          <Text style={{ ...fs(12), color: t.textTertiary }}>活跃赚轴承币，可兑换精选礼品</Text>
           <View className='member-redeem' style={{ backgroundColor: t.primary }} onClick={handleRedeem}>
             <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去兑换</Text>
           </View>
         </View>
       </View>
 
-      {/* 功能卡 - 横向四宫格（白卡样式，v1.7.11 调整到积分卡下方） */}
+      {/* 功能卡 - 横向四宫格（白卡样式，v1.7.11 调整到轴承币卡下方） */}
       <View className='menu-grid' style={{ backgroundColor: t.bgCard }}>
         {menuItems.map((item) => (
           <View
@@ -288,9 +290,9 @@ export default function MyPage() {
       {/* v2.6.0 勋章卡改版（承 v2.1.0 徽章条）：头部"我的勋章 + 共 N 枚 ›"，
           主体横向勋章排——rare 金环/普通主题色环双色描边模拟金属感，下方勋章名一行；
           整卡点进成就墙；改动说明（用户定案）：卡片常驻显示不再判断 >0，0 枚显示引导；
-          位置调整（用户定案）：移到功能四宫格下方（积分→功能→勋章 三段递进） */}
+          位置调整（用户定案）：移到功能四宫格下方（轴承币→功能→勋章 三段递进） */}
       <View
-        // 改动说明：左右 16px 对齐 menu-grid/积分卡的 $space-4 栅格（原 12 比功能卡宽 8px）
+        // 改动说明：左右 16px 对齐 menu-grid/轴承币卡的 $space-4 栅格（原 12 比功能卡宽 8px）
         style={{ backgroundColor: t.bgCard, marginLeft: 16, marginRight: 16, marginTop: 12, marginBottom: 16, borderRadius: 12, padding: 14 }}
         onClick={() => Taro.navigateTo({ url: '/pages/my/achievements' })}
       >

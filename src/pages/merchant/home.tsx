@@ -284,7 +284,7 @@ export default function MerchantHomePage() {
 
         {/* 合规三纪律脚注（与个人侧口径一致） */}
         <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 4, marginBottom: 24 }}>
-          金库积分不可充值、不可提现、不可转让
+              商家金不可充值、不可提现、不可转让
         </Text>
       </ScrollView>
     </PageLayout>
