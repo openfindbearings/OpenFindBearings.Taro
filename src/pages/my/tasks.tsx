@@ -44,6 +44,8 @@ function taskIcon(grantType: string): string {
     case 'correction_adopted': return 'file_text'
     case 'merchant_approved': return 'users'
     case 'register_bonus': return 'heart'
+    // v2.7.0 G2：每日任务板三件套（三项联动图标）
+    case 'daily_combo': return 'zap'
     default: return 'info'
   }
 }

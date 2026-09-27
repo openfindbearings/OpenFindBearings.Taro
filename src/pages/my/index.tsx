@@ -229,7 +229,15 @@ export default function MyPage() {
           改动说明：文案"积分可兑换现金"违反积分合规红线（不可兑现），改"兑换精选礼品" */}
       <View className='member-card-white' style={{ ...cardShadow, backgroundColor: t.bgCard }}>
         <View className='member-head'>
-          <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的积分</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的积分</Text>
+            {/* v2.7.0 G7：用户积分等级徽章（按累计获得积分落档，纯展示无特权）；后端缺省等级 1 */}
+            {points.level != null && points.level > 1 && (
+              <View style={{ marginLeft: 8, backgroundColor: t.primary, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>Lv.{points.level} {points.levelName ?? ''}</Text>
+              </View>
+            )}
+          </View>
           <View className='member-detail' onClick={handlePointsDetail}>
             <Text style={{ ...fs(13), color: t.textSecondary }}>收支明细</Text>
             <Icon name="chevron_right" size={14} color={t.textTertiary} />
