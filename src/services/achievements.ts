@@ -19,6 +19,8 @@ export interface AchievementItem {
   hidden: boolean
   metaPoints: number
   titleReward?: string | null
+  /** v2.6.0 勋章图片相对媒体键（后台配置，无图为空则用图标占位） */
+  imageKey?: string | null
 }
 
 /** 成就墙视图（对应 BFF AchievementWallResponse） */
