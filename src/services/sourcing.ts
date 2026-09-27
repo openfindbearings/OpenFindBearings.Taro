@@ -17,6 +17,10 @@ export interface SourcingFeedItem {
   createdAt: string
   expiryAt: string
   isMine: boolean
+  /** v2.10.0 寻货置顶：置顶期内（大厅角标+排序依据） */
+  isPinned?: boolean
+  /** 置顶到期时刻（ISO UTC） */
+  pinnedUntil?: string | null
 }
 
 /** 应答明细（仅发布人可见全量） */
@@ -79,6 +83,10 @@ export interface SourcingMyDemand {
   responseCount: number
   createdAt: string
   expiryAt: string
+  /** v2.10.0 寻货置顶：置顶期内（"我的"页置顶按钮态） */
+  isPinned?: boolean
+  /** 置顶到期时刻（ISO UTC） */
+  pinnedUntil?: string | null
 }
 
 /** 商户应答记录项 */

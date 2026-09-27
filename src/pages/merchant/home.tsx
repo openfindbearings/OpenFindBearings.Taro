@@ -125,17 +125,18 @@ export default function MerchantHomePage() {
         {isAdmin && (
           <View
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 16, marginTop: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}
-            onClick={() => Taro.navigateTo({ url: '/pages/merchant/gifts' })}
+            onClick={() => Taro.navigateTo({ url: '/pages/merchant/treasury' })}
           >
             <View style={{ flex: 1 }}>
               <Text style={{ ...fs(13), color: t.textSecondary }}>商家金库</Text>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 4 }}>
                 <Text style={{ ...fs(26), color: t.primary, fontWeight: 'bold' }}>{treasury?.balance ?? 0}</Text>
-                <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6 }}>积分</Text>
+                {/* 改动说明（v2.10.0 商家金）：金库货币定名"商家金"，与个人积分区分 */}
+                <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6 }}>商家金</Text>
               </View>
               <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>来源：成员赚分上供 · 挂礼结算 · 集体任务奖励</Text>
             </View>
-            <Text style={{ ...fs(13), color: t.primary }}>流水与挂礼 ›</Text>
+            <Text style={{ ...fs(13), color: t.primary }}>收支明细 ›</Text>
           </View>
         )}
 
@@ -236,7 +237,7 @@ export default function MerchantHomePage() {
                     <View style={{ flex: Math.max(1 - pct, 0.02) }} />
                   </View>
                   <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>
-                    {mt.rewardType === 2 ? `达成奖励：商家金库 +${mt.rewardAmount}` : `达成奖励：每位成员 +${mt.rewardAmount}`}
+                    {mt.rewardType === 2 ? `达成奖励：商家金 +${mt.rewardAmount}` : `达成奖励：每位成员 +${mt.rewardAmount}`}
                   </Text>
                 </View>
               )

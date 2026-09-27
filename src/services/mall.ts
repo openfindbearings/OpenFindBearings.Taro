@@ -43,6 +43,8 @@ export interface MallItem {
   soldOut: boolean
   /** v2.4.0 挂礼：归属商户名（"来自 XX 商家"） */
   ownerMerchantName?: string | null
+  /** v2.10.0 寻货置顶：置顶对象类型（1=商品·商家金定价 / 2=寻货需求·积分定价） */
+  targetKind?: number
 }
 
 /** 商城目录（含余额，供三态按钮：兑换 / 积分不足去赚） */

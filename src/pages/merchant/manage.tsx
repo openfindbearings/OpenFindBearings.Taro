@@ -25,6 +25,8 @@ import {
 import { searchBearings, type Bearing } from '../../services/bearing'
 // v2.3.0 商城置顶卡：目录/兑换（花积分买曝光，履约=该型号商家列表置顶 N 小时）
 import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallCatalog } from '../../services/mall'
+// 改动说明（v2.10.0 商家金）：支付面板读站点配置的商家金兑换率显示个人代付折算价
+import { getSiteConfig } from '../../services/config-api'
 import { getTreasury } from '../../services/gifts'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 // Excel 文件选择平台分派（Metro 按 .rn 后缀解析 RN 版，H5/小程序走 index.ts）
@@ -184,45 +186,52 @@ export default function MerchantManagePage() {
     }
     setBusyId(null)
 
-    const pins = (catalog?.items || []).filter((i) => i.category === MALL_CATEGORY.PIN_CARD && !i.soldOut)
+    // 改动说明（v2.10.0）：本面板只列商品置顶卡（targetKind=1），需求卡走"我的寻货"
+    const pins = (catalog?.items || []).filter((i) => i.category === MALL_CATEGORY.PIN_CARD && (i.targetKind ?? 1) === 1 && !i.soldOut)
     if (pins.length === 0) {
       Taro.showToast({ title: '暂无可用置顶权益', icon: 'none' })
       return
     }
 
     const sheet = await Taro.showActionSheet({
-      itemList: pins.map((p) => `${p.name}（${p.price} 积分）`)
+      // 改动说明（v2.10.0 商家金）：商品置顶卡按商家金定价（金库单位），标注清楚
+      itemList: pins.map((p) => `${p.name}（${p.price} 商家金）`)
     }).catch(() => null)
     if (!sheet || sheet.tapIndex < 0) return
     const picked = pins[sheet.tapIndex]
     const balance = catalog?.balance ?? 0
-    // v2.4.0 商家经济：管理员双支付通道（个人积分 / 商家金库），员工仅个人；
-    // 金库余额前置可见，不足同样引导去赚（成员赚分即在为金库攒额度）
+    // v2.4.0 商家经济：管理员双支付通道（商家金库 / 个人积分代付），员工仅个人积分；
+    // 改动说明（v2.10.0）：管理员默认金库（置顶是经营行为走金库），个人代付按汇率折算多付
     const cur = useMerchantStore.getState().currentMerchant()
     const isAdmin = cur?.role === 'MerchantAdmin'
     let treasuryBalance = 0
     if (isAdmin) {
       treasuryBalance = (await getTreasury().catch(() => null))?.balance ?? 0
     }
+    const goldRate = isAdmin
+      ? (await getSiteConfig().catch(() => null))?.merchantGoldPayRate ?? 2
+      : 2
+    const personalCost = picked.price * goldRate
     const itemList = isAdmin
-      ? [`个人积分（余额 ${balance}）`, `商家金库（余额 ${treasuryBalance}）`]
-      : [`个人积分（余额 ${balance}）`]
+      ? [`商家金库支付（${picked.price} 金，余额 ${treasuryBalance}）`, `个人积分代付（折算 ${personalCost} 分，余额 ${balance}）`]
+      : [`个人积分（余额 ${balance}，本单折算 ${personalCost} 分）`]
     const pay = await Taro.showActionSheet({ itemList }).catch(() => null)
     if (!pay || pay.tapIndex < 0) return
-    const useTreasury = isAdmin && pay.tapIndex === 1
+    const useTreasury = isAdmin && pay.tapIndex === 0
+    const cost = useTreasury ? picked.price : personalCost
     const payerBalance = useTreasury ? treasuryBalance : balance
-    const affordable = payerBalance >= picked.price
+    const affordable = payerBalance >= cost
 
     const ok = await showConfirmDialog({
       title: picked.name,
       content: affordable
-        ? `用${useTreasury ? '商家金库' : '个人积分'}花 ${picked.price} 把「${item.bearingPartNumber}」在该型号商家列表置顶 ${picked.durationHours ?? 24} 小时？${useTreasury ? '金库' : ''}余额 ${payerBalance}。`
-        : `需要 ${picked.price} 积分，${useTreasury ? '金库' : ''}余额 ${payerBalance}。${useTreasury ? '可让成员多赚分上供，或改用个人积分。' : '去任务中心赚积分？'}`,
+        ? `用${useTreasury ? '商家金' : `个人积分（${picked.price} 商家金 × 汇率 ${goldRate} 折算）`}花 ${cost} 把「${item.bearingPartNumber}」在该型号商家列表置顶 ${picked.durationHours ?? 24} 小时？余额 ${payerBalance}。`
+        : `需要 ${cost}${useTreasury ? ' 商家金' : ' 积分'}，${useTreasury ? '金库' : ''}余额 ${payerBalance}。${useTreasury ? '可让成员多赚分上供、完成集体任务或挂礼成交，或改用个人积分代付。' : '去任务中心赚积分？'}`,
       confirmText: affordable ? '确认兑换' : '去赚积分'
     })
     if (!ok) return
     if (!affordable) {
-      Taro.navigateTo({ url: '/pages/my/tasks' })
+      Taro.navigateTo({ url: useTreasury ? '/pages/merchant/gifts' : '/pages/my/tasks' })
       return
     }
 
@@ -230,7 +239,7 @@ export default function MerchantManagePage() {
     try {
       await redeemMallItem(picked.id, item.id, `pin-${item.id}-${Date.now()}`, useTreasury)
       void vibrateSuccess()
-      Taro.showToast({ title: `置顶成功 -${picked.price} 积分`, icon: 'success' })
+      Taro.showToast({ title: `置顶成功 -${cost}${useTreasury ? ' 金' : ' 分'}`, icon: 'success' })
     } catch (e: any) {
       Taro.showToast({ title: e?.message || '兑换失败', icon: 'none' })
     } finally {

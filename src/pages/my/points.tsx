@@ -44,7 +44,19 @@ export default function PointsPage() {
   }
 
   return (
-    <PageLayout nav={<NavBar title='积分明细' showBack onBack={() => Taro.navigateBack()} />}>
+    <PageLayout nav={
+      <NavBar
+        title='积分明细'
+        showBack
+        onBack={() => Taro.navigateBack()}
+        rightSlot={
+          // 改动说明（v2.10.1）：右上角进积分规则页（与商家金规则同页双内容）
+          <View onClick={() => Taro.navigateTo({ url: '/pages/rules/index?kind=points' })}>
+            <Text style={{ ...fs(13), color: t.primary }}>积分规则</Text>
+          </View>
+        }
+      />
+    }>
       <ScrollView style={{ flex: 1 }} onScrollToLower={() => void loadMore()}>
         {/* 余额概览卡 */}
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, alignItems: 'center' }}>
