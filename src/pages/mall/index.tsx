@@ -1,7 +1,7 @@
-// 积分商城页（v2.3.0 商城虚拟权益）：虚拟权益目录 + 我的兑换订单。
+// 轴承币商城页（v2.3.0 商城虚拟权益）：虚拟权益目录 + 我的兑换订单。
 // 一期上架置顶卡（商户买曝光）；兑换入口在商品管理页"置顶"按钮（需选定具体商品），
 // 本页承担"看得见价格与库存"的橱窗职责 + 订单凭据查询。
-// 合规三纪律沿用：积分不可充值、不可提现、不可转让；虚拟权益非实物商品。
+// 合规三纪律沿用：轴承币不可充值、不可提现、不可转让；虚拟权益非实物商品。
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值、无多值简写。
 import { useState } from 'react'
 import { View, Text, ScrollView, Input } from '@tarojs/components'
@@ -40,7 +40,7 @@ function statusColor(s: number, t: any): string {
   return t.textTertiary
 }
 
-/** 积分商城页：虚拟权益橱窗 + 我的订单 */
+/** 轴承币商城页：虚拟权益橱窗 + 我的订单 */
 export default function MallPage() {
   const t = useTheme()
   const fs = useFs()
@@ -57,7 +57,7 @@ export default function MallPage() {
 
   /** 置顶卡兑换入口：跳商品管理页选具体商品（无在职商户则引导入驻） */
   // 改动说明（v2.10.0 寻货置顶）：置顶卡按对象类型分流——
-  // 需求卡（targetKind=2）去"我的寻货"选需求兑换（个人积分）；商品卡进商家管理选在售商品
+  // 需求卡（targetKind=2）去"我的寻货"选需求兑换（个人轴承币）；商品卡进商家管理选在售商品
   const goPin = (item: MallItem) => {
     if ((item.targetKind ?? 1) === 2) {
       Taro.navigateTo({ url: '/pages/my/sourcing' })
@@ -99,7 +99,7 @@ export default function MallPage() {
       const r = await redeemGift(giftItem.id, gName.trim(), gPhone.trim(), gAddr.trim(), `gift-${giftItem.id}-${Date.now()}`)
       setGiftItem(null)
       void vibrateSuccess()
-      Taro.showToast({ title: `兑换成功 -${r.pointsSpent} 积分`, icon: 'success' })
+      Taro.showToast({ title: `兑换成功 -${r.pointsSpent} 轴承币`, icon: 'success' })
       const list = await getMallOrders(1, 10).catch(() => null)
       if (list) setOrders(list.items || [])
     } catch (e: any) {
@@ -109,11 +109,11 @@ export default function MallPage() {
     }
   }
 
-  /** 确认收货：积分结算进商家金库（二次确认防误点） */
+  /** 确认收货：轴承币结算进商家金库（二次确认防误点） */
   const doConfirm = async (o: MallOrder) => {
     const ok = await showConfirmDialog({
       title: '确认收货',
-      content: `确认已收到「${o.itemName}」？确认后 ${o.pointsSpent} 积分将结算给商家。若未收到请勿确认，可联系平台处理。`
+      content: `确认已收到「${o.itemName}」？确认后 ${o.pointsSpent} 轴承币将结算给商家。若未收到请勿确认，可联系平台处理。`
     })
     if (!ok) return
     try {
@@ -138,21 +138,21 @@ export default function MallPage() {
   }
 
   return (
-    <PageLayout nav={<NavBar title='积分商城' />} tabbar={<CustomTabBar />}>
-      {!isLoggedIn && <LoginGuide icon='gift' text='登录后即可用积分兑换权益' />}
+    <PageLayout nav={<NavBar title='轴承币商城' />} tabbar={<CustomTabBar />}>
+      {!isLoggedIn && <LoginGuide icon='gift' text='登录后即可用轴承币兑换权益' />}
       {isLoggedIn && (
         <ScrollView style={{ flex: 1 }}>
           {/* 余额条：兑换能力前置可见，不足直接引导去赚 */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ ...fs(24), color: t.primary, fontWeight: '700' }}>{catalog?.balance ?? 0}</Text>
-              <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>我的积分</Text>
+              <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>我的轴承币</Text>
             </View>
             <View
               style={{ backgroundColor: t.primary, borderRadius: 16, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
               onClick={() => Taro.navigateTo({ url: '/pages/my/tasks' })}
             >
-              <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去赚积分</Text>
+              <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去赚轴承币</Text>
             </View>
           </View>
 
@@ -161,7 +161,7 @@ export default function MallPage() {
             <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
               <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>兑换：{giftItem.name}</Text>
               <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
-                {giftItem.price} 积分 · 确认收货后才会结算给商家，收货前可联系平台退款
+                {giftItem.price} 轴承币 · 确认收货后才会结算给商家，收货前可联系平台退款
               </Text>
               <Input
                 style={{ ...fs(15), backgroundColor: t.bgInput, borderRadius: 8, padding: 10, marginTop: 10, color: t.textPrimary }}
@@ -196,7 +196,7 @@ export default function MallPage() {
                   style={{ flex: 1, marginLeft: 10, borderRadius: 18, paddingTop: 9, paddingBottom: 9, alignItems: 'center', backgroundColor: gBusy ? t.textTertiary : t.primary }}
                   onClick={() => { if (!gBusy) doRedeemGift() }}
                 >
-                  <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: '600' }}>{gBusy ? '提交中…' : `花 ${giftItem.price} 积分兑换`}</Text>
+                  <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: '600' }}>{gBusy ? '提交中…' : `花 ${giftItem.price} 轴承币兑换`}</Text>
                 </View>
               </View>
             </View>
@@ -238,9 +238,9 @@ export default function MallPage() {
                   ) : null}
                   <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                     <Text style={{ ...fs(15), color: t.primary, fontWeight: '700' }}>{item.price}</Text>
-                    {/* 改动说明（v2.10.0 商家金）：商品置顶卡按商家金定价（金库支付），其余权益仍是个人积分 */}
+                    {/* 改动说明（v2.10.0 商家金）：商品置顶卡按商家金定价（金库支付），其余权益仍是个人轴承币 */}
                     <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 4 }}>
-                      {item.category === MALL_CATEGORY.PIN_CARD && (item.targetKind ?? 1) === 1 ? '商家金' : '积分'}
+                      {item.category === MALL_CATEGORY.PIN_CARD && (item.targetKind ?? 1) === 1 ? '商家金' : '轴承币'}
                     </Text>
                     {item.flashing && item.originalPrice != null && (
                       <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 6, textDecoration: 'line-through' }}>原价 {item.originalPrice}</Text>
@@ -313,7 +313,7 @@ export default function MallPage() {
           </View>
 
           <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 16, marginBottom: 8 }}>
-            积分不可充值、不可提现、不可转让，仅可在平台内兑换权益
+            轴承币不可充值、不可提现、不可转让，仅可在平台内兑换权益
           </Text>
           <View style={{ height: 80 }} />
         </ScrollView>

@@ -110,11 +110,11 @@ export default function TasksPage() {
       // v2.8.0 G1 暴击：命中双倍/传说时替换 toast 文案播彩蛋（传说金色震动）
       const crit = r.critMultiplier ?? 1
       if (crit >= 5) {
-        Taro.showToast({ title: `传说暴击！+${r.amount} 积分 ×${crit}`, icon: 'none' })
+        Taro.showToast({ title: `传说暴击！+${r.amount} 轴承币 ×${crit}`, icon: 'none' })
       } else if (crit >= 2) {
-        Taro.showToast({ title: `暴击双倍！+${r.amount} 积分`, icon: 'success' })
+        Taro.showToast({ title: `暴击双倍！+${r.amount} 轴承币`, icon: 'success' })
       } else {
-        Taro.showToast({ title: `签到成功 +${r.amount} 积分`, icon: 'success' })
+        Taro.showToast({ title: `签到成功 +${r.amount} 轴承币`, icon: 'success' })
       }
       // v2.1.0 成就子系统：签到顺带点亮成就时补一条 toast（延迟错开签到 toast）
       if (r.unlockedAchievements && r.unlockedAchievements.length > 0) {
@@ -154,30 +154,30 @@ export default function TasksPage() {
   return (
     <PageLayout nav={<NavBar title='任务中心' showBack onBack={() => Taro.navigateBack()} />}>
       <ScrollView style={{ flex: 1 }}>
-        {!isLoggedIn && <LoginGuide icon='gift' text='登录后可签到赚积分' />}
+        {!isLoggedIn && <LoginGuide icon='gift' text='登录后可签到赚轴承币' />}
         {isLoggedIn && (
         <>
         {/* 顶部余额条 */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
             <Text style={{ ...fs(26), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
-            <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6 }}>积分</Text>
+            <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6 }}>轴承币</Text>
           </View>
           <Text style={{ ...fs(13), color: t.textSecondary }}>
-            {account.consecutiveDays > 0 ? `已连续签到 ${account.consecutiveDays} 天` : '签到赚积分'}
+            {account.consecutiveDays > 0 ? `已连续签到 ${account.consecutiveDays} 天` : '签到赚轴承币'}
           </Text>
         </View>
 
-        {/* 积分用途说明卡（v1.7.21 额度可见化）：让赚的分有明确消费认知——
+        {/* 轴承币用途说明卡（v1.7.21 额度可见化）：让赚的分有明确消费认知——
             当前真实用途是寻货超额度加量，商城兑换预告 */}
         <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
-          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>积分能做什么</Text>
+          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>轴承币能做什么</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>寻货加量：超出每日免费额度后，花积分继续发布/应答</Text>
+            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>寻货加量：超出每日免费额度后，花轴承币继续发布/应答</Text>
             <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/discover/index' })}>去寻货</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>积分商城：兑换置顶卡与商家礼品</Text>
+            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>轴承币商城：兑换置顶卡与商家礼品</Text>
             {/* v2.5.0：商城已上线，从预告文案转真实入口 */}
             <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/mall/index' })}>去兑换</Text>
           </View>
@@ -186,7 +186,7 @@ export default function TasksPage() {
         {/* 卡片 1：每日签到日期条 */}
         <View style={{ display: 'flex', flexDirection: 'column', margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>每日签到</Text>
-          <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>连续签到天数越多，单日积分越高</Text>
+          <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>连续签到天数越多，单日轴承币越高</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 }}>
             {cells.map((c) => (
               <View key={c.key} style={{ alignItems: 'center', width: 38 }}>
@@ -221,7 +221,7 @@ export default function TasksPage() {
 
         {/* 卡片 2：赚分任务列表 */}
         <View style={{ display: 'flex', flexDirection: 'column', margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
-          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>赚积分任务</Text>
+          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>赚轴承币任务</Text>
           {tasks.length === 0 && (
             <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 12 }}>
               {isLoggedIn ? '暂无可参加的任务' : '登录后可查看任务'}
@@ -275,7 +275,7 @@ export default function TasksPage() {
 
         {/* 合规三纪律脚注（与商城页口径一致） */}
         <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 4, marginBottom: 24 }}>
-          积分不可充值、不可提现、不可转让
+          轴承币不可充值、不可提现、不可转让
         </Text>
         </>
         )}

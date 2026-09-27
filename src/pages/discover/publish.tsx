@@ -1,5 +1,5 @@
 // 发布寻货页（v1.7.19）：个人用户发布求购询价单。
-// 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹积分确认框 → usePoints=true 重提交
+// 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹轴承币确认框 → usePoints=true 重提交
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useState } from 'react'
 import { View, Text, ScrollView, Input } from '@tarojs/components'
@@ -72,8 +72,8 @@ export default function PublishSourcingPage() {
     if (needPoints !== null) {
       const ok = await showConfirmDialog({
         title: '今日免费额度已用完',
-        content: `继续发布需花费 ${needPoints} 积分，确认发布？`,
-        confirmText: '花积分发布',
+        content: `继续发布需花费 ${needPoints} 轴承币，确认发布？`,
+        confirmText: '花轴承币发布',
       })
       if (ok) await submit(true)
       return
@@ -97,7 +97,7 @@ export default function PublishSourcingPage() {
     </View>
   )
 
-  // 按钮三态推导（v1.7.21）：额度内免费发布 → 超限花积分 → 余额不足去赚分
+  // 按钮三态推导（v1.7.21）：额度内免费发布 → 超限花轴承币 → 余额不足去赚分
   const pq = quota?.publish
   const freeLeft = pq ? Math.max(pq.freeLimit - pq.todayUsed, 0) : null
   const overFree = !!pq && pq.todayUsed >= pq.freeLimit
@@ -114,7 +114,7 @@ export default function PublishSourcingPage() {
               {freeLeft > 0 ? `今日免费额度剩 ${freeLeft}/${pq.freeLimit} 条` : `今日免费额度已用完`}
             </Text>
             <Text style={{ ...fs(12), color: t.textSecondary }}>
-              {freeLeft > 0 ? `用后可花 ${pq.pointsPrice} 积分/条` : `本条花 ${pq.pointsPrice} 积分 · 余额 ${quota?.balance ?? 0}`}
+              {freeLeft > 0 ? `用后可花 ${pq.pointsPrice} 轴承币/条` : `本条花 ${pq.pointsPrice} 轴承币 · 余额 ${quota?.balance ?? 0}`}
             </Text>
           </View>
         ) : null}
@@ -140,7 +140,7 @@ export default function PublishSourcingPage() {
           发布后商户可应答报价，您从应答中选定一家后双方互见联系方式。寻货 14 天有效，请留意站内信通知。
         </Text>
 
-        {/* 发布按钮三态（v1.7.21）：免费发布 → 花积分发布（额度已用完）→ 积分不足去赚（跳任务中心）。
+        {/* 发布按钮三态（v1.7.21）：免费发布 → 花轴承币发布（额度已用完）→ 轴承币不足去赚（跳任务中心）。
             判定仍以服务端 NEED_POINTS 协议为准，这里只是前置展示与引导 */}
         <View
           style={{
@@ -157,7 +157,7 @@ export default function PublishSourcingPage() {
           }}
         >
           <Text style={{ ...fs(16), color: '#FFFFFF', fontWeight: '600' }}>
-            {submitting ? '发布中…' : insufficient ? '积分不足，去赚积分' : overFree && pq ? `花 ${pq.pointsPrice} 积分发布` : '免费发布'}
+            {submitting ? '发布中…' : insufficient ? '轴承币不足，去赚轴承币' : overFree && pq ? `花 ${pq.pointsPrice} 轴承币发布` : '免费发布'}
           </Text>
         </View>
       </ScrollView>

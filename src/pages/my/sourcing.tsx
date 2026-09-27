@@ -1,6 +1,6 @@
 // 我的寻货页（v1.7.19）：个人用户发布的寻货列表（全状态倒序），点击进详情。
 // 八格"我的寻货"入口落地（原占位 toast）
-// v2.10.0 寻货置顶：进行中的需求可购买"寻货置顶卡"（24h/72h，个人积分支付），
+// v2.10.0 寻货置顶：进行中的需求可购买"寻货置顶卡"（24h/72h，个人轴承币支付），
 // 兑换成功后该需求在公开大厅排前并带角标
 import { useState } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
@@ -43,7 +43,7 @@ export default function MySourcingPage() {
   }
 
   // 兑换置顶卡：requestId 幂等键带需求与时间戳防重复提交；
-  // request 层失败抛后端 message（积分不足/越权），此处 catch 转 toast
+  // request 层失败抛后端 message（轴承币不足/越权），此处 catch 转 toast
   const doPin = async (card: MallItem) => {
     if (!pinFor || pinning) return
     setPinning(true)
@@ -116,7 +116,7 @@ export default function MySourcingPage() {
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end', display: 'flex' }}>
           <View style={{ backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16 }}>
             <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '700' }}>置顶这条寻货</Text>
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>寻 {pinFor.partNumber} · 将用个人积分支付</Text>
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>寻 {pinFor.partNumber} · 将用个人轴承币支付</Text>
             {demandPins.length === 0 && (
               <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 16 }}>暂无可购买的寻货置顶卡</Text>
             )}
@@ -131,7 +131,7 @@ export default function MySourcingPage() {
                   <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>{card.name}</Text>
                   <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{card.description}</Text>
                 </View>
-                <Text style={{ ...fs(15), color: t.primary, fontWeight: '700' }}>{card.price} 积分</Text>
+                <Text style={{ ...fs(15), color: t.primary, fontWeight: '700' }}>{card.price} 轴承币</Text>
               </View>
             ))}
             <View

@@ -1,4 +1,4 @@
-// 积分明细页（v1.7.17 积分底座）：余额概览 + 收支流水分页（触底加载）
+// 轴承币明细页（v1.7.17 轴承币底座）：余额概览 + 收支流水分页（触底加载）
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值
 import { useState } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
@@ -46,13 +46,13 @@ export default function PointsPage() {
   return (
     <PageLayout nav={
       <NavBar
-        title='积分明细'
+        title='轴承币明细'
         showBack
         onBack={() => Taro.navigateBack()}
         rightSlot={
-          // 改动说明（v2.10.1）：右上角进积分规则页（与商家金规则同页双内容）
+          // 改动说明（v2.10.1）：右上角进轴承币规则页（与商家金规则同页双内容）
           <View onClick={() => Taro.navigateTo({ url: '/pages/rules/index?kind=points' })}>
-            <Text style={{ ...fs(13), color: t.primary }}>积分规则</Text>
+            <Text style={{ ...fs(13), color: t.primary }}>轴承币规则</Text>
           </View>
         }
       />
@@ -61,8 +61,8 @@ export default function PointsPage() {
         {/* 余额概览卡 */}
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, alignItems: 'center' }}>
           <Text style={{ ...fs(34), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
-          <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>当前积分</Text>
-          {/* v2.7.0 G7：等级徽章（累计获得积分落档） */}
+          <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>当前轴承币</Text>
+          {/* v2.7.0 G7：等级徽章（累计获得轴承币落档） */}
           {account.level != null && account.level > 1 && (
             <View style={{ marginTop: 8, backgroundColor: t.primary, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 }}>
               <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>Lv.{account.level} {account.levelName ?? ''}</Text>
@@ -78,7 +78,7 @@ export default function PointsPage() {
         <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12 }}>
           {items.length === 0 && (
             <View style={{ padding: 32, alignItems: 'center' }}>
-              <Text style={{ ...fs(13), color: t.textTertiary }}>暂无积分记录，登录签到赚积分吧</Text>
+              <Text style={{ ...fs(13), color: t.textTertiary }}>暂无轴承币记录，登录签到赚轴承币吧</Text>
             </View>
           )}
           {items.map((it) => (

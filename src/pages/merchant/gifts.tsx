@@ -1,7 +1,7 @@
 // 商家挂礼管理页（v2.4.0 商家经济）：挂礼申请与管理 + 礼品订单发货。
 // 改动说明（v2.10.1）：金库流水拆到独立"收支明细"页（pages/merchant/treasury），
 // 本页只留余额卡与管理职能，与商家主页宫格双入口各司其职。
-// 合规三纪律：金库积分只平台内流通（置顶卡等权益），不可提现/转让/折现；
+// 合规三纪律：金库轴承币只平台内流通（置顶卡等权益），不可提现/转让/折现；
 // 挂礼走"商家申请→平台定档→买家托管兑换→确认收货结算"，杜绝定向转移。
 // RN 约束：仅 flex 布局、无 fixed、Text 包裹、Input 显式字号、lineHeight 数值。
 import { useState } from 'react'
@@ -166,7 +166,7 @@ export default function MerchantGiftsPage() {
             </View>
             <Text style={{ ...fs(28), color: t.primary, fontWeight: '700', marginTop: 2 }}>
               {treasury?.balance ?? 0}
-              {/* 改动说明（v2.10.0 商家金）：金库货币定名"商家金"，与个人积分彻底区分 */}
+              {/* 改动说明（v2.10.0 商家金）：金库货币定名"商家金"，与个人轴承币彻底区分 */}
               <Text style={{ ...fs(13), color: t.textTertiary }}> 商家金</Text>
             </Text>
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>
@@ -206,7 +206,7 @@ export default function MerchantGiftsPage() {
                   ) : null}
                 </View>
                 <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
-                  提交后由平台审核并定积分价（商家不自行定价，防止积分定向转移），通过后自动上架
+                  提交后由平台审核并定轴承币价（商家不自行定价，防止轴承币定向转移），通过后自动上架
                 </Text>
                 <View
                   style={{ backgroundColor: aBusy ? t.textTertiary : t.primary, borderRadius: 18, paddingTop: 10, paddingBottom: 10, alignItems: 'center', marginTop: 10 }}
@@ -240,7 +240,7 @@ export default function MerchantGiftsPage() {
             })}
             {gifts.length === 0 && !applyOpen && (
               <View style={{ alignItems: 'center', paddingTop: 18, paddingBottom: 18 }}>
-                <Text style={{ ...fs(12), color: t.textTertiary }}>还没有挂礼，点右上"申请挂礼"把库存好货变成积分收入</Text>
+                <Text style={{ ...fs(12), color: t.textTertiary }}>还没有挂礼，点右上"申请挂礼"把库存好货变成商家金收入</Text>
               </View>
             )}
           </View>
