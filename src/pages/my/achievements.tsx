@@ -12,6 +12,7 @@ import Icon from '../../components/Icon'
 import LoginGuide from '../../components/LoginGuide'
 import { useAuthStore } from '../../stores/auth'
 import { getAchievementWall, type AchievementWall, type AchievementItem } from '../../services/achievements'
+import MedalImage from '../../components/MedalImage'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
 definePageConfig({ disableScroll: true })
@@ -29,26 +30,11 @@ function fmtEarnDate(iso?: string | null): string {
   }
 }
 
-/** 舞台勋章占位：双层环+icon（rare 金环/普通主题色环），选中实亮、其余半透明；
- *  配色按深浅主题双轨（金/紫用于深底，金/主题色用于浅底，环底色用半透明叠加两端通用） */
+/** 舞台勋章：MedalImage 统一渲染（v2.6.0 有图用后台勋章图，无图回退双环占位），选中实亮其余半透明 */
 function StageMedal({ item, active, isDark, primary }: { item: AchievementItem; active: boolean; isDark: boolean; primary: string }) {
-  const ring = item.rare ? '#F59E0B' : (isDark ? '#A78BFA' : primary)
-  const iconColor = item.rare ? (isDark ? '#FDE68A' : '#B45309') : (isDark ? '#E9D5FF' : primary)
   return (
-    <View style={{ width: STAGE_ITEM_W, alignItems: 'center', opacity: active ? 1 : 0.4 }}>
-      <View style={{
-        width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: ring,
-        alignItems: 'center', justifyContent: 'center',
-        backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(99,102,241,0.08)'
-      }}>
-        <View style={{
-          width: 80, height: 80, borderRadius: 40, borderWidth: 1,
-          borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.12)',
-          alignItems: 'center', justifyContent: 'center'
-        }}>
-          <Icon name={item.icon || 'award'} size={40} color={iconColor} />
-        </View>
-      </View>
+    <View style={{ width: STAGE_ITEM_W, alignItems: 'center' }}>
+      <MedalImage imageKey={item.imageKey} icon={item.icon || 'award'} rare={item.rare} variant='stage' primary={primary} isDark={isDark} active={active} />
     </View>
   )
 }
@@ -68,7 +54,11 @@ function AchievementCard({ item, t, fs }: { item: AchievementItem; t: any; fs: (
         width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
         backgroundColor: item.unlocked ? t.primary : t.borderColor
       }}>
-        <Icon name={item.icon || 'award'} size={22} color={item.unlocked ? '#FFFFFF' : t.textTertiary} />
+        {item.unlocked && item.imageKey ? (
+          <MedalImage imageKey={item.imageKey} icon={item.icon || 'award'} rare={item.rare} variant='card' primary={t.primary} size={44} />
+        ) : (
+          <Icon name={item.icon || 'award'} size={22} color={item.unlocked ? '#FFFFFF' : t.textTertiary} />
+        )}
       </View>
       <View style={{ flex: 1, marginLeft: 10, display: 'flex', flexDirection: 'column' }}>
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>

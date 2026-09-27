@@ -7,6 +7,7 @@ import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import MedalImage from '../../components/MedalImage'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -129,12 +130,9 @@ export default function MerchantDetailPage() {
             <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                 {medalItems.map((b) => {
-                  const ring = b.rare ? '#F59E0B' : t.primary
                   return (
                     <View key={b.key} style={{ width: 64, alignItems: 'center', marginRight: 6 }}>
-                      <View style={{ width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: ring, alignItems: 'center', justifyContent: 'center', backgroundColor: b.rare ? 'rgba(245,158,11,0.12)' : t.primaryLight }}>
-                        <Icon name={b.icon || 'award'} size={22} color={ring} />
-                      </View>
+                      <MedalImage imageKey={b.imageKey} icon={b.icon || 'award'} rare={b.rare} variant='card' primary={t.primary} primaryLight={t.primaryLight} />
                       <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4, lineHeight: 13 }} numberOfLines={1}>{b.name}</Text>
                     </View>
                   )
