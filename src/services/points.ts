@@ -12,6 +12,9 @@ export interface PointAccount {
   todayCheckedIn: boolean
   /** 当前连续签到天数（阶梯展示用） */
   consecutiveDays: number
+  /** v2.7.0 G7：用户积分等级（按累计获得积分落档，纯展示） */
+  level?: number
+  levelName?: string
   /** 业务日界偏移小时数（v1.36.1 后端下发，对应 BusinessClock 配置；缺省按 +8 北京兜底） */
   tzOffsetHours?: number
 }
@@ -51,6 +54,8 @@ export const GRANT_TYPE_LABELS: Record<string, string> = {
   sourcing_respond_bonus: '寻货应答加量',
   // v2.6.0 M3：商家集体任务 Job 达标结算发放
   merchant_task: '商家集体任务奖励',
+  // v2.7.0 G2：每日任务板三件套（签到 + 纠错 + 应答）额外奖励
+  daily_combo: '每日任务板三件套',
   // 名词统一（成就/徽章→勋章）：勋章点亮解锁的一次性甜头
   achievement_unlock: '勋章解锁奖励',
 }
@@ -62,8 +67,7 @@ export async function getPointAccount(): Promise<PointAccount> {
     return r ?? { balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 }
   } catch {
     return { balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 }
-  }
-}
+  }}
 
 /** 每日签到 */
 export function dailyCheckin() {

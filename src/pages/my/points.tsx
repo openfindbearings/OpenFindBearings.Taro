@@ -50,6 +50,12 @@ export default function PointsPage() {
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, alignItems: 'center' }}>
           <Text style={{ ...fs(34), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
           <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>当前积分</Text>
+          {/* v2.7.0 G7：等级徽章（累计获得积分落档） */}
+          {account.level != null && account.level > 1 && (
+            <View style={{ marginTop: 8, backgroundColor: t.primary, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 }}>
+              <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>Lv.{account.level} {account.levelName ?? ''}</Text>
+            </View>
+          )}
           <View style={{ flexDirection: 'row', marginTop: 12 }}>
             <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 16 }}>累计获得 {account.totalEarned}</Text>
             <Text style={{ ...fs(12), color: t.textTertiary }}>累计消耗 {account.totalSpent}</Text>
