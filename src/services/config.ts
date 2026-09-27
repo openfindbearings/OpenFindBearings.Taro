@@ -201,6 +201,24 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   POINTS_TRANSACTIONS: `${API_PREFIX}/points/transactions`,
   // v1.7.18 任务中心：赚分任务清单（规则+完成态，daily 任务每日自动刷新）
   POINTS_TASKS: `${API_PREFIX}/points/tasks`,
+  // v2.1.0 成就子系统：成就墙/我的徽章排/商户徽章排，走 BFF /mobile/achievements/*
+  ACHIEVEMENTS_WALL: `${API_PREFIX}/achievements/wall`,
+  ACHIEVEMENTS_ME: `${API_PREFIX}/achievements/me`,
+  ACHIEVEMENTS_MERCHANT: (id: string) => `${API_PREFIX}/achievements/merchants/${id}`,
+  // v2.3.0 商城虚拟权益：目录/兑换/我的订单，走 BFF /mobile/mall/*
+  MALL_ITEMS: `${API_PREFIX}/mall/items`,
+  MALL_REDEEM: `${API_PREFIX}/mall/redeem`,
+  MALL_ORDERS: `${API_PREFIX}/mall/orders`,
+  // v2.4.0 工会经济：礼品兑换/收货 + 商家金库/挂礼/礼品订单
+  MALL_REDEEM_GIFT: `${API_PREFIX}/mall/redeem-gift`,
+  MALL_CONFIRM_RECEIPT: (id: string) => `${API_PREFIX}/mall/orders/${id}/confirm-receipt`,
+  MERCHANT_TREASURY: `${API_PREFIX}/merchant/treasury`,
+  MERCHANT_TREASURY_TX: `${API_PREFIX}/merchant/treasury/transactions`,
+  MERCHANT_GIFTS: `${API_PREFIX}/merchant/gifts`,
+  MERCHANT_GIFT_OFFSHELF: (id: string) => `${API_PREFIX}/merchant/gifts/${id}/offshelf`,
+  MERCHANT_GIFT_IMAGE: `${API_PREFIX}/merchant/gifts/image`,
+  MERCHANT_GIFT_ORDERS: `${API_PREFIX}/merchant/gift-orders`,
+  MERCHANT_GIFT_ORDER_SHIP: (id: string) => `${API_PREFIX}/merchant/gift-orders/${id}/ship`,
   // v1.7.19 寻货：feed/详情/发布/应答/选定/取消/我的列表（BFF /mobile/sourcing/*）
   SOURCING_DEMANDS: `${API_PREFIX}/sourcing/demands`,
   // v1.7.21 额度可见化：发布/应答额度条与按钮三态数据源

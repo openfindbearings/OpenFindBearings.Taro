@@ -45,6 +45,10 @@ export interface BearingMerchant {
   isRestocking?: boolean
   /** 补货预计到货时间（自由文本） */
   restockEta?: string | null
+  /** 置顶中（v2.3.0 商城置顶卡：商家花积分买曝光，列表已按置顶优先排序） */
+  isPinned?: boolean
+  /** 置顶到期时间（UTC） */
+  pinnedUntil?: string | null
 }
 
 /** 轴承替代品项（对齐 BFF InterchangeItem） */

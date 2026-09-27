@@ -135,6 +135,10 @@ export default function BearingDetailPage() {
               <View className='bd-list-main'>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
+                  {/* v2.3.0 商城置顶卡：置顶商家角标（排序已由后端置顶优先，角标让曝光"看得见"） */}
+                  {m.isPinned ? (
+                    <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
+                  ) : null}
                   {m.isRestocking ? (
                     <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
                   ) : null}
