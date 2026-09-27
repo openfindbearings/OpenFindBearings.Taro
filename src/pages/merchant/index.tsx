@@ -117,9 +117,13 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
 
   /** 点击商户卡：生效商户切换为当前；未通过则带商户 id 进"修改并重新提交"编辑页（v2.6.0，原为跳空白向导） */
   const onCardTap = () => {
-    if (m.status === 'Active' && m.merchantId !== currentMerchantId) void switchMerchant(m.merchantId)
-    else if (m.status === 'Suspended') {
-      if (!isLoggedIn) { Taro.showToast({ title: '请先登录', icon: 'none' }); return }
+    if (m.status === 'Active') {
+      // 改动说明（v2.6.0 用户定案）：当前商家整卡点击直进商家管理页（与勋章卡交互一致），
+      //   非当前商家点击=切换当前（原"商家管理"按钮删除）
+      if (m.merchantId === currentMerchantId) void Taro.navigateTo({ url: '/pages/merchant/home' })
+      else void switchMerchant(m.merchantId)
+    } else if (m.status === 'Suspended') {
+      if (!isLoggedIn) { Taro.showToast({ title: '先登录', icon: 'none' }); return }
       Taro.navigateTo({ url: `/pages/merchant/apply?merchantId=${m.merchantId}` })
     }
   }
@@ -207,30 +211,23 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
       )}
 
       {/* 当前生效商户：内联操作区
-          改动说明（v2.6.0 双界面拆分）：商品/成员/寻货应答/信息维护/金库挂礼五个跳转
-          收拢进"商家管理"页（pages/merchant/home，三卡镜像个人我的页）；
-          商家主页（merchantDetail）回归纯公开展示界面；申请认证是业务动作非跳转，保留原位 */}
-      {isActive && isCurrent && (
+          改动说明（v2.6.0 用户定案）：整卡点击已直进商家管理页（onCardTap），"商家管理"按钮删除；
+          仅剩申请认证业务动作（非跳转保留原位），stopPropagation 防冒泡触发卡片进管理页 */}
+      {isActive && isCurrent && m.role === 'MerchantAdmin' && !m.isVerified && (
         <View className='mch-actions' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}>
-          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/home' })}>
-            <Text style={{ ...fs(13), color: t.textPrimary }}>商家管理</Text>
+          <View
+            className='mch-action'
+            style={{ backgroundColor: t.bgInput }}
+            onClick={(e: any) => {
+              e?.stopPropagation?.()
+              if (m.verifyRequested) Taro.showToast({ title: '认证申请已提交，平台将优先审核', icon: 'none' })
+              else onRequestVerify()
+            }}
+          >
+            <Text style={{ ...fs(13), color: m.verifyRequested ? t.textTertiary : t.primary }}>
+              {m.verifyRequested ? '已申请认证' : '申请认证'}
+            </Text>
           </View>
-          {m.role === 'MerchantAdmin' && !m.isVerified && (
-            // 改动说明（v1.7.3）：申请认证从"跳信息维护"升级为真业务动作——
-            //   调 verify-request 端点（材料矩阵后端校验，不齐 400 透传缺项引导）；
-            //   已申请未处理时按钮转"已申请认证"置灰，点击提示等待
-            <View
-              className='mch-action'
-              style={{ backgroundColor: t.bgInput }}
-              onClick={m.verifyRequested
-                ? () => Taro.showToast({ title: '认证申请已提交，平台将优先审核', icon: 'none' })
-                : onRequestVerify}
-            >
-              <Text style={{ ...fs(13), color: m.verifyRequested ? t.textTertiary : t.primary }}>
-                {m.verifyRequested ? '已申请认证' : '申请认证'}
-              </Text>
-            </View>
-          )}
         </View>
       )}
 

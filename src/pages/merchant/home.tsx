@@ -153,10 +153,12 @@ export default function MerchantHomePage() {
           </View>
         </View>
 
-        {/* 3. 商家勋章卡（镜像我的勋章卡；点击进公开主页看勋章园全貌） */}
+        {/* 3. 商家勋章卡（镜像我的勋章卡）
+            改动说明（用户定案）：点击进商家勋章展示页（medals，镜像个人勋章页），
+            不进 public 详情页——自家荣誉看自家展厅 */}
         <View
           style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
-          onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${current.merchantId}` })}
+          onClick={() => Taro.navigateTo({ url: '/pages/merchant/medals' })}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家勋章</Text>
