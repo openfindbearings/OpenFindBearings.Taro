@@ -196,7 +196,7 @@ export default function MerchantManagePage() {
     if (!sheet || sheet.tapIndex < 0) return
     const picked = pins[sheet.tapIndex]
     const balance = catalog?.balance ?? 0
-    // v2.4.0 工会经济：管理员双支付通道（个人积分 / 商家金库），员工仅个人；
+    // v2.4.0 商家经济：管理员双支付通道（个人积分 / 商家金库），员工仅个人；
     // 金库余额前置可见，不足同样引导去赚（成员赚分即在为金库攒额度）
     const cur = useMerchantStore.getState().currentMerchant()
     const isAdmin = cur?.role === 'MerchantAdmin'

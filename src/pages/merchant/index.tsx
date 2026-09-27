@@ -227,7 +227,7 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             </View>
           )}
           {m.role === 'MerchantAdmin' && (
-            // v2.4.0 工会经济：金库+挂礼+礼品发货集中入口（仅管理员，员工不经手钱货）
+            // v2.4.0 商家经济：金库+挂礼+礼品发货集中入口（仅管理员，员工不经手钱货）
             <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/gifts' })}>
               <Text style={{ ...fs(13), color: t.textPrimary }}>金库挂礼</Text>
             </View>
