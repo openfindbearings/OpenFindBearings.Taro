@@ -104,6 +104,10 @@ export default function TasksPage() {
     } else {
       void vibrateSuccess()
       Taro.showToast({ title: `签到成功 +${r.amount} 积分`, icon: 'success' })
+      // v2.1.0 成就子系统：签到顺带点亮成就时补一条 toast（延迟错开签到 toast）
+      if (r.unlockedAchievements && r.unlockedAchievements.length > 0) {
+        setTimeout(() => Taro.showToast({ title: `点亮 ${r.unlockedAchievements!.length} 个成就`, icon: 'none' }), 1600)
+      }
     }
     await refresh()
   }

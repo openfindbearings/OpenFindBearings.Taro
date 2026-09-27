@@ -4,7 +4,7 @@
 // NavBar：标题居中"我的"，右侧 Bell（消息中心）+ Settings（设置入口）
 // 内容：用户信息区 + 会员卡 + 功能卡（收藏/关注/历史/全部功能 四横钮）
 import Icon from '../../components/Icon'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 // 改动说明（v1.7.11 沉浸式渐变头部）：useState 管滚动浮现度；useSafeArea 供渐变内容避让状态栏
 import { useState } from 'react'
@@ -22,6 +22,8 @@ import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
 // 改动说明（v1.7.17 积分底座）：账户/签到服务 + 签到成功长震反馈
 import { getPointAccount, type PointAccount } from '../../services/points'
+// v2.1.0 成就子系统：个人徽章排（我的页积分卡下方横向徽章条）
+import { getMyAchievements, type AchievementWall } from '../../services/achievements'
 import './index.scss'
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
@@ -59,14 +61,19 @@ export default function MyPage() {
   const unreadCount = useNotificationStore((s) => s.unreadCount)
   // v1.7.17 积分账户（未登录零值兜底）
   const [points, setPoints] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
+  // v2.1.0 成就子系统：已解锁个人徽章排（积分卡下方横向徽章条）
+  const [myAch, setMyAch] = useState<AchievementWall | null>(null)
 
   useDidShow(() => {
-    // 每次显示时补拉一次资料（若已登录），保证昵称/手机号/头像跟随后端变更
+    // 每次显示时拉一次资料，保证登录成功 navigateBack 后昵称/手机/头像立即刷新
     if (isLoggedIn) void useAuthStore.getState().fetchProfile()
-    // 改动说明（v1.7.8）：补拉未读消息数——铃铛红点与 TabBar 角标同源同步（store 单例）
+    // 改动说明（v1.7.8）：拉取未读消息数，与消息中心页、TabBar 角标同源同刷（store 单例）
     void useNotificationStore.getState().fetchUnread()
-    // v1.7.17：补拉积分账户（签到状态跨天刷新）
+    // v1.7.17：积分账户与签到状态随页刷新
     if (isLoggedIn) void getPointAccount().then(setPoints)
+    // v2.1.0：徽章排随页刷新（未登录清空）
+    if (isLoggedIn) void getMyAchievements().then((r) => setMyAch(r || null)).catch(() => setMyAch(null))
+    else setMyAch(null)
   })
 
   const handleMenuClick = (key: string) => {
@@ -236,6 +243,26 @@ export default function MyPage() {
       </View>
 
       {/* 功能卡 - 横向四宫格（白卡样式，v1.7.11 调整到积分卡下方） */}
+      {/* v2.1.0 成就子系统：个人徽章排（GitHub 成就条/军功章感），横向滚动，整条点进成就墙；
+          仅已解锁>0 时显示，未登录/无徽章不占位 */}
+      {myAch && myAch.unlockedCount > 0 && (
+        <View
+          style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginBottom: 12, borderRadius: 12, paddingTop: 8, paddingBottom: 8, paddingLeft: 10, paddingRight: 10 }}
+          onClick={() => Taro.navigateTo({ url: '/pages/my/achievements' })}
+        >
+          <ScrollView scrollX style={{ height: 44 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              {myAch.items.slice(0, 12).map((b) => (
+                <View key={b.key} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                  <Icon name={b.icon || 'award'} size={18} color='#FFFFFF' />
+                </View>
+              ))}
+              <Text style={{ ...fs(12), color: t.textTertiary }}>{myAch.unlockedCount} 枚</Text>
+            </View>
+          </ScrollView>
+        </View>
+      )}
+
       <View className='menu-grid' style={{ backgroundColor: t.bgCard }}>
         {menuItems.map((item) => (
           <View

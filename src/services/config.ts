@@ -201,6 +201,14 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   POINTS_TRANSACTIONS: `${API_PREFIX}/points/transactions`,
   // v1.7.18 任务中心：赚分任务清单（规则+完成态，daily 任务每日自动刷新）
   POINTS_TASKS: `${API_PREFIX}/points/tasks`,
+  // v2.1.0 成就子系统：成就墙/我的徽章排/商户徽章排，走 BFF /mobile/achievements/*
+  ACHIEVEMENTS_WALL: `${API_PREFIX}/achievements/wall`,
+  ACHIEVEMENTS_ME: `${API_PREFIX}/achievements/me`,
+  ACHIEVEMENTS_MERCHANT: (id: string) => `${API_PREFIX}/achievements/merchants/${id}`,
+  // v2.3.0 商城虚拟权益：目录/兑换/我的订单，走 BFF /mobile/mall/*
+  MALL_ITEMS: `${API_PREFIX}/mall/items`,
+  MALL_REDEEM: `${API_PREFIX}/mall/redeem`,
+  MALL_ORDERS: `${API_PREFIX}/mall/orders`,
   // v1.7.19 寻货：feed/详情/发布/应答/选定/取消/我的列表（BFF /mobile/sourcing/*）
   SOURCING_DEMANDS: `${API_PREFIX}/sourcing/demands`,
   // v1.7.21 额度可见化：发布/应答额度条与按钮三态数据源

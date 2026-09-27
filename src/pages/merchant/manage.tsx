@@ -23,6 +23,9 @@ import {
   type MerchantBearingItem
 } from '../../services/merchant'
 import { searchBearings, type Bearing } from '../../services/bearing'
+// v2.3.0 商城置顶卡：目录/兑换（花积分买曝光，履约=该型号商家列表置顶 N 小时）
+import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallCatalog } from '../../services/mall'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 // Excel 文件选择平台分派（Metro 按 .rn 后缀解析 RN 版，H5/小程序走 index.ts）
 import { chooseExcelFile } from '../../services/importExcel'
 
@@ -158,6 +161,65 @@ export default function MerchantManagePage() {
         }
       })
       .catch(() => { /* 取消 */ })
+  }
+
+  /**
+   * 置顶（v2.3.0 商城虚拟权益）：拉目录取置顶卡 → 选时长档 → 确认花分 → 兑换。
+   * targetRef 传 item.id（MerchantBearingId 关联行主键，API 侧据此校验归属与在售）；
+   * requestId 为本次确认的幂等键，防连点重复扣分。
+   * 余额不足不直接报错，而是引导去任务中心赚积分（额度/价格前置可见原则）
+   */
+  const onPin = async (item: MerchantBearingItem) => {
+    if (!item.isOnSale) {
+      Taro.showToast({ title: '仅在售商品可置顶', icon: 'none' })
+      return
+    }
+    setBusyId(item.id)
+    let catalog: MallCatalog | null = null
+    try {
+      catalog = await getMallItems()
+    } catch {
+      catalog = null
+    }
+    setBusyId(null)
+
+    const pins = (catalog?.items || []).filter((i) => i.category === MALL_CATEGORY.PIN_CARD && !i.soldOut)
+    if (pins.length === 0) {
+      Taro.showToast({ title: '暂无可用置顶权益', icon: 'none' })
+      return
+    }
+
+    const sheet = await Taro.showActionSheet({
+      itemList: pins.map((p) => `${p.name}（${p.price} 积分）`)
+    }).catch(() => null)
+    if (!sheet || sheet.tapIndex < 0) return
+    const picked = pins[sheet.tapIndex]
+    const balance = catalog?.balance ?? 0
+    const affordable = balance >= picked.price
+
+    const ok = await showConfirmDialog({
+      title: picked.name,
+      content: affordable
+        ? `花 ${picked.price} 积分把「${item.bearingPartNumber}」在该型号商家列表置顶 ${picked.durationHours ?? 24} 小时？当前余额 ${balance}。`
+        : `需要 ${picked.price} 积分，当前余额 ${balance}。去任务中心赚积分？`,
+      confirmText: affordable ? '确认兑换' : '去赚积分'
+    })
+    if (!ok) return
+    if (!affordable) {
+      Taro.navigateTo({ url: '/pages/my/tasks' })
+      return
+    }
+
+    setBusyId(item.id)
+    try {
+      await redeemMallItem(picked.id, item.id, `pin-${item.id}-${Date.now()}`)
+      void vibrateSuccess()
+      Taro.showToast({ title: `置顶成功 -${picked.price} 积分`, icon: 'success' })
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '兑换失败', icon: 'none' })
+    } finally {
+      setBusyId(null)
+    }
   }
 
   /** Excel 批量导入（管理员，v1.7.7 三端打通）：chooseExcelFile 平台分派
@@ -397,8 +459,16 @@ export default function MerchantManagePage() {
                 <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
                   {[item.brandName, item.bearingTypeName, item.priceDescription || item.price].filter(Boolean).join(' · ') || '暂无规格'}
                 </Text>
-                {/* 行操作：编辑 + 上/下架 */}
+                {/* 行操作：置顶（商城权益） + 编辑 + 状态 */}
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                  {item.isOnSale && (
+                    <View
+                      style={{ backgroundColor: t.bgInput, borderRadius: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, marginRight: 8 }}
+                      onClick={() => onPin(item)}
+                    >
+                      <Text style={{ ...fs(12), color: '#F59E0B' }}>置顶</Text>
+                    </View>
+                  )}
                   <View
                     style={{ backgroundColor: t.bgInput, borderRadius: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, marginRight: 8 }}
                     onClick={() => (editingId === item.id ? setEditingId(null) : startEdit(item))}

@@ -2,7 +2,7 @@
 // 数据来自 BFF public 端点：/merchants/{id}、/merchants/{id}/bearings。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
-import { View, Text } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
@@ -14,6 +14,8 @@ import { useAuthStore } from '../../stores/auth'
 import { checkFollow, toggleFollow, recordMerchantView } from '../../services/user'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
 import MediaImage from '../../components/MediaImage'
+// v2.1.0 成就子系统：商户徽章排（B2B 信任信号，头部下方横向徽章条）
+import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
 import './merchantDetail.scss'
 
 export default function MerchantDetailPage() {
@@ -24,6 +26,13 @@ export default function MerchantDetailPage() {
 
   const [detail, setDetail] = useState<MerchantDetail | null>(null)
   const [bearings, setBearings] = useState<MerchantBearing[]>([])
+  // v2.1.0 成就子系统：商户徽章排（信任信号）
+  const [mAch, setMAch] = useState<AchievementWall | null>(null)
+
+  // 徽章排随页刷新（失败静默，信任信号缺失不阻断详情）
+  useDidShow(() => {
+    if (id) void getMerchantAchievements(id).then((r) => setMAch(r || null)).catch(() => setMAch(null))
+  })
   // 改动说明：登录态改订阅 auth store（同轴承详情页，access 只存内存旧写法恒判未登录）
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [isFollowed, setIsFollowed] = useState(false)
@@ -96,6 +105,24 @@ export default function MerchantDetailPage() {
             {detail?.type && detail.type !== '0' ? <Text className='md-sub' style={{ ...fs(12), color: t.textTertiary }}>{detail.type}</Text> : null}
           </View>
         </View>
+
+        {/* v2.1.0 成就子系统：商户徽章排（老将军军功章感），横向滚动；徽章越多信任度越高 */}
+        {mAch && mAch.unlockedCount > 0 && (
+          <View className='md-card' style={{ backgroundColor: t.bgCard }}>
+            <ScrollView scrollX style={{ height: 44 }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                {mAch.items.slice(0, 10).map((b) => (
+                  <View key={b.key} style={{ marginRight: 8, alignItems: 'center' }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name={b.icon || 'award'} size={18} color='#FFFFFF' />
+                    </View>
+                    <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 2 }}>{b.name}</Text>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        )}
 
         {/* 联系信息 */}
         <View className='md-card' style={{ backgroundColor: t.bgCard }}>

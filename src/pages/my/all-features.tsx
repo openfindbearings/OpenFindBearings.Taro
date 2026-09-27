@@ -21,6 +21,7 @@ const featureList = [
   { key: 'history', label: '浏览历史', desc: '最近浏览记录', icon: 'clock', color: '#10B981' },
   { key: 'corrections', label: '我的纠错', desc: '提交记录与审核结果', icon: 'edit', color: '#8B5CF6' },
   { key: 'tasks', label: '任务中心', desc: '签到与赚积分任务', icon: 'gift', color: '#F59E0B' },
+  { key: 'achievements', label: '成就墙', desc: '徽章与称号', icon: 'award', color: '#A855F7' },
   { key: 'points', label: '积分明细', desc: '积分收支流水', icon: 'list', color: '#14B8A6' },
   { key: 'sourcing', label: '我的寻货', desc: '我发布的寻货需求', icon: 'compass', color: '#3B82F6' },
   { key: 'messages', label: '消息中心', desc: '系统通知与消息', icon: 'bell', color: '#F97316' },
@@ -44,6 +45,7 @@ export default function AllFeaturesPage() {
       history: '/pages/my/history',
       corrections: '/pages/my/corrections',
       tasks: '/pages/my/tasks',
+      achievements: '/pages/my/achievements',
       points: '/pages/my/points',
       sourcing: '/pages/my/sourcing',
       messages: '/pages/notifications/index'

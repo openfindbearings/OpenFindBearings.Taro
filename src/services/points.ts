@@ -21,6 +21,8 @@ export interface CheckinResult {
   amount: number
   consecutiveDays: number
   alreadyCheckedIn: boolean
+  /** v2.1.0 成就子系统：本次签到新点亮的成就键（供 toast） */
+  unlockedAchievements?: string[]
 }
 
 /** 积分流水项（对齐 BFF PointTransactionItem） */
