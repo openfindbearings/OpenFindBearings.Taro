@@ -207,13 +207,13 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
       )}
 
       {/* 当前生效商户：内联操作区
-          改动说明（v2.6.0 双体系重组）：商品/成员/寻货应答/信息维护/金库挂礼五个跳转
-          收拢进"进入商家主页"（商家详情页成员区统一管理宫格+集体任务板），
-          tab 页回归"商家列表+我的商家快捷"本职；申请认证是业务动作非跳转，保留原位 */}
+          改动说明（v2.6.0 双界面拆分）：商品/成员/寻货应答/信息维护/金库挂礼五个跳转
+          收拢进"商家管理"页（pages/merchant/home，三卡镜像个人我的页）；
+          商家主页（merchantDetail）回归纯公开展示界面；申请认证是业务动作非跳转，保留原位 */}
       {isActive && isCurrent && (
         <View className='mch-actions' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}>
-          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${m.merchantId}` })}>
-            <Text style={{ ...fs(13), color: t.textPrimary }}>进入商家主页</Text>
+          <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/home' })}>
+            <Text style={{ ...fs(13), color: t.textPrimary }}>商家管理</Text>
           </View>
           {m.role === 'MerchantAdmin' && !m.isVerified && (
             // 改动说明（v1.7.3）：申请认证从"跳信息维护"升级为真业务动作——

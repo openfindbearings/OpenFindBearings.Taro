@@ -15,9 +15,8 @@ import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
-  getPointAccount, dailyCheckin, getPointTransactions, getPointTasks, getMerchantBuff,
-  getMerchantTasks, getMerchantRanking,
-  type PointAccount, type PointTask, type MerchantBuff, type MerchantTask, type MerchantRanking
+  getPointAccount, dailyCheckin, getPointTransactions, getPointTasks,
+  type PointAccount, type PointTask
 } from '../../services/points'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
@@ -68,13 +67,8 @@ export default function TasksPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [account, setAccount] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
   const [tasks, setTasks] = useState<PointTask[]>([])
-  // v2.5.0 商家经济：商家福利卡数据（最佳商家等级+被动加成清单）
-  const [bestMerchant, setBestMerchant] = useState<MerchantBuff | null>(null)
-  // v2.6.0 M3：集体任务板 + 商家实力月榜
-  const [mtasks, setMtasks] = useState<MerchantTask[]>([])
-  const [mtaskMerchantName, setMtaskMerchantName] = useState<string | null>(null)
-  const [mtaskCompletedTotal, setMtaskCompletedTotal] = useState(0)
-  const [ranking, setRanking] = useState<MerchantRanking | null>(null)
+  // 改动说明（v2.6.0 任务中心拆分）：商家福利/集体任务/实力榜三卡迁至商家管理页
+  // （pages/merchant/home，帮派任务归帮派），本页只留个人任务
   // 已签到日集合（业务日期串，来自流水过滤 daily_checkin，按后端下发偏移换算）
   const [checkedDates, setCheckedDates] = useState<Set<string>>(new Set())
   const [checking, setChecking] = useState(false)
@@ -87,15 +81,6 @@ export default function TasksPage() {
     // 日界偏移取后端下发值（缺省 +8 兜底），与 BusinessClock 实时对齐
     const off = acc.tzOffsetHours ?? 8
     setTasks(await getPointTasks())
-    // v2.5.0 商家经济：福利卡并行拉取（散人返回空清单不展示）
-    void getMerchantBuff().then((gb) => setBestMerchant(gb)).catch(() => { /* 静默 */ })
-    // v2.6.0 M3：集体任务板与实力月榜静默拉取（失败保持旧值，不打扰任务主流程）
-    void getMerchantTasks().then((mt) => {
-      setMtasks(mt.tasks || [])
-      setMtaskMerchantName(mt.merchantName ?? null)
-      setMtaskCompletedTotal(mt.completedTotal ?? 0)
-    }).catch(() => { /* 静默 */ })
-    void getMerchantRanking().then(setRanking).catch(() => { /* 静默 */ })
     const paged = await getPointTransactions(1, 50)
     const set = new Set<string>()
     for (const it of paged?.items || []) {
@@ -171,117 +156,6 @@ export default function TasksPage() {
           <Text style={{ ...fs(13), color: t.textSecondary }}>
             {account.consecutiveDays > 0 ? `已连续签到 ${account.consecutiveDays} 天` : '签到赚积分'}
           </Text>
-        </View>
-
-        {/* v2.5.0 商家经济：商家福利卡——成员被动加成可视化（散人显示加入引导，制造入会动力） */}
-        <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家福利</Text>
-            {bestMerchant && bestMerchant.rank > 0 ? (
-              <Text style={{ ...fs(11), color: '#8B5CF6' }}>{bestMerchant.merchantName}</Text>
-            ) : null}
-          </View>
-          {bestMerchant && bestMerchant.rank > 0 ? (
-            <>
-              <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>
-                {bestMerchant.rank === 1 ? 'Lv1 入驻商家' : bestMerchant.rank === 2 ? 'Lv2 认证商家' : bestMerchant.rank === 3 ? 'Lv3 活跃供给商家' : 'Lv4 金牌商家'} · 以下加成已自动生效：
-              </Text>
-              {(bestMerchant.labels || []).map((lb, i) => (
-                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
-                  <Text style={{ ...fs(12), color: '#16A34A', marginRight: 6 }}>✓</Text>
-                  <Text style={{ ...fs(12), color: t.textSecondary, flex: 1 }}>{lb}</Text>
-                </View>
-              ))}
-            </>
-          ) : (
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>
-              加入商家（入驻或受聘为员工）即可享签到、纠错、寻货额度等被动加成
-            </Text>
-          )}
-          {bestMerchant?.nextHint ? (
-            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>升级：{bestMerchant.nextHint}</Text>
-          ) : null}
-        </View>
-
-        {/* v2.6.0 M3：商家集体任务卡——全商家成员共同推进的周期目标（达标即全员/金库获奖） */}
-        <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>集体任务</Text>
-            {mtaskMerchantName ? (
-              <Text style={{ ...fs(11), color: '#8B5CF6' }}>{mtaskMerchantName}</Text>
-            ) : null}
-          </View>
-          {mtasks.length === 0 ? (
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>
-              加入商家后可与同事一起推进周期目标，达标全员得分
-            </Text>
-          ) : (
-            mtasks.map((mt, i) => {
-              const pct = mt.target > 0 ? Math.min(1, mt.current / mt.target) : 0
-              return (
-                <View key={mt.taskKey} style={{ marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ ...fs(13), color: t.textPrimary, flex: 1 }}>
-                      {mt.period === 2 ? '月' : '周'}·{mt.name}
-                    </Text>
-                    {mt.done ? (
-                      <Text style={{ ...fs(12), color: '#16A34A', fontWeight: '600' }}>已达成</Text>
-                    ) : (
-                      <Text style={{ ...fs(12), color: t.textSecondary }}>{mt.current}/{mt.target}</Text>
-                    )}
-                  </View>
-                  {/* 进度条：flex 比例双段填充（RN 无百分比宽度依赖） */}
-                  <View style={{ flexDirection: 'row', height: 6, borderRadius: 3, backgroundColor: t.bgInput, marginTop: 6, overflow: 'hidden' }}>
-                    <View style={{ flex: Math.max(pct, 0.02), backgroundColor: mt.done ? '#16A34A' : t.primary }} />
-                    <View style={{ flex: Math.max(1 - pct, 0.02) }} />
-                  </View>
-                  <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>
-                    {mt.rewardType === 2 ? `达成奖励：商家金库 +${mt.rewardAmount}` : `达成奖励：每位成员 +${mt.rewardAmount}`}
-                  </Text>
-                </View>
-              )
-            })
-          )}
-          {mtasks.length > 0 && mtaskCompletedTotal > 0 ? (
-            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>累计达标 {mtaskCompletedTotal} 次</Text>
-          ) : null}
-        </View>
-
-        {/* v2.6.0 M3：商家实力月榜——本月金库入账 TOP5 + 我的商家回显 */}
-        <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家实力榜</Text>
-            {ranking?.periodKey ? (
-              <Text style={{ ...fs(11), color: t.textTertiary }}>
-                {ranking.periodKey.length === 6 ? `${ranking.periodKey.slice(0, 4)}年${ranking.periodKey.slice(4)}月` : ranking.periodKey}
-              </Text>
-            ) : null}
-          </View>
-          {!ranking || ranking.top.length === 0 ? (
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>本月还没有商家入账，冲榜机会来了</Text>
-          ) : (
-            ranking.top.slice(0, 5).map((r) => (
-              <View key={r.merchantId} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                <Text style={{ ...fs(13), fontWeight: '700', width: 28, color: r.rank === 1 ? '#F59E0B' : r.rank === 2 ? '#94A3B8' : r.rank === 3 ? '#B45309' : t.textTertiary }}>{r.rank}</Text>
-                <View style={{ flex: 1, marginLeft: 4 }}>
-                  <Text style={{ ...fs(13), color: t.textPrimary }} numberOfLines={1}>{r.merchantName}</Text>
-                  <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 1 }}>{r.gradeDisplay}商家</Text>
-                </View>
-                <Text style={{ ...fs(13), color: t.primary, fontWeight: '600' }}>{r.total}</Text>
-                <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 3 }}>分</Text>
-              </View>
-            ))
-          )}
-          {ranking?.mine ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: t.border }}>
-              <Text style={{ ...fs(13), fontWeight: '700', width: 28, color: t.textTertiary }}>{ranking.mine.rank > 0 ? ranking.mine.rank : '—'}</Text>
-              <View style={{ flex: 1, marginLeft: 4 }}>
-                <Text style={{ ...fs(13), color: t.textPrimary }} numberOfLines={1}>我的商家 · {ranking.mine.merchantName}</Text>
-              </View>
-              <Text style={{ ...fs(13), color: t.primary, fontWeight: '600' }}>{ranking.mine.rank > 0 ? ranking.mine.total : '未上榜'}</Text>
-              {ranking.mine.rank > 0 ? <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 3 }}>分</Text> : null}
-            </View>
-          ) : null}
         </View>
 
         {/* 积分用途说明卡（v1.7.21 额度可见化）：让赚的分有明确消费认知——

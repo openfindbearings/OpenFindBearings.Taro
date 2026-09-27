@@ -1,7 +1,7 @@
-// 商家主页（v2.6.0 双体系改版）：公开区=门面+勋章园+商家信息+在售商品；
-// 成员区（在职成员可见，对标游戏帮派总部）=管理宫格+集体任务进度板。
-// 数据来自 BFF：/merchants/{id}（含成员标记/角色/达成数）、/merchants/{id}/bearings、
-// /points/merchant-tasks?merchantId=。关注/纠错为登录门槛（未登录提示）。
+// 商家主页（v2.6.0 双界面拆分后=纯公开展示界面）：门面+勋章园+商家信息+在售商品+关注/纠错；
+// 自家成员管理界面见 pages/merchant/home.tsx（本页仅给成员一条"进入管理"横幅）。
+// 数据来自 BFF public 端点：/merchants/{id}（含成员标记/达成数）、/merchants/{id}/bearings。
+// 关注/纠错为登录门槛（未登录提示）。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text, ScrollView } from '@tarojs/components'
@@ -13,15 +13,11 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
-// v2.6.0 商家主页：成员区管理宫格跳转前需把该商家设为当前上下文（与商家 tab 同约定）
-import { useMerchantStore } from '../../stores/merchant'
 import { checkFollow, toggleFollow, recordMerchantView } from '../../services/user'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
 import MediaImage from '../../components/MediaImage'
 // v2.1.0 成就子系统：商家勋章园（B2B 信任信号）
 import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
-// v2.6.0 商家主页：成员区集体任务进度板（复用 M3 任务板数据源，按本页商家查询）
-import { getMerchantTasks, type MerchantTasksResult } from '../../services/points'
 import './merchantDetail.scss'
 
 export default function MerchantDetailPage() {
@@ -34,16 +30,10 @@ export default function MerchantDetailPage() {
   const [bearings, setBearings] = useState<MerchantBearing[]>([])
   // v2.1.0 成就子系统：商家勋章园数据（信任信号）
   const [mAch, setMAch] = useState<AchievementWall | null>(null)
-  // v2.6.0 商家主页：成员区集体任务进度板（仅登录拉取，非成员 403 静默空）
-  const [mtasks, setMtasks] = useState<MerchantTasksResult | null>(null)
-  // 当前商家上下文（成员区管理宫格跳转前提）
-  const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
-  const switchMerchant = useMerchantStore((s) => s.switchMerchant)
 
   // 勋章园随页刷新（失败静默，信任信号缺失不阻断详情）
   useDidShow(() => {
     if (id) void getMerchantAchievements(id).then((r) => setMAch(r || null)).catch(() => setMAch(null))
-    if (id && isLoggedIn) void getMerchantTasks(id).then(setMtasks).catch(() => setMtasks(null))
   })
   // 改动说明：登录态改订阅 auth store（同轴承详情页，access 只存内存旧写法恒判未登录）
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
@@ -52,14 +42,6 @@ export default function MerchantDetailPage() {
     .filter((i) => i.unlocked)
     .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
     .slice(0, 12)
-  // 成员区管理宫格（与商家 tab 原按钮同权集：全员=商品/成员/寻货应答，管理员+金库挂礼/资料维护）
-  const isAdmin = detail?.memberRole === 'MerchantAdmin'
-  const memberActions = [
-    { url: '/pages/merchant/manage', icon: 'boxes', label: '商品管理' },
-    { url: '/pages/merchant/members', icon: 'users', label: isAdmin ? '成员管理' : '员工列表' },
-    { url: '/pages/merchant/responses', icon: 'search', label: '寻货应答' },
-    ...(isAdmin ? [{ url: '/pages/merchant/gifts', icon: 'gift', label: '金库挂礼' }, { url: '/pages/merchant/profile', icon: 'file_text', label: '信息维护' }] : []),
-  ]
   const [isFollowed, setIsFollowed] = useState(false)
   // 改动说明（v1.7.14）：纠错面板可见态（结构化纠错 CorrectionSheet）
   const [correctVisible, setCorrectVisible] = useState(false)
@@ -99,7 +81,7 @@ export default function MerchantDetailPage() {
   const callPhone = (p?: string | null) => { if (p) Taro.makePhoneCall({ phoneNumber: p }).catch(() => {}) }
 
   return (
-    <PageLayout nav={<NavBar title="商家详情" showBack />}>
+    <PageLayout nav={<NavBar title="商家主页" showBack />}>
       <View className='md'>
         {/* 头部：Logo + 名称 + 认证 + 类型 */}
         <View className='md-hero' style={{ backgroundColor: t.bgCard }}>
@@ -165,68 +147,16 @@ export default function MerchantDetailPage() {
           )}
         </View>
 
-        {/* v2.6.0 成员区（对标帮派总部，仅该商家在职成员渲染）：
-            当前上下文=本商家 → 管理宫格+集体任务进度板；否则给"管理本商家"切换入口 */}
+        {/* 成员横幅（v2.6.0 双界面拆分）：本页回归纯公开展示，自家成员给一条
+            进入管理页的导航（建议1 落地：两界面互留导航） */}
         {detail?.isMerchantMember && (
-          <View className='md-card' style={{ backgroundColor: t.bgCard }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家管理</Text>
-              <Text style={{ ...fs(12), color: '#8B5CF6' }}>{detail.memberRole === 'MerchantAdmin' ? '管理员' : '员工'}</Text>
-            </View>
-            {currentMerchantId === id ? (
-              <>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
-                  {memberActions.map((a) => (
-                    <View key={a.url} style={{ width: '33.33%', alignItems: 'center', padding: 10 }} onClick={() => Taro.navigateTo({ url: a.url })}>
-                      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
-                        <Icon name={a.icon} size={20} color={t.primary} />
-                      </View>
-                      <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 4 }}>{a.label}</Text>
-                    </View>
-                  ))}
-                </View>
-                {/* 集体任务进度板（商家版 raid 任务板，数据同任务中心卡） */}
-                {mtasks && mtasks.tasks.length > 0 && (
-                  <View style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: t.borderLight, paddingTop: 10 }}>
-                    <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>集体任务</Text>
-                    {mtasks.tasks.map((mt) => {
-                      const pct = mt.target > 0 ? Math.min(1, mt.current / mt.target) : 0
-                      return (
-                        <View key={mt.taskKey} style={{ marginTop: 8 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={{ ...fs(13), color: t.textPrimary, flex: 1 }}>{mt.period === 2 ? '月' : '周'}·{mt.name}</Text>
-                            {mt.done
-                              ? <Text style={{ ...fs(12), color: '#16A34A', fontWeight: '600' }}>已达成</Text>
-                              : <Text style={{ ...fs(12), color: t.textSecondary }}>{mt.current}/{mt.target}</Text>}
-                          </View>
-                          <View style={{ flexDirection: 'row', height: 6, borderRadius: 3, backgroundColor: t.bgInput, marginTop: 5, overflow: 'hidden' }}>
-                            <View style={{ flex: Math.max(pct, 0.02), backgroundColor: mt.done ? '#16A34A' : t.primary }} />
-                            <View style={{ flex: Math.max(1 - pct, 0.02) }} />
-                          </View>
-                        </View>
-                      )
-                    })}
-                    {mtasks.completedTotal > 0 && (
-                      <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>累计达成 {mtasks.completedTotal} 次</Text>
-                    )}
-                  </View>
-                )}
-              </>
-            ) : (
-              <View
-                style={{ marginTop: 10, height: 40, borderRadius: 20, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center' }}
-                onClick={async () => {
-                  // 兜底：直进详情页时商家列表可能未加载，先刷新再切换（switchMerchant 要求目标在列表内）
-                  await useMerchantStore.getState().fetchApplications().catch(() => {})
-                  await switchMerchant(id)
-                  if (useMerchantStore.getState().currentMerchantId !== id) {
-                    Taro.showToast({ title: '切换失败，请重试', icon: 'none' })
-                  }
-                }}
-              >
-                <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: '600' }}>设为当前商家并管理</Text>
-              </View>
-            )}
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', margin: 12, marginTop: 0, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, borderRadius: 10, backgroundColor: 'rgba(139,92,246,0.10)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.35)' }}
+            onClick={() => Taro.navigateTo({ url: '/pages/merchant/home' })}
+          >
+            <Icon name='shield' size={16} color='#8B5CF6' />
+            <Text style={{ ...fs(13), color: '#8B5CF6', flex: 1, marginLeft: 8 }}>这是你经营的商家</Text>
+            <Text style={{ ...fs(13), color: '#8B5CF6', fontWeight: '600' }}>进入管理 ›</Text>
           </View>
         )}
 

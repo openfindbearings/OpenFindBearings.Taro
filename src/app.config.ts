@@ -19,6 +19,8 @@ export default defineAppConfig({
     'pages/home/search',
     'pages/home/bearingDetail',
     'pages/merchant/merchantDetail',
+  // v2.6.0 双界面拆分：商家管理页（自家成员），merchantDetail 回归纯公开展示
+  'pages/merchant/home',
     'pages/my/settings',
     'pages/my/all-features',
     'pages/my/favorites',

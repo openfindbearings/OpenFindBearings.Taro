@@ -111,9 +111,11 @@ export interface MerchantBuff {
   nextHint: string
 }
 
-/** 拉取商家福利卡（任务中心展示） */
-export function getMerchantBuff() {
-  return request<MerchantBuff>(API.POINTS_MERCHANT_BUFF)
+/** 拉取商家福利卡；v2.6.0 任务中心拆分：传 merchantId 查"本店给成员的 buff"（商家管理页），
+ *  缺省查"我的最佳商家"（个人视角） */
+export function getMerchantBuff(merchantId?: string) {
+  const url = merchantId ? `${API.POINTS_MERCHANT_BUFF}?merchantId=${merchantId}` : API.POINTS_MERCHANT_BUFF
+  return request<MerchantBuff>(url)
 }
 
 /** 商家集体任务项（v2.6.0 M3；period 1 周/2 月，rewardType 1 成员/2 金库，done=本周期已达成） */
@@ -165,10 +167,11 @@ export interface MerchantRanking {
   mine?: MerchantRankItem | null
 }
 
-/** 月榜数据（失败返回空榜） */
-export async function getMerchantRanking(): Promise<MerchantRanking> {
+/** 月榜数据（失败返回空榜）；v2.6.0 拆分：传 merchantId 时"我的商家"=该店（商家管理页视角） */
+export async function getMerchantRanking(merchantId?: string): Promise<MerchantRanking> {
   try {
-    const r = await request<MerchantRanking>(API.POINTS_MERCHANT_RANKING)
+    const url = merchantId ? `${API.POINTS_MERCHANT_RANKING}?merchantId=${merchantId}` : API.POINTS_MERCHANT_RANKING
+    const r = await request<MerchantRanking>(url)
     return r ?? { periodKey: '', top: [], mine: null }
   } catch {
     return { periodKey: '', top: [], mine: null }
