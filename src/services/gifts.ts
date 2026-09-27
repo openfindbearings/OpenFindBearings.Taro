@@ -1,4 +1,4 @@
-// 商家金库与挂礼服务（v2.4.0 工会经济）：金库余额/流水 + 挂礼管理 + 礼品订单发货
+// 商家金库与挂礼服务（v2.4.0 商家经济）：金库余额/流水 + 挂礼管理 + 礼品订单发货
 // 全部走 BFF /mobile/merchant/*，依赖 X-Merchant-Id 当前商户上下文（merchantContext 自动带头）
 import { request } from './request'
 import { API, getBaseUrl } from './config'
@@ -28,6 +28,9 @@ export interface TreasuryAccount {
   balance: number
   totalEarned: number
   totalSpent: number
+  /** v2.5.0 商家等级（1入驻/3认证/2活跃/4金牌，非单调） */
+  grade?: number
+  gradeDisplay?: string | null
 }
 
 /** 金库流水条目 */
@@ -47,6 +50,8 @@ export function treasurySceneText(scene: string): string {
     case 'gift_settlement': return '礼品订单结算'
     case 'treasury_spend': return '金库消费'
     case 'treasury_burn': return '关店清算'
+    // v2.6.0 M3：商家集体任务达标入账
+    case 'merchant_task_reward': return '集体任务奖励'
     default: return scene
   }
 }

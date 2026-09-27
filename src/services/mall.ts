@@ -97,7 +97,7 @@ export function getMallOrders(page = 1, pageSize = 20) {
 }
 
 /**
- * 实物礼品兑换（v2.4.0 工会经济）：托管扣分 + 收货信息；
+ * 实物礼品兑换（v2.4.0 商家经济）：托管扣分 + 收货信息；
  * 失败（自兑排除/月限/积分不足）由 request 层抛出后端 message
  */
 export function redeemGift(itemId: string, receiverName: string, receiverPhone: string, receiverAddress: string, requestId?: string) {

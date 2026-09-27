@@ -49,6 +49,8 @@ export const GRANT_TYPE_LABELS: Record<string, string> = {
   merchant_first_product: '首件商品上架',
   sourcing_publish_bonus: '寻货发布加量',
   sourcing_respond_bonus: '寻货应答加量',
+  // v2.6.0 M3：商家集体任务 Job 达标结算发放
+  merchant_task: '商家集体任务奖励',
 }
 
 /** 拉取积分账户（失败返回零值兜底，不打扰页面） */
@@ -94,5 +96,77 @@ export async function getPointTasks(): Promise<PointTask[]> {
     return r ?? []
   } catch {
     return []
+  }
+}
+
+/** 商家福利卡（v2.5.0：成员最佳商家与被动加成，散人 rank=0 空清单） */
+export interface MerchantBuff {
+  merchantId?: string | null
+  merchantName?: string | null
+  grade: number
+  rank: number
+  labels: string[]
+  nextHint: string
+}
+
+/** 拉取商家福利卡（任务中心展示） */
+export function getMerchantBuff() {
+  return request<MerchantBuff>(API.POINTS_MERCHANT_BUFF)
+}
+
+/** 商家集体任务项（v2.6.0 M3；period 1 周/2 月，rewardType 1 成员/2 金库，done=本周期已达成） */
+export interface MerchantTask {
+  taskKey: string
+  name: string
+  description: string
+  target: number
+  current: number
+  period: number
+  rewardType: number
+  rewardAmount: number
+  done: boolean
+}
+
+/** 集体任务板响应（对齐 BFF MerchantTasksResponse；散人 tasks 为空） */
+export interface MerchantTasksResult {
+  merchantId?: string | null
+  merchantName?: string | null
+  tasks: MerchantTask[]
+  completedTotal: number
+}
+
+/** 任务板数据（失败返回空清单，不打扰页面） */
+export async function getMerchantTasks(): Promise<MerchantTasksResult> {
+  try {
+    const r = await request<MerchantTasksResult>(API.POINTS_MERCHANT_TASKS)
+    return r ?? { merchantId: null, merchantName: null, tasks: [], completedTotal: 0 }
+  } catch {
+    return { merchantId: null, merchantName: null, tasks: [], completedTotal: 0 }
+  }
+}
+
+/** 商家实力月榜行（rank=0 表示未进前 100；对齐 BFF MerchantRankItem） */
+export interface MerchantRankItem {
+  rank: number
+  merchantId: string
+  merchantName: string
+  gradeDisplay: string
+  total: number
+}
+
+/** 月榜响应（对齐 BFF MerchantRankingResponse；mine 可能为 null=散人无商家） */
+export interface MerchantRanking {
+  periodKey: string
+  top: MerchantRankItem[]
+  mine?: MerchantRankItem | null
+}
+
+/** 月榜数据（失败返回空榜） */
+export async function getMerchantRanking(): Promise<MerchantRanking> {
+  try {
+    const r = await request<MerchantRanking>(API.POINTS_MERCHANT_RANKING)
+    return r ?? { periodKey: '', top: [], mine: null }
+  } catch {
+    return { periodKey: '', top: [], mine: null }
   }
 }
