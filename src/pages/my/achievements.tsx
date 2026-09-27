@@ -11,7 +11,7 @@ import NavBar from '../../components/NavBar'
 import Icon from '../../components/Icon'
 import LoginGuide from '../../components/LoginGuide'
 import { useAuthStore } from '../../stores/auth'
-import { getAchievementWall, type AchievementWall, type AchievementItem } from '../../services/achievements'
+import { getAchievementWall, getMyTitles, equipTitle, type AchievementWall, type AchievementItem, type MyTitles } from '../../services/achievements'
 import MedalImage from '../../components/MedalImage'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
@@ -87,10 +87,21 @@ export default function AchievementsPage() {
   const [wall, setWall] = useState<AchievementWall | null>(null)
   // 舞台选中索引（onScroll 换算）
   const [sel, setSel] = useState(0)
+  // v2.8.0 称号系统：我的称号与当前佩戴（选择器数据）
+  const [titles, setTitles] = useState<MyTitles | null>(null)
 
   useDidShow(() => {
-    if (isLoggedIn) void getAchievementWall().then((r) => setWall(r || null))
+    if (isLoggedIn) {
+      void getAchievementWall().then((r) => setWall(r || null))
+      void getMyTitles().then((r) => setTitles(r || null))
+    }
   })
+
+  // v2.8.0 称号佩戴：点称号胶囊=佩戴（点当前=卸下），成功后回写本地态
+  const onEquip = async (title: string | null) => {
+    const r = await equipTitle(title ?? '')
+    if (r) setTitles((prev) => prev ? { ...prev, equippedTitle: title } : prev)
+  }
 
   // 已解锁勋章：最近获得排前（unlockedAt ISO 串字典序即时间序）
   const unlocked = (wall?.items || [])
@@ -166,6 +177,36 @@ export default function AchievementsPage() {
               <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>勋章点 · 荣誉不花</Text>
             </View>
           </View>
+
+          {/* v2.8.0 称号佩戴选择：已解锁称号横向胶囊，点选佩戴/卸下 */}
+          {titles && titles.titles.length > 0 && (
+            <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
+              <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>佩戴称号</Text>
+              <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
+                <View style={{ flexDirection: 'row' }}>
+                  {titles.titles.map((tt) => {
+                    const active = titles.equippedTitle === tt
+                    return (
+                      <View
+                        key={tt}
+                        onClick={() => void onEquip(active ? null : tt)}
+                        style={{
+                          marginRight: 8, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
+                          backgroundColor: active ? t.primary : t.bgMain, borderWidth: 1,
+                          borderColor: active ? t.primary : t.borderColor
+                        }}
+                      >
+                        <Text style={{ ...fs(12), color: active ? '#FFFFFF' : t.textSecondary, fontWeight: active ? '600' : '400' }}>
+                          {tt}{active ? ' ✓' : ''}
+                        </Text>
+                      </View>
+                    )
+                  })}
+                </View>
+              </ScrollView>
+              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>点选已解锁称号佩戴，点当前佩戴可卸下</Text>
+            </View>
+          )}
 
           {/* 3. 分类分组列表：组头带 已点亮/总数 进度 */}
           <View style={{ marginLeft: 12, marginRight: 12, marginTop: 16 }}>

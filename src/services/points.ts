@@ -26,6 +26,8 @@ export interface CheckinResult {
   alreadyCheckedIn: boolean
   /** v2.1.0 成就子系统：本次签到新点亮的成就键（供 toast） */
   unlockedAchievements?: string[]
+  /** v2.8.0 G1：暴击倍数（1=无暴击 / 2=双倍 / 5=传说，供动画 toast） */
+  critMultiplier?: number
 }
 
 /** 积分流水项（对齐 BFF PointTransactionItem） */

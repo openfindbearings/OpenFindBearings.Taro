@@ -107,7 +107,15 @@ export default function TasksPage() {
       Taro.showToast({ title: '今日已签到', icon: 'none' })
     } else {
       void vibrateSuccess()
-      Taro.showToast({ title: `签到成功 +${r.amount} 积分`, icon: 'success' })
+      // v2.8.0 G1 暴击：命中双倍/传说时替换 toast 文案播彩蛋（传说金色震动）
+      const crit = r.critMultiplier ?? 1
+      if (crit >= 5) {
+        Taro.showToast({ title: `传说暴击！+${r.amount} 积分 ×${crit}`, icon: 'none' })
+      } else if (crit >= 2) {
+        Taro.showToast({ title: `暴击双倍！+${r.amount} 积分`, icon: 'success' })
+      } else {
+        Taro.showToast({ title: `签到成功 +${r.amount} 积分`, icon: 'success' })
+      }
       // v2.1.0 成就子系统：签到顺带点亮成就时补一条 toast（延迟错开签到 toast）
       if (r.unlockedAchievements && r.unlockedAchievements.length > 0) {
         setTimeout(() => Taro.showToast({ title: `点亮 ${r.unlockedAchievements!.length} 枚勋章`, icon: 'none' }), 1600)

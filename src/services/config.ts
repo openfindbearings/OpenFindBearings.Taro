@@ -210,6 +210,9 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   ACHIEVEMENTS_WALL: `${API_PREFIX}/achievements/wall`,
   ACHIEVEMENTS_ME: `${API_PREFIX}/achievements/me`,
   ACHIEVEMENTS_MERCHANT: (id: string) => `${API_PREFIX}/achievements/merchants/${id}`,
+  // v2.8.0 称号系统：我的称号列表/佩戴（代理 BFF /mobile/achievements/titles|title）
+  ACHIEVEMENTS_TITLES: `${API_PREFIX}/achievements/titles`,
+  ACHIEVEMENTS_TITLE: `${API_PREFIX}/achievements/title`,
   // v2.3.0 商城虚拟权益：目录/兑换/我的订单，走 BFF /mobile/mall/*
   MALL_ITEMS: `${API_PREFIX}/mall/items`,
   MALL_REDEEM: `${API_PREFIX}/mall/redeem`,
