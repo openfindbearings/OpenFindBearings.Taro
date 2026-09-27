@@ -201,6 +201,8 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   POINTS_TRANSACTIONS: `${API_PREFIX}/points/transactions`,
   // v1.7.18 任务中心：赚分任务清单（规则+完成态，daily 任务每日自动刷新）
   POINTS_TASKS: `${API_PREFIX}/points/tasks`,
+  // v2.5.0 工会经济：工会福利卡（最佳工会等级/buff 清单/升级提示）
+  POINTS_GUILD_BUFF: `${API_PREFIX}/points/guild-buff`,
   // v2.1.0 成就子系统：成就墙/我的徽章排/商户徽章排，走 BFF /mobile/achievements/*
   ACHIEVEMENTS_WALL: `${API_PREFIX}/achievements/wall`,
   ACHIEVEMENTS_ME: `${API_PREFIX}/achievements/me`,

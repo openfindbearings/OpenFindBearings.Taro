@@ -15,8 +15,8 @@ import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
-  getPointAccount, dailyCheckin, getPointTransactions, getPointTasks,
-  type PointAccount, type PointTask
+  getPointAccount, dailyCheckin, getPointTransactions, getPointTasks, getGuildBuff,
+  type PointAccount, type PointTask, type GuildBuff
 } from '../../services/points'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
@@ -67,6 +67,8 @@ export default function TasksPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [account, setAccount] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
   const [tasks, setTasks] = useState<PointTask[]>([])
+  // v2.5.0 工会经济：工会福利卡数据（最佳工会等级+被动加成清单）
+  const [guild, setGuild] = useState<GuildBuff | null>(null)
   // 已签到日集合（业务日期串，来自流水过滤 daily_checkin，按后端下发偏移换算）
   const [checkedDates, setCheckedDates] = useState<Set<string>>(new Set())
   const [checking, setChecking] = useState(false)
@@ -79,6 +81,8 @@ export default function TasksPage() {
     // 日界偏移取后端下发值（缺省 +8 兜底），与 BusinessClock 实时对齐
     const off = acc.tzOffsetHours ?? 8
     setTasks(await getPointTasks())
+    // v2.5.0 工会经济：福利卡并行拉取（散人返回空清单不展示）
+    void getGuildBuff().then((gb) => setGuild(gb)).catch(() => { /* 静默 */ })
     const paged = await getPointTransactions(1, 50)
     const set = new Set<string>()
     for (const it of paged?.items || []) {
@@ -156,6 +160,36 @@ export default function TasksPage() {
           </Text>
         </View>
 
+        {/* v2.5.0 工会经济：工会福利卡——成员被动加成可视化（散人显示加入引导，制造入会动力） */}
+        <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>工会福利</Text>
+            {guild && guild.rank > 0 ? (
+              <Text style={{ ...fs(11), color: '#8B5CF6' }}>{guild.guildName}</Text>
+            ) : null}
+          </View>
+          {guild && guild.rank > 0 ? (
+            <>
+              <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>
+                {guild.rank === 1 ? 'Lv1 入驻工会' : guild.rank === 2 ? 'Lv2 认证工会' : guild.rank === 3 ? 'Lv3 活跃供给工会' : 'Lv4 金牌工会'} · 以下加成已自动生效：
+              </Text>
+              {(guild.labels || []).map((lb, i) => (
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
+                  <Text style={{ ...fs(12), color: '#16A34A', marginRight: 6 }}>✓</Text>
+                  <Text style={{ ...fs(12), color: t.textSecondary, flex: 1 }}>{lb}</Text>
+                </View>
+              ))}
+            </>
+          ) : (
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>
+              加入商家（入驻或受聘为员工）即可享签到、纠错、寻货额度等被动加成
+            </Text>
+          )}
+          {guild?.nextHint ? (
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>升级：{guild.nextHint}</Text>
+          ) : null}
+        </View>
+
         {/* 积分用途说明卡（v1.7.21 额度可见化）：让赚的分有明确消费认知——
             当前真实用途是寻货超额度加量，商城兑换预告 */}
         <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
@@ -165,8 +199,9 @@ export default function TasksPage() {
             <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/discover/index' })}>去寻货</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>积分商城：兑换精选礼品</Text>
-            <Text style={{ ...fs(13), color: t.textTertiary }}>即将上线</Text>
+            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>积分商城：兑换置顶卡与商家礼品</Text>
+            {/* v2.5.0：商城已上线，从预告文案转真实入口 */}
+            <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/mall/index' })}>去兑换</Text>
           </View>
         </View>
 

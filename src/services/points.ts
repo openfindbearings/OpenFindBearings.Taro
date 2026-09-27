@@ -96,3 +96,18 @@ export async function getPointTasks(): Promise<PointTask[]> {
     return []
   }
 }
+
+/** 工会福利卡（v2.5.0：成员最佳工会与被动加成，散人 rank=0 空清单） */
+export interface GuildBuff {
+  guildId?: string | null
+  guildName?: string | null
+  grade: number
+  rank: number
+  labels: string[]
+  nextHint: string
+}
+
+/** 拉取工会福利卡（任务中心展示） */
+export function getGuildBuff() {
+  return request<GuildBuff>(API.POINTS_GUILD_BUFF)
+}

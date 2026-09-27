@@ -147,7 +147,13 @@ export default function MerchantGiftsPage() {
         <ScrollView style={{ flex: 1 }}>
           {/* 金库余额（工会仓库） */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
-            <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
+              {/* v2.5.0 工会经济：等级徽章（入驻/认证/活跃供给/金牌——buff 与信任的可视化） */}
+              {treasury?.gradeDisplay ? (
+                <Text style={{ ...fs(10), color: '#8B5CF6', backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
+              ) : null}
+            </View>
             <Text style={{ ...fs(28), color: t.primary, fontWeight: '700', marginTop: 2 }}>{treasury?.balance ?? 0}</Text>
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>
               累计入账 {treasury?.totalEarned ?? 0} · 累计支出 {treasury?.totalSpent ?? 0}

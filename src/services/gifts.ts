@@ -28,6 +28,9 @@ export interface TreasuryAccount {
   balance: number
   totalEarned: number
   totalSpent: number
+  /** v2.5.0 工会等级（1入驻/3认证/2活跃/4金牌，非单调） */
+  grade?: number
+  gradeDisplay?: string | null
 }
 
 /** 金库流水条目 */
