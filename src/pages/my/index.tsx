@@ -24,7 +24,7 @@ import { useNotificationStore } from '../../stores/notification'
 // 改动说明（v1.7.17 积分底座）：账户/签到服务 + 签到成功长震反馈
 import { getPointAccount, type PointAccount } from '../../services/points'
 // v2.1.0 成就子系统：个人徽章排（我的页积分卡下方横向徽章条）
-import { getMyAchievements, type AchievementWall } from '../../services/achievements'
+import { getMyAchievements, getMyTitles, type AchievementWall } from '../../services/achievements'
 import './index.scss'
 
 // 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
@@ -69,6 +69,8 @@ export default function MyPage() {
     .slice()
     .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
     .slice(0, 12)
+  // v2.8.0 称号系统：当前佩戴称号（昵称旁金色徽章）
+  const [equippedTitle, setEquippedTitle] = useState<string | null>(null)
 
   useDidShow(() => {
     // 每次显示时拉一次资料，保证登录成功 navigateBack 后昵称/手机/头像立即刷新
@@ -80,6 +82,9 @@ export default function MyPage() {
     // v2.1.0：徽章排随页刷新（未登录清空）
     if (isLoggedIn) void getMyAchievements().then((r) => setMyAch(r || null)).catch(() => setMyAch(null))
     else setMyAch(null)
+    // v2.8.0 称号系统：佩戴称号随页刷新
+    if (isLoggedIn) void getMyTitles().then((r) => setEquippedTitle(r?.equippedTitle || null)).catch(() => setEquippedTitle(null))
+    else setEquippedTitle(null)
   })
 
   const handleMenuClick = (key: string) => {
@@ -201,7 +206,15 @@ export default function MyPage() {
                   )}
                 </View>
                 <View className='user-detail'>
-                  <Text className='nickname' style={{ ...fs(19), color: '#FFFFFF' }}>{authUser?.nickname || authUser?.userName || '已登录用户'}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text className='nickname' style={{ ...fs(19), color: '#FFFFFF' }}>{authUser?.nickname || authUser?.userName || '已登录用户'}</Text>
+                    {/* v2.8.0 称号系统：佩戴称号金色徽章（昵称旁） */}
+                    {equippedTitle && (
+                      <View style={{ marginLeft: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#F59E0B' }}>
+                        <Text style={{ ...fs(11), color: '#FDE68A', fontWeight: '600' }}>{equippedTitle}</Text>
+                      </View>
+                    )}
+                  </View>
                   {authUser?.phoneNumber && <Text className='phone' style={{ ...fs(13), color: 'rgba(255,255,255,0.85)' }}>{authUser.phoneNumber}</Text>}
                 </View>
                 <Icon name="chevron-right" size={18} color="rgba(255,255,255,0.85)" />
