@@ -4,7 +4,7 @@
 // 合规三纪律沿用：积分不可充值、不可提现、不可转让；虚拟权益非实物商品。
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值、无多值简写。
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -15,7 +15,9 @@ import CustomTabBar from '../../components/CustomTabBar'
 import LoginGuide from '../../components/LoginGuide'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
-import { getMallItems, getMallOrders, MALL_CATEGORY, MALL_ORDER_STATUS, type MallCatalog, type MallOrder } from '../../services/mall'
+import { getMallItems, getMallOrders, redeemGift, confirmReceipt, MALL_CATEGORY, MALL_ORDER_STATUS, type MallCatalog, type MallOrder, type MallItem } from '../../services/mall'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
+import { vibrateSuccess } from '../../utils/haptics'
 import { formatTime } from '../../utils/format'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
@@ -63,6 +65,72 @@ export default function MallPage() {
     Taro.navigateTo({ url: '/pages/merchant/manage' })
   }
 
+  // ===== v2.4.0 商家挂礼：收货信息弹层 + 托管兑换 =====
+  const user = useAuthStore((s) => s.user)
+  const [giftItem, setGiftItem] = useState<MallItem | null>(null)
+  const [gName, setGName] = useState('')
+  const [gPhone, setGPhone] = useState('')
+  const [gAddr, setGAddr] = useState('')
+  const [gBusy, setGBusy] = useState(false)
+
+  /** 打开收货弹层：昵称/电话从登录资料预填省输入 */
+  const openGift = (item: MallItem) => {
+    setGiftItem(item)
+    setGName(user?.nickname || user?.userName || '')
+    setGPhone(user?.phoneNumber || '')
+    setGAddr('')
+  }
+
+  /** 提交礼品兑换（托管扣分；失败原因直接 toast） */
+  const doRedeemGift = async () => {
+    if (!giftItem) return
+    if (!gName.trim() || !gPhone.trim() || !gAddr.trim()) {
+      Taro.showToast({ title: '收货人/电话/地址都要填哦', icon: 'none' })
+      return
+    }
+    setGBusy(true)
+    try {
+      const r = await redeemGift(giftItem.id, gName.trim(), gPhone.trim(), gAddr.trim(), `gift-${giftItem.id}-${Date.now()}`)
+      setGiftItem(null)
+      void vibrateSuccess()
+      Taro.showToast({ title: `兑换成功 -${r.pointsSpent} 积分`, icon: 'success' })
+      const list = await getMallOrders(1, 10).catch(() => null)
+      if (list) setOrders(list.items || [])
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '兑换失败', icon: 'none' })
+    } finally {
+      setGBusy(false)
+    }
+  }
+
+  /** 确认收货：积分结算进商家金库（二次确认防误点） */
+  const doConfirm = async (o: MallOrder) => {
+    const ok = await showConfirmDialog({
+      title: '确认收货',
+      content: `确认已收到「${o.itemName}」？确认后 ${o.pointsSpent} 积分将结算给商家。若未收到请勿确认，可联系平台处理。`
+    })
+    if (!ok) return
+    try {
+      const r = await confirmReceipt(o.id)
+      void vibrateSuccess()
+      Taro.showToast({ title: r.settled > 0 ? '已确认收货' : '已确认收货', icon: 'success' })
+      const list = await getMallOrders(1, 10).catch(() => null)
+      if (list) setOrders(list.items || [])
+      void getMallItems().then((c2) => setCatalog(c2 || null)).catch(() => { /* 静默 */ })
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
+    }
+  }
+
+  /** 礼品物流态文案（与 API ShipStatus 对齐） */
+  const shipText = (s?: number) => {
+    if (s === 1) return '待商家发货'
+    if (s === 2) return '已发货·待确认'
+    if (s === 3) return '已收货'
+    if (s === 4) return '已退款'
+    return ''
+  }
+
   return (
     <PageLayout nav={<NavBar title='积分商城' />} tabbar={<CustomTabBar />}>
       {!isLoggedIn && <LoginGuide icon='gift' text='登录后即可用积分兑换权益' />}
@@ -81,6 +149,52 @@ export default function MallPage() {
               <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去赚积分</Text>
             </View>
           </View>
+
+          {/* v2.4.0 挂礼收货信息面板：RN 不支持 fixed，作为常规块内嵌于目录之上 */}
+          {giftItem && (
+            <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
+              <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>兑换：{giftItem.name}</Text>
+              <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
+                {giftItem.price} 积分 · 确认收货后才会结算给商家，收货前可联系平台退款
+              </Text>
+              <Input
+                style={{ ...fs(15), backgroundColor: t.bgInput, borderRadius: 8, padding: 10, marginTop: 10, color: t.textPrimary }}
+                placeholder='收货人姓名'
+                placeholderTextColor={t.textTertiary}
+                value={gName}
+                onInput={(e: any) => setGName(e.detail.value)}
+              />
+              <Input
+                style={{ ...fs(15), backgroundColor: t.bgInput, borderRadius: 8, padding: 10, marginTop: 8, color: t.textPrimary }}
+                placeholder='联系电话'
+                placeholderTextColor={t.textTertiary}
+                type='number'
+                value={gPhone}
+                onInput={(e: any) => setGPhone(e.detail.value)}
+              />
+              <Input
+                style={{ ...fs(15), backgroundColor: t.bgInput, borderRadius: 8, padding: 10, marginTop: 8, color: t.textPrimary }}
+                placeholder='详细收货地址'
+                placeholderTextColor={t.textTertiary}
+                value={gAddr}
+                onInput={(e: any) => setGAddr(e.detail.value)}
+              />
+              <View style={{ display: 'flex', flexDirection: 'row', marginTop: 12 }}>
+                <View
+                  style={{ flex: 1, borderRadius: 18, paddingTop: 9, paddingBottom: 9, alignItems: 'center', backgroundColor: t.bgInput }}
+                  onClick={() => setGiftItem(null)}
+                >
+                  <Text style={{ ...fs(14), color: t.textSecondary }}>取消</Text>
+                </View>
+                <View
+                  style={{ flex: 1, marginLeft: 10, borderRadius: 18, paddingTop: 9, paddingBottom: 9, alignItems: 'center', backgroundColor: gBusy ? t.textTertiary : t.primary }}
+                  onClick={() => { if (!gBusy) doRedeemGift() }}
+                >
+                  <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: '600' }}>{gBusy ? '提交中…' : `花 ${giftItem.price} 积分兑换`}</Text>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* 权益目录 */}
           <View style={{ marginLeft: 12, marginRight: 12, marginTop: 12 }}>
@@ -112,6 +226,10 @@ export default function MallPage() {
                     )}
                   </View>
                   <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>{item.description}</Text>
+                  {/* v2.4.0 挂礼：展示来源商户（信任来自具体商家而非平台） */}
+                  {item.ownerMerchantName ? (
+                    <Text style={{ ...fs(11), color: t.primary, marginTop: 3 }}>来自 {item.ownerMerchantName}</Text>
+                  ) : null}
                   <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                     <Text style={{ ...fs(15), color: t.primary, fontWeight: '700' }}>{item.price}</Text>
                     <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 4 }}>积分</Text>
@@ -131,11 +249,12 @@ export default function MallPage() {
                   onClick={() => {
                     if (item.soldOut) return
                     if (item.category === MALL_CATEGORY.PIN_CARD) goPin()
+                    else if (item.category === MALL_CATEGORY.GIFT) openGift(item)
                     else Taro.showToast({ title: '该权益即将上线', icon: 'none' })
                   }}
                 >
                   <Text style={{ ...fs(12), color: item.soldOut ? t.textTertiary : '#FFFFFF', fontWeight: '600' }}>
-                    {item.soldOut ? '兑完' : item.category === MALL_CATEGORY.PIN_CARD ? '去置顶' : '兑换'}
+                    {item.soldOut ? '兑完' : item.category === MALL_CATEGORY.PIN_CARD ? '去置顶' : item.category === MALL_CATEGORY.GIFT ? '兑换' : '即将上线'}
                   </Text>
                 </View>
               </View>
@@ -159,7 +278,21 @@ export default function MallPage() {
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={{ ...fs(14), color: t.textPrimary }}>-{o.pointsSpent}</Text>
-                  <Text style={{ ...fs(11), color: statusColor(o.status, t), marginTop: 3 }}>{statusText(o.status)}</Text>
+                  <Text style={{ ...fs(11), color: statusColor(o.status, t), marginTop: 3 }}>
+                    {o.shipStatus ? `${statusText(o.status)}·${shipText(o.shipStatus)}` : statusText(o.status)}
+                  </Text>
+                  {/* v2.4.0 挂礼：已发货未收货提供确认收货入口 */}
+                  {o.shipStatus === 2 && (
+                    <View
+                      style={{ backgroundColor: t.primary, borderRadius: 12, paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, marginTop: 6 }}
+                      onClick={() => doConfirm(o)}
+                    >
+                      <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>确认收货</Text>
+                    </View>
+                  )}
+                  {o.shipStatus === 2 && o.shipTracking ? (
+                    <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }}>单号 {o.shipTracking}</Text>
+                  ) : null}
                 </View>
               </View>
             ))}

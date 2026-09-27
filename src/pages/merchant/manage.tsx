@@ -25,6 +25,7 @@ import {
 import { searchBearings, type Bearing } from '../../services/bearing'
 // v2.3.0 商城置顶卡：目录/兑换（花积分买曝光，履约=该型号商家列表置顶 N 小时）
 import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallCatalog } from '../../services/mall'
+import { getTreasury } from '../../services/gifts'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 // Excel 文件选择平台分派（Metro 按 .rn 后缀解析 RN 版，H5/小程序走 index.ts）
 import { chooseExcelFile } from '../../services/importExcel'
@@ -195,13 +196,28 @@ export default function MerchantManagePage() {
     if (!sheet || sheet.tapIndex < 0) return
     const picked = pins[sheet.tapIndex]
     const balance = catalog?.balance ?? 0
-    const affordable = balance >= picked.price
+    // v2.4.0 工会经济：管理员双支付通道（个人积分 / 商家金库），员工仅个人；
+    // 金库余额前置可见，不足同样引导去赚（成员赚分即在为金库攒额度）
+    const cur = useMerchantStore.getState().currentMerchant()
+    const isAdmin = cur?.role === 'MerchantAdmin'
+    let treasuryBalance = 0
+    if (isAdmin) {
+      treasuryBalance = (await getTreasury().catch(() => null))?.balance ?? 0
+    }
+    const itemList = isAdmin
+      ? [`个人积分（余额 ${balance}）`, `商家金库（余额 ${treasuryBalance}）`]
+      : [`个人积分（余额 ${balance}）`]
+    const pay = await Taro.showActionSheet({ itemList }).catch(() => null)
+    if (!pay || pay.tapIndex < 0) return
+    const useTreasury = isAdmin && pay.tapIndex === 1
+    const payerBalance = useTreasury ? treasuryBalance : balance
+    const affordable = payerBalance >= picked.price
 
     const ok = await showConfirmDialog({
       title: picked.name,
       content: affordable
-        ? `花 ${picked.price} 积分把「${item.bearingPartNumber}」在该型号商家列表置顶 ${picked.durationHours ?? 24} 小时？当前余额 ${balance}。`
-        : `需要 ${picked.price} 积分，当前余额 ${balance}。去任务中心赚积分？`,
+        ? `用${useTreasury ? '商家金库' : '个人积分'}花 ${picked.price} 把「${item.bearingPartNumber}」在该型号商家列表置顶 ${picked.durationHours ?? 24} 小时？${useTreasury ? '金库' : ''}余额 ${payerBalance}。`
+        : `需要 ${picked.price} 积分，${useTreasury ? '金库' : ''}余额 ${payerBalance}。${useTreasury ? '可让成员多赚分上供，或改用个人积分。' : '去任务中心赚积分？'}`,
       confirmText: affordable ? '确认兑换' : '去赚积分'
     })
     if (!ok) return
@@ -212,7 +228,7 @@ export default function MerchantManagePage() {
 
     setBusyId(item.id)
     try {
-      await redeemMallItem(picked.id, item.id, `pin-${item.id}-${Date.now()}`)
+      await redeemMallItem(picked.id, item.id, `pin-${item.id}-${Date.now()}`, useTreasury)
       void vibrateSuccess()
       Taro.showToast({ title: `置顶成功 -${picked.price} 积分`, icon: 'success' })
     } catch (e: any) {

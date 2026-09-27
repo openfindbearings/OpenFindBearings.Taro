@@ -12,6 +12,7 @@ export default defineAppConfig({
     'pages/merchant/apply',
     'pages/merchant/members',
     'pages/merchant/manage',
+    'pages/merchant/gifts',
     'pages/merchant/profile',
     'pages/notifications/index',
     'pages/my/index',

@@ -209,6 +209,16 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   MALL_ITEMS: `${API_PREFIX}/mall/items`,
   MALL_REDEEM: `${API_PREFIX}/mall/redeem`,
   MALL_ORDERS: `${API_PREFIX}/mall/orders`,
+  // v2.4.0 工会经济：礼品兑换/收货 + 商家金库/挂礼/礼品订单
+  MALL_REDEEM_GIFT: `${API_PREFIX}/mall/redeem-gift`,
+  MALL_CONFIRM_RECEIPT: (id: string) => `${API_PREFIX}/mall/orders/${id}/confirm-receipt`,
+  MERCHANT_TREASURY: `${API_PREFIX}/merchant/treasury`,
+  MERCHANT_TREASURY_TX: `${API_PREFIX}/merchant/treasury/transactions`,
+  MERCHANT_GIFTS: `${API_PREFIX}/merchant/gifts`,
+  MERCHANT_GIFT_OFFSHELF: (id: string) => `${API_PREFIX}/merchant/gifts/${id}/offshelf`,
+  MERCHANT_GIFT_IMAGE: `${API_PREFIX}/merchant/gifts/image`,
+  MERCHANT_GIFT_ORDERS: `${API_PREFIX}/merchant/gift-orders`,
+  MERCHANT_GIFT_ORDER_SHIP: (id: string) => `${API_PREFIX}/merchant/gift-orders/${id}/ship`,
   // v1.7.19 寻货：feed/详情/发布/应答/选定/取消/我的列表（BFF /mobile/sourcing/*）
   SOURCING_DEMANDS: `${API_PREFIX}/sourcing/demands`,
   // v1.7.21 额度可见化：发布/应答额度条与按钮三态数据源

@@ -226,6 +226,12 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
               <Text style={{ ...fs(13), color: t.textPrimary }}>信息维护</Text>
             </View>
           )}
+          {m.role === 'MerchantAdmin' && (
+            // v2.4.0 工会经济：金库+挂礼+礼品发货集中入口（仅管理员，员工不经手钱货）
+            <View className='mch-action' style={{ backgroundColor: t.bgInput }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/gifts' })}>
+              <Text style={{ ...fs(13), color: t.textPrimary }}>金库挂礼</Text>
+            </View>
+          )}
           {m.role === 'MerchantAdmin' && !m.isVerified && (
             // 改动说明（v1.7.3）：申请认证从"跳信息维护"升级为真业务动作——
             //   调 verify-request 端点（材料矩阵后端校验，不齐 400 透传缺项引导）；

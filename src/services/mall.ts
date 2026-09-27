@@ -41,6 +41,8 @@ export interface MallItem {
   stock: number
   soldCount: number
   soldOut: boolean
+  /** v2.4.0 挂礼：归属商户名（"来自 XX 商家"） */
+  ownerMerchantName?: string | null
 }
 
 /** 商城目录（含余额，供三态按钮：兑换 / 积分不足去赚） */
@@ -66,6 +68,11 @@ export interface MallOrder {
   remark?: string | null
   createdAt: string
   fulfilledAt?: string | null
+  // v2.4.0 实物礼品物流态（虚拟权益恒 0）
+  shipStatus?: number
+  shipTracking?: string | null
+  shippedAt?: string | null
+  receivedAt?: string | null
 }
 
 /** 拉取商城目录（含当前余额） */
@@ -77,14 +84,30 @@ export function getMallItems() {
  * 积分兑换。requestId 为客户端幂等键（同一次确认重复提交只扣一次），
  * 调用方生成一次并复用；失败时 request 层抛出后端 message（积分不足/越权/非在售）
  */
-export function redeemMallItem(itemId: string, targetRef?: string, requestId?: string) {
+export function redeemMallItem(itemId: string, targetRef?: string, requestId?: string, useTreasury = false) {
   return request<MallRedeemResult>(API.MALL_REDEEM, {
     method: 'POST',
-    data: { itemId, targetRef: targetRef || null, requestId: requestId || null }
+    data: { itemId, targetRef: targetRef || null, requestId: requestId || null, useTreasury }
   })
 }
 
 /** 我的兑换订单（分页） */
 export function getMallOrders(page = 1, pageSize = 20) {
   return request<Paged<MallOrder>>(`${API.MALL_ORDERS}?page=${page}&pageSize=${pageSize}`)
+}
+
+/**
+ * 实物礼品兑换（v2.4.0 工会经济）：托管扣分 + 收货信息；
+ * 失败（自兑排除/月限/积分不足）由 request 层抛出后端 message
+ */
+export function redeemGift(itemId: string, receiverName: string, receiverPhone: string, receiverAddress: string, requestId?: string) {
+  return request<MallRedeemResult>(API.MALL_REDEEM_GIFT, {
+    method: 'POST',
+    data: { itemId, receiverName, receiverPhone, receiverAddress, requestId: requestId || null }
+  })
+}
+
+/** 确认收货（买家）：触发积分结算进商家金库 */
+export function confirmReceipt(orderId: string) {
+  return request<{ settled: number }>(API.MALL_CONFIRM_RECEIPT(orderId), { method: 'POST', data: {} })
 }
