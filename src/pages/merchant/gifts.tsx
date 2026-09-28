@@ -157,7 +157,7 @@ export default function MerchantGiftsPage() {
         <ScrollView style={{ flex: 1 }}>
           {/* 金库余额（商家仓库） */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
               {/* v2.5.0 商家经济：等级徽章（入驻/认证/活跃供给/金牌——buff 与信任的可视化） */}
               {treasury?.gradeDisplay ? (
@@ -182,7 +182,7 @@ export default function MerchantGiftsPage() {
 
           {/* 挂礼管理 */}
           <View style={{ marginLeft: 12, marginRight: 12, marginTop: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>我的挂礼</Text>
               <View
                 style={{ backgroundColor: applyOpen ? t.bgInput : t.primary, borderRadius: 14, paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5 }}
@@ -197,7 +197,7 @@ export default function MerchantGiftsPage() {
                 <Input style={{ ...inputStyle, fontSize: 15 }} placeholder='礼品名称（如：轴承保养工具套装）' placeholderTextColor={t.textTertiary} value={aName} onInput={(e: any) => setAName(e.detail.value)} />
                 <Input style={{ ...inputStyle, fontSize: 15 }} placeholder='礼品描述（成色/规格/发货时效）' placeholderTextColor={t.textTertiary} value={aDesc} onInput={(e: any) => setADesc(e.detail.value)} />
                 <Input style={{ ...inputStyle, fontSize: 15 }} placeholder='数量（1-999）' placeholderTextColor={t.textTertiary} type='number' value={aStock} onInput={(e: any) => setAStock(e.detail.value)} />
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                   <View style={{ backgroundColor: t.bgInput, borderRadius: 8, padding: 10 }} onClick={onPickImage}>
                     <Text style={{ ...fs(13), color: t.primary }}>{aImage ? '重选图片' : '选礼品图（可选）'}</Text>
                   </View>
@@ -209,7 +209,7 @@ export default function MerchantGiftsPage() {
                   提交后由平台审核并定轴承币价（商家不自行定价，防止轴承币定向转移），通过后自动上架
                 </Text>
                 <View
-                  style={{ backgroundColor: aBusy ? t.textTertiary : t.primary, borderRadius: 18, paddingTop: 10, paddingBottom: 10, alignItems: 'center', marginTop: 10 }}
+                  style={{ backgroundColor: aBusy ? t.textTertiary : t.primary, borderRadius: 18, paddingTop: 10, paddingBottom: 10, display: 'flex', alignItems: 'center', marginTop: 10 }}
                   onClick={() => { if (!aBusy) doCreate() }}
                 >
                   <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: '600' }}>{aBusy ? '提交中…' : '提交审核'}</Text>
@@ -221,7 +221,7 @@ export default function MerchantGiftsPage() {
               const badge = auditBadge(g, t)
               return (
                 <View key={g.id} style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 12, marginTop: 10 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ ...fs(14), color: t.textPrimary, flex: 1, fontWeight: '600' }}>{g.name}</Text>
                     <Text style={{ ...fs(11), color: '#FFFFFF', backgroundColor: badge.color, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2 }}>{badge.text}</Text>
                   </View>
@@ -239,7 +239,7 @@ export default function MerchantGiftsPage() {
               )
             })}
             {gifts.length === 0 && !applyOpen && (
-              <View style={{ alignItems: 'center', paddingTop: 18, paddingBottom: 18 }}>
+              <View style={{ display: 'flex', alignItems: 'center', paddingTop: 18, paddingBottom: 18 }}>
                 <Text style={{ ...fs(12), color: t.textTertiary }}>还没有挂礼，点右上"申请挂礼"把库存好货变成商家金收入</Text>
               </View>
             )}
@@ -248,7 +248,7 @@ export default function MerchantGiftsPage() {
           {/* 礼品订单（发货义务） */}
           <View style={{ marginLeft: 12, marginRight: 12, marginTop: 16 }}>
             <Text style={{ ...fs(13), color: t.textSecondary }}>礼品订单</Text>
-            <View style={{ flexDirection: 'row', marginTop: 8 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', marginTop: 8 }}>
               {[SHIP_STATUS.PENDING, SHIP_STATUS.SHIPPED].map((s) => (
                 <View
                   key={s}
@@ -262,7 +262,7 @@ export default function MerchantGiftsPage() {
 
             {orders.map((o) => (
               <View key={o.id} style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 12, marginTop: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(14), color: t.textPrimary, flex: 1, fontWeight: '600' }}>{o.itemName}</Text>
                   <Text style={{ ...fs(13), color: t.primary, fontWeight: '700' }}>+{o.pointsSpent}</Text>
                 </View>
@@ -278,11 +278,11 @@ export default function MerchantGiftsPage() {
                   shipFor === o.id ? (
                     <View style={{ marginTop: 8 }}>
                       <Input style={{ ...inputStyle, fontSize: 15 }} placeholder='物流公司 + 单号' placeholderTextColor={t.textTertiary} value={tracking} onInput={(e: any) => setTracking(e.detail.value)} />
-                      <View style={{ flexDirection: 'row', marginTop: 8 }}>
-                        <View style={{ flex: 1, borderRadius: 16, paddingTop: 8, paddingBottom: 8, alignItems: 'center', backgroundColor: t.bgInput }} onClick={() => { setShipFor(null); setTracking('') }}>
+                      <View style={{ display: 'flex', flexDirection: 'row', marginTop: 8 }}>
+                        <View style={{ flex: 1, borderRadius: 16, paddingTop: 8, paddingBottom: 8, display: 'flex', alignItems: 'center', backgroundColor: t.bgInput }} onClick={() => { setShipFor(null); setTracking('') }}>
                           <Text style={{ ...fs(13), color: t.textSecondary }}>取消</Text>
                         </View>
-                        <View style={{ flex: 1, marginLeft: 8, borderRadius: 16, paddingTop: 8, paddingBottom: 8, alignItems: 'center', backgroundColor: t.primary }} onClick={() => doShip(o)}>
+                        <View style={{ flex: 1, marginLeft: 8, borderRadius: 16, paddingTop: 8, paddingBottom: 8, display: 'flex', alignItems: 'center', backgroundColor: t.primary }} onClick={() => doShip(o)}>
                           <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>确认发货</Text>
                         </View>
                       </View>
@@ -296,7 +296,7 @@ export default function MerchantGiftsPage() {
               </View>
             ))}
             {orders.length === 0 && (
-              <View style={{ alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}>
+              <View style={{ display: 'flex', alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}>
                 <Text style={{ ...fs(12), color: t.textTertiary }}>{orderFilter === SHIP_STATUS.PENDING ? '没有待发货订单' : '没有已发货订单'}</Text>
               </View>
             )}

@@ -133,7 +133,7 @@ export default function BearingDetailPage() {
                 <Icon name="store" size={18} color={t.primary} />
               </View>
               <View className='bd-list-main'>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
                   {/* v2.3.0 商城置顶卡：置顶商家角标（排序已由后端置顶优先，角标让曝光"看得见"） */}
                   {m.isPinned ? (

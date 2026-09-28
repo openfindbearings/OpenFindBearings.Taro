@@ -1,4 +1,4 @@
-﻿// 首页：公开查询入口（搜索 + 快捷三钮 + 历史/热门）
+// 首页：公开查询入口（搜索 + 快捷三钮 + 历史/热门）
 // v1.7.0 度量重构：接入 PageLayout 统一骨架（删 rnHeight/padding-bottom hack），
 // 尺寸全部走 dp token；快捷入口改"实心圆 + 白图标"（更明快）；
 // 简洁模式：nav=null 无顶栏，搜索框+三钮在滚动区内垂直居中，隐藏历史/热门，保留 TabBar。
@@ -160,7 +160,7 @@ export default function HomePage() {
   if (effectiveMode === 'smart') {
     return (
       <PageLayout nav={<NavBar title="智能助手" />} tabbar={<CustomTabBar />} scrollY={false}>
-        <View className='coming-soon' style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View className='coming-soon' style={{ flex: 1, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <Icon name="sparkles" size={40} color={t.textTertiary} />
           <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>智能模式暂未上线</Text>
         </View>

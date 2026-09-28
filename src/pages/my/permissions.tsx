@@ -43,11 +43,11 @@ export default function PermissionsPage() {
             <View
               key={p.name}
               style={{
-                flexDirection: 'row', alignItems: 'center', padding: 14,
+                display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 14,
                 borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border,
               }}
             >
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Icon name={p.icon} size={18} color={t.primary} />
               </View>
               <View style={{ flex: 1, marginLeft: 10 }}>
@@ -59,7 +59,7 @@ export default function PermissionsPage() {
         </View>
         {/* 去系统设置按钮 */}
         <View
-          style={{ margin: 12, height: 44, borderRadius: 22, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center' }}
+          style={{ margin: 12, height: 44, borderRadius: 22, backgroundColor: t.primary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
           onClick={openSystemSettings}
         >
           <Text style={{ fontSize: 15, color: '#FFFFFF', fontWeight: '600' }}>去系统设置</Text>

@@ -22,7 +22,7 @@ function RuleSection({ title, rows, t, fs }: {
       <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>{title}</Text>
       {rows.map((r, i) => (
         <View key={i} style={{ marginTop: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>{r.label}</Text>
             {r.value ? <Text style={{ ...fs(13), color: t.primary, fontWeight: '600' }}>{r.value}</Text> : null}
           </View>
@@ -46,7 +46,7 @@ export default function RulesPage() {
         {isGold ? (
           <>
             <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
-              <Text style={{ ...fs(13), color: t.textTertiary, lineHeight: 20 }}>
+              <Text style={{ ...fs(13), color: t.textTertiary }}>
                 商家金是店铺经营账本（金库）里的货币，与个人轴承币是两套独立账本，互不转账。只有商户管理员可支配，用于平台内经营支出。
               </Text>
             </View>
@@ -72,7 +72,7 @@ export default function RulesPage() {
         ) : (
           <>
             <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
-              <Text style={{ ...fs(13), color: t.textTertiary, lineHeight: 20 }}>
+              <Text style={{ ...fs(13), color: t.textTertiary }}>
                 轴承币是个人行为货币：靠日常贡献赚取，用于超额寻货与商城兑换。不可充值、不可提现、不可转让，与商家金是两套账本。
               </Text>
             </View>

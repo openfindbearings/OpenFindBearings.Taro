@@ -68,7 +68,7 @@ export default function FavoritesPage() {
     <PageLayout nav={<NavBar title="我的收藏" showBack />}>
       {!isLoggedIn && <LoginGuide icon='heart' text='登录后可查看收藏' />}
       {isLoggedIn && items.length === 0 && !loading && (
-        <View style={{ alignItems: 'center', paddingTop: 80 }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 80 }}>
           <Icon name="heart" size={48} color={t.textTertiary} />
           <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>还没有收藏，去逛逛轴承详情吧</Text>
         </View>
@@ -76,7 +76,7 @@ export default function FavoritesPage() {
       {items.map((item) => (
         <View
           key={item.id}
-          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, flexDirection: 'row', alignItems: 'center' }}
+          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
           onClick={() => goDetail(item.bearing.id)}
         >
           <View style={{ flex: 1 }}>
@@ -95,7 +95,7 @@ export default function FavoritesPage() {
         </View>
       ))}
       {isLoggedIn && hasMore && (
-        <View style={{ alignItems: 'center', paddingTop: 14, paddingBottom: 14 }} onClick={() => { if (!loading) load(page + 1, true) }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 14, paddingBottom: 14 }} onClick={() => { if (!loading) load(page + 1, true) }}>
           <Text style={{ ...fs(14), color: t.primaryText }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
       )}

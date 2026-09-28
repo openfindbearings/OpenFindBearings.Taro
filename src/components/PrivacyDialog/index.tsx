@@ -84,8 +84,8 @@ export default function PrivacyDialog() {
         zIndex: 10000,
         backgroundColor: 'rgba(0,0,0,0.55)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        display: 'flex', alignItems: 'center',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center'
       }}
     >
       <View style={{ width: '84%', backgroundColor: t.bgCard, borderRadius: 12, paddingTop: 22, paddingBottom: 16, paddingLeft: 20, paddingRight: 20 }}>
@@ -95,7 +95,7 @@ export default function PrivacyDialog() {
         <Text style={{ display: 'block', width: '100%', fontSize: 15, lineHeight: '24px', color: '#374151', marginTop: 14 }}>
           欢迎使用本应用。请阅读并同意
         </Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 2 }}>
+        <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 2 }}>
           <Text style={{ fontSize: 15, lineHeight: '24px', color: t.primary }} onClick={() => openDoc('user-agreement')}>
             《用户协议》
           </Text>
@@ -105,7 +105,7 @@ export default function PrivacyDialog() {
           </Text>
           <Text style={{ fontSize: 15, lineHeight: '24px', color: t.textSecondary }}>后再使用登录、收藏、入驻等功能。</Text>
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
           <View
             style={{ minWidth: 72, display: 'flex', alignItems: 'center', paddingTop: 9, paddingBottom: 9, paddingLeft: 18, paddingRight: 18, borderRadius: 8, marginLeft: 12, backgroundColor: t.primaryLight }}
             onClick={() => settle(false)}

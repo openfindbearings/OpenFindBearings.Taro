@@ -107,6 +107,13 @@
   line-height: 20px;
 }
 
+// 改动说明（H5 输入内容偏上修复，同 auth.scss）：Taro H5 Input 的 className 只作用宿主，
+// 内部 weui-input 默认 1.4rem 高悬顶；此处把高度写到内部 input，仅 H5 生效（RN 丢弃后代选择器）
+.chat-input .weui-input {
+  height: 36px;
+  line-height: 36px;
+}
+
 // 发送圆形按钮（背景色由 tsx inline 随主题/发送态）
 .chat-send {
   width: 36px;

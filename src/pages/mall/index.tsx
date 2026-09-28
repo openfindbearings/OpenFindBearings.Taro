@@ -144,12 +144,12 @@ export default function MallPage() {
         <ScrollView style={{ flex: 1 }}>
           {/* 余额条：兑换能力前置可见，不足直接引导去赚 */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ flex: 1 }}>
+            <View style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <Text style={{ ...fs(24), color: t.primary, fontWeight: '700' }}>{catalog?.balance ?? 0}</Text>
               <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>我的轴承币</Text>
             </View>
             <View
-              style={{ backgroundColor: t.primary, borderRadius: 16, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary, borderRadius: 16, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
               onClick={() => Taro.navigateTo({ url: '/pages/my/tasks' })}
             >
               <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去赚轴承币</Text>
@@ -158,7 +158,7 @@ export default function MallPage() {
 
           {/* v2.4.0 挂礼收货信息面板：RN 不支持 fixed，作为常规块内嵌于目录之上 */}
           {giftItem && (
-            <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
+            <View style={{ display: 'flex', flexDirection: 'column', backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
               <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>兑换：{giftItem.name}</Text>
               <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
                 {giftItem.price} 轴承币 · 确认收货后才会结算给商家，收货前可联系平台退款
@@ -187,13 +187,13 @@ export default function MallPage() {
               />
               <View style={{ display: 'flex', flexDirection: 'row', marginTop: 12 }}>
                 <View
-                  style={{ flex: 1, borderRadius: 18, paddingTop: 9, paddingBottom: 9, alignItems: 'center', backgroundColor: t.bgInput }}
+                  style={{ flex: 1, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.bgInput }}
                   onClick={() => setGiftItem(null)}
                 >
                   <Text style={{ ...fs(14), color: t.textSecondary }}>取消</Text>
                 </View>
                 <View
-                  style={{ flex: 1, marginLeft: 10, borderRadius: 18, paddingTop: 9, paddingBottom: 9, alignItems: 'center', backgroundColor: gBusy ? t.textTertiary : t.primary }}
+                  style={{ flex: 1, marginLeft: 10, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: gBusy ? t.textTertiary : t.primary }}
                   onClick={() => { if (!gBusy) doRedeemGift() }}
                 >
                   <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: '600' }}>{gBusy ? '提交中…' : `花 ${giftItem.price} 轴承币兑换`}</Text>
@@ -214,10 +214,10 @@ export default function MallPage() {
                   opacity: item.soldOut ? 0.6 : 1
                 }}
               >
-                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <Icon name={item.icon || 'gift'} size={22} color={t.primary} />
                 </View>
-                <View style={{ flex: 1, marginLeft: 10 }}>
+                <View style={{ display: 'flex', flexDirection: 'column', flex: 1, marginLeft: 10 }}>
                   <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>{item.name}</Text>
                     {item.flashing && (
@@ -252,6 +252,7 @@ export default function MallPage() {
                 </View>
                 <View
                   style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                     backgroundColor: item.soldOut ? t.bgInput : t.primary,
                     borderRadius: 16, paddingLeft: 12, paddingRight: 12, paddingTop: 7, paddingBottom: 7
                   }}
@@ -269,7 +270,7 @@ export default function MallPage() {
               </View>
             ))}
             {(catalog?.items || []).length === 0 && (
-              <View style={{ alignItems: 'center', paddingTop: 24, paddingBottom: 24 }}>
+              <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24, paddingBottom: 24 }}>
                 <Text style={{ ...fs(13), color: t.textTertiary }}>暂无上架权益</Text>
               </View>
             )}
@@ -285,7 +286,7 @@ export default function MallPage() {
                   <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 3 }}>{formatTime(o.createdAt)}</Text>
                   {o.remark ? <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{o.remark}</Text> : null}
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
+                <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                   <Text style={{ ...fs(14), color: t.textPrimary }}>-{o.pointsSpent}</Text>
                   <Text style={{ ...fs(11), color: statusColor(o.status, t), marginTop: 3 }}>
                     {o.shipStatus ? `${statusText(o.status)}·${shipText(o.shipStatus)}` : statusText(o.status)}
@@ -293,7 +294,7 @@ export default function MallPage() {
                   {/* v2.4.0 挂礼：已发货未收货提供确认收货入口 */}
                   {o.shipStatus === 2 && (
                     <View
-                      style={{ backgroundColor: t.primary, borderRadius: 12, paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, marginTop: 6 }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary, borderRadius: 12, paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, marginTop: 6 }}
                       onClick={() => doConfirm(o)}
                     >
                       <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>确认收货</Text>
@@ -306,7 +307,7 @@ export default function MallPage() {
               </View>
             ))}
             {orders.length === 0 && (
-              <View style={{ alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}>
+              <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}>
                 <Text style={{ ...fs(12), color: t.textTertiary }}>还没有兑换记录</Text>
               </View>
             )}

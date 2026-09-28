@@ -33,7 +33,7 @@ function fmtEarnDate(iso?: string | null): string {
 /** 舞台勋章：MedalImage 统一渲染（v2.6.0 有图用后台勋章图，无图回退双环占位），选中实亮其余半透明 */
 function StageMedal({ item, active, isDark, primary }: { item: AchievementItem; active: boolean; isDark: boolean; primary: string }) {
   return (
-    <View style={{ width: STAGE_ITEM_W, alignItems: 'center' }}>
+    <View style={{ width: STAGE_ITEM_W, display: 'flex', alignItems: 'center' }}>
       <MedalImage imageKey={item.imageKey} icon={item.icon || 'award'} rare={item.rare} variant='stage' primary={primary} isDark={isDark} active={active} />
     </View>
   )
@@ -51,7 +51,7 @@ function AchievementCard({ item, t, fs }: { item: AchievementItem; t: any; fs: (
       display: 'flex', flexDirection: 'row', alignItems: 'center'
     }}>
       <View style={{
-        width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+        width: 44, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center',
         backgroundColor: item.unlocked ? t.primary : t.borderColor
       }}>
         {item.unlocked && item.imageKey ? (
@@ -137,27 +137,27 @@ export default function AchievementsPage() {
                   style={{ height: 96 }}
                   contentContainerStyle={{ paddingHorizontal: (STAGE_ITEM_W - 96) / 2 }}
                 >
-                  <View style={{ flexDirection: 'row' }}>
+                  <View style={{ display: 'flex', flexDirection: 'row' }}>
                     {unlocked.map((m, i) => (
                       <StageMedal key={m.key} item={m} active={Math.min(sel, unlocked.length - 1) === i} isDark={t.isDark} primary={t.primary} />
                     ))}
                   </View>
                 </ScrollView>
                 {focus && (
-                  <View style={{ alignItems: 'center', marginTop: 14 }}>
-                    <Text style={{ ...fs(14), color: '#E2E8F0', lineHeight: 20 }}>
+                  <View style={{ display: 'flex', alignItems: 'center', marginTop: 14 }}>
+                    <Text style={{ ...fs(14), color: '#E2E8F0' }}>
                       {fmtEarnDate(focus.unlockedAt)} 获得此勋章
                     </Text>
-                    <Text style={{ ...fs(12), color: '#94A3B8', marginTop: 4, lineHeight: 16 }}>
+                    <Text style={{ ...fs(12), color: '#94A3B8', marginTop: 4 }}>
                       {focus.category} · {focus.name}
                     </Text>
                   </View>
                 )}
               </>
             ) : (
-              <View style={{ alignItems: 'center', paddingTop: 26, paddingBottom: 26 }}>
+              <View style={{ display: 'flex', alignItems: 'center', paddingTop: 26, paddingBottom: 26 }}>
                 <Icon name='award' size={36} color='#475569' />
-                <Text style={{ ...fs(13), color: '#94A3B8', marginTop: 10, lineHeight: 18 }}>
+                <Text style={{ ...fs(13), color: '#94A3B8', marginTop: 10 }}>
                   还没有点亮的勋章，完成下方任务即可获得
                 </Text>
               </View>
@@ -165,14 +165,14 @@ export default function AchievementsPage() {
           </View>
 
           {/* 2. 荣誉摘要条：称号为叙事主角（金色），勋章点为数值佐证 */}
-          <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>当前称号</Text>
               <Text style={{ ...fs(16), color: wall?.currentTitle ? '#F59E0B' : t.textTertiary, fontWeight: '700', marginTop: 2 }}>
                 {wall?.currentTitle || '暂未获得'}
               </Text>
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
+            <View style={{ display: 'flex', alignItems: 'flex-end' }}>
               <Text style={{ ...fs(22), color: t.primary, fontWeight: '700' }}>{wall?.totalMetaPoints ?? 0}</Text>
               <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>勋章点 · 荣誉不花</Text>
             </View>
@@ -183,7 +183,7 @@ export default function AchievementsPage() {
             <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
               <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>佩戴称号</Text>
               <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
-                <View style={{ flexDirection: 'row' }}>
+                <View style={{ display: 'flex', flexDirection: 'row' }}>
                   {titles.titles.map((tt) => {
                     const active = titles.equippedTitle === tt
                     return (
@@ -215,7 +215,7 @@ export default function AchievementsPage() {
               const doneInCat = inCat.filter((i) => i.unlocked).length
               return (
                 <View key={cat} style={{ marginBottom: 6 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 8, marginBottom: 8 }}>
+                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', marginTop: 8, marginBottom: 8 }}>
                     <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>{cat}</Text>
                     <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 6 }}>{doneInCat}/{inCat.length}</Text>
                   </View>

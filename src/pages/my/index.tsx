@@ -208,7 +208,7 @@ export default function MyPage() {
                   )}
                 </View>
                 <View className='user-detail'>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <Text className='nickname' style={{ ...fs(19), color: '#FFFFFF' }}>{authUser?.nickname || authUser?.userName || '已登录用户'}</Text>
                     {/* v2.8.0 称号系统：佩戴称号金色徽章（昵称旁） */}
                     {equippedTitle && (
@@ -244,7 +244,7 @@ export default function MyPage() {
           改动说明：文案"轴承币可兑换现金"违反轴承币合规红线（不可兑现），改"兑换精选礼品" */}
       <View className='member-card-white' style={{ ...cardShadow, backgroundColor: t.bgCard }}>
         <View className='member-head'>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的轴承币</Text>
             {/* v2.7.0 G7：用户轴承币等级徽章（按累计获得轴承币落档，纯展示无特权）；后端缺省等级 1 */}
             {points.level != null && points.level > 1 && (
@@ -296,7 +296,7 @@ export default function MyPage() {
         style={{ backgroundColor: t.bgCard, marginLeft: 16, marginRight: 16, marginTop: 12, marginBottom: 16, borderRadius: 12, padding: 14 }}
         onClick={() => Taro.navigateTo({ url: '/pages/my/achievements' })}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>我的勋章</Text>
           <Text style={{ ...fs(13), color: t.textTertiary }}>共 {myAch?.unlockedCount ?? 0} 枚 ›</Text>
         </View>
@@ -306,13 +306,13 @@ export default function MyPage() {
           </Text>
         ) : (
         <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
             {medalItems.map((b) => {
               return (
-                <View key={b.key} style={{ width: 64, alignItems: 'center', marginRight: 6 }}>
+                <View key={b.key} style={{ width: 64, display: 'flex', alignItems: 'center', marginRight: 6 }}>
                   {/* 勋章图组件统一渲染：无图回退双环占位（rare 金环/主题环） */}
                   <MedalImage imageKey={b.imageKey} icon={b.icon || 'award'} rare={b.rare} variant='card' primary={t.primary} primaryLight={t.primaryLight} />
-                  <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4, lineHeight: 13 }} numberOfLines={1}>
+                  <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }} numberOfLines={1}>
                     {b.name}
                   </Text>
                 </View>

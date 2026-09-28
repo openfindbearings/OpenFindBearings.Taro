@@ -1,4 +1,4 @@
-﻿// 浏览历史页：轴承/商家双 Tab，逐条删除 + 一键清空。数据经 BFF /mobile/me/history/*。
+// 浏览历史页：轴承/商家双 Tab，逐条删除 + 一键清空。数据经 BFF /mobile/me/history/*。
 // 上报入口在两个详情页（进入即 upsert），本页只做展示与清理。
 import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
@@ -110,14 +110,14 @@ export default function HistoryPage() {
   return (
     <PageLayout nav={<NavBar title="浏览历史" showBack rightIcons={rightIcons} />}>
       {/* Tab 栏 */}
-      <View style={{ flexDirection: 'row', backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border }}>
         {([
           { key: 'bearing', label: '轴承' },
           { key: 'merchant', label: '商家' }
         ] as const).map((tb) => (
           <View
             key={tb.key}
-            style={{ flex: 1, alignItems: 'center', paddingTop: 12, paddingBottom: 12, borderBottomWidth: 2, borderBottomColor: tab === tb.key ? t.primary : 'transparent' }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', paddingTop: 12, paddingBottom: 12, borderBottomWidth: 2, borderBottomColor: tab === tb.key ? t.primary : 'transparent' }}
             onClick={() => switchTab(tb.key)}
           >
             <Text style={{ ...fs(15), color: tab === tb.key ? t.primaryText : t.textSecondary }}>{tb.label}</Text>
@@ -126,7 +126,7 @@ export default function HistoryPage() {
       </View>
 
       {!isLoggedIn && (
-        <View style={{ alignItems: 'center', paddingTop: 80 }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 80 }}>
           <Icon name="clock" size={48} color={t.textTertiary} />
           <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>登录后可查看浏览历史</Text>
           <View
@@ -138,7 +138,7 @@ export default function HistoryPage() {
         </View>
       )}
       {isLoggedIn && (tab === 'bearing' ? bearings.length === 0 : merchants.length === 0) && !loading && (
-        <View style={{ alignItems: 'center', paddingTop: 80 }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 80 }}>
           <Icon name="clock" size={48} color={t.textTertiary} />
           <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>暂无浏览记录</Text>
         </View>
@@ -146,7 +146,7 @@ export default function HistoryPage() {
       {tab === 'bearing' && bearings.map((item) => (
         <View
           key={item.id}
-          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, flexDirection: 'row', alignItems: 'center' }}
+          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
           onClick={() => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${item.bearingId}` })}
         >
           <View style={{ flex: 1 }}>
@@ -163,7 +163,7 @@ export default function HistoryPage() {
       {tab === 'merchant' && merchants.map((item) => (
         <View
           key={item.id}
-          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, flexDirection: 'row', alignItems: 'center' }}
+          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
           onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${item.merchantId}` })}
         >
           <View style={{ flex: 1 }}>
@@ -178,7 +178,7 @@ export default function HistoryPage() {
         </View>
       ))}
       {isLoggedIn && hasMore && (
-        <View style={{ alignItems: 'center', paddingTop: 14, paddingBottom: 14 }} onClick={() => { if (!loading) load(page + 1, true) }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 14, paddingBottom: 14 }} onClick={() => { if (!loading) load(page + 1, true) }}>
           <Text style={{ ...fs(14), color: t.primaryText }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
       )}

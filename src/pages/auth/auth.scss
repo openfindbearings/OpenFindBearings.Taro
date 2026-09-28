@@ -34,6 +34,16 @@
   height: 48px;
 }
 
+// 改动说明（H5 输入内容偏上修复，重写原 line-height 方案）：
+// Taro H5 的 <Input> 渲染为 taro-input-core 宿主元素，className 只作用宿主；
+// 内部 <input class="weui-input"> 默认 height:1.4rem(~22px)，作为块元素从宿主顶部排布，
+// 造成"输入框很高但可输入区只占上半、下半无焦点"。须把高度/行高写到内部 input 上。
+// 此后代选择器仅 H5 生效：RN 端由 css-to-react-native 丢弃（无 DOM 后代概念），无平台影响。
+.auth-input .weui-input {
+  height: 48px;
+  line-height: 48px;
+}
+
 .auth-msg {
   margin-bottom: 10px;
 }

@@ -126,7 +126,7 @@ export default function MerchantMembersPage() {
   /** 面板单行动作 */
   const sheetAction = (label: string, color: string, onPress: () => void) => (
     <View
-      style={{ backgroundColor: t.bgCard, borderRadius: 10, paddingTop: 13, paddingBottom: 13, alignItems: 'center', marginBottom: 8 }}
+      style={{ backgroundColor: t.bgCard, borderRadius: 10, paddingTop: 13, paddingBottom: 13, display: 'flex', alignItems: 'center', marginBottom: 8 }}
       onClick={onPress}
     >
       <Text style={{ ...fs(15), color }}>{label}</Text>
@@ -141,9 +141,9 @@ export default function MerchantMembersPage() {
       <View style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 12 }}>
         {/* v1.7.3 操作栏：管理员可添加成员（对标主流店铺员工管理） */}
         {isAdmin && (
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <View
-              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
               onClick={() => setAdding((v) => !v)}
             >
               <Icon name="user-plus" size={14} color={t.textOnPrimary} />
@@ -163,7 +163,7 @@ export default function MerchantMembersPage() {
               placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
               onInput={(e) => setContact(e.detail.value)}
             />
-            <View style={{ flexDirection: 'row', marginTop: 10 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', marginTop: 10 }}>
               {(['MerchantStaff', 'MerchantAdmin'] as const).map((r) => (
                 <View
                   key={r}
@@ -174,7 +174,7 @@ export default function MerchantMembersPage() {
                 </View>
               ))}
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
               <View
                 style={{ backgroundColor: t.bgInput, borderRadius: 16, paddingLeft: 18, paddingRight: 18, paddingTop: 7, paddingBottom: 7, marginRight: 10 }}
                 onClick={() => { setAdding(false); setContact(''); setAddRole('MerchantStaff') }}
@@ -194,7 +194,7 @@ export default function MerchantMembersPage() {
 
       <View style={{ padding: 14 }}>
         {members.length === 0 ? (
-          <View style={{ alignItems: 'center', paddingTop: 60 }}>
+          <View style={{ display: 'flex', alignItems: 'center', paddingTop: 60 }}>
             <Icon name="user" size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无成员</Text>
           </View>
@@ -211,16 +211,16 @@ export default function MerchantMembersPage() {
               return (
                 <View
                   key={rowKey}
-                  style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === rowKey ? 0.5 : 1 }}
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === rowKey ? 0.5 : 1 }}
                   onClick={() => setTarget(m)}
                 >
-                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 12 }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.bgInput, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden', marginRight: 12 }}>
                     {usableImage(m.avatar)
                       ? <Image style={{ width: 40, height: 40 }} src={usableImage(m.avatar)} mode="aspectFill" />
                       : <Icon name={isInvited ? 'mail' : 'user'} size={20} color={t.textTertiary} />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                       <Text style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.nickname}</Text>
                       {isSelf && (
                         <View style={{ marginLeft: 6, borderRadius: 4, backgroundColor: t.bgInput, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1 }}>
@@ -228,7 +228,7 @@ export default function MerchantMembersPage() {
                         </View>
                       )}
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                       <View style={{ borderRadius: 4, backgroundColor: t.bgInput, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, marginRight: 8 }}>
                         <Text style={{ ...fs(11), color: m.role === '管理员' ? t.primary : t.textSecondary }}>{isInvited ? (m.role || '待确认') : (m.role || '员工')}</Text>
                       </View>
@@ -263,8 +263,8 @@ export default function MerchantMembersPage() {
             onClick={process.env.TARO_ENV === 'rn' ? undefined : (e) => e?.stopPropagation?.()}
           >
             {/* 详情头部：头像 + 昵称 + 角色徽标 */}
-            <View style={{ alignItems: 'center', marginBottom: 14 }}>
-              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <View style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: t.bgInput, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}>
                 {usableImage(target.avatar)
                   ? <Image style={{ width: 56, height: 56 }} src={usableImage(target.avatar)} mode="aspectFill" />
                   : <Icon name={target.status === 'Invited' ? 'mail' : 'user'} size={26} color={t.textTertiary} />}
@@ -280,7 +280,7 @@ export default function MerchantMembersPage() {
               ['手机号', target.mobile || '未留'],
               ['加入时间', target.joinedAt ? formatTime(target.joinedAt).slice(0, 10) : '-']
             ] as [string, string][]).map(([k, v]) => (
-              <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: t.bgCard, borderRadius: 10, paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, marginBottom: 8 }}>
+              <View key={k} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', backgroundColor: t.bgCard, borderRadius: 10, paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, marginBottom: 8 }}>
                 <Text style={{ ...fs(14), color: t.textSecondary }}>{k}</Text>
                 <Text style={{ ...fs(14), color: t.textPrimary }}>{v}</Text>
               </View>

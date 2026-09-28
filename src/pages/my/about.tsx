@@ -75,7 +75,7 @@ export default function AboutPage() {
         </View>
 
         {/* 简介 + 版权行 */}
-        <Text style={{ ...fs(12), color: t.textTertiary, textAlign: 'center', marginTop: 20, lineHeight: 18 }}>
+        <Text style={{ ...fs(12), color: t.textTertiary, textAlign: 'center', marginTop: 20 }}>
           轴承信息撮合平台 · 寻货发布、商户应答、点对点直达
         </Text>
         <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 6 }}>

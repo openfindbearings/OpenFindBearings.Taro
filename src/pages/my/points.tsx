@@ -59,7 +59,7 @@ export default function PointsPage() {
     }>
       <ScrollView style={{ flex: 1 }} onScrollToLower={() => void loadMore()}>
         {/* 余额概览卡 */}
-        <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, alignItems: 'center' }}>
+        <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center' }}>
           <Text style={{ ...fs(34), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
           <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>当前轴承币</Text>
           {/* v2.7.0 G7：等级徽章（累计获得轴承币落档） */}
@@ -68,7 +68,7 @@ export default function PointsPage() {
               <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>Lv.{account.level} {account.levelName ?? ''}</Text>
             </View>
           )}
-          <View style={{ flexDirection: 'row', marginTop: 12 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', marginTop: 12 }}>
             <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 16 }}>累计获得 {account.totalEarned}</Text>
             <Text style={{ ...fs(12), color: t.textTertiary }}>累计消耗 {account.totalSpent}</Text>
           </View>
@@ -77,14 +77,14 @@ export default function PointsPage() {
         {/* 流水列表 */}
         <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12 }}>
           {items.length === 0 && (
-            <View style={{ padding: 32, alignItems: 'center' }}>
+            <View style={{ padding: 32, display: 'flex', alignItems: 'center' }}>
               <Text style={{ ...fs(13), color: t.textTertiary }}>暂无轴承币记录，登录签到赚轴承币吧</Text>
             </View>
           )}
           {items.map((it) => (
             <View
               key={it.id}
-              style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}
             >
               <View style={{ flex: 1 }}>
                 <Text style={{ ...fs(14), color: t.textPrimary }}>{GRANT_TYPE_LABELS[it.grantType] || it.grantType}</Text>
@@ -93,7 +93,7 @@ export default function PointsPage() {
                   {it.remark ? `${it.remark} · ` : ''}{formatTime(it.createdAt)}
                 </Text>
               </View>
-              <View style={{ alignItems: 'flex-end' }}>
+              <View style={{ display: 'flex', alignItems: 'flex-end' }}>
                 <Text style={{ ...fs(15), fontWeight: '600', color: it.direction === 1 ? t.primary : '#EF4444' }}>
                   {it.direction === 1 ? '+' : '-'}{it.amount}
                 </Text>
@@ -102,7 +102,7 @@ export default function PointsPage() {
             </View>
           ))}
           {loading && (
-            <View style={{ padding: 12, alignItems: 'center' }}>
+            <View style={{ padding: 12, display: 'flex', alignItems: 'center' }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>加载中…</Text>
             </View>
           )}
