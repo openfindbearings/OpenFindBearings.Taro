@@ -45,7 +45,7 @@ export default function MerchantResponsesPage() {
         {/* 需求信号横幅（v1.7.21 反向导购）：你在售的型号正被寻货且无人应答 */}
         {currentMerchant && opps.length > 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', marginLeft: 12, marginRight: 12, marginTop: 12, padding: 12, backgroundColor: t.bgCard, borderRadius: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Icon name="trending-up" size={16} color={t.warning} />
               <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600', marginLeft: 6 }}>
                 你的在售型号有 {opps.reduce((s, o) => s + o.demandCount, 0)} 条寻货待应答
@@ -54,7 +54,7 @@ export default function MerchantResponsesPage() {
             {opps.slice(0, 5).map((o) => (
               <View
                 key={o.partNumber}
-                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}
                 onClick={() => {
                   // switchTab 不能带 query——搜索词经 storage 传给发现页消费
                   void setItem('sourcing_search_kw', o.partNumber)
@@ -83,7 +83,7 @@ export default function MerchantResponsesPage() {
               style={{ marginLeft: 12, marginRight: 12, marginTop: i === 0 ? 12 : 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
               onClick={() => Taro.navigateTo({ url: `/pages/discover/detail?id=${item.demandId}` })}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>
                   寻 {item.partNumber || '已删除的寻货'}
                 </Text>
@@ -95,7 +95,7 @@ export default function MerchantResponsesPage() {
                 {[item.price != null ? `¥${item.price}/只` : null, item.stock ? `库存 ${item.stock}` : null, item.leadTime ? `交期 ${item.leadTime}` : null].filter(Boolean).join(' · ') || item.remark}
               </Text>
               {adopted && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                   <Text style={{ ...fs(12), color: t.primary, flex: 1 }}>已被选定，进详情查看需求方联系方式</Text>
                   {/* 成交回流（v1.7.21）：跳商品管理并预填型号——撮合成功沉淀为结构化在售 */}
                   <View

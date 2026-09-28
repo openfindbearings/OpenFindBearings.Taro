@@ -170,8 +170,8 @@ export default function CustomTabBar() {
                   size={24}
                 />
                 {tab.key === 'my' && unreadCount > 0 && (
-                  <View style={{ position: 'absolute', top: -4, right: -10, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingLeft: 4, paddingRight: 4 }}>
-                    <Text style={{ fontSize: 10, lineHeight: 14, color: '#FFFFFF' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                  <View style={{ position: 'absolute', top: -4, right: -10, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingLeft: 4, paddingRight: 4 }}>
+                    <Text style={{ ...fs(10), color: '#FFFFFF' }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
                   </View>
                 )}
               </View>

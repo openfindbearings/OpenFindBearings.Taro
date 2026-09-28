@@ -50,7 +50,7 @@ export default function MedalImage({
       : (primaryLight ?? 'rgba(99,102,241,0.08)'))
 
   return (
-    <View style={{ width: outer, height: outer, borderRadius: outer / 2, borderWidth: stage ? 3 : 2, borderColor: ring, alignItems: 'center', justifyContent: 'center', backgroundColor: bg, opacity: active ? 1 : 0.4, overflow: 'hidden' }}>
+    <View style={{ width: outer, height: outer, borderRadius: outer / 2, borderWidth: stage ? 3 : 2, borderColor: ring, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: bg, opacity: active ? 1 : 0.4, overflow: 'hidden' }}>
       {imageKey ? (
         // 后台配置了勋章图：环内存真实图片（方形图裁成圆环），加载失败自动回退图标
         <MediaImage
@@ -63,7 +63,7 @@ export default function MedalImage({
         />
       ) : stage ? (
         // 舞台档占位：外环+内底双层圆模拟勋章金属边框
-        <View style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.12)', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.12)', alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <Icon name={icon} size={40} color={iconColor} />
         </View>
       ) : (

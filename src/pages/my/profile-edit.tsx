@@ -118,9 +118,9 @@ export default function ProfileEditPage() {
 
   /** 单行字段：左标题 + 右输入（RN 安全样式，无 position/伪元素） */
   const fieldRow = (label: string, node: any) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(15), color: t.textPrimary, width: 88 }}>{label}</Text>
-      <View style={{ flex: 1, alignItems: 'flex-end' }}>{node}</View>
+      <View style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>{node}</View>
     </View>
   )
 
@@ -129,9 +129,9 @@ export default function ProfileEditPage() {
   return (
     <PageLayout nav={<NavBar title="个人信息" showBack />}>
       {/* 头像预览：点击打开选择面板（预置 6 格 + 相册上传）；仅绝对地址可渲染 */}
-      <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 20, backgroundColor: t.bgCard, marginBottom: 12 }}>
+      <View style={{ display: 'flex', alignItems: 'center', paddingTop: 20, paddingBottom: 20, backgroundColor: t.bgCard, marginBottom: 12 }}>
         <View
-          style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+          style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: t.bgInput, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}
           onClick={() => setPickerOpen(!pickerOpen)}
         >
           {usableImage(form.avatar)
@@ -144,13 +144,13 @@ export default function ProfileEditPage() {
         {pickerOpen && (
           <View style={{ width: 280, marginTop: 14, backgroundColor: t.bgInput, borderRadius: 12, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
             <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 10 }}>预置头像</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
               {PRESET_AVATAR_KEYS.map((key) => {
                 const selected = form.avatar === key
                 return (
                   <View
                     key={key}
-                    style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 10, alignItems: 'center', justifyContent: 'center', borderWidth: selected ? 3 : 0, borderColor: t.primary, overflow: 'hidden' }}
+                    style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 10, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderWidth: selected ? 3 : 0, borderColor: t.primary, overflow: 'hidden' }}
                     onClick={() => { setField('avatar', key); setPickerOpen(false) }}
                   >
                     <Image style={{ width: 56, height: 56, borderRadius: 28 }} src={usableImage(key)} mode="aspectFill" />
@@ -159,7 +159,7 @@ export default function ProfileEditPage() {
               })}
             </View>
             <View
-              style={{ backgroundColor: uploading ? t.textTertiary : t.primary, borderRadius: 20, paddingTop: 8, paddingBottom: 8, alignItems: 'center', marginTop: 4 }}
+              style={{ backgroundColor: uploading ? t.textTertiary : t.primary, borderRadius: 20, paddingTop: 8, paddingBottom: 8, display: 'flex', alignItems: 'center', marginTop: 4 }}
               onClick={uploading ? undefined : pickFromAlbum}
             >
               <Text style={{ ...fs(14), color: t.textOnPrimary }}>{uploading ? '上传中…' : '从相册上传'}</Text>
@@ -174,7 +174,7 @@ export default function ProfileEditPage() {
         {/* 改动说明：删除"头像地址"输入行——头像由上方预览直接展示，URL 编辑体验差；
             form.avatar 仍随资料回填与保存透传，不清空已存头像 */}
         {fieldRow('职业', (
-          <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={pickOccupation}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={pickOccupation}>
             <Text style={{ ...fs(15), color: form.occupation ? t.textPrimary : t.textTertiary }}>
               {OCCUPATIONS.find((o) => o.value === form.occupation)?.label || '未设置'}
             </Text>
@@ -186,7 +186,7 @@ export default function ProfileEditPage() {
       </View>
 
       <View
-        style={{ backgroundColor: saving ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, alignItems: 'center', marginLeft: 16, marginRight: 16 }}
+        style={{ backgroundColor: saving ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center', marginLeft: 16, marginRight: 16 }}
         onClick={saving ? undefined : onSave}
       >
         <Text style={{ ...fs(16), color: t.textOnPrimary }}>{saving ? '保存中…' : '保存'}</Text>

@@ -61,7 +61,7 @@ export default function MyCorrectionsPage() {
       >
         {!isLoggedIn && <LoginGuide icon='file_text' text='登录后可查看我的纠错' />}
         {isLoggedIn && items.length === 0 && !loading && (
-          <View style={{ alignItems: 'center', paddingTop: 120 }}>
+          <View style={{ display: 'flex', alignItems: 'center', paddingTop: 120 }}>
             <Icon name="edit" size={48} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
               {isLoggedIn ? '还没有提交过纠错，在详情页点"纠错"帮助我们改进数据' : '登录后查看我提交的纠错'}
@@ -72,7 +72,7 @@ export default function MyCorrectionsPage() {
           const st = STATUS_MAP[item.status] || STATUS_MAP.Pending
           return (
             <View key={item.id} style={{ backgroundColor: t.bgCard, borderRadius: 12, marginLeft: 12, marginRight: 12, marginTop: 10, padding: 14 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>
                   {item.targetDisplay || (item.targetType === 'Bearing' ? '轴承' : '商家')}
                 </Text>
@@ -82,7 +82,7 @@ export default function MyCorrectionsPage() {
               </View>
               <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 6 }}>{item.fieldDisplayName}</Text>
               {/* diff 行：原值删除线 → 建议值加粗 */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' }}>
                 <Text style={{ ...fs(13), color: t.textTertiary, textDecoration: 'line-through' }}>
                   {item.originalValue || '（空）'}
                 </Text>

@@ -182,7 +182,7 @@ export default function SourcingDetailPage() {
 
   /** 表单行 */
   const rField = (label: string, value: string, setValue: (v: string) => void, placeholder: string) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 44, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 44, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(14), color: t.textSecondary, width: 64 }}>{label}</Text>
       <Input style={{ ...fs(15), flex: 1, color: t.textPrimary }} placeholder={placeholder} placeholderTextColor={t.textTertiary} value={value} onInput={(e) => setValue(e.detail.value)} />
     </View>
@@ -200,7 +200,7 @@ export default function SourcingDetailPage() {
       <ScrollView style={{ flex: 1 }}>
         {/* 需求卡 */}
         <View style={{ margin: 12, paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(20), color: t.textPrimary, fontWeight: 'bold', flex: 1 }} numberOfLines={1}>
               寻 {detail.partNumber}
             </Text>
@@ -209,7 +209,7 @@ export default function SourcingDetailPage() {
             </View>
           </View>
           {rows.filter(([, v]) => v).map(([k, v]) => (
-            <View key={k} style={{ flexDirection: 'row', marginTop: 10 }}>
+            <View key={k} style={{ display: 'flex', flexDirection: 'row', marginTop: 10 }}>
               <Text style={{ ...fs(13), color: t.textTertiary, width: 72 }}>{k}</Text>
               <Text style={{ ...fs(13), color: t.textPrimary, flex: 1 }}>{v}</Text>
             </View>
@@ -217,7 +217,7 @@ export default function SourcingDetailPage() {
           {detail.description ? (
             <View style={{ marginTop: 10 }}>
               <Text style={{ ...fs(13), color: t.textTertiary }}>补充说明</Text>
-              <Text style={{ ...fs(13), color: t.textPrimary, marginTop: 2, lineHeight: 20 }}>{detail.description}</Text>
+              <Text style={{ ...fs(13), color: t.textPrimary, marginTop: 2 }}>{detail.description}</Text>
             </View>
           ) : null}
           <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 10 }}>
@@ -227,7 +227,7 @@ export default function SourcingDetailPage() {
 
         {/* 发布人视角：解锁的被选商户联系方式 */}
         {detail.isPublisher && detail.selectedMerchantContact ? (
-          <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Icon name='phone' size={18} color={t.primary} />
             <View style={{ flex: 1, marginLeft: 8 }}>
               <Text style={{ ...fs(13), color: t.textPrimary }}>已选定商户联系电话</Text>
@@ -239,7 +239,7 @@ export default function SourcingDetailPage() {
 
         {/* 被选商户视角：解锁的发布人手机号 */}
         {detail.myResponse?.status === RESPONSE_STATUS.adopted && detail.publisherContact ? (
-          <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Icon name='phone' size={18} color={t.primary} />
             <View style={{ flex: 1, marginLeft: 8 }}>
               <Text style={{ ...fs(13), color: t.textPrimary }}>需求方联系电话</Text>
@@ -255,7 +255,7 @@ export default function SourcingDetailPage() {
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>商户应答（{detail.responses.length}）</Text>
             {detail.responses.map((r, i) => (
               <View key={r.id} style={{ marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '500', flex: 1 }} numberOfLines={1}>
                     {r.merchantName || '商户'}
                   </Text>
@@ -269,7 +269,7 @@ export default function SourcingDetailPage() {
                 <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>
                   {[r.price != null ? `¥${r.price}/只` : null, r.stock ? `库存 ${r.stock}` : null, r.leadTime ? `交期 ${r.leadTime}` : null].filter(Boolean).join(' · ') || '仅留言'}
                 </Text>
-                <Text style={{ ...fs(13), color: t.textPrimary, marginTop: 2, lineHeight: 19 }}>{r.remark}</Text>
+                <Text style={{ ...fs(13), color: t.textPrimary, marginTop: 2 }}>{r.remark}</Text>
                 {isOpen && r.status === RESPONSE_STATUS.pending && (
                   <View
                     style={{ alignSelf: 'flex-end', marginTop: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, backgroundColor: busy ? t.textTertiary : t.primary }}
@@ -292,7 +292,7 @@ export default function SourcingDetailPage() {
             <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>
               {[detail.myResponse.price != null ? `¥${detail.myResponse.price}/只` : null, detail.myResponse.stock ? `库存 ${detail.myResponse.stock}` : null, detail.myResponse.leadTime ? `交期 ${detail.myResponse.leadTime}` : null].filter(Boolean).join(' · ') || '仅留言'}
             </Text>
-            <Text style={{ ...fs(13), color: t.textPrimary, marginTop: 2, lineHeight: 19 }}>{detail.myResponse.remark}</Text>
+            <Text style={{ ...fs(13), color: t.textPrimary, marginTop: 2 }}>{detail.myResponse.remark}</Text>
             {isOpen && detail.myResponse.status === RESPONSE_STATUS.pending && (
               <Text style={{ ...fs(13), color: t.primary, marginTop: 8 }} onClick={() => { void openRespond() }}>修改应答</Text>
             )}
@@ -302,7 +302,7 @@ export default function SourcingDetailPage() {
         {/* 商户：发起应答按钮（有当前商户 + 进行中 + 登录） */}
         {isOpen && !detail.isPublisher && isLoggedIn && currentMerchant && !detail.myResponse && (
           <View
-            style={{ margin: 12, marginTop: 4, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary }}
+            style={{ margin: 12, marginTop: 4, height: 46, borderRadius: 23, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: t.primary }}
             onClick={() => { void openRespond() }}
           >
             <Text style={{ ...fs(16), color: '#FFFFFF', fontWeight: '600' }}>我要应答</Text>
@@ -312,7 +312,7 @@ export default function SourcingDetailPage() {
         {/* 发布人：取消寻货 */}
         {detail.isPublisher && isOpen && (
           <View
-            style={{ margin: 12, marginTop: 4, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}
+            style={{ margin: 12, marginTop: 4, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}
             onClick={() => { void doCancel() }}
           >
             <Text style={{ ...fs(15), color: t.textSecondary }}>取消寻货</Text>
@@ -321,7 +321,7 @@ export default function SourcingDetailPage() {
 
         {/* 未登录引导 */}
         {!isLoggedIn && isOpen && (
-          <View style={{ margin: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12, alignItems: 'center' }}>
+          <View style={{ margin: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12, display: 'flex', alignItems: 'center' }}>
             <Text style={{ ...fs(13), color: t.textSecondary }}>登录后可发布寻货；商户账号可应答报价</Text>
           </View>
         )}
@@ -338,7 +338,7 @@ export default function SourcingDetailPage() {
               const rq = quota.respond
               const left = Math.max(rq.freeLimit - rq.todayUsed, 0)
               return (
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 7, paddingBottom: 7, backgroundColor: t.primaryLight, borderRadius: 8 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 7, paddingBottom: 7, backgroundColor: t.primaryLight, borderRadius: 8 }}>
                   <Text style={{ ...fs(11), color: t.primary }}>
                     {left > 0 ? `商户今日免费应答剩 ${left}/${rq.freeLimit} 条` : '今日免费应答已用完'}
                   </Text>
@@ -352,11 +352,11 @@ export default function SourcingDetailPage() {
             {rField('库存', rStock, setRStock, '如 现货 2000（可空）')}
             {rField('交期', rLead, setRLead, '如 3 天内发货（可空）')}
             {rField('说明', rRemark, setRRemark, '必填：货源/成色/可否验货')}
-            <View style={{ flexDirection: 'row', marginTop: 14 }}>
-              <View style={{ flex: 1, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.border, marginRight: 10 }} onClick={() => setRespondOpen(false)}>
+            <View style={{ display: 'flex', flexDirection: 'row', marginTop: 14 }}>
+              <View style={{ flex: 1, height: 42, borderRadius: 21, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderWidth: 1, borderColor: t.border, marginRight: 10 }} onClick={() => setRespondOpen(false)}>
                 <Text style={{ ...fs(15), color: t.textSecondary }}>取消</Text>
               </View>
-              <View style={{ flex: 1, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: busy ? t.textTertiary : t.primary }} onClick={() => { void doRespond(false) }}>
+              <View style={{ flex: 1, height: 42, borderRadius: 21, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: busy ? t.textTertiary : t.primary }} onClick={() => { void doRespond(false) }}>
                 <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>{busy ? '提交中…' : (quota && quota.respond.todayUsed >= quota.respond.freeLimit ? `花  轴承币应答` : '提交应答')}</Text>
               </View>
             </View>

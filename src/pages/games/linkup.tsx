@@ -6,7 +6,7 @@
 // 架构对齐方案 A：本文件只是"玩家客户端"，出题/发分走通用端点 /mobile/games/linkup/*。
 // RN 约束：仅 flex + absolute 弹层、Text 包裹、数值 lineHeight、图片固定尺寸。
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -14,6 +14,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import Icon from '../../components/Icon'
 import MediaImage from '../../components/MediaImage'
+import { usableImage } from '../../services/config'
 import { getGameBoard, reportGameResult, type LinkupTile } from '../../services/games'
 import { vibrateSuccess } from '../../utils/haptics'
 
@@ -153,22 +154,35 @@ export default function LinkupPage() {
   const [status, setStatus] = useState<'loading' | 'playing' | 'won' | 'lost'>('loading')
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME)
   const [granted, setGranted] = useState(-1)
+  const [preloadedCount, setPreloadedCount] = useState(0)
+  const [preloadDone, setPreloadDone] = useState(false)
   const gameIdRef = useRef('')
   const settlingRef = useRef(false)
 
   const remainPairs = cells.filter((v) => v >= 0).length / 2
 
-  /** 开新局：拉题→铺盘→重置计时 */
+  // 响应式棋盘（v2.10.2 用户要求：行列固定、大屏放大、小屏缩放）：
+  // 用系统屏宽实时算瓷片尺寸（纯数值，三端一致，无需百分比/aspectRatio 等 CSS hack）
+  const sysInfo = Taro.getSystemInfoSync()
+  const winW = sysInfo.windowWidth || 375
+  const boardW = Math.min(winW, 560) - 29
+  const tileSize = Math.max(32, Math.floor((boardW - 10 - COLS * 4) / COLS))
+  const imgSize = Math.floor(tileSize * 0.62)
+  const txtSize = Math.max(8, Math.round(tileSize * 0.18))
+
+  /** 开新局：拉题→铺盘→预加载图片→就绪后进场 */
   const startGame = useCallback(async () => {
     setStatus('loading')
     const board = await getGameBoard('linkup', PAIRS)
     if (board.length < 2) {
-      Taro.showToast({ title: '3D 图库样本不足，待补充后开放', icon: 'none' })
+      Taro.showToast({ title: '图片样本不足，待补充后开放', icon: 'none' })
       return
     }
     const built = buildCells(board.length)
     gameIdRef.current = newGameId()
     settlingRef.current = false
+    setPreloadedCount(0)
+    setPreloadDone(false)
     setTiles(board)
     setCells(built.cells)
     setRows(built.rows)
@@ -176,10 +190,24 @@ export default function LinkupPage() {
     setHint(null)
     setGranted(-1)
     setTimeLeft(TOTAL_TIME)
-    setStatus('playing')
   }, [])
 
   useEffect(() => { void startGame() }, [startGame])
+
+  // 图片预加载（跨端安全：屏幕外 1px 隐藏 Image 强制拉图进原生/浏览器缓存）
+  // 全部 onLoad/onError 或 3 秒超时兜底后，标记就绪才真正开始读秒——
+  // 修复"已进场在读秒、瓷片还在陆续加载"的体验问题
+  useEffect(() => {
+    if (status !== 'loading' || tiles.length === 0 || preloadDone) return
+    if (preloadedCount >= tiles.length) { setPreloadDone(true); return }
+    const timer = setTimeout(() => setPreloadDone(true), 3000)
+    return () => clearTimeout(timer)
+  }, [status, tiles.length, preloadedCount, preloadDone])
+
+  // 就绪闸门：预加载完成后进入 playing 开始读秒
+  useEffect(() => {
+    if (status === 'loading' && preloadDone && tiles.length > 0) setStatus('playing')
+  }, [status, preloadDone, tiles.length])
 
   // 倒计时：归零判负（已结束不再走表）
   useEffect(() => {
@@ -243,16 +271,40 @@ export default function LinkupPage() {
   return (
     <PageLayout nav={<NavBar title='轴承连连看' showBack />}>
       <View style={{ flex: 1 }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: status === 'loading' ? 'center' : 'flex-start' }}>
+        <View style={{ flex: 1, display: 'flex', alignItems: 'center', display: 'flex', justifyContent: status === 'loading' ? 'center' : 'flex-start' }}>
           {status === 'loading' && (
-            <Text style={{ ...fs(14), color: t.textTertiary }}>正在从轴承图库抽题…</Text>
+            <>
+              <Text style={{ ...fs(14), color: t.textTertiary }}>
+                正在预加载图片{tiles.length > 0 ? `（${Math.min(preloadedCount, tiles.length)}/${tiles.length}）` : '…'}
+              </Text>
+              {/* 屏幕外 1px 隐藏 Image 强制拉图进缓存（H5/小程序/RN 均有效） */}
+              {tiles.length > 0 && (
+                <View style={{ position: 'absolute', left: -9999, top: 0, width: 1, height: 1, overflow: 'hidden' }}>
+                  {tiles.map((tl, ti) => {
+                    const src = usableImage(tl.imageUrl)
+                    return src ? (
+                      <Image
+                        key={`pre-${ti}`}
+                        src={src}
+                        style={{ width: 1, height: 1 }}
+                        onLoad={() => setPreloadedCount((c) => c + 1)}
+                        onError={() => setPreloadedCount((c) => c + 1)}
+                      />
+                    ) : (
+                      // 无有效图也计入就绪，避免卡住闸门
+                      <Text key={`pre-${ti}`} style={{ width: 1, height: 1 }} onLayout={() => setPreloadedCount((c) => c + 1)}>{ti}</Text>
+                    )
+                  })}
+                </View>
+              )}
+            </>
           )}
 
           {status !== 'loading' && (
             <>
               {/* 状态条：剩余对数 + 倒计时进度 + 提示按钮 */}
-              <View style={{ width: 346, marginTop: 12, backgroundColor: t.bgCard, borderRadius: 14, padding: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ width: boardW, marginTop: 12, backgroundColor: t.bgCard, borderRadius: 14, padding: 12 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>剩余 <Text style={{ color: t.primary, fontWeight: '700' }}>{remainPairs}</Text> 对</Text>
                   <Text style={{ ...fs(13), color: pct > 30 ? t.textSecondary : '#EF4444', fontWeight: '600' }}>{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</Text>
                   <View style={{ marginLeft: 12, backgroundColor: t.primaryLight, borderRadius: 12, paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4 }} onClick={doHint}>
@@ -264,8 +316,8 @@ export default function LinkupPage() {
                 </View>
               </View>
 
-              {/* 棋盘：6 列定宽动态行数，瓷片=纯 3D 渲染图（选中金环/提示橙环） */}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 346, marginTop: 14, paddingLeft: 5, paddingRight: 5 }}>
+              {/* 棋盘：6 列固定、瓷片尺寸随屏宽缩放（大屏放大/小屏缩小），选中金环/提示橙环 */}
+              <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', width: boardW, marginTop: 14, paddingLeft: 5, paddingRight: 5 }}>
                 {cells.map((v, i) => {
                   const tile = v >= 0 ? tiles[v] : null
                   const isSel = selected === i
@@ -274,12 +326,12 @@ export default function LinkupPage() {
                     <View
                       key={i}
                       style={{
-                        width: 52,
-                        height: 52,
+                        width: tileSize,
+                        height: tileSize,
                         margin: 2,
                         borderRadius: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        display: 'flex', alignItems: 'center',
+                        display: 'flex', flexDirection: 'column', justifyContent: 'center',
                         backgroundColor: v < 0 ? 'transparent' : t.bgCard,
                         borderWidth: isSel ? 2 : 1,
                         borderStyle: 'solid',
@@ -295,13 +347,13 @@ export default function LinkupPage() {
                         <>
                           <MediaImage
                             url={tile.imageUrl}
-                            style={{ width: 32, height: 32 }}
+                            style={{ width: imgSize, height: imgSize }}
                             mode='aspectFit'
                             fallbackIcon='package'
                             fallbackColor={t.primary}
-                            fallbackSize={22}
+                            fallbackSize={Math.max(14, Math.floor(imgSize * 0.55))}
                           />
-                          <Text style={{ ...fs(9), color: t.textTertiary, marginTop: 1 }} numberOfLines={1}>{tile.partNumber}</Text>
+                          <Text style={{ ...fs(txtSize), color: t.textTertiary, marginTop: 1 }} numberOfLines={1}>{tile.partNumber}</Text>
                         </>
                       )}
                     </View>
@@ -318,9 +370,9 @@ export default function LinkupPage() {
 
         {/* 胜利/失败弹层（absolute 遮罩，RN 兼容） */}
         {(status === 'won' || status === 'lost') && (
-          <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.55)', alignItems: 'center', justifyContent: 'center' }}>
-            <View style={{ width: 280, backgroundColor: t.bgCard, borderRadius: 20, padding: 24, alignItems: 'center' }}>
-              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: status === 'won' ? t.primaryLight : t.bgInput, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.55)', alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <View style={{ width: 280, backgroundColor: t.bgCard, borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center' }}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: status === 'won' ? t.primaryLight : t.bgInput, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Icon name={status === 'won' ? 'trophy' : 'timer'} size={32} color={status === 'won' ? '#F59E0B' : t.textTertiary} />
               </View>
               <Text style={{ ...fs(20), color: t.textPrimary, fontWeight: '700', marginTop: 12 }}>
@@ -332,7 +384,7 @@ export default function LinkupPage() {
                   : '差一点，再来一局'}
               </Text>
               <View
-                style={{ alignSelf: 'stretch', backgroundColor: t.primary, borderRadius: 22, paddingTop: 12, paddingBottom: 12, alignItems: 'center', marginTop: 18 }}
+                style={{ alignSelf: 'stretch', backgroundColor: t.primary, borderRadius: 22, paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center', marginTop: 18 }}
                 onClick={() => void startGame()}
               >
                 <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>再来一局</Text>

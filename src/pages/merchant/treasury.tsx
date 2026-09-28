@@ -49,7 +49,7 @@ export default function MerchantTreasuryPage() {
         <ScrollView style={{ flex: 1 }}>
           {/* 金库余额（商家仓库） */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
               {/* 等级徽章（入驻/认证/活跃供给/金牌——buff 与信任的可视化） */}
               {treasury?.gradeDisplay ? (
@@ -73,7 +73,7 @@ export default function MerchantTreasuryPage() {
             <View style={{ marginLeft: 12, marginRight: 12, marginTop: 12 }}>
               <Text style={{ ...fs(13), color: t.textSecondary }}>全部流水</Text>
               {txs.map((tx, i) => (
-                <View key={i} style={{ backgroundColor: t.bgCard, borderRadius: 10, padding: 12, marginTop: 8, flexDirection: 'row', alignItems: 'center' }}>
+                <View key={i} style={{ backgroundColor: t.bgCard, borderRadius: 10, padding: 12, marginTop: 8, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ ...fs(13), color: t.textPrimary }}>{treasurySceneText(tx.scene)}</Text>
                     <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 3 }}>{tx.remark || ''} {formatTime(tx.createdAt)}</Text>
@@ -85,7 +85,7 @@ export default function MerchantTreasuryPage() {
               ))}
             </View>
           ) : (
-            <View style={{ alignItems: 'center', paddingTop: 60 }}>
+            <View style={{ display: 'flex', alignItems: 'center', paddingTop: 60 }}>
               <Text style={{ ...fs(13), color: t.textTertiary }}>还没有金库流水，成员赚分上供、挂礼成交与集体任务奖励会记在这里</Text>
             </View>
           )}

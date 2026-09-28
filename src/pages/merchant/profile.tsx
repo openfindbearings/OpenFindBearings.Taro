@@ -211,9 +211,9 @@ export default function MerchantProfilePage() {
 
   /** 单行字段：左标题 + 右输入 */
   const fieldRow = (label: string, node: any) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(15), color: t.textPrimary, width: 88 }}>{label}</Text>
-      <View style={{ flex: 1, alignItems: 'flex-end' }}>{node}</View>
+      <View style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>{node}</View>
     </View>
   )
   const inputStyle = { ...fs(15), color: t.textPrimary, textAlign: 'right' as const, flex: 1 }
@@ -224,9 +224,9 @@ export default function MerchantProfilePage() {
       {/* Logo 预览：点击上传，仅绝对/相对可解析地址渲染，失败回退 store 图标。
           改动说明（v1.7.12）：72 圆形 aspectFill 会把非方形 logo 裁掉边角——改 96 圆角白底
           aspectFit 完整自适应显示（与商户列表卡 mch-avatar-img 同口径） */}
-      <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 20, backgroundColor: t.bgCard, marginBottom: 12 }}>
+      <View style={{ display: 'flex', alignItems: 'center', paddingTop: 20, paddingBottom: 20, backgroundColor: t.bgCard, marginBottom: 12 }}>
         <View
-          style={{ width: 96, height: 96, borderRadius: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: t.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+          style={{ width: 96, height: 96, borderRadius: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: t.border, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}
           onClick={uploading ? undefined : onPickLogo}
         >
           {logoSrc
@@ -270,7 +270,7 @@ export default function MerchantProfilePage() {
           const st = latest ? DOC_STATUS_MAP[latest.status] : undefined
           const thumb = latest && latest.status !== 'Rejected' ? usableImage(latest.fileUrl) : ''
           return (
-            <View key={slot.type} style={{ flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: t.border, paddingTop: 10, paddingBottom: 10 }}>
+            <View key={slot.type} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: t.border, paddingTop: 10, paddingBottom: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ ...fs(14), color: t.textPrimary }}>{slot.label}</Text>
                 <Text style={{ ...fs(12), color: st ? (t as any)[st.color] : t.textTertiary, marginTop: 2 }}>
@@ -287,7 +287,7 @@ export default function MerchantProfilePage() {
       </View>
 
       <View
-        style={{ backgroundColor: saving ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, alignItems: 'center', marginLeft: 16, marginRight: 16 }}
+        style={{ backgroundColor: saving ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center', marginLeft: 16, marginRight: 16 }}
         onClick={saving ? undefined : onSave}
       >
         <Text style={{ ...fs(16), color: t.textOnPrimary }}>{saving ? '保存中…' : '保存'}</Text>

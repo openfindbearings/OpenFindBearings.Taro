@@ -343,7 +343,7 @@ export default function MerchantManagePage() {
 
   /** 表单四项描述输入行（添加/编辑共用） */
   const descRow = (label: string, key: keyof FormState, placeholder: string) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingBottom: 8 }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingBottom: 8 }}>
       <Text style={{ ...fs(13), color: t.textSecondary, width: 72 }}>{label}</Text>
       <Input
         style={{ ...fs(14), color: t.textPrimary, flex: 1, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6 }}
@@ -356,7 +356,7 @@ export default function MerchantManagePage() {
   )
 
   const formActions = (onSubmit: () => void, okLabel: string) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+    <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
       <View
         style={{ backgroundColor: t.bgInput, borderRadius: 16, paddingLeft: 18, paddingRight: 18, paddingTop: 7, paddingBottom: 7, marginRight: 10 }}
         onClick={() => { setAdding(false); setEditingId(null); setForm(EMPTY_FORM); setPicked(null) }}
@@ -384,9 +384,9 @@ export default function MerchantManagePage() {
   return (
     <PageLayout nav={<NavBar title="商品管理" showBack />}>
       {/* 操作栏：添加商品（成员均可）+ Excel 导入（仅管理员）——v1.7.3 替代原整行大按钮 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 4 }}>
+      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 4 }}>
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
           onClick={toggleAdd}
         >
           <Icon name="plus" size={14} color={t.textOnPrimary} />
@@ -394,7 +394,7 @@ export default function MerchantManagePage() {
         </View>
         {isAdmin && (
           <View
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, marginLeft: 10 }}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, marginLeft: 10 }}
             onClick={onImport}
           >
             <Text style={{ ...fs(13), color: importing ? t.textTertiary : t.primary }}>{importing ? '导入中…' : 'Excel 导入'}</Text>
@@ -414,7 +414,7 @@ export default function MerchantManagePage() {
             onInput={(e) => onSearchInput(e.detail.value)}
           />
           {picked && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 8, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8 }}>
               <Text style={{ ...fs(13), color: t.primary, flex: 1 }} numberOfLines={1}>
                 已选：{picked.brandName ? `${picked.brandName} ` : ''}{picked.partNumber}{picked.bearingType ? ` · ${picked.bearingType}` : ''}
               </Text>
@@ -451,7 +451,7 @@ export default function MerchantManagePage() {
       )}
 
       {/* 筛选页签 */}
-      <View style={{ flexDirection: 'row', paddingLeft: 14, paddingRight: 14, paddingTop: 10, paddingBottom: 2 }}>
+      <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 14, paddingRight: 14, paddingTop: 10, paddingBottom: 2 }}>
         {filterTab('all', '全部')}
         {filterTab('onSale', '在售')}
         {filterTab('pending', '审核中')}
@@ -459,7 +459,7 @@ export default function MerchantManagePage() {
 
       <View style={{ paddingLeft: 14, paddingRight: 14, marginTop: 8 }}>
         {items.length === 0 && !loading ? (
-          <View style={{ alignItems: 'center', paddingTop: 50 }}>
+          <View style={{ display: 'flex', alignItems: 'center', paddingTop: 50 }}>
             <Icon name="box" size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无商品，点左上"添加商品"上架</Text>
           </View>
@@ -470,14 +470,14 @@ export default function MerchantManagePage() {
                 key={item.id}
                 style={{ backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === item.id ? 0.5 : 1 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(15), color: t.textPrimary, flex: 1 }} numberOfLines={1}>{item.bearingPartNumber}</Text>
                   {item.isPendingApproval && (
                     <View style={{ borderRadius: 4, backgroundColor: '#F59E0B', paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, marginRight: 8 }}>
                       <Text style={{ ...fs(10), color: '#fff' }}>审核中</Text>
                     </View>
                   )}
-                  <View style={{ width: 52, height: 20, borderRadius: 10, backgroundColor: item.isOnSale ? '#16A34A' : t.textTertiary, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ width: 52, height: 20, borderRadius: 10, backgroundColor: item.isOnSale ? '#16A34A' : t.textTertiary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ ...fs(11), color: '#fff' }}>{item.isOnSale ? '在售' : '下架'}</Text>
                   </View>
                 </View>
@@ -485,7 +485,7 @@ export default function MerchantManagePage() {
                   {[item.brandName, item.bearingTypeName, item.priceDescription || item.price].filter(Boolean).join(' · ') || '暂无规格'}
                 </Text>
                 {/* 行操作：置顶（商城权益） + 编辑 + 状态 */}
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
                   {item.isOnSale && (
                     <View
                       style={{ backgroundColor: t.bgInput, borderRadius: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, marginRight: 8 }}
@@ -525,7 +525,7 @@ export default function MerchantManagePage() {
 
       {items.length < total && (
         <View
-          style={{ alignItems: 'center', paddingTop: 14, paddingBottom: 20 }}
+          style={{ display: 'flex', alignItems: 'center', paddingTop: 14, paddingBottom: 20 }}
           onClick={() => load(page + 1, true)}
         >
           <Text style={{ ...fs(14), color: t.textSecondary }}>{loading ? '加载中…' : '加载更多'}</Text>

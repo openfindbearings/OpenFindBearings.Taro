@@ -1,4 +1,4 @@
-﻿// 我的关注商家页：分页列表 + 行内取消关注。数据经 BFF /mobile/followed（API /api/me/follows/merchants）。
+// 我的关注商家页：分页列表 + 行内取消关注。数据经 BFF /mobile/followed（API /api/me/follows/merchants）。
 // 与收藏页同范式：登录态订阅 store，未登录展示引导空态。
 import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
@@ -65,7 +65,7 @@ export default function FollowedPage() {
   return (
     <PageLayout nav={<NavBar title="我的关注" showBack />}>
       {!isLoggedIn && (
-        <View style={{ alignItems: 'center', paddingTop: 80 }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 80 }}>
           <Icon name="users" size={48} color={t.textTertiary} />
           <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>登录后可查看关注</Text>
           <View
@@ -77,7 +77,7 @@ export default function FollowedPage() {
         </View>
       )}
       {isLoggedIn && items.length === 0 && !loading && (
-        <View style={{ alignItems: 'center', paddingTop: 80 }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 80 }}>
           <Icon name="users" size={48} color={t.textTertiary} />
           <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>还没有关注，去商家详情页看看吧</Text>
         </View>
@@ -85,10 +85,10 @@ export default function FollowedPage() {
       {items.map((item) => (
         <View
           key={item.id}
-          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, flexDirection: 'row', alignItems: 'center' }}
+          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
           onClick={() => goDetail(item.merchant.id)}
         >
-          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 12 }}>
             <Icon name="store" size={20} color={t.primary} />
           </View>
           <View style={{ flex: 1 }}>
@@ -107,7 +107,7 @@ export default function FollowedPage() {
         </View>
       ))}
       {isLoggedIn && hasMore && (
-        <View style={{ alignItems: 'center', paddingTop: 14, paddingBottom: 14 }} onClick={() => { if (!loading) load(page + 1, true) }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 14, paddingBottom: 14 }} onClick={() => { if (!loading) load(page + 1, true) }}>
           <Text style={{ ...fs(14), color: t.primaryText }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
       )}

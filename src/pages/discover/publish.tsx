@@ -83,7 +83,7 @@ export default function PublishSourcingPage() {
 
   /** 单行输入字段（label + input 行式布局） */
   const field = (key: keyof FormState, label: string, placeholder: string, required = false) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', minHeight: 48, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 48, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(14), color: required ? t.textPrimary : t.textSecondary, width: 76 }}>
         {label}{required ? ' *' : ''}
       </Text>
@@ -109,7 +109,7 @@ export default function PublishSourcingPage() {
         {/* 额度条（v1.7.21 额度可见化）：常驻展示今日剩余免费额度与超限单价，
             不再"撞墙才可见"；quota 拉取失败（未登录等）整条隐藏 */}
         {pq && freeLeft !== null ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginLeft: 12, marginRight: 12, marginTop: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 9, paddingBottom: 9, backgroundColor: t.primaryLight, borderRadius: 10 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginLeft: 12, marginRight: 12, marginTop: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 9, paddingBottom: 9, backgroundColor: t.primaryLight, borderRadius: 10 }}>
             <Text style={{ ...fs(12), color: t.primary }}>
               {freeLeft > 0 ? `今日免费额度剩 ${freeLeft}/${pq.freeLimit} 条` : `今日免费额度已用完`}
             </Text>
@@ -124,7 +124,7 @@ export default function PublishSourcingPage() {
           {field('quantity', '数量', '如 500 套（可空）')}
           {field('expectedDelivery', '期望交期', '如 一周内（可空）')}
           {field('region', '收货地区', '如 河南洛阳（可空）')}
-          <View style={{ flexDirection: 'row', minHeight: 72, paddingTop: 12 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', minHeight: 72, paddingTop: 12 }}>
             <Text style={{ ...fs(14), color: t.textSecondary, width: 76 }}>补充说明</Text>
             <Input
               style={{ ...fs(15), flex: 1, color: t.textPrimary }}
@@ -136,7 +136,7 @@ export default function PublishSourcingPage() {
           </View>
         </View>
 
-        <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 16, marginRight: 16, marginTop: 4, lineHeight: 18 }}>
+        <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 16, marginRight: 16, marginTop: 4 }}>
           发布后商户可应答报价，您从应答中选定一家后双方互见联系方式。寻货 14 天有效，请留意站内信通知。
         </Text>
 
@@ -144,7 +144,7 @@ export default function PublishSourcingPage() {
             判定仍以服务端 NEED_POINTS 协议为准，这里只是前置展示与引导 */}
         <View
           style={{
-            margin: 16, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center',
+            margin: 16, height: 46, borderRadius: 23, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center',
             backgroundColor: submitting ? t.textTertiary : (insufficient ? t.textTertiary : t.primary),
           }}
           onClick={() => {

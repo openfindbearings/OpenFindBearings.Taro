@@ -113,8 +113,8 @@ export default function NavBar({
                 >
                   <Icon name={ic.name} size={ic.size ?? 24} color={fg} />
                   {!!ic.badge && (
-                    <View style={{ position: 'absolute', top: -2, right: -6, minWidth: 15, height: 15, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingLeft: 4, paddingRight: 4 }}>
-                      <Text style={{ fontSize: 10, lineHeight: 13, color: '#FFFFFF' }}>{ic.badge > 99 ? '99+' : ic.badge}</Text>
+                    <View style={{ position: 'absolute', top: -2, right: -6, minWidth: 15, height: 15, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingLeft: 4, paddingRight: 4 }}>
+                      <Text style={{ ...fs(10), color: '#FFFFFF' }}>{ic.badge > 99 ? '99+' : ic.badge}</Text>
                     </View>
                   )}
                 </View>

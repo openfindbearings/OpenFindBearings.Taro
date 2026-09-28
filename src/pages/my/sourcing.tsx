@@ -77,7 +77,7 @@ export default function MySourcingPage() {
               style={{ marginLeft: 12, marginRight: 12, marginTop: i === 0 ? 12 : 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
               onClick={() => Taro.navigateTo({ url: `/pages/discover/detail?id=${item.id}` })}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>
                   寻 {item.partNumber}
                 </Text>
@@ -90,7 +90,7 @@ export default function MySourcingPage() {
                   <Text style={{ ...fs(11), color: open ? t.primary : t.textTertiary }}>{demandStatusText(item.status)}</Text>
                 </View>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                 <Text style={{ ...fs(13), color: t.textTertiary, flex: 1 }}>
                   {[item.brand, item.quantity].filter(Boolean).join(' · ') || '—'} · {item.responseCount} 条应答
                 </Text>
@@ -98,7 +98,7 @@ export default function MySourcingPage() {
                 {open && (
                   <View
                     onClick={(e) => { e?.stopPropagation?.(); void openPinPicker(item) }}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderWidth: 1, borderColor: t.primary }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderWidth: 1, borderColor: t.primary }}
                   >
                     <Icon name='arrow-up-circle' size={13} color={t.primary} />
                     <Text style={{ ...fs(12), color: t.primary, marginLeft: 3 }}>{item.isPinned ? '续置顶' : '置顶'}</Text>
@@ -124,7 +124,7 @@ export default function MySourcingPage() {
               <View
                 key={card.id}
                 onClick={() => void doPin(card)}
-                style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: t.borderColor, backgroundColor: t.bgMain }}
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 12, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: t.borderColor, backgroundColor: t.bgMain }}
               >
                 <Icon name={card.icon || 'arrow-up-circle'} size={20} color={t.primary} />
                 <View style={{ flex: 1, marginLeft: 10 }}>
@@ -136,7 +136,7 @@ export default function MySourcingPage() {
             ))}
             <View
               onClick={() => setPinFor(null)}
-              style={{ marginTop: 14, alignItems: 'center', padding: 10 }}
+              style={{ marginTop: 14, display: 'flex', alignItems: 'center', padding: 10 }}
             >
               <Text style={{ ...fs(14), color: t.textTertiary }}>{pinning ? '提交中…' : '取消'}</Text>
             </View>

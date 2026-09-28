@@ -600,9 +600,9 @@ export default function MerchantApplyPage() {
 
   /** 左标题右控件的单行字段行（自营表单用） */
   const fieldRow = (label: string, node: any) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(15), color: t.textPrimary, width: 92 }}>{label}</Text>
-      <View style={{ flex: 1, alignItems: 'flex-end' }}>{node}</View>
+      <View style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>{node}</View>
     </View>
   )
   const inputStyle = { ...fs(15), color: t.textPrimary, textAlign: 'right' as const, flex: 1 }
@@ -612,7 +612,7 @@ export default function MerchantApplyPage() {
     <View style={{ marginBottom: 12 }}>
       <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 4 }}>{label}</Text>
       <Input
-        style={{ backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 10, paddingBottom: 10, fontSize: 15, lineHeight: 22, color: t.textPrimary }}
+        style={{ backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 10, paddingBottom: 10, ...fs(15), color: t.textPrimary }}
         value={value}
         type={type || 'text'}
         placeholder={placeholder}
@@ -625,10 +625,10 @@ export default function MerchantApplyPage() {
   /** 操作方式选择卡片（图标 + 标题 + 描述 + 右箭头） */
   const optionCard = (icon: string, title: string, desc: string, onClick: () => void) => (
     <View
-      style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, borderWidth: 1, borderColor: t.border, padding: 14, marginBottom: 12 }}
+      style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, borderWidth: 1, borderColor: t.border, padding: 14, marginBottom: 12 }}
       onClick={onClick}
     >
-      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <Icon name={icon} size={20} color={t.primary} />
       </View>
       <View style={{ flex: 1, marginLeft: 12 }}>
@@ -642,7 +642,7 @@ export default function MerchantApplyPage() {
   /** 统一提交按钮（提交中禁用变灰） */
   const submitButton = (label: string) => (
     <View
-      style={{ backgroundColor: submitting ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, alignItems: 'center', marginTop: 18 }}
+      style={{ backgroundColor: submitting ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center', marginTop: 18 }}
       onClick={submitting ? undefined : onSubmit}
     >
       <Text style={{ ...fs(16), color: t.textOnPrimary }}>{submitting ? '提交中…' : label}</Text>
@@ -652,15 +652,15 @@ export default function MerchantApplyPage() {
   /** 步骤条：当前相位高亮，序号圆点 + 文字（修复点：文字 lineHeight 给足避免顶部裁切） */
   const stepIndex = phase === 'mode' ? 1 : phase === 'form' ? 2 : 0
   const stepBar = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
       {STEP_LABELS.map((label, i) => {
         const active = i <= stepIndex
         return (
-          <View key={label} style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-            <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: active ? t.primary : t.border, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 11, lineHeight: 22, color: active ? t.textOnPrimary : t.textTertiary }}>{i + 1}</Text>
+          <View key={label} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: active ? t.primary : t.border, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Text style={{ ...fs(11), color: active ? t.textOnPrimary : t.textTertiary }}>{i + 1}</Text>
             </View>
-            <Text style={{ fontSize: 12, lineHeight: 18, color: i === stepIndex ? t.textPrimary : t.textTertiary, marginLeft: 4 }}>{label}</Text>
+            <Text style={{ ...fs(12), color: i === stepIndex ? t.textPrimary : t.textTertiary, marginLeft: 4 }}>{label}</Text>
             {i < STEP_LABELS.length - 1 && (
               <View style={{ flex: 1, height: 2, backgroundColor: i < stepIndex ? t.primary : t.border, marginLeft: 6, marginRight: 6 }} />
             )}
@@ -677,7 +677,7 @@ export default function MerchantApplyPage() {
         你收到了其他用户发来的商户管理员提名，补全资料并成功后即可提交审核。
       </Text>
       {invites.length === 0 ? (
-        <View style={{ alignItems: 'center', paddingTop: 40 }}>
+        <View style={{ display: 'flex', alignItems: 'center', paddingTop: 40 }}>
           <Icon name="mail" size={40} color={t.textTertiary} />
           <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无待接受的提名</Text>
         </View>
@@ -686,7 +686,7 @@ export default function MerchantApplyPage() {
           const open = item.invitationCode === openCode
           return (
             <View key={item.invitationCode} style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 14, marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={() => onOpenInvite(item)}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={() => onOpenInvite(item)}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ ...fs(15), color: t.textPrimary }}>{item.merchantName}</Text>
                   <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
@@ -707,7 +707,7 @@ export default function MerchantApplyPage() {
                 {docRow('品牌授权书', false, 'authorization', 2, '被提名商户为授权经销商时必备')}
                 {docRow('厂房照片', false, 'factory', 3, '生产厂家选传')}
                   <View
-                    style={{ backgroundColor: accepting ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 11, paddingBottom: 11, alignItems: 'center', marginTop: 4 }}
+                    style={{ backgroundColor: accepting ? t.textTertiary : t.primary, borderRadius: 24, paddingTop: 11, paddingBottom: 11, display: 'flex', alignItems: 'center', marginTop: 4 }}
                     onClick={accepting ? undefined : () => onAccept(item.invitationCode)}
                   >
                     <Text style={{ ...fs(15), color: t.textOnPrimary }}>{accepting ? '提交中…' : '接受提名并提交审核'}</Text>
@@ -719,7 +719,7 @@ export default function MerchantApplyPage() {
         })
       )}
       <View
-        style={{ backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, alignItems: 'center', borderWidth: 1, borderColor: t.primary }}
+        style={{ backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center', borderWidth: 1, borderColor: t.primary }}
         onClick={() => setPhase('search')}
       >
         <Text style={{ ...fs(15), color: t.primary }}>不是我的商户？我自己申请入驻</Text>
@@ -734,10 +734,10 @@ export default function MerchantApplyPage() {
         输入商家名称关键字，查询商家全称
       </Text>
       {/* 描边胶囊 + 放大镜：让搜索框在浅灰卡片背景上足够醒目（修复：原无边框浅灰底不明显） */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 10, borderWidth: 1, borderColor: t.border, paddingLeft: 12, paddingRight: 12 }}>
+      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 10, borderWidth: 1, borderColor: t.border, paddingLeft: 12, paddingRight: 12 }}>
         <Icon name="search" size={18} color={t.textTertiary} />
         <Input
-          style={{ flex: 1, ...fs(15), color: t.textPrimary, marginLeft: 8, paddingTop: 11, paddingBottom: 11, minHeight: 42, lineHeight: 22 }}
+          style={{ flex: 1, ...fs(15), color: t.textPrimary, marginLeft: 8, paddingTop: 11, paddingBottom: 11, minHeight: 42 }}
           value={keyword}
           placeholder="输入关键字，如：人本 / 光洋 / 轴承"
           placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
@@ -749,7 +749,7 @@ export default function MerchantApplyPage() {
       <View style={{ marginTop: 12 }}>
         {searching && <Text style={{ ...fs(13), color: t.textTertiary }}>搜索中…</Text>}
         {!searching && keyword.trim() && results.length === 0 && (
-          <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 8 }}>
+          <View style={{ display: 'flex', alignItems: 'center', paddingTop: 20, paddingBottom: 8 }}>
             <Text style={{ ...fs(13), color: t.textTertiary }}>未找到相关商家，可在下方新建</Text>
           </View>
         )}
@@ -759,14 +759,14 @@ export default function MerchantApplyPage() {
           return (
             <View
               key={item.id}
-              style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, padding: 12, marginBottom: 8 }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, padding: 12, marginBottom: 8 }}
               onClick={() => onPick(item)}
             >
               <View style={{ flex: 1 }}>
                 <Text style={{ ...fs(15), color: t.textPrimary }}>{item.name}</Text>
                 {item.companyName ? <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>{item.companyName}</Text> : null}
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 6 }}>{item.type}</Text>
                 <View style={{ borderRadius: 4, borderWidth: 1, borderColor: badgeColor, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1 }}>
                   <Text style={{ ...fs(11), color: badgeColor }}>{item.statusText || '可认领'}</Text>
@@ -779,7 +779,7 @@ export default function MerchantApplyPage() {
       {/* 新建入口：改为带"+"的描边按钮，去掉原 borderTopWidth 横线（修复：横线易被误认为输入位置） */}
       <View style={{ marginTop: 18 }}>
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, borderWidth: 1, borderColor: t.primary }}
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, borderWidth: 1, borderColor: t.primary }}
           onClick={onCreateNew}
         >
           <Text style={{ ...fs(16), color: t.primary, marginRight: 6 }}>+</Text>
@@ -836,7 +836,7 @@ export default function MerchantApplyPage() {
           <View style={{ borderRadius: 12, overflow: 'hidden' }}>
             {fieldRow('商家名称', <Input style={inputStyle} value={form.name} maxlength={50} placeholder="必填，对外展示名称" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('name', e.detail.value)} />)}
             {fieldRow('商家类型 *', (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }} onClick={() => pickType(form.type, (v) => setField('type', v))}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={() => pickType(form.type, (v) => setField('type', v))}>
                 <Text style={{ ...fs(15), color: form.type ? t.textPrimary : t.textTertiary }}>
                   {MERCHANT_TYPES.find((x) => x.value === form.type)?.label || '请选择'}
                 </Text>
@@ -888,8 +888,8 @@ export default function MerchantApplyPage() {
           {fieldColumn('商家名称 *', nomName, setNomName, '对外展示名称')}
           <View style={{ marginBottom: 12 }}>
             <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 4 }}>商家类型</Text>
-            <View style={{ backgroundColor: t.bgInput, borderRadius: 8, padding: 10, flexDirection: 'row', justifyContent: 'space-between' }} onClick={() => pickType(nomType, setNomType)}>
-              <Text style={{ fontSize: 15, lineHeight: 22, color: t.textPrimary }}>{MERCHANT_TYPES.find((x) => x.value === nomType)?.label || '请选择'}</Text>
+            <View style={{ backgroundColor: t.bgInput, borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }} onClick={() => pickType(nomType, setNomType)}>
+              <Text style={{ ...fs(15), color: t.textPrimary }}>{MERCHANT_TYPES.find((x) => x.value === nomType)?.label || '请选择'}</Text>
               <Text style={{ color: t.textTertiary }}>选择 ›</Text>
             </View>
           </View>
@@ -909,7 +909,7 @@ export default function MerchantApplyPage() {
         {/* 编辑模式无"上一步"（向导相位不适用），返回即退出页面 */}
         {!editing && (
           <View
-            style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
             onClick={() => setPhase('mode')}
           >
             <Icon name="chevron-left" size={16} color={t.textSecondary} />

@@ -87,8 +87,8 @@ export default function DiscoverPage() {
   return (
     <PageLayout nav={<NavBar title='寻货' rightSlot={<Text style={{ ...fs(14), color: t.primary, fontWeight: '600' }} onClick={goPublish}>发布</Text>} />} tabbar={<CustomTabBar />}>
       {/* 搜索行 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 8 }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', height: 38, borderRadius: 19, backgroundColor: t.bgInput, paddingLeft: 12, paddingRight: 12 }}>
+      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 8 }}>
+        <View style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', height: 38, borderRadius: 19, backgroundColor: t.bgInput, paddingLeft: 12, paddingRight: 12 }}>
           <Icon name='search' size={16} color={t.textTertiary} />
           <Input
             style={{ ...fs(15), flex: 1, marginLeft: 6, marginRight: 6, color: t.textPrimary }}
@@ -104,7 +104,7 @@ export default function DiscoverPage() {
       </View>
 
       {/* 过滤 chips */}
-      <View style={{ flexDirection: 'row', paddingLeft: 16, paddingTop: 10, paddingBottom: 4 }}>
+      <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 16, paddingTop: 10, paddingBottom: 4 }}>
         {([
           { key: 'all', label: '全部寻货' },
           { key: 'unanswered', label: '等待应答' },
@@ -112,6 +112,8 @@ export default function DiscoverPage() {
           <View
             key={f.key}
             style={{
+              // 改动说明：补 display:flex + center——H5 下 View 默认 block，内联文字行盒被 strut 撑高、文字偏上
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, marginRight: 8,
               backgroundColor: filter === f.key ? t.primary : t.bgInput,
             }}
@@ -141,23 +143,23 @@ export default function DiscoverPage() {
             onClick={() => goDetail(item.id)}
           >
             {/* 首行：型号 + 状态 */}
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>
                 寻 {item.partNumber}
               </Text>
               {/* 改动说明（v2.10.0 寻货置顶）：置顶期需求带醒目金色角标（服务端已按置顶排序） */}
               {item.isPinned && (
-                <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.warning, marginRight: 6 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.warning, marginRight: 6 }}>
                   <Icon name='arrow-up-circle' size={10} color='#FFFFFF' />
                   <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '700' }}>置顶</Text>
                 </View>
               )}
               {item.isMine && (
-                <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 6 }}>
+                <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 6 }}>
                   <Text style={{ ...fs(11), color: t.primary }}>我发布</Text>
                 </View>
               )}
-              <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.bgInput }}>
+              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.bgInput }}>
                 <Text style={{ ...fs(11), color: t.textSecondary }}>{item.responseCount > 0 ? `${item.responseCount} 家应答` : '等待应答'}</Text>
               </View>
             </View>
@@ -166,7 +168,7 @@ export default function DiscoverPage() {
               {[item.brand, item.quantity, item.region].filter(Boolean).join(' · ') || '详情见需求说明'}
             </Text>
             {/* 底行：时间 + 过期提示 */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>{relativeTime(item.createdAt)}</Text>
               <Text style={{ ...fs(12), color: t.textTertiary }}>{relativeTime(item.expiryAt).replace('前', '后过期')}</Text>
             </View>

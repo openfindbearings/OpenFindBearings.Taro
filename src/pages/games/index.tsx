@@ -36,7 +36,7 @@ export default function GamesPage() {
           {/* 头部说明卡：主题色浅底 + 赚分纪律（预期透明） */}
           <View style={{ marginLeft: 16, marginRight: 16, marginTop: 16, borderRadius: 16, backgroundColor: t.primaryLight, padding: 16 }}>
             <Text style={{ ...fs(17), color: t.textPrimary, fontWeight: '700' }}>玩小游戏，赚轴承币</Text>
-            <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6, lineHeight: 18 }}>
+            <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>
               每局胜利 +5 分，每日上限 10 分；题目都来自平台真实轴承数据，玩着玩着就认识型号了
             </Text>
           </View>
@@ -48,8 +48,8 @@ export default function GamesPage() {
               <View
                 key={g.key}
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
+                  display: 'flex', flexDirection: 'row',
+                  display: 'flex', alignItems: 'center',
                   backgroundColor: t.bgCard,
                   marginLeft: 16,
                   marginRight: 16,
@@ -61,11 +61,11 @@ export default function GamesPage() {
                 onClick={() => openGame(g.route, g.status)}
               >
                 {/* 图标容器：游戏专属色浅底圆角块 */}
-                <View style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: locked ? t.bgInput : t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: locked ? t.bgInput : t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <Icon name={g.icon} size={28} color={locked ? t.textTertiary : g.color} />
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600' }}>{g.name}</Text>
                     {locked ? (
                       <Text style={{ ...fs(10), color: t.textTertiary, backgroundColor: t.bgInput, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>敬请期待</Text>
@@ -82,7 +82,7 @@ export default function GamesPage() {
 
           {/* 合规脚注：轴承币红线口径（与规则页一致） */}
           <View style={{ marginLeft: 16, marginRight: 16, marginTop: 20 }}>
-            <Text style={{ ...fs(11), color: t.textTertiary, lineHeight: 17 }}>
+            <Text style={{ ...fs(11), color: t.textTertiary }}>
               轴承币不可充值、不可提现、不可转让；小游戏是平台的活跃奖励，不是收益渠道
             </Text>
           </View>

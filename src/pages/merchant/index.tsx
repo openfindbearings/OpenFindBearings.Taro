@@ -175,10 +175,10 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
         </View>
         <View className='mch-mid'>
           {/* v1.7.2 认证徽标上移至名称旁（金色小标，主流电商店铺式）：替代卡底重复提示行 */}
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.merchantName}</Text>
             {isActive && m.isVerified && (
-              <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: '#F59E0B' }}>
+              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: '#F59E0B' }}>
                 <Text style={{ ...fs(10), color: '#FFFFFF' }}>已认证</Text>
               </View>
             )}
@@ -233,7 +233,7 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
 
       {/* 非当前的生效商户：引导切换 */}
       {isActive && !isCurrent && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
           <Text style={{ ...fs(12), color: t.primaryText }}>点击设为当前商户</Text>
           <Icon name='chevron-right' size={14} color={t.primaryText} />
         </View>
@@ -356,15 +356,15 @@ export default function MerchantPage() {
                 <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
                   身份：{inv.role === 'MerchantAdmin' ? '管理员' : '员工'}
                 </Text>
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 }}>
                   <View
-                    style={{ borderRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 6, paddingBottom: 6, marginRight: 10, backgroundColor: t.bgInput }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 6, paddingBottom: 6, marginRight: 10, backgroundColor: t.bgInput }}
                     onClick={() => onInviteDecision(inv, false)}
                   >
                     <Text style={{ ...fs(13), color: t.textSecondary }}>拒绝</Text>
                   </View>
                   <View
-                    style={{ borderRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 6, paddingBottom: 6, backgroundColor: inviteBusy ? t.textTertiary : t.primary }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 6, paddingBottom: 6, backgroundColor: inviteBusy ? t.textTertiary : t.primary }}
                     onClick={() => onInviteDecision(inv, true)}
                   >
                     <Text style={{ ...fs(13), color: t.textOnPrimary }}>接受</Text>
@@ -377,7 +377,7 @@ export default function MerchantPage() {
 
         {/* 未登录引导 */}
         {!isLoggedIn ? (
-          <View className='mch-card' style={{ backgroundColor: t.bgCard, ...cardShadow, alignItems: 'center', padding: 24 }}>
+          <View className='mch-card' style={{ backgroundColor: t.bgCard, ...cardShadow, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 24 }}>
             <Text style={{ ...fs(14), color: t.textSecondary, textAlign: 'center' }}>登录后可申请入驻与管理店铺</Text>
             <View className='mch-primary' style={{ backgroundColor: t.primary, alignSelf: 'stretch' }}
               onClick={() => Taro.navigateTo({ url: '/pages/auth/login' })}>
@@ -405,7 +405,7 @@ export default function MerchantPage() {
           </>
         ) : (
           /* 空状态：无任何申请 */
-          <View className='mch-card' style={{ backgroundColor: t.bgCard, ...cardShadow, alignItems: 'center', padding: 24 }}>
+          <View className='mch-card' style={{ backgroundColor: t.bgCard, ...cardShadow, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 24 }}>
             <Text style={{ ...fs(14), color: t.textSecondary, textAlign: 'center' }}>你还没有入驻任何商户</Text>
             <View className='mch-primary' style={{ backgroundColor: t.primary, alignSelf: 'stretch' }} onClick={goApply}>
               <Text style={{ ...fs(15), color: t.textOnPrimary }}>申请入驻</Text>

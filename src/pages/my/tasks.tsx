@@ -158,8 +158,8 @@ export default function TasksPage() {
         {isLoggedIn && (
         <>
         {/* 顶部余额条 */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}>
             <Text style={{ ...fs(26), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
             <Text style={{ ...fs(13), color: t.textSecondary, marginLeft: 6 }}>轴承币</Text>
           </View>
@@ -172,11 +172,11 @@ export default function TasksPage() {
             当前真实用途是寻货超额度加量，商城兑换预告 */}
         <View style={{ display: 'flex', flexDirection: 'column', margin: 12, marginTop: 0, backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>轴承币能做什么</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
             <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>寻货加量：超出每日免费额度后，花轴承币继续发布/应答</Text>
             <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/discover/index' })}>去寻货</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
             <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>轴承币商城：兑换置顶卡与商家礼品</Text>
             {/* v2.5.0：商城已上线，从预告文案转真实入口 */}
             <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/mall/index' })}>去兑换</Text>
@@ -187,13 +187,13 @@ export default function TasksPage() {
         <View style={{ display: 'flex', flexDirection: 'column', margin: 12, backgroundColor: t.bgCard, borderRadius: 12, padding: 16 }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>每日签到</Text>
           <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>连续签到天数越多，单日轴承币越高</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 }}>
             {cells.map((c) => (
-              <View key={c.key} style={{ alignItems: 'center', width: 38 }}>
+              <View key={c.key} style={{ display: 'flex', alignItems: 'center', width: 38 }}>
                 <Text style={{ ...fs(11), color: c.state === 'today' ? t.primary : t.textTertiary, marginBottom: 6 }}>{c.label}</Text>
                 <View
                   style={{
-                    width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center',
+                    width: 30, height: 30, borderRadius: 15, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center',
                     backgroundColor: c.state === 'done' ? t.primary : 'transparent',
                     borderWidth: 1.5,
                     borderColor: c.state === 'done' ? t.primary : c.state === 'today' ? t.primary : t.border,
@@ -208,7 +208,7 @@ export default function TasksPage() {
           </View>
           <View
             style={{
-              marginTop: 16, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+              marginTop: 16, height: 40, borderRadius: 20, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center',
               backgroundColor: account.todayCheckedIn ? t.bgInput : t.primary,
             }}
             onClick={doCheckin}
@@ -231,15 +231,15 @@ export default function TasksPage() {
             <View
               key={task.grantType}
               style={{
-                flexDirection: 'row', alignItems: 'center', marginTop: i === 0 ? 12 : 0, paddingTop: i === 0 ? 0 : 12,
+                display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: i === 0 ? 12 : 0, paddingTop: i === 0 ? 0 : 12,
                 borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border,
               }}
             >
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Icon name={taskIcon(task.grantType)} size={18} color={t.primary} />
               </View>
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(14), color: t.textPrimary }}>{task.displayName}</Text>
                   {/* 阶梯任务标注分值区间 */}
                   <Text style={{ ...fs(13), color: t.primary, fontWeight: '600', marginLeft: 6 }}>

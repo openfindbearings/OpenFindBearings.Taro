@@ -130,7 +130,9 @@
 }
 
 // 当前商户的操作区（卡内分隔线下的一组按钮）
+// 改动说明：补 display:flex——H5 下缺它则 flexDirection/flexWrap 全 no-op，按钮竖堆
 .mch-actions {
+  display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 14px;
@@ -151,15 +153,6 @@
   margin-top: 10px;
   padding: 10px;
   border-radius: 10px;
-}
-
-// 认证提示行
-.mch-verify-row {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding-top: 12px;
 }
 
 // 主操作按钮（申请入驻 / 再申请一家）

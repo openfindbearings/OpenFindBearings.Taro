@@ -108,8 +108,8 @@ export default function ConfirmDialog() {
         zIndex: 9999,
         backgroundColor: 'rgba(0,0,0,0.55)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        display: 'flex', alignItems: 'center',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center'
       }}
     >
       <View style={{ width: '84%', backgroundColor: '#FFFFFF', borderRadius: 12, paddingTop: 22, paddingBottom: 16, paddingLeft: 20, paddingRight: 20 }}>
@@ -121,7 +121,7 @@ export default function ConfirmDialog() {
         <Text style={{ display: 'block', width: '100%', fontSize: 15, lineHeight: '22px', color: '#374151', marginTop: 14, textAlign: 'center' }}>
           {opts.content}
         </Text>
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
           {opts.showCancel !== false ? (
             <View
               style={{ minWidth: 72, display: 'flex', alignItems: 'center', paddingTop: 9, paddingBottom: 9, paddingLeft: 18, paddingRight: 18, borderRadius: 8, marginLeft: 12, backgroundColor: t.primaryLight }}

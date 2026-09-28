@@ -79,7 +79,7 @@ export default function CorrectionSheet({ visible, targetType, targetId, onClose
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16 }}
         onClick={process.env.TARO_ENV === 'rn' ? undefined : (e) => e?.stopPropagation?.()}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Text style={{ ...fs(17), fontWeight: 'bold', color: t.textPrimary }}>信息纠错</Text>
           <Icon name="x" size={20} color={t.textTertiary} onClick={onClose} />
         </View>
@@ -93,7 +93,7 @@ export default function CorrectionSheet({ visible, targetType, targetId, onClose
           <ScrollView scrollY style={{ maxHeight: 420 }}>
             {/* 字段选择：chip 流式布局，选中高亮 */}
             <Text style={{ ...fs(14), fontWeight: 'bold', color: t.textSecondary, marginBottom: 8 }}>纠错字段</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
               {fields.map((f) => {
                 const active = f.key === fieldKey
                 return (
@@ -145,7 +145,7 @@ export default function CorrectionSheet({ visible, targetType, targetId, onClose
 
         <View
           style={{
-            height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center',
+            height: 46, borderRadius: 23, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center',
             backgroundColor: selected && suggested.trim() && !submitting ? t.primary : t.bgInput
           }}
           onClick={onSubmit}

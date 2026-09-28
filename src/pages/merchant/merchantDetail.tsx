@@ -104,7 +104,7 @@ export default function MerchantDetailPage() {
                 //   统一为与商户页同款金色"已认证"徽标（主流：徽标在所有露出点一致）
                 // 改动说明（v2.5.0 商家经济）：徽章直接展示商家等级中文名（认证商家/活跃供给/金牌商家），
                 //   等级是 B2B 信任资产——金牌琥珀、活跃紫、认证金，徽标在所有露出点保持一致
-                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: detail.grade === 'Gold' ? '#D97706' : detail.grade === 'Premium' ? '#8B5CF6' : '#F59E0B', flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: detail.grade === 'Gold' ? '#D97706' : detail.grade === 'Premium' ? '#8B5CF6' : '#F59E0B', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Icon name="badge-check" size={11} color="#FFFFFF" />
                   <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>{detail.gradeDisplay || '已认证'}</Text>
                 </View>
@@ -120,7 +120,7 @@ export default function MerchantDetailPage() {
             勋章双环占位排（rare 金环/主题色环，与个人勋章卡同款），
             底部集体任务累计达成次数（帮派"通关史"信任信号） */}
         <View className='md-card' style={{ backgroundColor: t.bgCard }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家勋章园</Text>
             <Text style={{ ...fs(13), color: t.textTertiary }}>共 {mAch?.unlockedCount ?? 0} 枚</Text>
           </View>
@@ -128,12 +128,12 @@ export default function MerchantDetailPage() {
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>商家完成签到纠错、上架供给、集体任务等都能点亮勋章</Text>
           ) : (
             <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
                 {medalItems.map((b) => {
                   return (
-                    <View key={b.key} style={{ width: 64, alignItems: 'center', marginRight: 6 }}>
+                    <View key={b.key} style={{ width: 64, display: 'flex', alignItems: 'center', marginRight: 6 }}>
                       <MedalImage imageKey={b.imageKey} icon={b.icon || 'award'} rare={b.rare} variant='card' primary={t.primary} primaryLight={t.primaryLight} />
-                      <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4, lineHeight: 13 }} numberOfLines={1}>{b.name}</Text>
+                      <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }} numberOfLines={1}>{b.name}</Text>
                     </View>
                   )
                 })}
@@ -149,7 +149,7 @@ export default function MerchantDetailPage() {
             进入管理页的导航（建议1 落地：两界面互留导航） */}
         {detail?.isMerchantMember && (
           <View
-            style={{ flexDirection: 'row', alignItems: 'center', margin: 12, marginTop: 0, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, borderRadius: 10, backgroundColor: 'rgba(139,92,246,0.10)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.35)' }}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 12, marginTop: 0, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, borderRadius: 10, backgroundColor: 'rgba(139,92,246,0.10)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.35)' }}
             onClick={() => Taro.navigateTo({ url: '/pages/merchant/home' })}
           >
             <Icon name='shield' size={16} color='#8B5CF6' />

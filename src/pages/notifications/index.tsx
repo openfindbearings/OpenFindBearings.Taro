@@ -156,7 +156,7 @@ export default function NotificationsPage() {
       // 改动说明（v1.7.9）："全部已读"从条件渲染改常驻（无未读置灰），加"清空已读"批量出口——
       //   原"有未读才出现"太隐蔽，用户找不到操作入口
       isLoggedIn ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ ...fs(13), color: hasRead ? t.primaryText : t.textTertiary }} onClick={() => void onClearRead()}>清空已读</Text>
           <Text style={{ ...fs(13), color: hasUnread ? t.primaryText : t.textTertiary, marginLeft: 14 }} onClick={() => void onReadAll()}>全部已读</Text>
         </View>
@@ -171,7 +171,7 @@ export default function NotificationsPage() {
           {!isLoggedIn ? (
             <LoginGuide icon='bell' text='登录后可查看消息' />
           ) : items.length === 0 && !loading ? (
-            <View style={{ alignItems: 'center', paddingTop: 60 }}>
+            <View style={{ display: 'flex', alignItems: 'center', paddingTop: 60 }}>
               <Icon name='bell' size={40} color={t.textTertiary} />
               <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无消息</Text>
             </View>
@@ -191,14 +191,14 @@ export default function NotificationsPage() {
                   containerStyle={{ marginBottom: 10 }}
                 >
                   <View
-                    style={{ flexDirection: 'row', alignItems: 'flex-start', backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}
                     onClick={() => void onTapItem(n)}
                   >
-                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Icon name={typeIcon(n.type)} size={18} color={t.primary} />
                     </View>
                     <View style={{ flex: 1, marginLeft: 10 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                         {/* 未读圆点：RN 用数值宽高小圆 View */}
                         {!n.isRead && (
                           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.danger, marginRight: 6 }} />
@@ -215,7 +215,7 @@ export default function NotificationsPage() {
             })
           )}
           {loading && (
-            <View style={{ alignItems: 'center', padding: 10 }}>
+            <View style={{ display: 'flex', alignItems: 'center', padding: 10 }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>加载中…</Text>
             </View>
           )}
@@ -233,25 +233,25 @@ export default function NotificationsPage() {
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.bgPage, paddingTop: 18, paddingLeft: 16, paddingRight: 16, paddingBottom: 30, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
             onClick={process.env.TARO_ENV === 'rn' ? undefined : (e) => e?.stopPropagation?.()}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Icon name={typeIcon(detail.type)} size={20} color={t.primary} />
               </View>
               <Text style={{ ...fs(17), color: t.textPrimary, fontWeight: '700', flex: 1, marginLeft: 10 }}>{detail.title}</Text>
               <Text style={{ ...fs(13), color: t.textTertiary }} onClick={() => setDetail(null)}>关闭</Text>
             </View>
-            <Text style={{ ...fs(15), color: t.textPrimary, marginTop: 14, lineHeight: 23 }}>{detail.body}</Text>
+            <Text style={{ ...fs(15), color: t.textPrimary, marginTop: 14 }}>{detail.body}</Text>
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 10 }}>{formatTime(detail.createdAt)}</Text>
-            <View style={{ flexDirection: 'row', marginTop: 20 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', marginTop: 20 }}>
               <View
-                style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: t.bgInput, alignItems: 'center', justifyContent: 'center' }}
+                style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: t.bgInput, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                 onClick={() => setDetail(null)}
               >
                 <Text style={{ ...fs(15), color: t.textPrimary }}>知道了</Text>
               </View>
               {detail.bizType === 'merchant' || detail.bizType === 'nomination' ? (
                 <View
-                  style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: t.primary, alignItems: 'center', justifyContent: 'center', marginLeft: 12 }}
+                  style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: t.primary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 12 }}
                   onClick={() => onGoHandle(detail)}
                 >
                   <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>去处理</Text>
