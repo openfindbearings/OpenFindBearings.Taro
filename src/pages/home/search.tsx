@@ -314,19 +314,19 @@ export default function SearchPage() {
             <View className='filter-chips'>
               {brandFilter && (
                 <View className='chip' style={{ backgroundColor: t.primaryLight }} onClick={clearBrand}>
-                  <Text className='chip-text' style={{ ...fs(12), color: t.primaryText }}>品牌:{brandFilter.name}</Text>
+                  <Text className='chip-text' style={{ ...fs(12, true), color: t.primaryText }}>品牌:{brandFilter.name}</Text>
                   <Icon name="x" size={12} color={t.primaryText} />
                 </View>
               )}
               {typeFilter && (
                 <View className='chip' style={{ backgroundColor: t.primaryLight }} onClick={clearType}>
-                  <Text className='chip-text' style={{ ...fs(12), color: t.primaryText }}>类型:{typeFilter.name}</Text>
+                  <Text className='chip-text' style={{ ...fs(12, true), color: t.primaryText }}>类型:{typeFilter.name}</Text>
                   <Icon name="x" size={12} color={t.primaryText} />
                 </View>
               )}
               {(sizeFilter.minIn != null || sizeFilter.maxIn != null) && (
                 <View className='chip' style={{ backgroundColor: t.primaryLight }} onClick={clearSizeFilter}>
-                  <Text className='chip-text' style={{ ...fs(12), color: t.primaryText }}>内径:{fmtRange(sizeFilter.minIn, sizeFilter.maxIn)}</Text>
+                  <Text className='chip-text' style={{ ...fs(12, true), color: t.primaryText }}>内径:{fmtRange(sizeFilter.minIn, sizeFilter.maxIn)}</Text>
                 </View>
               )}
             </View>
