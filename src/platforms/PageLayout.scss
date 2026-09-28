@@ -22,6 +22,15 @@
   width: 100%;
 }
 
+// 吸顶子区（v1.7.19 首页搜索框）：sticky 钉在导航正下方；
+// top 偏移（状态栏+44）由 tsx inline 注入，z-index 低于导航栏
+.pl-h5-subheader {
+  position: sticky;
+  left: 0;
+  right: 0;
+  z-index: 99;
+}
+
 // 底栏容器：fixed 钉底
 .pl-h5-tabbar {
   position: fixed;

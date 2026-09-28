@@ -8,11 +8,19 @@ import { View } from '@tarojs/components'
 import { ReactNode } from 'react'
 import { usePageScroll } from '@tarojs/taro'
 import { useTheme } from '../hooks/useTheme'
+// 改动说明（首页吸顶搜索框）：subHeader 的 sticky top 需等于"状态栏 + 导航高"，
+//   weapp 端状态栏高度由安全区 hook 提供（H5 恒 0），故在此消费
+import { useSafeArea } from '../utils/use-safe-area'
 import './PageLayout.scss'
 
 interface PageLayoutProps {
   /** 顶部导航栏节点（NavBar 元素），null/缺省则不渲染顶栏（简洁模式首页） */
   nav?: ReactNode
+  /**
+   * 导航栏下方的吸顶区（v1.7.19 首页改版）：如首页搜索框。
+   * H5/小程序 sticky 钉在导航正下方、内容从其下滚过；RN 版渲染在 ScrollView 外天然固定
+   */
+  subHeader?: ReactNode
   /** 底部标签栏节点（CustomTabBar 元素），缺省则不渲染（设置/搜索等非 tab 页） */
   tabbar?: ReactNode
   /** 页面内容（普通块级流，随文档滚动） */
@@ -28,9 +36,11 @@ interface PageLayoutProps {
   onScrollY?: (scrollTop: number) => void
 }
 
-export default function PageLayout({ nav, tabbar, children, immersive, onScrollY }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, immersive, onScrollY, subHeader }: PageLayoutProps) {
   // 页面底色随主题模式运行时切换
   const t = useTheme()
+  // subHeader 吸顶偏移 = 状态栏高 + 导航基准高 44（$navbar-height，weapp 端状态栏非 0）
+  const { top } = useSafeArea()
   // 改动说明（v1.7.11）：immersive 时订阅页面文档滚动（Taro 编译期注册 onPageScroll，
   //   非 immersive 页面零开销——hook 无条件调用但回调内判空）
   usePageScroll((e) => {
@@ -42,7 +52,7 @@ export default function PageLayout({ nav, tabbar, children, immersive, onScrollY
       <View className='pl-h5' style={{ backgroundColor: t.bgPage }}>
         {/* nav 覆盖层：fixed 钉视口顶（文档流下 absolute 会随滚动走，必须 fixed；
             H5/小程序支持 fixed，RN 版另有 absolute 实现——平台分文件各写各的） */}
-        <View style={{ position: 'fixed', left: 0, right: 0, top: 0, zIndex: 10 }}>{nav}</View>
+        <View style={{ position: 'fixed', left: 0, right: 0, top: 0, zIndex: 10 }}>{nav}{subHeader}</View>
         <View style={{ paddingBottom: tabbar ? 64 : 0 }}>
           {children}
         </View>
@@ -54,6 +64,10 @@ export default function PageLayout({ nav, tabbar, children, immersive, onScrollY
   return (
     <View className='pl-h5' style={{ backgroundColor: t.bgPage }}>
       {nav ? <View className='pl-h5-nav' style={{ backgroundColor: t.bgPage }}>{nav}</View> : null}
+      {/* 改动说明（v1.7.19）：吸顶子区（首页搜索框），sticky 钉在导航正下方 */}
+      {subHeader ? (
+        <View className='pl-h5-subheader' style={{ top: top + 44, backgroundColor: t.bgPage }}>{subHeader}</View>
+      ) : null}
       {/* 有底栏时给内容底部留白，避免 fixed tabbar 遮住最后一条内容（tabbar 高 56 + 余量） */}
       <View className='pl-h5-body' style={{ paddingBottom: tabbar ? 64 : 0 }}>
         {children}

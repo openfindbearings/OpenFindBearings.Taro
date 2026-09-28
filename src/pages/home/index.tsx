@@ -8,6 +8,8 @@ import { View, Input, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { getItem, setItem, removeItem } from '../../utils/storage'
 import { getHome, type HomeData } from '../../services/home'
+// 改动说明（v1.7.19 首页改版）：导航栏标题用站点配置 siteName（启动时缓存），兜底应用中文名
+import { getCachedSiteConfig } from '../../services/config-api'
 import MediaImage from '../../components/MediaImage'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
@@ -135,20 +137,22 @@ export default function HomePage() {
     <View className='quick-actions'>
       <View className='quick-item' onClick={handleVoicePlaceholder}>
         <View className='quick-icon quick-icon-voice'>
-          <Icon name='mic' size={28} color='#FFFFFF' />
+          {/* 改动说明：图标 28→24，圆底 56dp 不变，占比 50%→43%（Material 标准），
+              修复小程序端白图标在饱和色底上偏满的观感，三端同步生效 */}
+          <Icon name='mic' size={24} color='#FFFFFF' />
         </View>
         <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>讲语音</Text>
       </View>
       <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
         <View className='quick-icon quick-icon-camera'>
-          <Icon name="camera" size={28} color='#FFFFFF' />
+          <Icon name="camera" size={24} color='#FFFFFF' />
         </View>
         <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>拍轴承</Text>
       </View>
       {/* 改动说明：扫码底层能力未接入，统一"暂未上线"停用文案 */}
       <View className='quick-item' onClick={() => Taro.showToast({ title: '扫码功能暂未上线', icon: 'none' })}>
         <View className='quick-icon quick-icon-scan'>
-          <Icon name="scan_line" size={28} color='#FFFFFF' />
+          <Icon name="scan_line" size={24} color='#FFFFFF' />
         </View>
         <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>扫条码</Text>
       </View>
@@ -180,9 +184,15 @@ export default function HomePage() {
     )
   }
 
-  // 普通模式：NavBar 固定搜索框（48dp 搜索态），下方快捷三钮 + 历史 + 热门
+  // 普通模式（v1.7.19 改版）：NavBar 显示应用名（与其他页一致），搜索框移到导航下方
+  // subHeader 吸顶区（三端一致：H5/小程序 sticky、RN/weapp 滚动区外固定），
+  // 不再挤在导航栏 searchMode 里——weapp 端搜索框恢复全宽，也不与胶囊冲突
   return (
-    <PageLayout nav={<NavBar centerSlot={searchBox} searchMode />} tabbar={<CustomTabBar />}>
+    <PageLayout
+      nav={<NavBar title={getCachedSiteConfig()?.siteName || '开源查找轴承'} />}
+      subHeader={<View className='home-search-sticky' style={{ backgroundColor: t.bgPage }}>{searchBox}</View>}
+      tabbar={<CustomTabBar />}
+    >
       {quickActions}
 
       {history.length > 0 && (
