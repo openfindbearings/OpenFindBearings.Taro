@@ -12,12 +12,20 @@ export function useFontScale(): number {
   return FONT_SCALE[size]
 }
 
-/** 返回 fs(base) 生成器，base 为设计基准字号 */
+/** 返回 fs(base) 生成器，base 为设计基准字号。
+ * noLineHeight=true 时只输出 fontSize、不输出 lineHeight——
+ * 用于定高 flex 居中容器内的文字（标签/chips 等）：
+ * RN Android 在 lineHeight 大于字体自然行高时，会把字形顶到行盒顶部，
+ * 多余空间全落在底部，视觉表现为"文字偏上"；省略 lineHeight 让行高回归自然值，
+ * 由外层 flex align-items:center 实现两端一致的垂直居中 */
 export function useFs() {
   const scale = useFontScale()
-  return (base: number) => {
+  return (base: number, noLineHeight = false) => {
     const fontSize = Math.round(base * scale)
     const lineHeight = Math.round(base * scale * 1.4)
+    if (noLineHeight) {
+      return IS_RN ? { fontSize } : { fontSize: `${fontSize}px` }
+    }
     // 改动说明：lineHeight 在 React 里是"无单位属性"，传数字会被 H5/浏览器当作"字号倍数"
     // （lineHeight:18 → 18×字号≈234px 行高），导致 H5 所有文字撑高、卡片/标签纵向拉伸；
     // 而 RN 把数字当绝对 dp，故 RN 正常。修法：H5 输出带 px 的字符串（=绝对像素），

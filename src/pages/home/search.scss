@@ -213,7 +213,9 @@
 }
 
 // ============ 已选筛选 chips ============
+// 改动说明：补 display:flex——H5 下缺它则 flexDirection/alignItems 全 no-op
 .filter-chips {
+  display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   padding-left: $space-4;
@@ -221,7 +223,9 @@
   padding-top: $space-2;
 }
 
+// 改动说明：补 display:flex——同上，H5 下 chip 需显式 flex 才横排居中
 .chip {
+  display: flex;
   flex-direction: row;
   align-items: center;
   border-radius: 999px;

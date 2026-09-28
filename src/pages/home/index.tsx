@@ -200,7 +200,7 @@ export default function HomePage() {
           <View className='history-tags'>
             {history.map((item, idx) => (
               <View key={idx} className='history-tag' style={{ backgroundColor: t.bgInput }} onClick={() => handleHistoryClick(item)}>
-                <Text className='history-tag-text' style={{ ...fs(14), color: t.textSecondary }}>{item}</Text>
+                <Text className='history-tag-text' style={{ ...fs(14, true), color: t.textSecondary }}>{item}</Text>
               </View>
             ))}
           </View>
@@ -217,7 +217,7 @@ export default function HomePage() {
         <View className='history-tags'>
           {['SKF', 'NSK', '6205', '6308', '轴承型号查询', '深沟球轴承'].map((item, idx) => (
             <View key={idx} className='history-tag' style={{ backgroundColor: t.bgInput }} onClick={() => handleHistoryClick(item)}>
-              <Text className='history-tag-text' style={{ ...fs(14), color: t.textSecondary }}>{item}</Text>
+              <Text className='history-tag-text' style={{ ...fs(14, true), color: t.textSecondary }}>{item}</Text>
             </View>
           ))}
         </View>
