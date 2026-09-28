@@ -1,4 +1,4 @@
-﻿// 首页样式（v1.7.0 度量重构，纯 RN 基准）
+// 首页样式（v1.7.0 度量重构，纯 RN 基准）
 // 改动说明：删除 var() 兜底（Metro SCSS 不支持回退语法）与 padding-bottom:74px hack
 // （骨架避让已由 PageLayout/CustomTabBar 统一处理）；尺寸全部走 dp token；
 // 快捷入口改实心彩圆 + 白图标；简洁模式用 flexGrow 在滚动区内垂直居中。
@@ -310,4 +310,13 @@
 .merchant-badge-text {
   font-size: $font-size-xs;
   line-height: $line-height-xs;
+}
+
+// 吸顶搜索区（v1.7.19 首页改版）：导航栏下方固定（H5 sticky / RN+weapp 滚动区外），
+// 左右 16dp 内边距让搜索框不贴屏幕边；底色由 tsx inline 随主题
+.home-search-sticky {
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }

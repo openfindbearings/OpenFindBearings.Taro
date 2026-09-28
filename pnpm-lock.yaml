@@ -74,6 +74,9 @@ importers:
       '@tarojs/taro-rn':
         specifier: 3.6.40
         version: 3.6.40(6c9f3ab36f72da317d4df7f236004bf0)
+      lucide:
+        specifier: 0.378.0
+        version: 0.378.0
       lucide-react:
         specifier: 0.378.0
         version: 0.378.0(react@18.3.1)
@@ -6756,6 +6759,9 @@ packages:
     resolution: {integrity: sha512-u6EPU8juLUk9ytRcyapkWI18epAv3RU+6+TC23ivjR0e+glWKBobFeSgRwOIJihzktILQuy6E0E80P2jVTDR5g==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0
+
+  lucide@0.378.0:
+    resolution: {integrity: sha512-bwWXuZf2jZbCI0Y+MWyv5bedWIxYKtgAEzC2Yl87Nrt/KcG9qTwAQxVFcZ6IwBioML06QUQsG+qRjyQvYHdbBQ==}
 
   magic-string@0.25.9:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
@@ -18574,6 +18580,8 @@ snapshots:
   lucide-react@0.378.0(react@18.3.1):
     dependencies:
       react: 18.3.1
+
+  lucide@0.378.0: {}
 
   magic-string@0.25.9:
     dependencies:

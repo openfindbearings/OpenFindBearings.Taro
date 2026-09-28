@@ -1,0 +1,42 @@
+// PageLayout 骨架样式 —— 微信小程序版（flex column + ScrollView）
+// 改动说明：weapp 页面级 disableScroll=true（为 RN 写），滚动全部走内部 ScrollView，
+//   故根容器必须显式 100vh 撑满，ScrollView flex:1 吃掉剩余高度
+.pl-wx {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+
+// 内容滚动区：flex:1 撑满 nav/subHeader/tabbar 之外的剩余高度
+.pl-wx-scroll {
+  flex: 1;
+}
+
+// 沉浸式：内容铺满整屏的绝对容器（flex column 让 ScrollView 撑高）
+.pl-wx-abs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// 沉浸式覆盖层：nav/subHeader 钉顶、tabbar 钉底（absolute 不占布局）
+.pl-wx-overlay-top {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 100;
+}
+
+.pl-wx-overlay-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+}

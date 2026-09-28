@@ -13,6 +13,11 @@ interface PageLayoutProps {
   nav?: ReactNode
   /** 底部标签栏节点（CustomTabBar 元素），缺省则不渲染（设置/搜索等非 tab 页） */
   tabbar?: ReactNode
+  /**
+   * 导航栏下方的吸顶区（v1.7.19 首页改版）：渲染在 ScrollView 之外，
+   * RN 无 sticky，滚动区外即天然固定，与 H5/小程序 sticky 表现一致
+   */
+  subHeader?: ReactNode
   /** 页面内容（自动包在滚动区内） */
   children: ReactNode
   /** 是否允许内容滚动（默认 true） */
@@ -26,7 +31,7 @@ interface PageLayoutProps {
   onScrollY?: (scrollTop: number) => void
 }
 
-export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, subHeader }: PageLayoutProps) {
   // RN 根节点显式高度 = windowHeight（dp，inline 不缩放）
   const h = getWindowHeight()
   // 页面底色随主题模式运行时切换，inline 覆盖 scss 静态 $bg-page
@@ -49,7 +54,7 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
             {children}
           </ScrollView>
         </View>
-        {nav ? <View style={{ position: 'absolute', left: 0, right: 0, top: 0 }}>{nav}</View> : null}
+        {nav ? <View style={{ position: 'absolute', left: 0, right: 0, top: 0 }}>{nav}{subHeader}</View> : null}
         {/* 改动说明（v1.7.11 修复）：immersive 下 ScrollView/nav 均为 absolute 不占布局，
             tabbar 若留在流内会被顶到列首（真机现象：TabBar 跑到屏幕顶上）——同样 absolute 钉底 */}
         {tabbar ? <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>{tabbar}</View> : null}
@@ -60,6 +65,8 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
   return (
     <View className='page-layout' style={rootStyle}>
       {nav}
+      {/* 改动说明（v1.7.19）：吸顶子区放 ScrollView 外（RN 无 sticky，滚动区外即固定） */}
+      {subHeader}
       {/* 改动说明（v1.7.2）：scrollY 为 RN-only prop，Taro 类型未声明，spread as any 过 tsc 门禁 */}
       <ScrollView className='page-layout-scroll' {...({ scrollY } as any)} contentContainerStyle={{ flexGrow: 1 }}>
         {children}

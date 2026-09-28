@@ -6,6 +6,9 @@ import { View, Text } from '@tarojs/components'
 import Icon from '../Icon'
 import Taro from '@tarojs/taro'
 import { useSafeArea } from '../../utils/use-safe-area'
+// 改动说明（weapp 适配）：小程序自定义导航下右上胶囊悬浮于页面之上，
+//   搜索框/右侧图标需为胶囊预留右边界，否则被压住（H5/RN 该值恒为 0）
+import { capsuleRightReserve } from '../../utils/capsule'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
 import './index.scss'
@@ -62,6 +65,8 @@ export default function NavBar({
 
   // 标准安全区：外层吃顶部内缩，内层固定基准高
   const { top } = useSafeArea()
+  // 胶囊预留（weapp>0，H5/RN=0）：外层右侧内缩，避免搜索框/右槽被胶囊压住
+  const capsulePad = capsuleRightReserve()
   // 全局字号缩放：标题按 navbar-title 基准 17dp 缩放
   const fs = useFs()
   // 主题色板：导航栏背景/标题/返回图标随模式
@@ -77,7 +82,7 @@ export default function NavBar({
   return (
     <View
       className={`navbar ${searchMode ? 'navbar-search' : ''}`}
-      style={{ paddingTop: top, backgroundColor: background ?? t.navBarBg, borderBottomColor: showBorder ? t.border : 'transparent' }}
+      style={{ paddingTop: top, paddingRight: capsulePad, backgroundColor: background ?? t.navBarBg, borderBottomColor: showBorder ? t.border : 'transparent' }}
     >
       {/* 内层内容行：固定基准高，垂直居中 */}
       <View className={`navbar-inner ${searchMode ? 'navbar-inner-search' : ''}`}>

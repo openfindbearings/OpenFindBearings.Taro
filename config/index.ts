@@ -37,7 +37,12 @@ const config = {
       pxtransform: {
         enable: true,
         config: {
-
+          // 改动说明：weapp 端 SCSS Npx 与 RN dp / H5 px 对齐（与 rn 段同款开关）。
+          // 原沿用全局 deviceRatio{750:1} → Npx→Nrpx→屏宽375时 N/2 pt，
+          // 而内联样式数字（Icon size、安全区 padding）不经 pxtransform 保持原值，
+          // 导致 TabBar 栏高砍半、搜索按钮"圆底小图标大"比例倒挂。
+          // 750:2 使 Npx→2Nrpx→Npt，三端度量语义统一
+          deviceRatio: { 750: 2 }
         }
       },
       url: {
