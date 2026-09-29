@@ -7,7 +7,7 @@
 // RN 约束：仅 flex + absolute 弹层、Text 包裹、数值 lineHeight、图片固定尺寸。
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { View, Text, Image } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
@@ -271,7 +271,7 @@ export default function LinkupPage() {
   return (
     <PageLayout nav={<NavBar title='轴承连连看' showBack />}>
       <View style={{ flex: 1 }}>
-        <View style={{ flex: 1, display: 'flex', alignItems: 'center', display: 'flex', justifyContent: status === 'loading' ? 'center' : 'flex-start' }}>
+        <View style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: status === 'loading' ? 'center' : 'flex-start' }}>
           {status === 'loading' && (
             <>
               <Text style={{ ...fs(14), color: t.textTertiary }}>
@@ -292,7 +292,8 @@ export default function LinkupPage() {
                       />
                     ) : (
                       // 无有效图也计入就绪，避免卡住闸门
-                      <Text key={`pre-${ti}`} style={{ width: 1, height: 1 }} onLayout={() => setPreloadedCount((c) => c + 1)}>{ti}</Text>
+                      // 改动说明：onLayout 为 RN 预加载计数探针，Taro 类型未声明该属性，用展开绕过类型检查
+                      <Text key={`pre-${ti}`} style={{ width: 1, height: 1 }} {...({ onLayout: () => setPreloadedCount((c) => c + 1) } as any)}>{ti}</Text>
                     )
                   })}
                 </View>
@@ -328,14 +329,19 @@ export default function LinkupPage() {
                       style={{
                         width: tileSize,
                         height: tileSize,
+                        // 改动说明（v1.7.19）：显式 border-box——tileSize 公式只预留了 margin(4)，
+                        //   weapp 默认 content-box 会把 2px 边框算在外侧，一行 6 个变 5 个，
+                        //   视觉行列与逻辑网格错位导致连连看无法判定相邻路径
+                        boxSizing: 'border-box',
                         margin: 2,
                         borderRadius: 10,
-                        display: 'flex', alignItems: 'center',
-                        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                         backgroundColor: v < 0 ? 'transparent' : t.bgCard,
-                        borderWidth: isSel ? 2 : 1,
+                        // 改动说明（v1.7.19 真机修复）：边框恒定 2px，未选中用底色边框占位——
+                        //   原 1↔2 切换在小程序 content-box 下使瓷片涨 2px，整盘瓷片错位抖动（RN border-box 无此现象）
+                        borderWidth: 2,
                         borderStyle: 'solid',
-                        borderColor: isSel ? t.primary : isHint ? '#F59E0B' : t.borderColor || t.bgInput
+                        borderColor: isSel ? t.primary : isHint ? '#F59E0B' : (v < 0 ? 'transparent' : t.bgCard)
                       }}
                       onClick={() => tap(i)}
                     >
