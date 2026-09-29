@@ -29,9 +29,11 @@ interface PageLayoutProps {
   immersive?: boolean
   /** 内容滚动回调（immersive 时生效，参数为 scrollTop dp） */
   onScrollY?: (scrollTop: number) => void
+  /** 触底回调（v1.7.19 发现页分页加载）：内部 ScrollView onScrollToLower 透传 */
+  onEndReached?: () => void
 }
 
-export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, subHeader }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader }: PageLayoutProps) {
   // RN 根节点显式高度 = windowHeight（dp，inline 不缩放）
   const h = getWindowHeight()
   // 页面底色随主题模式运行时切换，inline 覆盖 scss 静态 $bg-page
@@ -68,7 +70,7 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
       {/* 改动说明（v1.7.19）：吸顶子区放 ScrollView 外（RN 无 sticky，滚动区外即固定） */}
       {subHeader}
       {/* 改动说明（v1.7.2）：scrollY 为 RN-only prop，Taro 类型未声明，spread as any 过 tsc 门禁 */}
-      <ScrollView className='page-layout-scroll' {...({ scrollY } as any)} contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView className='page-layout-scroll' {...({ scrollY, onScrollToLower: onEndReached } as any)} contentContainerStyle={{ flexGrow: 1 }}>
         {children}
       </ScrollView>
       {tabbar}

@@ -2,7 +2,7 @@
 // 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹轴承币确认框 → usePoints=true 重提交
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useState } from 'react'
-import { View, Text, ScrollView, Input } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -105,7 +105,7 @@ export default function PublishSourcingPage() {
 
   return (
     <PageLayout nav={<NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {/* 额度条（v1.7.21 额度可见化）：常驻展示今日剩余免费额度与超限单价，
             不再"撞墙才可见"；quota 拉取失败（未登录等）整条隐藏 */}
         {pq && freeLeft !== null ? (
@@ -160,7 +160,7 @@ export default function PublishSourcingPage() {
             {submitting ? '发布中…' : insufficient ? '轴承币不足，去赚轴承币' : overFree && pq ? `花 ${pq.pointsPrice} 轴承币发布` : '免费发布'}
           </Text>
         </View>
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

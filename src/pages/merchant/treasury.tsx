@@ -2,7 +2,7 @@
 // 与个人"收支明细"页对齐；挂礼管理走商家主页宫格"金库挂礼"入口，本页不再重复承载。
 // RN 约束：仅 flex 布局、无 fixed、Text 包裹、lineHeight 数值。
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text} from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -46,7 +46,7 @@ export default function MerchantTreasuryPage() {
     >
       {!isLoggedIn && <LoginGuide icon='vault' text='登录后查看商家金收支明细' />}
       {isLoggedIn && (
-        <ScrollView style={{ flex: 1 }}>
+        <View>
           {/* 金库余额（商家仓库） */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -90,7 +90,7 @@ export default function MerchantTreasuryPage() {
             </View>
           )}
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </View>
       )}
     </PageLayout>
   )

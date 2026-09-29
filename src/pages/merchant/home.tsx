@@ -93,7 +93,7 @@ export default function MerchantHomePage() {
 
   return (
     <PageLayout nav={<NavBar title='商家管理' showBack />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {/* 头部：商家 Logo + 名称 + 等级徽章（管理员取金库接口等级，员工按认证态简化显示） */}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <MediaImage
@@ -145,7 +145,7 @@ export default function MerchantHomePage() {
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>商家功能</Text>
           <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 }}>
             {actions.map((a) => (
-              <View key={a.url} style={{ width: '33.33%', display: 'flex', alignItems: 'center', padding: 10 }} onClick={() => Taro.navigateTo({ url: a.url })}>
+              <View key={a.url} style={{ width: '33.33%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: 10 }} onClick={() => Taro.navigateTo({ url: a.url })}>
                 <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <Icon name={a.icon} size={22} color={t.primary} />
                 </View>
@@ -286,7 +286,7 @@ export default function MerchantHomePage() {
         <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 4, marginBottom: 24 }}>
               商家金不可充值、不可提现、不可转让
         </Text>
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

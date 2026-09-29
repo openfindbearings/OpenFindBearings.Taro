@@ -2,7 +2,7 @@
 // 改动说明（v2.11.0 定名）：个人积分对外定名"轴承币"（与"荣誉分/商家金"彻底区分），
 // 代码与接口仍用 points 内部口径，仅展示层改名。内容对齐 API 实际实现，运营改配置后需随文档同步。
 // RN 约束：仅 flex、无 fixed、Text 包裹、数值 lineHeight。
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text} from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -42,7 +42,7 @@ export default function RulesPage() {
 
   return (
     <PageLayout nav={<NavBar title={isGold ? '商家金规则' : '轴承币规则'} showBack />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {isGold ? (
           <>
             <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
@@ -101,7 +101,7 @@ export default function RulesPage() {
           </>
         )}
         <View style={{ height: 40 }} />
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

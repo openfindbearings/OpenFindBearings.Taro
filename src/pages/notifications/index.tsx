@@ -4,7 +4,7 @@
 // 进入与返回时刷新未读数（联动 TabBar 角标 store）。
 // RN 约束：仅 flex 布局、无 fixed/vh（覆盖层用 absolute）、Text 包裹、lineHeight 数值。
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -161,12 +161,11 @@ export default function NotificationsPage() {
           <Text style={{ ...fs(13), color: hasUnread ? t.primaryText : t.textTertiary, marginLeft: 14 }} onClick={() => void onReadAll()}>全部已读</Text>
         </View>
       ) : null
-    } />}>
-      <ScrollView
-        scrollY
-        style={{ flex: 1 }}
-        onScrollToLower={() => { if (hasMore && !loading) void load(page + 1, true) }}
-      >
+    } />}
+    // 改动说明（v1.7.19 weapp 适配）：页内 ScrollView 移除（PageLayout 统一滚动），触底加载走 onEndReached
+    onEndReached={() => { if (hasMore && !loading) void load(page + 1, true) }}
+  >
+      <View>
         <View style={{ padding: 16 }}>
           {!isLoggedIn ? (
             <LoginGuide icon='bell' text='登录后可查看消息' />
@@ -220,7 +219,7 @@ export default function NotificationsPage() {
             </View>
           )}
         </View>
-      </ScrollView>
+      </View>
 
       {/* 消息详情面板（v1.7.9，自绘覆盖层 absolute 于页面根，与成员详情面板同款）
           改动说明：点行不再直接跳转商户页——先看详情，〔去处理〕才跳转（主流消息中心交互） */}

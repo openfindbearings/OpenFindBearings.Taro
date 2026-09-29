@@ -1,16 +1,36 @@
 // PageLayout 骨架样式 —— 微信小程序版（flex column + ScrollView）
 // 改动说明：weapp 页面级 disableScroll=true（为 RN 写），滚动全部走内部 ScrollView，
-//   故根容器必须显式 100vh 撑满，ScrollView flex:1 吃掉剩余高度
+//   故根容器必须显式撑满可视区。原 height:100vh 在 Android 真机（体验/开发版顶部有
+//   "小程序提供服务"提示条占位）会算高偏大 → tabbar 被顶出屏幕、内部滚动区失效；
+//   改 position:fixed 四边贴零，根高度恒等于 webview 可视高度，三端机型一致
 .pl-wx {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
   width: 100%;
 }
 
 // 内容滚动区：flex:1 撑满 nav/subHeader/tabbar 之外的剩余高度
+// 改动说明（v1.7.19 真机修复）：必须显式 min-height:0——weapp flex 子项默认
+//   min-height:auto，内容超高时滚动区不肯收缩，把后面的 tabbar 挤出 fixed 容器外
+//   （现象：商城等内容长的页面底栏消失且滚不动）
 .pl-wx-scroll {
   flex: 1;
+  min-height: 0;
+}
+
+// 顶栏/吸顶区容器：固定高度语义，禁止被 flex 压缩
+.pl-wx-nav {
+  flex-shrink: 0;
+}
+
+// 底栏容器：flex 列末子项，禁止被压缩
+.pl-wx-tabbar {
+  flex-shrink: 0;
 }
 
 // 沉浸式：内容铺满整屏的绝对容器（flex column 让 ScrollView 撑高）

@@ -180,9 +180,10 @@ export default function MyPage() {
               rightIcons={rightIcons}
             />
           </View>
-          {/* 浮现层：白底 + "我的"标题 + 深色图标（滚动后淡入） */}
+          {/* 改动说明（v1.7.19）：浮现层去掉"我的"标题——weapp 胶囊把右侧图标推近居中会撞标题；
+              主流 App 的"我的"页以头像/白底头部为标识，导航不重复标题 */}
           <View style={{ position: 'absolute', left: 0, right: 0, top: 0, opacity: fade }}>
-            <NavBar title='我的' rightIcons={rightIcons} />
+            <NavBar rightIcons={rightIcons} />
           </View>
         </View>
       }

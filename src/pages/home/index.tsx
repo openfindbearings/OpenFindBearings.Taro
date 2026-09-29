@@ -8,8 +8,6 @@ import { View, Input, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { getItem, setItem, removeItem } from '../../utils/storage'
 import { getHome, type HomeData } from '../../services/home'
-// 改动说明（v1.7.19 首页改版）：导航栏标题用站点配置 siteName（启动时缓存），兜底应用中文名
-import { getCachedSiteConfig } from '../../services/config-api'
 import MediaImage from '../../components/MediaImage'
 import { useFs } from '../../hooks/useFontScale'
 import { useTheme } from '../../hooks/useTheme'
@@ -184,12 +182,12 @@ export default function HomePage() {
     )
   }
 
-  // 普通模式（v1.7.19 改版）：NavBar 显示应用名（与其他页一致），搜索框移到导航下方
+  // 普通模式（v1.7.19 改版）：NavBar 显示"首页"（与其他页一致），搜索框移到导航下方
   // subHeader 吸顶区（三端一致：H5/小程序 sticky、RN/weapp 滚动区外固定），
   // 不再挤在导航栏 searchMode 里——weapp 端搜索框恢复全宽，也不与胶囊冲突
   return (
     <PageLayout
-      nav={<NavBar title={getCachedSiteConfig()?.siteName || '开源查找轴承'} />}
+      nav={<NavBar title="首页" />}
       subHeader={<View className='home-search-sticky' style={{ backgroundColor: t.bgPage }}>{searchBox}</View>}
       tabbar={<CustomTabBar />}
     >
@@ -244,11 +242,13 @@ export default function HomePage() {
           </View>
           {/* 改动说明（v1.7.2）：scrollX/showsHorizontalScrollIndicator 为 RN-only props，
               Taro ScrollView 类型未声明（RN 端运行时支持），spread as any 过 tsc 门禁 */}
-          <ScrollView className='hot-bearings-scroll' {...({ scrollX: true, showsHorizontalScrollIndicator: false } as any)}>
+          {/* 改动说明（weapp 适配）：小程序 scroll-view 横滚不吃"scroll-view 本身 display:flex"，
+              需 white-space:nowrap + 卡片 inline-flex（weapp 专属类，RN/H5 不加保持原样） */}
+          <ScrollView className={`hot-bearings-scroll${process.env.TARO_ENV === 'weapp' ? ' hot-bearings-scroll-wx' : ''}`} {...({ scrollX: true, showsHorizontalScrollIndicator: false } as any)}>
             {home.hotBearings.map((b) => (
               <View
                 key={b.id}
-                className='bearing-card'
+                className={`bearing-card${process.env.TARO_ENV === 'weapp' ? ' bearing-card-wx' : ''}`}
                 style={{ backgroundColor: t.bgCard }}
                 onClick={() => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${b.id}` })}
               >

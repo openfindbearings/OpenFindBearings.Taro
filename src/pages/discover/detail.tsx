@@ -3,7 +3,7 @@
 // 匿名/他人只见应答数。联系方式在"选定"后对双方解锁（发布人见商户电话/被选商户见需求人手机）
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useState } from 'react'
-import { View, Text, ScrollView, Input } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -11,6 +11,9 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
+// 改动说明（v1.7.19 真机修复）：发布日期原用 toLocaleDateString('zh-CN')，
+//   Android 微信 JSCore 无 Intl 会回落英文串，统一改走 utils/format
+import { formatDate } from '../../utils/format'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { vibrateSuccess } from '../../utils/haptics'
@@ -197,7 +200,7 @@ export default function SourcingDetailPage() {
 
   return (
     <PageLayout nav={<NavBar title='寻货详情' onBack={() => Taro.navigateBack()} showBack />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {/* 需求卡 */}
         <View style={{ margin: 12, paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 16, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -221,7 +224,7 @@ export default function SourcingDetailPage() {
             </View>
           ) : null}
           <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 10 }}>
-            {detail.responseCount} 家应答 · 发布 {new Date(detail.createdAt).toLocaleDateString('zh-CN')}
+            {detail.responseCount} 家应答 · 发布 {formatDate(detail.createdAt)}
           </Text>
         </View>
 
@@ -364,7 +367,7 @@ export default function SourcingDetailPage() {
         )}
 
         <View style={{ height: 30 }} />
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

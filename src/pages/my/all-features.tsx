@@ -24,7 +24,7 @@ const featureList = [
   // 改动说明（v2.10.1 游戏中心）：我的宫格换入口后，全部功能页同步补常驻条目
   { key: 'games', label: '游戏中心', desc: '轴承连连看，玩一局赚币', icon: 'puzzle', color: '#0EA5E9' },
   { key: 'achievements', label: '我的勋章', desc: '点亮勋章与称号', icon: 'award', color: '#A855F7' },
-  { key: 'points', label: '轴承币明细', desc: '轴承币收支流水', icon: 'list', color: '#14B8A6' },
+  { key: 'points', label: '收支明细', desc: '轴承币收支流水', icon: 'list', color: '#14B8A6' },
   { key: 'sourcing', label: '我的寻货', desc: '我发布的寻货需求', icon: 'compass', color: '#3B82F6' },
   { key: 'messages', label: '消息中心', desc: '系统通知与消息', icon: 'bell', color: '#F97316' },
   { key: 'settings', label: '设置', desc: '通用设置与隐私', icon: 'settings', color: '#64748B' }

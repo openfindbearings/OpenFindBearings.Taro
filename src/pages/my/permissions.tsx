@@ -3,7 +3,7 @@
 // 统一 try openAppAuthorizeSetting，失败降级为提示文案（RN/H5 无该 API）
 // 改动说明：本页字号走固定值（信息型页面不随字号设置缩放，保持版式稳定），
 // 故不引入 useFs
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text} from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -34,7 +34,7 @@ export default function PermissionsPage() {
 
   return (
     <PageLayout nav={<NavBar title='权限管理' showBack onBack={() => Taro.navigateBack()} />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         <Text style={{ fontSize: 13, color: t.textTertiary, marginTop: 12, marginBottom: 4, paddingLeft: 16, paddingRight: 16 }}>
           以下权限仅在您使用对应功能时才会请求，可随时在系统中关闭。
         </Text>
@@ -64,7 +64,7 @@ export default function PermissionsPage() {
         >
           <Text style={{ fontSize: 15, color: '#FFFFFF', fontWeight: '600' }}>去系统设置</Text>
         </View>
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

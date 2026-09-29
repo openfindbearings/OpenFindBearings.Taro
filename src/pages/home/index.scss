@@ -320,3 +320,14 @@
   padding-top: 8px;
   padding-bottom: 8px;
 }
+
+// weapp 横滚适配（v1.7.19）：scroll-view 用 nowrap 让卡片排成一行，卡片 inline-flex 保持内部纵向布局
+.hot-bearings-scroll-wx {
+  white-space: nowrap;
+}
+
+.bearing-card-wx {
+  display: inline-flex;
+  white-space: normal;
+  vertical-align: top;
+}

@@ -1,7 +1,7 @@
 // 游戏中心页（v2.10.1）：注册表 GAMES 驱动渲染——available 可玩、comingSoon 置灰"敬请期待"。
 // 赚分纪律卡置顶（每局 5 分/日上限 10 分），让用户对奖励预期透明。
 // RN 约束：仅 flex、无 fixed/渐变/vh、Text 包裹、数值 lineHeight。
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text} from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -32,7 +32,7 @@ export default function GamesPage() {
     <PageLayout nav={<NavBar title='游戏中心' showBack />}>
       {!isLoggedIn && <LoginGuide icon='puzzle' text='登录后玩游戏赚轴承币' />}
       {isLoggedIn && (
-        <ScrollView style={{ flex: 1 }}>
+        <View>
           {/* 头部说明卡：主题色浅底 + 赚分纪律（预期透明） */}
           <View style={{ marginLeft: 16, marginRight: 16, marginTop: 16, borderRadius: 16, backgroundColor: t.primaryLight, padding: 16 }}>
             <Text style={{ ...fs(17), color: t.textPrimary, fontWeight: '700' }}>玩小游戏，赚轴承币</Text>
@@ -87,7 +87,7 @@ export default function GamesPage() {
             </Text>
           </View>
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </View>
       )}
     </PageLayout>
   )

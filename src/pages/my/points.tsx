@@ -1,7 +1,7 @@
-// 轴承币明细页（v1.7.17 轴承币底座）：余额概览 + 收支流水分页（触底加载）
+// 收支明细页（v1.7.17 轴承币底座；v1.7.19 标题由"轴承币明细"改"收支明细"，与商家金流水页同名不同币种）：余额概览 + 收支流水分页（触底加载）
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -46,7 +46,7 @@ export default function PointsPage() {
   return (
     <PageLayout nav={
       <NavBar
-        title='轴承币明细'
+        title='收支明细'
         showBack
         onBack={() => Taro.navigateBack()}
         rightSlot={
@@ -56,8 +56,12 @@ export default function PointsPage() {
           </View>
         }
       />
-    }>
-      <ScrollView style={{ flex: 1 }} onScrollToLower={() => void loadMore()}>
+    }
+    // 改动说明（v1.7.19 weapp 适配）：页内 ScrollView 移除（PageLayout 统一滚动），
+    //   触底加载改走 PageLayout onEndReached 透传
+    onEndReached={() => void loadMore()}
+    >
+      <View>
         {/* 余额概览卡 */}
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center' }}>
           <Text style={{ ...fs(34), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
@@ -109,7 +113,7 @@ export default function PointsPage() {
         </View>
         {/* 底部留白防内容贴边 */}
         <View style={{ height: 24 }} />
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

@@ -4,7 +4,7 @@
 // linear-gradient，绘制法规避两坑）；样式复用 settings.scss 的 section/list 类（v1.7.19
 // 首版裸奔缺样式的修复）；自动更新开关留在设置页帮助组，本页仅手动检查
 import { useState } from 'react'
-import { View, Text, ScrollView, Image } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -32,7 +32,7 @@ export default function AboutPage() {
 
   return (
     <PageLayout nav={<NavBar title='关于' onBack={() => Taro.navigateBack()} showBack />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {/* 品牌区：直接用 app 图标位图（mipmap ic_launcher 拷入 assets，三端 Image 一致；
             改动说明：此前纯 View 手绘指针三角在 RN 渲染变形，位图方案根治且与桌面图标完全同源） */}
         <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 44, paddingBottom: 20 }}>
@@ -82,7 +82,7 @@ export default function AboutPage() {
           © 2026 OpenFindBearings · 保留所有权利
         </Text>
         <View style={{ height: 40 }} />
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

@@ -1,10 +1,10 @@
-// 轴承币商城页（v2.3.0 商城虚拟权益）：虚拟权益目录 + 我的兑换订单。
+// 商城页（v2.3.0 商城虚拟权益；改动说明：标题由"轴承币商城"改"商城"——商城不止轴承币兑换）：虚拟权益目录 + 我的兑换订单。
 // 一期上架置顶卡（商户买曝光）；兑换入口在商品管理页"置顶"按钮（需选定具体商品），
 // 本页承担"看得见价格与库存"的橱窗职责 + 订单凭据查询。
 // 合规三纪律沿用：轴承币不可充值、不可提现、不可转让；虚拟权益非实物商品。
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值、无多值简写。
 import { useState } from 'react'
-import { View, Text, ScrollView, Input } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -40,7 +40,7 @@ function statusColor(s: number, t: any): string {
   return t.textTertiary
 }
 
-/** 轴承币商城页：虚拟权益橱窗 + 我的订单 */
+/** 商城页：虚拟权益橱窗 + 我的订单 */
 export default function MallPage() {
   const t = useTheme()
   const fs = useFs()
@@ -138,10 +138,10 @@ export default function MallPage() {
   }
 
   return (
-    <PageLayout nav={<NavBar title='轴承币商城' />} tabbar={<CustomTabBar />}>
+    <PageLayout nav={<NavBar title='商城' />} tabbar={<CustomTabBar />}>
       {!isLoggedIn && <LoginGuide icon='gift' text='登录后即可用轴承币兑换权益' />}
       {isLoggedIn && (
-        <ScrollView style={{ flex: 1 }}>
+        <View>
           {/* 余额条：兑换能力前置可见，不足直接引导去赚 */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -317,7 +317,7 @@ export default function MallPage() {
             轴承币不可充值、不可提现、不可转让，仅可在平台内兑换权益
           </Text>
           <View style={{ height: 80 }} />
-        </ScrollView>
+        </View>
       )}
     </PageLayout>
   )
