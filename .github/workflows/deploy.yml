@@ -72,6 +72,25 @@ jobs:
     steps:
     - uses: actions/checkout@v6.0.2
 
+    # open-core 素材拆分：从私有库 FindBearings.Infra 拉官方品牌图标，覆盖仓库内灰色 "OFB" 占位图。
+    # 未配置 INFRA_ASSETS_PAT（fine-grained PAT，仅 read FindBearings.Infra）时自动跳过——
+    # 公开自部署用占位图照常出包，官方发布配置 secret 后自动用真品牌素材
+    - name: 注入官方品牌素材（FindBearings.Infra/assets/taro）
+      if: ${{ secrets.INFRA_ASSETS_PAT != '' }}
+      env:
+        INFRA_ASSETS_PAT: ${{ secrets.INFRA_ASSETS_PAT }}
+      run: |
+        curl -sSL -H "Authorization: Bearer $INFRA_ASSETS_PAT" -o infra.zip \
+          https://api.github.com/repos/${{ github.repository_owner }}/FindBearings.Infra/zipball/main
+        unzip -q infra.zip -d infra_extract
+        ASSET_DIR=$(find infra_extract -maxdepth 2 -type d -path "*/assets/taro")
+        test -n "$ASSET_DIR" || { echo "infra assets/taro not found"; exit 1; }
+        cp -r "$ASSET_DIR/src" .
+        cp -r "$ASSET_DIR/static" .
+        cp -r "$ASSET_DIR/android" .
+        cp -r "$ASSET_DIR/ios" .
+        echo "品牌素材注入完成（app-icon/favicon/mipmap/appiconset 已替换为官方图）"
+
     - name: Set tag
       id: set_tag
       run: |
@@ -155,6 +174,25 @@ jobs:
       contents: write
     steps:
     - uses: actions/checkout@v6.0.2
+
+    # open-core 素材拆分：从私有库 FindBearings.Infra 拉官方品牌图标，覆盖仓库内灰色 "OFB" 占位图。
+    # 未配置 INFRA_ASSETS_PAT（fine-grained PAT，仅 read FindBearings.Infra）时自动跳过——
+    # 公开自部署用占位图照常出包，官方发布配置 secret 后自动用真品牌素材
+    - name: 注入官方品牌素材（FindBearings.Infra/assets/taro）
+      if: ${{ secrets.INFRA_ASSETS_PAT != '' }}
+      env:
+        INFRA_ASSETS_PAT: ${{ secrets.INFRA_ASSETS_PAT }}
+      run: |
+        curl -sSL -H "Authorization: Bearer $INFRA_ASSETS_PAT" -o infra.zip \
+          https://api.github.com/repos/${{ github.repository_owner }}/FindBearings.Infra/zipball/main
+        unzip -q infra.zip -d infra_extract
+        ASSET_DIR=$(find infra_extract -maxdepth 2 -type d -path "*/assets/taro")
+        test -n "$ASSET_DIR" || { echo "infra assets/taro not found"; exit 1; }
+        cp -r "$ASSET_DIR/src" .
+        cp -r "$ASSET_DIR/static" .
+        cp -r "$ASSET_DIR/android" .
+        cp -r "$ASSET_DIR/ios" .
+        echo "品牌素材注入完成（app-icon/favicon/mipmap/appiconset 已替换为官方图）"
 
     # 改动说明：规范版本发布时以 meta 的 tag 反写 package.json.version（仅工作区，不 commit），
     # RN bundle 的 __APP_VERSION__ 与 gradle JsonSlurper 读到的 versionName 由此与 tag 单源一致
