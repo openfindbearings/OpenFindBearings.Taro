@@ -245,7 +245,7 @@ jobs:
 
     # 改动说明：原"Push APKs to K3s download server"与"Record version to server config"两步删除——
     # 跨境 kubectl cp 上行仅 ~50KB/s 且发布时长时间阻塞、CI 需持有集群凭据；
-    # 分发包同步与 Mobile.AppVersion 宣告改由集群侧 CronJob 完成（deploy/apk-server/apk-server.yml，
+    # 分发包同步与 Mobile.AppVersion 宣告改由集群侧 CronJob 完成（FindBearings.Infra 仓库 apps/taro/apk-server.yml，
     # 每 30 分钟从 GitHub Release 拉取，包齐才写库），CI 回归纯构建 + 传 Release
 
     - name: Upload APKs as workflow artifact
