@@ -2,7 +2,7 @@
 // 条目 = 目标 + 字段 + "原值 → 应改为" diff + 状态徽标（审核中/已采纳/未采纳），
 // 被驳回时展示审核意见（与详情页 CorrectionSheet 提交闭环，结果经此页+站内信双触达）。
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -53,12 +53,12 @@ export default function MyCorrectionsPage() {
   const hasMore = items.length < total
 
   return (
-    <PageLayout nav={<NavBar title="我的纠错" showBack />}>
-      <ScrollView
-        scrollY
-        style={{ flex: 1 }}
-        onScrollToLower={() => { if (hasMore && !loading) load(page + 1, true) }}
-      >
+    // 改动说明（v1.7.19 weapp 适配）：页内 ScrollView 移除（PageLayout 统一滚动），触底加载走 onEndReached
+    <PageLayout
+      nav={<NavBar title="我的纠错" showBack />}
+      onEndReached={() => { if (hasMore && !loading) load(page + 1, true) }}
+    >
+      <View>
         {!isLoggedIn && <LoginGuide icon='file_text' text='登录后可查看我的纠错' />}
         {isLoggedIn && items.length === 0 && !loading && (
           <View style={{ display: 'flex', alignItems: 'center', paddingTop: 120 }}>
@@ -105,7 +105,7 @@ export default function MyCorrectionsPage() {
           </Text>
         )}
         <View style={{ height: 24 }} />
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

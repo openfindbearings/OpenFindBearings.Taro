@@ -2,7 +2,7 @@
 // 占位期文案兑现：点对点找货；浏览匿名可访问，发布/应答需登录（商户身份）
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值、样式数值单位
 import { useState } from 'react'
-import { View, Text, ScrollView, Input } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -85,55 +85,73 @@ export default function DiscoverPage() {
   const hasMore = items.length < total
 
   return (
-    <PageLayout nav={<NavBar title='寻货' rightSlot={<Text style={{ ...fs(14), color: t.primary, fontWeight: '600' }} onClick={goPublish}>发布</Text>} />} tabbar={<CustomTabBar />}>
-      {/* 搜索行 */}
-      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 8 }}>
-        <View style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', height: 38, borderRadius: 19, backgroundColor: t.bgInput, paddingLeft: 12, paddingRight: 12 }}>
-          <Icon name='search' size={16} color={t.textTertiary} />
-          <Input
-            style={{ ...fs(15), flex: 1, marginLeft: 6, marginRight: 6, color: t.textPrimary }}
-            placeholder='搜索型号，如 6205'
-            placeholderTextColor={t.textTertiary}
-            value={keyword}
-            onInput={(e) => setKeyword(e.detail.value)}
-            onConfirm={() => void load(1, keyword)}
-            confirmType='search'
-          />
-        </View>
-        <Text style={{ ...fs(14), color: t.primary, marginLeft: 10 }} onClick={() => void load(1, keyword)}>搜索</Text>
-      </View>
-
-      {/* 过滤 chips */}
-      <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 16, paddingTop: 10, paddingBottom: 4 }}>
-        {([
-          { key: 'all', label: '全部寻货' },
-          { key: 'unanswered', label: '等待应答' },
-        ] as const).map((f) => (
-          <View
-            key={f.key}
-            style={{
-              // 改动说明：补 display:flex + center——H5 下 View 默认 block，内联文字行盒被 strut 撑高、文字偏上
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, marginRight: 8,
-              backgroundColor: filter === f.key ? t.primary : t.bgInput,
-            }}
-            onClick={() => setFilter(f.key)}
-          >
-            <Text style={{ ...fs(13), color: filter === f.key ? '#FFFFFF' : t.textSecondary }}>{f.label}</Text>
+    <PageLayout
+      nav={<NavBar title='发现' />}
+      // 改动说明（v1.7.19）：搜索行+过滤chips+发布按钮整体进吸顶区（weapp 胶囊不再与
+      // 导航右侧内容冲突；发布从导航栏挪到 chips 行右端，参照主流 feed 页）
+      subHeader={
+        <View style={{ backgroundColor: t.bgPage, paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 4 }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', height: 38, borderRadius: 19, backgroundColor: t.bgInput, paddingLeft: 12, paddingRight: 12 }}>
+              <Icon name='search' size={16} color={t.textTertiary} />
+              <Input
+                style={{ ...fs(15), flex: 1, marginLeft: 6, marginRight: 6, color: t.textPrimary }}
+                placeholder='搜索型号，如 6205'
+                placeholderTextColor={t.textTertiary}
+                value={keyword}
+                onInput={(e) => setKeyword(e.detail.value)}
+                onConfirm={() => void load(1, keyword)}
+                confirmType='search'
+              />
+            </View>
+            <Text style={{ ...fs(14), color: t.primary, marginLeft: 10 }} onClick={() => void load(1, keyword)}>搜索</Text>
           </View>
-        ))}
-      </View>
-
-      <ScrollView style={{ flex: 1 }} onScrollToLower={() => { if (hasMore) void load(page + 1, keyword) }}>
-        {shown.length === 0 && !loading && (
+          {/* 过滤 chips + 发布（v1.7.19 从内容区挪进吸顶区，发布自导航栏挪来此处右端） */}
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 4 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              {([
+                { key: 'all', label: '全部寻货' },
+                { key: 'unanswered', label: '等待应答' },
+              ] as const).map((f) => (
+                <View
+                  key={f.key}
+                  style={{
+                    // 改动说明：补 display:flex + center——H5 下 View 默认 block，内联文字行盒被 strut 撑高、文字偏上
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, marginRight: 8,
+                    backgroundColor: filter === f.key ? t.primary : t.bgInput,
+                  }}
+                  onClick={() => setFilter(f.key)}
+                >
+                  <Text style={{ ...fs(13), color: filter === f.key ? '#FFFFFF' : t.textSecondary }}>{f.label}</Text>
+                </View>
+              ))}
+            </View>
+            <View
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5, borderRadius: 15, backgroundColor: t.primaryLight }}
+              onClick={goPublish}
+            >
+              <Icon name='plus' size={14} color={t.primaryText} />
+              <Text style={{ ...fs(13), color: t.primaryText, marginLeft: 2 }}>发布</Text>
+            </View>
+          </View>
+        </View>
+      }
+      // 改动说明（v1.7.19）：页内不再自套 ScrollView（weapp 骨架已内置滚动），
+      // 触底加载经 PageLayout onEndReached 透传
+      onEndReached={() => { if (hasMore && !loading) void load(page + 1, keyword) }}
+      tabbar={<CustomTabBar />}
+    >
+      {shown.length === 0 && !loading && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
-              {keyword ? '没有找到相关寻货' : '还没有进行中的寻货，点右上角发布第一条'}
+              {keyword ? '没有找到相关寻货' : '还没有进行中的寻货，点上方「发布」发第一条'}
             </Text>
           </View>
         )}
-        {shown.map((item, i) => (
+      {/* 改动说明（v1.7.19）：原页内 ScrollView 移除，滚动与触底由 PageLayout 统一提供 */}
+      {shown.map((item, i) => (
           <View
             key={item.id}
             style={{
@@ -179,7 +197,6 @@ export default function DiscoverPage() {
             {loading ? '加载中…' : hasMore ? '上拉加载更多' : '没有更多了'}
           </Text>
         )}
-      </ScrollView>
     </PageLayout>
   )
 }

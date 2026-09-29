@@ -3,7 +3,7 @@
 // v2.10.0 寻货置顶：进行中的需求可购买"寻货置顶卡"（24h/72h，个人轴承币支付），
 // 兑换成功后该需求在公开大厅排前并带角标
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text} from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -61,7 +61,7 @@ export default function MySourcingPage() {
 
   return (
     <PageLayout nav={<NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {!isLoggedIn && <LoginGuide icon="compass" text="登录后可查看我发布的寻货" />}
         {isLoggedIn && items.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
@@ -109,7 +109,7 @@ export default function MySourcingPage() {
           )
         })}
         <View style={{ height: 30 }} />
-      </ScrollView>
+      </View>
 
       {/* v2.10.0 寻货置顶：选卡弹层（遮罩自绘，RN 兼容无 fixed——用全屏绝对定位替代方案：ScrollView 内浮层高度 100%） */}
       {pinFor && (

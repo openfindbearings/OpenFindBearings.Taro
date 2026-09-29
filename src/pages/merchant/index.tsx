@@ -327,8 +327,12 @@ export default function MerchantPage() {
     elevation: 2
   } as const
 
+  // 改动说明（v1.7.19）：页面标题随入驻状态动态化，与 CustomTabBar 中间格文案同规则
+  // （已入驻=商家 / 有审核中申请=审核中 / 其余=入驻），TabBar 与页面字样保持一致
+  const merchantTitle = merchants.length > 0 ? '商家' : pendingCount > 0 ? '审核中' : '入驻'
+
   return (
-    <PageLayout nav={<NavBar title='商家' />} tabbar={<CustomTabBar />}>
+    <PageLayout nav={<NavBar title={merchantTitle} />} tabbar={<CustomTabBar />}>
       <View className='mch-body'>
         {/* 顶部品牌区 */}
         <View className='mch-hero'>

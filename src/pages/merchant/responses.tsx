@@ -1,7 +1,7 @@
 // 商家寻货应答页（v1.7.19）：当前商户对寻货的应答记录（应答=商家行为，归属商户），
 // 展示需求快照与应答状态（待处理/已选定/未选中），点击进详情。入口：商家 Tab 已入驻功能区
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text} from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -36,7 +36,7 @@ export default function MerchantResponsesPage() {
 
   return (
     <PageLayout nav={<NavBar title='寻货应答' onBack={() => Taro.navigateBack()} showBack />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {!currentMerchant && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Text style={{ ...fs(14), color: t.textTertiary }}>请先在商家 Tab 选择当前商户</Text>
@@ -115,7 +115,7 @@ export default function MerchantResponsesPage() {
           )
         })}
         <View style={{ height: 30 }} />
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }

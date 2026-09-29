@@ -65,7 +65,8 @@ export default function NavBar({
 
   // 标准安全区：外层吃顶部内缩，内层固定基准高
   const { top } = useSafeArea()
-  // 胶囊预留（weapp>0，H5/RN=0）：外层右侧内缩，避免搜索框/右槽被胶囊压住
+  // 胶囊预留（weapp>0，H5/RN=0）：改动说明（v1.7.19）——只加在右侧栏 inline，
+  //   不再吃在外层，否则标题居中基准被推偏（标题现按屏幕全宽 absolute 居中）
   const capsulePad = capsuleRightReserve()
   // 全局字号缩放：标题按 navbar-title 基准 17dp 缩放
   const fs = useFs()
@@ -82,7 +83,7 @@ export default function NavBar({
   return (
     <View
       className={`navbar ${searchMode ? 'navbar-search' : ''}`}
-      style={{ paddingTop: top, paddingRight: capsulePad, backgroundColor: background ?? t.navBarBg, borderBottomColor: showBorder ? t.border : 'transparent' }}
+      style={{ paddingTop: top, backgroundColor: background ?? t.navBarBg, borderBottomColor: showBorder ? t.border : 'transparent' }}
     >
       {/* 内层内容行：固定基准高，垂直居中 */}
       <View className={`navbar-inner ${searchMode ? 'navbar-inner-search' : ''}`}>
@@ -97,16 +98,18 @@ export default function NavBar({
           </View>
         )}
 
-        {/* 中间栏：搜索框（centerSlot）或标题 */}
-        <View className='navbar-center'>
-          {centerSlot || <Text className='navbar-title' style={{ ...fs(17), color: fg }}>{title}</Text>}
+        {/* 中间栏：搜索框（centerSlot）或标题。
+            改动说明（v1.7.19）：有右侧内容（rightSlot/rightIcons）时标题改左对齐内联，
+            避免 absolute 居中与右侧按钮重叠（Material 规矩：带操作项的标题栏左对齐） */}
+        <View className={`navbar-center${(rightSlot || rightIcons) ? ' navbar-center-inline' : ''}`}>
+          {centerSlot || <Text className={`navbar-title${(rightSlot || rightIcons) ? ' navbar-title-left' : ''}`} style={{ ...fs(17), color: fg }}>{title}</Text>}
         </View>
 
         {/* 右侧栏：优先渲染声明式 rightIcons（类名在本文件作用域，稳定生效），
             右侧图标用紧凑触控框（32dp，与搜索框内 action-icon 同几何、glyph 间距约 10dp），
             返回按钮仍用 44dp navbar-icon 保证主操作可点。兼容自定义 rightSlot。 */}
         {showRight && (
-          <View className='navbar-right'>
+          <View className='navbar-right' style={{ paddingRight: capsulePad }}>
             {rightIcons &&
               rightIcons.map((ic) => (
                 <View

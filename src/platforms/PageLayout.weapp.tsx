@@ -28,9 +28,14 @@ interface PageLayoutProps {
   immersive?: boolean
   /** 内容滚动回调（immersive 时生效，参数为 scrollTop px） */
   onScrollY?: (scrollTop: number) => void
+  /**
+   * 触底回调（v1.7.19 发现页分页加载）：内部 ScrollView onScrollToLower 透传，
+   * 页面不再自套 ScrollView（weapp 嵌套 ScrollView 高度塌陷）
+   */
+  onEndReached?: () => void
 }
 
-export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, subHeader }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader }: PageLayoutProps) {
   // 页面底色随主题模式运行时切换
   const t = useTheme()
 
@@ -63,14 +68,15 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
 
   return (
     <View className='pl-wx' style={{ backgroundColor: t.bgPage }}>
-      {nav ? <View style={{ backgroundColor: t.bgPage }}>{nav}</View> : null}
+      {/* 顶栏/吸顶区包一层禁缩容器：flex 列内不可被滚动区挤压（min-height 陷阱同源） */}
+      {nav ? <View className='pl-wx-nav' style={{ backgroundColor: t.bgPage }}>{nav}</View> : null}
       {/* 吸顶子区在滚动区外：不随内容滚动（与 RN 版一致） */}
-      {subHeader}
-      <ScrollView className='pl-wx-scroll' {...({ scrollY } as any)}>
+      {subHeader ? <View className='pl-wx-nav'>{subHeader}</View> : null}
+      <ScrollView className='pl-wx-scroll' {...({ scrollY, onScrollToLower: onEndReached } as any)}>
         {/* 有底栏时内容底部留白（tabbar 高 56 + 余量），fixed 底栏会盖住最后内容 */}
         <View style={{ paddingBottom: tabbar ? 64 : 0 }}>{children}</View>
       </ScrollView>
-      {tabbar}
+      {tabbar ? <View className='pl-wx-tabbar'>{tabbar}</View> : null}
     </View>
   )
 }

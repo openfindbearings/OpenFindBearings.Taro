@@ -5,7 +5,7 @@
 // 挂礼走"商家申请→平台定档→买家托管兑换→确认收货结算"，杜绝定向转移。
 // RN 约束：仅 flex 布局、无 fixed、Text 包裹、Input 显式字号、lineHeight 数值。
 import { useState } from 'react'
-import { View, Text, ScrollView, Input, Image } from '@tarojs/components'
+import { View, Text, Input, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -154,7 +154,7 @@ export default function MerchantGiftsPage() {
     }>
       {!isLoggedIn && <LoginGuide icon='gift' text='登录后管理商家金库与挂礼' />}
       {isLoggedIn && (
-        <ScrollView style={{ flex: 1 }}>
+        <View>
           {/* 金库余额（商家仓库） */}
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -303,7 +303,7 @@ export default function MerchantGiftsPage() {
           </View>
 
           <View style={{ height: 40 }} />
-        </ScrollView>
+        </View>
       )}
     </PageLayout>
   )

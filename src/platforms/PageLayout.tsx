@@ -34,17 +34,24 @@ interface PageLayoutProps {
   immersive?: boolean
   /** 内容滚动回调（immersive 时生效，参数为 scrollTop px） */
   onScrollY?: (scrollTop: number) => void
+  /** 触底回调（v1.7.19 发现页分页加载）：H5 文档滚动近底时触发 */
+  onEndReached?: () => void
 }
 
-export default function PageLayout({ nav, tabbar, children, immersive, onScrollY, subHeader }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, immersive, onScrollY, onEndReached, subHeader }: PageLayoutProps) {
   // 页面底色随主题模式运行时切换
   const t = useTheme()
   // subHeader 吸顶偏移 = 状态栏高 + 导航基准高 44（$navbar-height，weapp 端状态栏非 0）
   const { top } = useSafeArea()
   // 改动说明（v1.7.11）：immersive 时订阅页面文档滚动（Taro 编译期注册 onPageScroll，
   //   非 immersive 页面零开销——hook 无条件调用但回调内判空）
+  // 改动说明（v1.7.19）：同一订阅顺带做 H5 触底检测（文档流无 ScrollView onScrollToLower）
   usePageScroll((e) => {
     if (immersive && onScrollY) onScrollY(e.scrollTop)
+    if (onEndReached && typeof document !== 'undefined') {
+      const docEl = document.documentElement
+      if (e.scrollTop + window.innerHeight >= docEl.scrollHeight - 80) onEndReached()
+    }
   })
 
   if (immersive) {

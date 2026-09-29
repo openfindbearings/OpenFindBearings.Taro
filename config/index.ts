@@ -20,6 +20,15 @@ const config = {
     // 编译期全局常量：当前应用版本号（SemVer，如 1.0.0-rc.1），供版本更新检查上报用
     __APP_VERSION__: JSON.stringify(pkg.version)
   },
+  // 改动说明（weapp 登录报 "process is not defined"）：源码用 process.env.TARO_APP_* 读
+  //   BFF/媒体地址，但项目无 .env 未定义这两个键 → 编译期不替换，小程序运行时没有
+  //   process 全局，取 base 地址即抛错（H5/RN 有 process 垫片故从未暴露）。
+  //   Taro 的 env 节专用于替换 process.env.X（defineConstants 不参与该前缀），
+  //   缺省空串让业务代码 `|| 常量兜底` 生效；构建时可用同名 shell 环境变量覆盖
+  env: {
+    TARO_APP_BFF_BASE_URL: JSON.stringify(process.env.TARO_APP_BFF_BASE_URL || ''),
+    TARO_APP_MEDIA_BASE_URL: JSON.stringify(process.env.TARO_APP_MEDIA_BASE_URL || '')
+  },
   copy: {
     patterns: [
       { from: 'static', to: 'dist/static' }

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
+import { formatDate } from '../../utils/format'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
@@ -26,7 +27,7 @@ const STAGE_ITEM_W = 112
 function fmtEarnDate(iso?: string | null): string {
   if (!iso) return ''
   try {
-    return new Date(iso).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
+    return formatDate(iso)
   } catch {
     return iso.slice(0, 10)
   }
@@ -116,7 +117,7 @@ export default function MerchantMedalsPage() {
     <PageLayout nav={<NavBar title='商家勋章' showBack />}>
       {!isLoggedIn && <LoginGuide icon='award' text='登录后查看商家勋章' />}
       {isLoggedIn && (
-        <ScrollView style={{ flex: 1 }}>
+        <View>
           {/* 1. 勋章舞台：展台底色深浅双轨（深底近黑/浅底近白），横向轮播+获得日期与归属 */}
           <View style={{ backgroundColor: t.isDark ? '#111827' : '#F8FAFC', margin: 12, borderRadius: 16, paddingTop: 18, paddingBottom: 14 }}>
             {unlocked.length > 0 ? (
@@ -190,7 +191,7 @@ export default function MerchantMedalsPage() {
             })}
           </View>
           <View style={{ height: 80 }} />
-        </ScrollView>
+        </View>
       )}
     </PageLayout>
   )

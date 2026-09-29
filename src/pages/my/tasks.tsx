@@ -4,7 +4,7 @@
 //       次日自动刷新回未完成；once 任务（注册/入驻）看历史，完成即永久完成。
 // RN 约束：仅 flex 布局、无 fixed/vh/gradient、Text 包裹、lineHeight 数值
 import { useState } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text} from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -153,7 +153,7 @@ export default function TasksPage() {
 
   return (
     <PageLayout nav={<NavBar title='任务中心' showBack onBack={() => Taro.navigateBack()} />}>
-      <ScrollView style={{ flex: 1 }}>
+      <View>
         {!isLoggedIn && <LoginGuide icon='gift' text='登录后可签到赚轴承币' />}
         {isLoggedIn && (
         <>
@@ -177,7 +177,7 @@ export default function TasksPage() {
             <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/discover/index' })}>去寻货</Text>
           </View>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>轴承币商城：兑换置顶卡与商家礼品</Text>
+            <Text style={{ ...fs(13), color: t.textSecondary, flex: 1 }}>商城：兑换置顶卡与商家礼品</Text>
             {/* v2.5.0：商城已上线，从预告文案转真实入口 */}
             <Text style={{ ...fs(13), color: t.primary }} onClick={() => Taro.switchTab({ url: '/pages/mall/index' })}>去兑换</Text>
           </View>
@@ -279,7 +279,7 @@ export default function TasksPage() {
         </Text>
         </>
         )}
-      </ScrollView>
+      </View>
     </PageLayout>
   )
 }
