@@ -268,10 +268,16 @@ spec:
   schedule: "0 4 * * *"
   timeZone: "Asia/Shanghai"
   concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
+  # 改动说明（2026-09-29）：成功历史清零，Completed pod 跑完即回收（不再常驻 kubectl get pods）；
+  # 失败保留 1 次供次晨排查慢链路/下载故障（国内→GitHub 抖动高发）
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      # 改动说明（2026-09-29）：ttlSecondsAfterFinished=6h——任何结果（成功/失败）跑完 6 小时后自动
+      # 清理 Job 及其 Pod；失败记录足够次晨排查（4 点失败到 9-10 点仍可查日志），之后自行消失，
+      # 不再受"成功不清理旧失败"的 K8s 限制（failedJobsHistoryLimit 只管失败挤占，成功不会触发清理）
+      ttlSecondsAfterFinished: 21600
       backoffLimit: 0
       # 单轮上限 90 分钟：好窗口约 25 分钟下完；坏窗口靠脚本内重试循环死磕，留足余量，
       # 到点仍下不完则本轮放弃、次日凌晨再续传（不宣告，保证"宣告即下载得到"）
