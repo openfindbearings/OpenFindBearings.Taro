@@ -322,7 +322,12 @@
 }
 
 // weapp 横滚适配（v1.7.19）：scroll-view 用 nowrap 让卡片排成一行，卡片 inline-flex 保持内部纵向布局
+// 改动说明：补 display:block 覆盖父类的 display:flex——weapp 未开 enable-flex 属性时 flex 声明不生效，
+// 基础库 3.17.4 会在控制台报警"设置 enable-flex 属性以使 flexbox 布局生效"；
+// 本类仅 weapp 追加且声明在父类之后（同优先级后者胜），横滚仍走 nowrap+inline-flex 方案，视觉无变化，
+// H5/RN 不追加本类不受影响。
 .hot-bearings-scroll-wx {
+  display: block;
   white-space: nowrap;
 }
 
