@@ -39,9 +39,10 @@ export default defineAppConfig({
 'pages/my/permissions',
 'pages/my/about',
     'pages/my/profile-edit',
+    // 改动说明（短信登录上线）：设置/修改登录密码（验证码登录注册的账号首次设密）
+    'pages/my/change-password',
     'pages/common/doc',
-    'pages/auth/login',
-    'pages/auth/register'
+    'pages/auth/login'
   ],
   window: {
     backgroundTextStyle: 'light',

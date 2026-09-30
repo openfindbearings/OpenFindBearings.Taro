@@ -98,6 +98,18 @@ export async function updateProfile(body: ProfileUpdateBody) {
 }
 
 /**
+ * 设置/修改登录密码（BFF 代理 Identity /api/account/me/change-password）。
+ * 改动说明（短信登录上线）：验证码登录注册的账号没有密码，首次设置时 currentPassword 传空串，
+ * 由 Identity 按"是否已设密码"决定是否校验当前密码。
+ */
+export async function changePassword(currentPassword: string, newPassword: string, confirmNewPassword: string) {
+  return request<OpResult>(API.CHANGE_PASSWORD, {
+    method: 'POST',
+    data: { currentPassword, newPassword, confirmNewPassword }
+  })
+}
+
+/**
  * 注销账户（v1.7.12）：服务端真注销——唯一管理员商户拦截（message 带商户名引导先转让）、
  * 其余成员关系清理、待确认邀请作废、通知清空、Identity 禁用与全设备令牌吊销；
  * 成功后本地仍需 logout 清缓存。30 天冷静期后数据匿名化。

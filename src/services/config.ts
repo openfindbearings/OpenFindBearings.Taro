@@ -122,7 +122,8 @@ export function usableImage(url?: string | null): string {
 export const API = {
   /** 认证 */
   LOGIN: `${API_PREFIX}/auth/login`,
-  REGISTER: `${API_PREFIX}/auth/register`,
+  // 改动说明（短信登录上线）：删除 REGISTER——注册页与 BFF /auth/register 已下线，
+  // 注册统一走"验证码登录即注册"（LOGIN_SMS 对未注册手机号自动建号）
   REFRESH: `${API_PREFIX}/auth/refresh`,
   LOGIN_SMS: `${API_PREFIX}/auth/login-sms`,
   SEND_CODE: `${API_PREFIX}/auth/send-code`,
@@ -263,6 +264,9 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
     CORRECTION_SUBMIT_MERCHANT: (id: string) => `${API_PREFIX}/me/corrections/merchants/${id}`,
     MY_CORRECTIONS: `${API_PREFIX}/me/corrections`,
     PROFILE_UPDATE: `${API_PREFIX}/me/profile`,
+    // 改动说明（短信登录上线）：设置/修改密码（验证码登录注册的账号首次设置密码走这里，
+    // BFF 代理 Identity /api/account/me/change-password）
+    CHANGE_PASSWORD: `${API_PREFIX}/profile/change-password`,
     // 注销账户（v1.7.12）：真注销——服务端守卫+关系清理+Identity 禁用吊销（原为纯本地清缓存假注销）
     ACCOUNT_DEACTIVATE: `${API_PREFIX}/me/deactivate`,
   /** 头像上传（multipart，BFF 代理到 API 落盘并返回绝对 URL） */

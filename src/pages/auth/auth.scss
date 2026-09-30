@@ -1,11 +1,18 @@
-// 登录/注册页共享布局样式（RN 优先）
+// 登录页布局样式（RN 优先）
 // 仅布局，不含颜色（颜色全部 inline 走 useTheme）；H5 需显式 display:flex，RN 忽略 display 用 flex-direction
-.auth-form {
-  margin: 16px;
-  padding: 32px 24px;
-  border-radius: 16px;
+// 改动说明（短信登录上线）：注册页下线，页面由"卡片表单"改为全幅脚手架（支付宝/亲邻式）：
+// 顶部标题区 → 表单 → 主按钮 → 协议勾选 → 弹性留白 → 互切链接 + 分隔线 + 其他登录方式图标行钉底。
+
+// 脚手架：整屏纵向容器，min-height 由 tsx 按窗口高度数值注入（H5 禁 vh、RN 不支持 vh）
+.auth-scaffold {
   display: flex;
   flex-direction: column;
+  padding: 24px 24px 32px;
+}
+
+// 弹性留白：把底部区（切换链接/分隔线/图标行）推到屏幕底部
+.auth-grow {
+  flex: 1;
 }
 
 .auth-title {
@@ -55,35 +62,21 @@
   justify-content: center;
   height: 48px;
   margin-top: 8px;
-  border-radius: 10px;
+  border-radius: 24px;
 }
 
 .auth-btn-text {
   font-weight: bold;
 }
 
-.auth-links {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-top: 18px;
-}
-
+// 协议勾选行：方框 + 文案可换行
 .auth-agree {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 24px;
-}
-
-.auth-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 12px;
+  margin-top: 18px;
 }
 
 .auth-checkbox {
@@ -93,10 +86,68 @@
   justify-content: center;
   width: 18px;
   height: 18px;
-  margin-right: 8px;
+  margin-right: 4px;
   border-radius: 4px;
   border-width: 1px;
   border-style: solid;
+}
+
+// 验证码/密码互切小字
+.auth-switch {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 8px;
+  margin-bottom: 18px;
+}
+
+// 「其他登录方式」分隔线：左右横线 + 居中文案
+.auth-divider {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.auth-divider-line {
+  flex: 1;
+  height: 1px;
+}
+
+.auth-divider-text {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+// 其他登录方式图标行：圆形图标 + 下方小字标签
+.auth-methods {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.auth-method {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // 改动说明：原 flex:1 均分整行宽导致 4 枚图标被摊开贴满屏宽、观感偏大，
+  // 改为固定宽 72px：4 枚共 288px 由父容器 justify-content:center 整组真正左右居中
+  width: 72px;
+}
+
+.auth-method-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  // 改动说明：圆形图标 52px → 44px，与整行居中同批收小
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+}
+
+.auth-method-label {
+  margin-top: 6px;
 }
 
 .auth-ph {
