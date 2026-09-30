@@ -99,14 +99,33 @@ export async function updateProfile(body: ProfileUpdateBody) {
 
 /**
  * 设置/修改登录密码（BFF 代理 Identity /api/account/me/change-password）。
- * 改动说明（短信登录上线）：验证码登录注册的账号没有密码，首次设置时 currentPassword 传空串，
- * 由 Identity 按"是否已设密码"决定是否校验当前密码。
+ * 改动说明（验证码改密）：验证凭据由当前密码换成短信验证码 verifyCode，
+ * Identity 按 type=reset_password 一次性消费校验；不再传 currentPassword。
  */
-export async function changePassword(currentPassword: string, newPassword: string, confirmNewPassword: string) {
+export async function changePassword(verifyCode: string, newPassword: string, confirmNewPassword: string) {
   return request<OpResult>(API.CHANGE_PASSWORD, {
     method: 'POST',
-    data: { currentPassword, newPassword, confirmNewPassword }
+    data: { verifyCode, newPassword, confirmNewPassword }
   })
+}
+
+/**
+ * 改密流程的验证码暂存（验证码页 → 设置新密码页跨页传递）。
+ * 改动说明（验证码改密）：只放内存不进 URL/持久化——App 中途被杀即失效，
+ * 用户回到验证码页重发即可；取用即清空，防重复消费。
+ */
+let pendingChangePasswordCode = ''
+
+/** 存入改密验证码（验证码页"下一步"时调用） */
+export function setPendingChangePasswordCode(code: string) {
+  pendingChangePasswordCode = code
+}
+
+/** 取出并清空改密验证码（设置新密码页"保存"时调用） */
+export function takePendingChangePasswordCode() {
+  const c = pendingChangePasswordCode
+  pendingChangePasswordCode = ''
+  return c
 }
 
 /**

@@ -134,19 +134,12 @@ export default function LoginPage() {
 
   /** 底部统一区：分隔线 + 其他登录方式图标行
    * 改动说明：密码登录从常驻小字升级为图标行平级入口（与指纹/微信/一键并列），
-   * 分隔线语义「其他登录方式」下四种方式一目了然；仅密码屏保留小字「验证码登录」切回。 */
+   * 分隔线语义「其他登录方式」下四种方式一目了然。
+   * 改动说明（图标行状态机修复）：第一枚永远指向"另一种"登录方式——
+   * 手机号/验证码屏显示「密码登录」进密码屏；密码屏显示「验证码登录」回手机号屏
+   * （原密码屏仍挂「密码登录」指向自己属废入口；原上方 auth-switch 小字与图标行重复，删除）。 */
   const bottomArea = (
     <>
-      {step === 'password' && (
-        <View className='auth-switch'>
-          <Text
-            className='auth-link'
-            style={{ ...fs(13), color: t.primaryText }}
-            onClick={() => { setMsg(''); setStep('phone') }}
-          >验证码登录</Text>
-        </View>
-      )}
-
       <View className='auth-divider'>
         <View className='auth-divider-line' style={{ backgroundColor: t.border }} />
         <Text className='auth-divider-text' style={{ ...fs(12), color: t.textTertiary }}>其他登录方式</Text>
@@ -154,12 +147,16 @@ export default function LoginPage() {
       </View>
 
       <View className='auth-methods'>
-        {methodItem('lock', '密码登录', '#475569', () => { setMsg(''); setStep('password') })}
-        {methodItem('fingerprint', '指纹登录', '#64748B', () =>
+        {/* 改动说明：图标圆底配色由三灰一绿改为多色区分（验证码青/密码蓝/指纹紫/微信品牌绿不动/一键橙），
+            两种方式互切的第一枚颜色也不同，白色图标不变，深浅主题均安全，避免整行灰调雷同 */}
+        {step === 'password'
+          ? methodItem('shield', '验证码登录', '#14B8A6', () => { setMsg(''); setStep('phone') })
+          : methodItem('lock', '密码登录', '#3B82F6', () => { setMsg(''); setStep('password') })}
+        {methodItem('fingerprint', '指纹登录', '#8B5CF6', () =>
           Taro.showToast({ title: '指纹登录即将上线', icon: 'none' }))}
         {methodItem('message-circle', '微信登录', '#07C160', () =>
           Taro.showToast({ title: '微信登录即将上线', icon: 'none' }))}
-        {methodItem('smartphone', '一键登录', '#64748B', () =>
+        {methodItem('smartphone', '一键登录', '#F59E0B', () =>
           Taro.showToast({ title: '本机号码一键登录即将上线', icon: 'none' }))}
       </View>
     </>
@@ -206,9 +203,12 @@ export default function LoginPage() {
       ? { text: loading ? '登录中…' : '登录', busy: loading, act: onLoginByCode }
       : { text: loading ? '登录中…' : '登录', busy: loading, act: onLoginByPassword }
 
-  /** 标题/副标题随步骤切换 */
+  /** 标题/副标题随步骤切换
+   * 改动说明：屏1 副标题由"验证后自动登录"改为直白点明"自动创建账号"，
+   * 让登录即注册的告知更透明（协议勾选之外的第二重知情告知），减轻强制感；
+   * 屏1 标题由"手机号登录"改为"验证码登录"，与密码屏"密码登录"成对称语义 */
   const heading = step === 'phone'
-    ? { title: '手机号登录', sub: '未注册的手机验证后自动登录' }
+    ? { title: '验证码登录', sub: '未注册的手机号将自动创建账号并登录' }
     : step === 'code'
       ? { title: '输入验证码', sub: `验证码已发送至 ${phone.slice(0, 3)}****${phone.slice(7)}` }
       : { title: '密码登录', sub: '使用手机号密码登录' }

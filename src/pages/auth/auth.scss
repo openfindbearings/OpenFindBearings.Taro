@@ -92,14 +92,7 @@
   border-style: solid;
 }
 
-// 验证码/密码互切小字
-.auth-switch {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  margin-top: 8px;
-  margin-bottom: 18px;
-}
+// 改动说明（图标行状态机修复）：原 .auth-switch 密码屏"验证码登录"小字与图标行入口重复，已删除。
 
 // 「其他登录方式」分隔线：左右横线 + 居中文案
 .auth-divider {

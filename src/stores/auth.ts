@@ -26,10 +26,11 @@ interface AuthState {
   /** 手机号 + 密码登录 */
   login: (phone: string, password: string) => Promise<void>
   /**
-   * 发送登录验证码（60 秒频控由服务端兜底）。
+   * 发送短信验证码（60 秒频控由服务端兜底）。
    * 改动说明（短信登录上线）：注册页下线、全面走"验证码登录即注册"，此动作为主登录链路供码。
+   * 改动说明（验证码改密）：type 区分用途（login 默认；改密发码传 reset_password），隔离验证码用途。
    */
-  sendCode: (phone: string) => Promise<void>
+  sendCode: (phone: string, type?: string) => Promise<void>
   /**
    * 手机号 + 验证码登录（登录即注册：未注册手机号由 Identity sms grant 自动建号）。
    * 改动说明（短信登录上线）：新增，替代原 register 动作。
@@ -77,9 +78,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  sendCode: async (phone: string) => {
+  sendCode: async (phone: string, type?: string) => {
     // 只发码不改登录态（页面自行管理倒计时与 loading），失败抛出交页面提示
-    await request(API.SEND_CODE, { method: 'POST', data: { phone }, auth: false })
+    // 改动说明（验证码改密）：带 type 区分用途，缺省不传由 BFF/Identity 回落 login
+    await request(API.SEND_CODE, { method: 'POST', data: { phone, ...(type ? { type } : {}) }, auth: false })
   },
 
   loginSms: async (phone: string, code: string) => {
