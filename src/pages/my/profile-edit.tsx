@@ -170,6 +170,13 @@ export default function ProfileEditPage() {
 
       <View style={{ marginBottom: 12 }}>
         {fieldRow('手机号', <Text style={{ ...fs(15), color: t.textTertiary }}>{phone || '未绑定'}</Text>)}
+        {/* 改动说明（短信登录上线）：设置/修改登录密码入口——验证码登录注册的账号在此首次设密 */}
+        {fieldRow('登录密码', (
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={() => Taro.navigateTo({ url: '/pages/my/change-password' })}>
+            <Text style={{ ...fs(15), color: t.textTertiary }}>设置 / 修改</Text>
+            <Icon name="chevron-right" size={16} color={t.textTertiary} />
+          </View>
+        ))}
         {fieldRow('昵称', <Input style={inputStyle} value={form.nickname} maxlength={30} placeholder="请输入昵称" placeholderClass="auth-ph" placeholderTextColor={t.textTertiary} onInput={(e) => setField('nickname', e.detail.value)} />)}
         {/* 改动说明：删除"头像地址"输入行——头像由上方预览直接展示，URL 编辑体验差；
             form.avatar 仍随资料回填与保存透传，不清空已存头像 */}

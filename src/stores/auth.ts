@@ -25,8 +25,17 @@ interface AuthState {
   loading: boolean
   /** 手机号 + 密码登录 */
   login: (phone: string, password: string) => Promise<void>
-  /** 手机号 + 密码注册（注册即登录） */
-  register: (phone: string, password: string, agreeTerms: boolean) => Promise<void>
+  /**
+   * 发送短信验证码（60 秒频控由服务端兜底）。
+   * 改动说明（短信登录上线）：注册页下线、全面走"验证码登录即注册"，此动作为主登录链路供码。
+   * 改动说明（验证码改密）：type 区分用途（login 默认；改密发码传 reset_password），隔离验证码用途。
+   */
+  sendCode: (phone: string, type?: string) => Promise<void>
+  /**
+   * 手机号 + 验证码登录（登录即注册：未注册手机号由 Identity sms grant 自动建号）。
+   * 改动说明（短信登录上线）：新增，替代原 register 动作。
+   */
+  loginSms: (phone: string, code: string) => Promise<void>
   /** 退出登录 */
   logout: () => Promise<void>
   /** 拉取并持久化用户信息 */
@@ -57,6 +66,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         { method: 'POST', data: { username: phone, password, deviceId }, auth: false }
       )
       await setTokens(res.accessToken, res.refreshToken)
+      // 记住本次登录手机号，下次打开登录页自动回填（登录过的设备一步直达）
+      await setItem('last_login_phone', phone)
       await get().fetchProfile()
       set({ isLoggedIn: true, loading: false })
       // 登录后拉取入驻状态（非阻塞，商户页/TabBar 读取）
@@ -67,16 +78,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (phone: string, password: string, agreeTerms: boolean) => {
+  sendCode: async (phone: string, type?: string) => {
+    // 只发码不改登录态（页面自行管理倒计时与 loading），失败抛出交页面提示
+    // 改动说明（验证码改密）：带 type 区分用途，缺省不传由 BFF/Identity 回落 login
+    await request(API.SEND_CODE, { method: 'POST', data: { phone, ...(type ? { type } : {}) }, auth: false })
+  },
+
+  loginSms: async (phone: string, code: string) => {
     set({ loading: true })
     try {
       const deviceId = await getDeviceId()
-      // 注册即登录：BFF register = Identity signup + password grant，直接返回令牌
+      // 登录即注册：BFF login-sms = Identity sms grant，未注册手机号自动建号后返回令牌
       const res = await request<{ accessToken: string; refreshToken: string }>(
-        API.REGISTER,
-        { method: 'POST', data: { phone, password, agreeTerms, deviceId }, auth: false }
+        API.LOGIN_SMS,
+        { method: 'POST', data: { phone, code, deviceId }, auth: false }
       )
       await setTokens(res.accessToken, res.refreshToken)
+      await setItem('last_login_phone', phone)
       await get().fetchProfile()
       set({ isLoggedIn: true, loading: false })
       void useMerchantStore.getState().fetchApplications()

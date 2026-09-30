@@ -81,7 +81,7 @@ export class ApiError extends Error {
 
 /** 认证类端点：不参与 401→刷新→重放，避免登录失败被刷新逻辑吞掉/递归 */
 const AUTH_PATHS: string[] = [
-  API.LOGIN, API.REGISTER, API.REFRESH,
+  API.LOGIN, API.REFRESH,
   API.LOGIN_SMS, API.SEND_CODE, API.LOGOUT, API.DELETION
 ]
 function isAuthPath(url: string): boolean {

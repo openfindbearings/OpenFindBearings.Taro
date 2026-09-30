@@ -98,6 +98,37 @@ export async function updateProfile(body: ProfileUpdateBody) {
 }
 
 /**
+ * 设置/修改登录密码（BFF 代理 Identity /api/account/me/change-password）。
+ * 改动说明（验证码改密）：验证凭据由当前密码换成短信验证码 verifyCode，
+ * Identity 按 type=reset_password 一次性消费校验；不再传 currentPassword。
+ */
+export async function changePassword(verifyCode: string, newPassword: string, confirmNewPassword: string) {
+  return request<OpResult>(API.CHANGE_PASSWORD, {
+    method: 'POST',
+    data: { verifyCode, newPassword, confirmNewPassword }
+  })
+}
+
+/**
+ * 改密流程的验证码暂存（验证码页 → 设置新密码页跨页传递）。
+ * 改动说明（验证码改密）：只放内存不进 URL/持久化——App 中途被杀即失效，
+ * 用户回到验证码页重发即可；取用即清空，防重复消费。
+ */
+let pendingChangePasswordCode = ''
+
+/** 存入改密验证码（验证码页"下一步"时调用） */
+export function setPendingChangePasswordCode(code: string) {
+  pendingChangePasswordCode = code
+}
+
+/** 取出并清空改密验证码（设置新密码页"保存"时调用） */
+export function takePendingChangePasswordCode() {
+  const c = pendingChangePasswordCode
+  pendingChangePasswordCode = ''
+  return c
+}
+
+/**
  * 注销账户（v1.7.12）：服务端真注销——唯一管理员商户拦截（message 带商户名引导先转让）、
  * 其余成员关系清理、待确认邀请作废、通知清空、Identity 禁用与全设备令牌吊销；
  * 成功后本地仍需 logout 清缓存。30 天冷静期后数据匿名化。
