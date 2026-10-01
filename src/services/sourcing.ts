@@ -24,15 +24,29 @@ export interface SourcingFeedItem {
   pinnedUntil?: string | null
 }
 
-/** 应答明细（仅发布人可见全量） */
+/** 应答型号行（v1.5.0 多行标书：每条应答含多行型号，可引用在售商品） */
+export interface SourcingResponseItem {
+  id: string
+  partNumber: string
+  /** 引用的在售商品 ID（MerchantBearing，可空=自由文本型号行） */
+  bearingId?: string | null
+  price?: number | null
+  stock?: string | null
+  leadTime?: string | null
+}
+
+/** 应答明细（仅发布人可见全量；v1.5.0 多行标书 + 实力摘要） */
 export interface SourcingResponseDetail {
   id: string
   merchantId: string
   merchantName?: string | null
   isVerified: boolean
-  price?: number | null
-  stock?: string | null
-  leadTime?: string | null
+  /** v1.5.0 证据力 P1：公司名/在售数/集体任务达成（发布人选定的结构化依据） */
+  companyName?: string | null
+  onSaleCount?: number
+  completedTaskCount?: number
+  /** v1.5.0 多行标书：应答型号行 */
+  items: SourcingResponseItem[]
   remark: string
   status: number
   createdAt: string
@@ -41,9 +55,7 @@ export interface SourcingResponseDetail {
 /** 我（当前商户）的应答 */
 export interface SourcingMyResponse {
   id: string
-  price?: number | null
-  stock?: string | null
-  leadTime?: string | null
+  items: SourcingResponseItem[]
   remark: string
   status: number
   createdAt: string
@@ -96,9 +108,7 @@ export interface SourcingMerchantResponse {
   demandId: string
   partNumber?: string | null
   demandStatus?: number | null
-  price?: number | null
-  stock?: string | null
-  leadTime?: string | null
+  items: SourcingResponseItem[]
   remark: string
   status: number
   createdAt: string
@@ -271,11 +281,19 @@ export function publishDemand(body: PublishDemandBody) {
   return opWrap(() => request(API.SOURCING_DEMANDS, { method: 'POST', data: body }))
 }
 
-/** 应答寻货请求体 */
-export interface RespondDemandBody {
+/** 应答型号行输入（v1.5.0 多行标书） */
+export interface RespondItemInput {
+  partNumber: string
+  /** 引用的在售商品 ID（可空=自由文本型号行） */
+  bearingId?: string | null
   price?: number | null
   stock?: string | null
   leadTime?: string | null
+}
+
+/** 应答寻货请求体 */
+export interface RespondDemandBody {
+  items: RespondItemInput[]
   remark: string
   usePoints: boolean
 }

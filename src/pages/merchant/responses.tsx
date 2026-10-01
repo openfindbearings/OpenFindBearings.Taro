@@ -128,7 +128,9 @@ export default function MerchantResponsesPage() {
                 </View>
               </View>
               <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 6 }} numberOfLines={1}>
-                {[item.price != null ? `¥${item.price}/只` : null, item.stock ? `库存 ${item.stock}` : null, item.leadTime ? `交期 ${item.leadTime}` : null].filter(Boolean).join(' · ') || item.remark}
+                {item.items && item.items.length > 0
+                  ? `${item.items.length} 个型号 · ${[item.items[0].price != null ? `¥${item.items[0].price}/只` : null, item.items[0].stock ? `库存 ${item.items[0].stock}` : null].filter(Boolean).join(' · ') || '可详谈'}`
+                  : item.remark}
               </Text>
               {adopted && (
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
