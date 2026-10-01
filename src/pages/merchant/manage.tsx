@@ -9,7 +9,7 @@
 //   3. 行新增"编辑"（价格/库存/起订量/备注四项描述，PUT 后重新进审核）；
 //   4. 待审核商品显示"审核中"角标（isPendingApproval），支持"审核中"筛选。
 import { useState } from 'react'
-import { View, Text, Input, ScrollView } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
@@ -422,8 +422,10 @@ export default function MerchantManagePage() {
             </View>
           )}
           {!picked && searchList.length > 0 && (
-            <ScrollView scrollY style={{ maxHeight: 180, marginTop: 8 }} {...({ showsVerticalScrollIndicator: false } as any)}>
-              {searchList.map((b) => (
+            <View style={{ marginTop: 8 }}>
+              {/* 改动说明（v1.5.0）：候选列表不再 maxHeight 裁切滚动（关滚动条后像被压住/显示不全），
+                  改完整渲染前 5 条 + "还有更多"提示，与应答页在售选择同款闭环 */}
+              {searchList.slice(0, 5).map((b) => (
                 <View
                   key={b.id}
                   style={{ borderBottomWidth: 1, borderBottomColor: t.border, paddingTop: 8, paddingBottom: 8 }}
@@ -435,7 +437,10 @@ export default function MerchantManagePage() {
                   </Text>
                 </View>
               ))}
-            </ScrollView>
+              {searchList.length > 5 && (
+                <Text style={{ ...fs(11), color: t.textTertiary, paddingTop: 8, paddingBottom: 2 }}>还有更多，输入更精确的型号关键词收窄结果</Text>
+              )}
+            </View>
           )}
           {!picked && !!searchKw.trim() && searchList.length === 0 && (
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>未找到型号；平台库没有的型号可先在家页搜索确认，或反馈纠错新增</Text>
