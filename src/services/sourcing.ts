@@ -154,10 +154,11 @@ export function responseStatusText(status: number): string {
   }
 }
 
-/** feed 分页（匿名可访问；keyword 型号搜索、onlyOpen 进行中过滤） */
-export function getSourcingFeed(keyword: string, onlyOpen: boolean, page: number, pageSize = 20) {
-  const qs = `?keyword=${encodeURIComponent(keyword)}&onlyOpen=${onlyOpen}&page=${page}&pageSize=${pageSize}`
-  return request<{ items: SourcingFeedItem[]; total: number }>(`${API.SOURCING_DEMANDS}${qs}`, { auth: false })
+/** feed 分页（匿名可访问；keyword 型号搜索、onlyOpen 进行中过滤；mineOnly 仅当前发布人全部状态，需登录） */
+export function getSourcingFeed(keyword: string, onlyOpen: boolean, page: number, mineOnly = false, pageSize = 20) {
+  const qs = `?keyword=${encodeURIComponent(keyword)}&onlyOpen=${onlyOpen}&mineOnly=${mineOnly}&page=${page}&pageSize=${pageSize}`
+  // 改动说明（我的寻货）：mineOnly 需身份（服务端匿名返回 401），故按参数决定是否带 token
+  return request<{ items: SourcingFeedItem[]; total: number }>(`${API.SOURCING_DEMANDS}${qs}`, { auth: mineOnly })
 }
 
 /** 寻货详情（匿名可访问；带 token 时返回我的应答/解锁联系方式） */

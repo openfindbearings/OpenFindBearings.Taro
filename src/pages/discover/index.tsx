@@ -11,7 +11,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import { useAuthStore } from '../../stores/auth'
-import { getSourcingFeed, type SourcingFeedItem } from '../../services/sourcing'
+import { getSourcingFeed, demandStatusText, type SourcingFeedItem } from '../../services/sourcing'
 import { getItem, removeItem } from '../../utils/storage'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
@@ -35,22 +35,36 @@ export default function DiscoverPage() {
   const fs = useFs()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [keyword, setKeyword] = useState('')
-  // 过滤器：all=全部进行中 / unanswered=仅未应答
-  const [filter, setFilter] = useState<'all' | 'unanswered'>('all')
+  // 过滤器：all=全部进行中 / unanswered=仅未应答 / mine=仅我发布的（含已结束状态）
+  const [filter, setFilter] = useState<'all' | 'unanswered' | 'mine'>('all')
   const [items, setItems] = useState<SourcingFeedItem[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
 
-  const load = async (nextPage: number, kw: string) => {
+  // 改动说明（我的寻货）：mine 走同一 feed 管线（onlyOpen=false + mineOnly=true），服务端分页 / 搜索 / 置顶排序一致
+  const load = async (nextPage: number, kw: string, mine: boolean) => {
     if (loading) return
     setLoading(true)
-    const r = await getSourcingFeed(kw, true, nextPage)
+    const r = await getSourcingFeed(kw, !mine, nextPage, mine)
     setLoading(false)
     if (!r) return
     setItems((prev) => (nextPage === 1 ? r.items : [...prev, ...r.items]))
     setPage(nextPage)
     setTotal(r.total)
+  }
+
+  /** 切换筛选：mine 需登录；切换后重置列表回第一页重新拉取 */
+  const switchFilter = (f: 'all' | 'unanswered' | 'mine') => {
+    if (f === 'mine' && !isLoggedIn) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      Taro.navigateTo({ url: '/pages/auth/login' })
+      return
+    }
+    if (f === filter) return
+    setFilter(f)
+    setItems([])
+    void load(1, keyword, f === 'mine')
   }
 
   // 进入页面刷新（发布/应答后返回列表即时更新）
@@ -62,9 +76,9 @@ export default function DiscoverPage() {
       if (kw) {
         await removeItem('sourcing_search_kw')
         setKeyword(kw)
-        void load(1, kw)
+        void load(1, kw, filter === 'mine')
       } else {
-        void load(1, keyword)
+        void load(1, keyword, filter === 'mine')
       }
     })()
   })
@@ -100,11 +114,11 @@ export default function DiscoverPage() {
                 placeholderTextColor={t.textTertiary}
                 value={keyword}
                 onInput={(e) => setKeyword(e.detail.value)}
-                onConfirm={() => void load(1, keyword)}
+                onConfirm={() => void load(1, keyword, filter === 'mine')}
                 confirmType='search'
               />
             </View>
-            <Text style={{ ...fs(14), color: t.primary, marginLeft: 10 }} onClick={() => void load(1, keyword)}>搜索</Text>
+            <Text style={{ ...fs(14), color: t.primary, marginLeft: 10 }} onClick={() => void load(1, keyword, filter === 'mine')}>搜索</Text>
           </View>
           {/* 过滤 chips + 发布（v1.7.19 从内容区挪进吸顶区，发布自导航栏挪来此处右端） */}
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, paddingBottom: 4 }}>
@@ -112,6 +126,7 @@ export default function DiscoverPage() {
               {([
                 { key: 'all', label: '全部寻货' },
                 { key: 'unanswered', label: '等待应答' },
+                { key: 'mine', label: '我的寻货' },
               ] as const).map((f) => (
                 <View
                   key={f.key}
@@ -121,7 +136,7 @@ export default function DiscoverPage() {
                     paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, marginRight: 8,
                     backgroundColor: filter === f.key ? t.primary : t.bgInput,
                   }}
-                  onClick={() => setFilter(f.key)}
+                  onClick={() => switchFilter(f.key)}
                 >
                   <Text style={{ ...fs(13), color: filter === f.key ? '#FFFFFF' : t.textSecondary }}>{f.label}</Text>
                 </View>
@@ -139,14 +154,14 @@ export default function DiscoverPage() {
       }
       // 改动说明（v1.7.19）：页内不再自套 ScrollView（weapp 骨架已内置滚动），
       // 触底加载经 PageLayout onEndReached 透传
-      onEndReached={() => { if (hasMore && !loading) void load(page + 1, keyword) }}
+      onEndReached={() => { if (hasMore && !loading) void load(page + 1, keyword, filter === 'mine') }}
       tabbar={<CustomTabBar />}
     >
       {shown.length === 0 && !loading && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
-              {keyword ? '没有找到相关寻货' : '还没有进行中的寻货，点上方「发布」发第一条'}
+              {keyword ? '没有找到相关寻货' : filter === 'mine' ? '还没有发布过寻货，点上方「发布」发第一条' : '还没有进行中的寻货，点上方「发布」发第一条'}
             </Text>
           </View>
         )}
@@ -175,6 +190,12 @@ export default function DiscoverPage() {
               {item.isMine && (
                 <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 6 }}>
                   <Text style={{ ...fs(11), color: t.primary }}>我发布</Text>
+                </View>
+              )}
+              {/* 改动说明（我的寻货）：mine 视图含已结束状态，卡片补状态章（全部/等待应答恒为进行中，不必要） */}
+              {filter === 'mine' && (
+                <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.bgInput, marginRight: 6 }}>
+                  <Text style={{ ...fs(11), color: t.textTertiary }}>{demandStatusText(item.status)}</Text>
                 </View>
               )}
               <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.bgInput }}>
