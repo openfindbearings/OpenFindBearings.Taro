@@ -24,6 +24,9 @@ export default function MySourcingPage() {
   const fs = useFs()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [items, setItems] = useState<SourcingMyDemand[]>([])
+  // 改动说明（v1.7.29 分组收敛）：子 tab 进行中|已结束——终态单不与进行中混排（列表卫生），
+  // 前端分组（一次拉全量后过滤），置顶仅进行中可见故默认 open
+  const [gTab, setGTab] = useState<'open' | 'closed'>('open')
   // v2.10.0 寻货置顶：选卡弹层状态（选中需求 + 需求置顶卡目录）
   const [pinFor, setPinFor] = useState<SourcingMyDemand | null>(null)
   const [demandPins, setDemandPins] = useState<MallItem[]>([])
@@ -59,17 +62,50 @@ export default function MySourcingPage() {
     }
   }
 
+  const openCount = items.filter((it) => it.status === DEMAND_STATUS.published).length
+  // 分组视图：进行中=published；已结束=已选定/已取消/已过期/已下架
+  const shown = items.filter((it) => (gTab === 'open' ? it.status === DEMAND_STATUS.published : it.status !== DEMAND_STATUS.published))
+
   return (
     <PageLayout nav={<NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />}>
       <View>
         {!isLoggedIn && <LoginGuide icon="compass" text="登录后可查看我发布的寻货" />}
+        {/* 子 tab（双态 chips，search 同款 pill）：有数据才出 tab 行 */}
+        {isLoggedIn && items.length > 0 && (
+          <View style={{ display: 'flex', flexDirection: 'row', marginLeft: 12, marginRight: 12, marginTop: 12 }}>
+            {([
+              { key: 'open' as const, label: `进行中 ${openCount}` },
+              { key: 'closed' as const, label: `已结束 ${items.length - openCount}` },
+            ]).map((tb) => (
+              <View
+                key={tb.key}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, marginRight: 8,
+                  backgroundColor: gTab === tb.key ? t.primary : t.bgInput,
+                }}
+                onClick={() => setGTab(tb.key)}
+              >
+                <Text style={{ ...fs(13), color: gTab === tb.key ? '#FFFFFF' : t.textSecondary }}>{tb.label}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         {isLoggedIn && items.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>还没有发布过寻货，去"发现"页发一条吧</Text>
           </View>
         )}
-        {items.map((item, i) => {
+        {isLoggedIn && items.length > 0 && shown.length === 0 && (
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
+            <Icon name='compass' size={40} color={t.textTertiary} />
+            <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
+              {gTab === 'open' ? '没有进行中的寻货' : '还没有已结束的寻货'}
+            </Text>
+          </View>
+        )}
+        {shown.map((item, i) => {
           const open = item.status === DEMAND_STATUS.published
           return (
             <View

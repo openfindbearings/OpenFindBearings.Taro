@@ -86,9 +86,10 @@ export default function SourcingDetailPage() {
 
   const isOpen = detail.status === DEMAND_STATUS.published
 
-  /** 复制联系方式（解锁后的电话） */
-  const copyContact = (value: string) => {
-    Taro.setClipboardData({ data: value })
+  /** 拨打电话（解锁后的联系方式，电话图标点击直接拨打） */
+  const callContact = (phone: string) => {
+    if (!phone) return
+    Taro.makePhoneCall({ phoneNumber: phone })
   }
 
   /** 发布人：选定应答（确认弹窗→调用→刷新） */
@@ -231,24 +232,34 @@ export default function SourcingDetailPage() {
         {/* 发布人视角：解锁的被选商户联系方式 */}
         {detail.isPublisher && detail.selectedMerchantContact ? (
           <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <Icon name='phone' size={18} color={t.primary} />
-            <View style={{ flex: 1, marginLeft: 8 }}>
+            <View style={{ flex: 1 }}>
               <Text style={{ ...fs(13), color: t.textPrimary }}>已选定商户联系电话</Text>
               <Text style={{ ...fs(16), color: t.primary, fontWeight: '600', marginTop: 2 }}>{detail.selectedMerchantContact}</Text>
             </View>
-            <Text style={{ ...fs(13), color: t.primary }} onClick={() => copyContact(detail.selectedMerchantContact || '')}>复制</Text>
+            {/* 改动说明：标题图标与拨打图标重复，删左侧标题图标；右侧改绿色圆形拨打按钮（动作感更明确） */}
+            <View
+              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.success, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 10 }}
+              onClick={() => callContact(detail.selectedMerchantContact || '')}
+            >
+              <Icon name='phone' size={18} color='#FFFFFF' />
+            </View>
           </View>
         ) : null}
 
         {/* 被选商户视角：解锁的发布人手机号 */}
         {detail.myResponse?.status === RESPONSE_STATUS.adopted && detail.publisherContact ? (
           <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <Icon name='phone' size={18} color={t.primary} />
-            <View style={{ flex: 1, marginLeft: 8 }}>
+            <View style={{ flex: 1 }}>
               <Text style={{ ...fs(13), color: t.textPrimary }}>需求方联系电话</Text>
               <Text style={{ ...fs(16), color: t.primary, fontWeight: '600', marginTop: 2 }}>{detail.publisherContact}</Text>
             </View>
-            <Text style={{ ...fs(13), color: t.primary }} onClick={() => copyContact(detail.publisherContact || '')}>复制</Text>
+            {/* 改动说明：与发布人视角卡同款——删左侧标题图标，右侧绿色圆形拨打按钮 */}
+            <View
+              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.success, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 10 }}
+              onClick={() => callContact(detail.publisherContact || '')}
+            >
+              <Icon name='phone' size={18} color='#FFFFFF' />
+            </View>
           </View>
         ) : null}
 
