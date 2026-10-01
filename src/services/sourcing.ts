@@ -303,6 +303,11 @@ export function respondDemand(demandId: string, body: RespondDemandBody) {
   return opWrap(() => request(`${API.SOURCING_DEMANDS}/${demandId}/respond`, { method: 'POST', data: body }))
 }
 
+/** 撤销应答（v1.5.0 取消应答：仅待处理可撤；撤后需求回到未应答，当日额度不退还） */
+export function cancelMyResponse(demandId: string) {
+  return opWrap(() => request(`${API.SOURCING_DEMANDS}/${demandId}/respond`, { method: 'DELETE' }))
+}
+
 /** 选定应答（发布人；双方解锁联系方式） */
 export function selectResponse(demandId: string, responseId: string) {
   return opWrap(() => request(`${API.SOURCING_DEMANDS}/${demandId}/select`, { method: 'POST', data: { responseId } }))
