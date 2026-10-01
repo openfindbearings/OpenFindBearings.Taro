@@ -133,6 +133,9 @@ export const API = {
   /** 首页聚合 */
   HOME: `${API_PREFIX}/home`,
 
+  /** 品牌字典（v1.7.29 发现页寻货筛选面板数据源，轻量独立端点） */
+  BRANDS: `${API_PREFIX}/brands`,
+
   /** 轴承 */
   BEARINGS_SEARCH: `${API_PREFIX}/bearings/search`,
   BEARING_DETAIL: (id: string) => `${API_PREFIX}/bearings/${id}`,

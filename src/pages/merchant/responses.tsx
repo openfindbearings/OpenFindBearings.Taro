@@ -11,7 +11,7 @@ import NavBar from '../../components/NavBar'
 import { useMerchantStore } from '../../stores/merchant'
 import {
   getMySourcingResponses, responseStatusText, getOpportunities,
-  RESPONSE_STATUS, type SourcingMerchantResponse, type OpportunityItem,
+  RESPONSE_STATUS, DEMAND_STATUS, type SourcingMerchantResponse, type OpportunityItem,
 } from '../../services/sourcing'
 import { setItem } from '../../utils/storage'
 
@@ -26,6 +26,8 @@ export default function MerchantResponsesPage() {
   const [items, setItems] = useState<SourcingMerchantResponse[]>([])
   // 需求信号（v1.7.21 反向导购）：在售型号中被寻货且未应答的聚合，失败静默隐藏
   const [opps, setOpps] = useState<OpportunityItem[]>([])
+  // 改动说明（v1.7.29 分组收敛）：子 tab 进行中|已结束——终态（选定/未选中/需求关闭）不与待处理混排
+  const [gTab, setGTab] = useState<'open' | 'closed'>('open')
 
   useDidShow(() => {
     if (currentMerchant) {
@@ -33,6 +35,12 @@ export default function MerchantResponsesPage() {
       void getOpportunities().then(setOpps)
     }
   })
+
+  // 进行中=应答待处理且需求仍开放（demandStatus 缺失按乐观归进行中）；其余归已结束
+  const isOpen = (it: SourcingMerchantResponse) =>
+    it.status === RESPONSE_STATUS.pending && (it.demandStatus == null || it.demandStatus === DEMAND_STATUS.published)
+  const openCount = items.filter(isOpen).length
+  const shown = items.filter((it) => (gTab === 'open' ? isOpen(it) : !isOpen(it)))
 
   return (
     <PageLayout nav={<NavBar title='寻货应答' onBack={() => Taro.navigateBack()} showBack />}>
@@ -67,6 +75,26 @@ export default function MerchantResponsesPage() {
             ))}
           </View>
         )}
+        {currentMerchant && items.length > 0 && (
+          <View style={{ display: 'flex', flexDirection: 'row', marginLeft: 12, marginRight: 12, marginTop: 12 }}>
+            {([
+              { key: 'open' as const, label: `进行中 ${openCount}` },
+              { key: 'closed' as const, label: `已结束 ${items.length - openCount}` },
+            ]).map((tb) => (
+              <View
+                key={tb.key}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, marginRight: 8,
+                  backgroundColor: gTab === tb.key ? t.primary : t.bgInput,
+                }}
+                onClick={() => setGTab(tb.key)}
+              >
+                <Text style={{ ...fs(13), color: gTab === tb.key ? '#FFFFFF' : t.textSecondary }}>{tb.label}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         {currentMerchant && items.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
@@ -75,7 +103,15 @@ export default function MerchantResponsesPage() {
             </Text>
           </View>
         )}
-        {items.map((item, i) => {
+        {currentMerchant && items.length > 0 && shown.length === 0 && (
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
+            <Icon name='compass' size={40} color={t.textTertiary} />
+            <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
+              {gTab === 'open' ? '没有进行中的应答' : '还没有已结束的应答'}
+            </Text>
+          </View>
+        )}
+        {shown.map((item, i) => {
           const adopted = item.status === RESPONSE_STATUS.adopted
           return (
             <View
@@ -92,7 +128,9 @@ export default function MerchantResponsesPage() {
                 </View>
               </View>
               <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 6 }} numberOfLines={1}>
-                {[item.price != null ? `¥${item.price}/只` : null, item.stock ? `库存 ${item.stock}` : null, item.leadTime ? `交期 ${item.leadTime}` : null].filter(Boolean).join(' · ') || item.remark}
+                {item.items && item.items.length > 0
+                  ? `${item.items.length} 个型号 · ${[item.items[0].price != null ? `¥${item.items[0].price}/只` : null, item.items[0].stock ? `库存 ${item.items[0].stock}` : null].filter(Boolean).join(' · ') || '可详谈'}`
+                  : item.remark}
               </Text>
               {adopted && (
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>

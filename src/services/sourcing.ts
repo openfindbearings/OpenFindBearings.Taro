@@ -4,6 +4,7 @@
 // 写操作统一 catch ApiError 转 {success,message}（request 失败抛 ApiError，message 即上游文案）
 import { request, ApiError } from './request'
 import { API } from './config'
+import type { HomeRef } from './home'
 
 /** feed 单项 */
 export interface SourcingFeedItem {
@@ -23,15 +24,29 @@ export interface SourcingFeedItem {
   pinnedUntil?: string | null
 }
 
-/** 应答明细（仅发布人可见全量） */
+/** 应答型号行（v1.5.0 多行标书：每条应答含多行型号，可引用在售商品） */
+export interface SourcingResponseItem {
+  id: string
+  partNumber: string
+  /** 引用的在售商品 ID（MerchantBearing，可空=自由文本型号行） */
+  bearingId?: string | null
+  price?: number | null
+  stock?: string | null
+  leadTime?: string | null
+}
+
+/** 应答明细（仅发布人可见全量；v1.5.0 多行标书 + 实力摘要） */
 export interface SourcingResponseDetail {
   id: string
   merchantId: string
   merchantName?: string | null
   isVerified: boolean
-  price?: number | null
-  stock?: string | null
-  leadTime?: string | null
+  /** v1.5.0 证据力 P1：公司名/在售数/集体任务达成（发布人选定的结构化依据） */
+  companyName?: string | null
+  onSaleCount?: number
+  completedTaskCount?: number
+  /** v1.5.0 多行标书：应答型号行 */
+  items: SourcingResponseItem[]
   remark: string
   status: number
   createdAt: string
@@ -40,9 +55,7 @@ export interface SourcingResponseDetail {
 /** 我（当前商户）的应答 */
 export interface SourcingMyResponse {
   id: string
-  price?: number | null
-  stock?: string | null
-  leadTime?: string | null
+  items: SourcingResponseItem[]
   remark: string
   status: number
   createdAt: string
@@ -95,9 +108,7 @@ export interface SourcingMerchantResponse {
   demandId: string
   partNumber?: string | null
   demandStatus?: number | null
-  price?: number | null
-  stock?: string | null
-  leadTime?: string | null
+  items: SourcingResponseItem[]
   remark: string
   status: number
   createdAt: string
@@ -154,11 +165,28 @@ export function responseStatusText(status: number): string {
   }
 }
 
-/** feed 分页（匿名可访问；keyword 型号搜索、onlyOpen 进行中过滤；mineOnly 仅当前发布人全部状态，需登录） */
-export function getSourcingFeed(keyword: string, onlyOpen: boolean, page: number, mineOnly = false, pageSize = 20) {
-  const qs = `?keyword=${encodeURIComponent(keyword)}&onlyOpen=${onlyOpen}&mineOnly=${mineOnly}&page=${page}&pageSize=${pageSize}`
-  // 改动说明（我的寻货）：mineOnly 需身份（服务端匿名返回 401），故按参数决定是否带 token
-  return request<{ items: SourcingFeedItem[]; total: number }>(`${API.SOURCING_DEMANDS}${qs}`, { auth: mineOnly })
+/** feed 分页选项（v1.7.29 大厅筛选）：brand/region 包含匹配、sort 发布时间升降序 */
+export interface SourcingFeedOptions {
+  brand?: string
+  region?: string
+  sort?: 'asc' | 'desc'
+  pageSize?: number
+}
+
+/** feed 分页（匿名可访问；keyword 型号 + brand/region 筛选 + sort 升降序 + 分页；有 token 即带出 isMine 角标） */
+export function getSourcingFeed(keyword: string, onlyOpen: boolean, page: number, opts: SourcingFeedOptions = {}) {
+  const parts = [
+    `keyword=${encodeURIComponent(keyword)}`,
+    `onlyOpen=${onlyOpen}`,
+    `sort=${opts.sort ?? 'desc'}`,
+    `page=${page}`,
+    `pageSize=${opts.pageSize ?? 20}`,
+  ]
+  if (opts.brand) parts.push(`brand=${encodeURIComponent(opts.brand)}`)
+  if (opts.region) parts.push(`region=${encodeURIComponent(opts.region)}`)
+  // 改动说明（v1.7.29）：auth 用默认 true——有 token 即带（isMine 角标生效），无 token 服务端浏览公开不报错；
+  // 原 mineOnly 专属 auth 参数随 mineOnly 一并删除（发现页收敛纯大厅）
+  return request<{ items: SourcingFeedItem[]; total: number }>(`${API.SOURCING_DEMANDS}?${parts.join('&')}`)
 }
 
 /** 寻货详情（匿名可访问；带 token 时返回我的应答/解锁联系方式） */
@@ -253,11 +281,19 @@ export function publishDemand(body: PublishDemandBody) {
   return opWrap(() => request(API.SOURCING_DEMANDS, { method: 'POST', data: body }))
 }
 
-/** 应答寻货请求体 */
-export interface RespondDemandBody {
+/** 应答型号行输入（v1.5.0 多行标书） */
+export interface RespondItemInput {
+  partNumber: string
+  /** 引用的在售商品 ID（可空=自由文本型号行） */
+  bearingId?: string | null
   price?: number | null
   stock?: string | null
   leadTime?: string | null
+}
+
+/** 应答寻货请求体 */
+export interface RespondDemandBody {
+  items: RespondItemInput[]
   remark: string
   usePoints: boolean
 }
@@ -285,4 +321,14 @@ export function getMySourcingDemands() {
 /** 当前商户的应答记录 */
 export function getMySourcingResponses() {
   return request<SourcingMerchantResponse[]>(API.SOURCING_MY_RESPONSES)
+}
+
+/** 拉取品牌字典（v1.7.29 发现页筛选面板；失败返回空数组面板降级为空态） */
+export async function getBrands(): Promise<HomeRef[]> {
+  try {
+    const r = await request<HomeRef[]>(API.BRANDS, { auth: false })
+    return r || []
+  } catch {
+    return []
+  }
 }
