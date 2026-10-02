@@ -10,7 +10,7 @@
 //   4. 待审核商品显示"审核中"角标（isPendingApproval），支持"审核中"筛选。
 import { useState } from 'react'
 import { View, Text, Input } from '@tarojs/components'
-import Taro, { useDidShow, useRouter } from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
 import PageLayout from '../../platforms/PageLayout'
@@ -91,19 +91,8 @@ export default function MerchantManagePage() {
       .finally(() => setLoading(false))
   }
 
-  // 改动说明（v1.7.21 成交回流）：商家寻货应答页『已被选定』行跳入时带 addPart 参数——
-  // 自动展开添加表单并预填型号搜索词，把撮合结果沉淀为结构化在售商品
-  const router = useRouter()
-  const prefilledRef = { current: false }
-
   useDidShow(() => {
     load(1, false)
-    const addPart = router.params.addPart
-    if (addPart && !prefilledRef.current) {
-      prefilledRef.current = true
-      setAdding(true)
-      onSearchInput(decodeURIComponent(addPart))
-    }
   })
 
   /** 切换筛选并重查 */
