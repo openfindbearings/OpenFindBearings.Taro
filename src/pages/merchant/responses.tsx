@@ -133,21 +133,7 @@ export default function MerchantResponsesPage() {
                   : item.remark}
               </Text>
               {adopted && (
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-                  <Text style={{ ...fs(12), color: t.primary, flex: 1 }}>已被选定，进详情查看需求方联系方式</Text>
-                  {/* 成交回流（v1.7.21）：跳商品管理并预填型号——撮合成功沉淀为结构化在售 */}
-                  <View
-                    style={{ paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 6, backgroundColor: t.primaryLight }}
-                    onClick={(e) => {
-                      e?.stopPropagation?.()
-                      if (item.partNumber) {
-                        void Taro.navigateTo({ url: `/pages/merchant/manage?addPart=${encodeURIComponent(item.partNumber)}` })
-                      }
-                    }}
-                  >
-                    <Text style={{ ...fs(12), color: t.primary }}>挂在售</Text>
-                  </View>
-                </View>
+                <Text style={{ ...fs(12), color: t.primary, marginTop: 4 }}>已被选定，进详情查看需求方联系方式</Text>
               )}
             </View>
           )

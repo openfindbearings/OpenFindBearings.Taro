@@ -74,6 +74,20 @@ export default function SourcingDetailPage() {
     Taro.makePhoneCall({ phoneNumber: phone })
   }
 
+  /** 被选商户联系需求方前弹窗：建议统一用公司公开电话联系（免暴露本机号码），坚持本机拨打需确认 */
+  const confirmCallPublisher = async (): Promise<void> => {
+    const companyPhone = currentMerchant?.mobile || currentMerchant?.phone
+    const content = companyPhone
+      ? `建议统一用公司公开电话联系：${companyPhone}\n若坚持用本机号码拨打 ${detail.publisherContact}，请点"仍要拨打"（对方来电显示本机号码）；否则请取消。`
+      : `未配置公司公开电话。若坚持用本机号码拨打 ${detail.publisherContact}，请点"仍要拨打"（对方来电显示本机号码）；否则请取消。`
+    const ok = await showConfirmDialog({
+      title: '联系需求方',
+      content,
+      confirmText: '仍要拨打',
+    })
+    if (ok) callContact(detail.publisherContact || '')
+  }
+
   /** 发布人：选定应答（确认弹窗→调用→刷新） */
   const doSelect = async (responseId: string, merchantName?: string | null) => {
     const ok = await showConfirmDialog({
@@ -202,7 +216,7 @@ export default function SourcingDetailPage() {
             {/* 改动说明：与发布人视角卡同款——删左侧标题图标，右侧绿色圆形拨打按钮 */}
             <View
               style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.success, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 10 }}
-              onClick={() => callContact(detail.publisherContact || '')}
+              onClick={() => { void confirmCallPublisher() }}
             >
               <Icon name='phone' size={18} color='#FFFFFF' />
             </View>
