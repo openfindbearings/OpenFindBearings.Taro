@@ -28,7 +28,7 @@ export type DocType =
 
 // 改动说明（pro 扩展缝）：App 名与运营主体名由 pro 扩展注入——开源版为 OpenFindBearings，
 // 自用版（含"轴承帮"）构建时 alias 指向 pro 包返回真实名，协议/隐私文本随之呈现对应主体
-import { PRO_APP_DISPLAY_NAME, PRO_OPERATOR_NAME } from '@ofb/taro-pro'
+import { PRO_APP_DISPLAY_NAME, PRO_OPERATOR_NAME } from '../ext/pro'
 
 const APP_NAME = PRO_APP_DISPLAY_NAME
 const OPERATOR = PRO_OPERATOR_NAME

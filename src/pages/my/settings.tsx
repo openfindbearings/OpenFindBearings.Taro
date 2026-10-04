@@ -33,7 +33,7 @@ import { getAppVersion } from '../../utils/version'
 // （Admin 系统配置填号即时生效，不发版）；优先读启动缓存，缓存缺失时兜底拉一次
 import { getCachedSiteConfig, getSiteConfig } from '../../services/config-api'
 // 改动说明（pro 扩展缝）：首页模式的「智能」选项由自用 pro 包注入（开源版占位返回空数组）
-import { PRO_HOME_MODES } from '@ofb/taro-pro'
+import { PRO_HOME_MODES } from '../../ext/pro'
 import './settings.scss'
 
 const SETTINGS_KEY = 'app_settings'

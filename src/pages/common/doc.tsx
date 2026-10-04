@@ -9,7 +9,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { getLegalDoc } from '../../content/legal'
 // 改动说明（pro 扩展缝）：版权行随构建版本呈现——开源版 OpenFindBearings，自用版"轴承帮"
-import { PRO_APP_DISPLAY_NAME } from '@ofb/taro-pro'
+import { PRO_APP_DISPLAY_NAME } from '../../ext/pro'
 import './doc.scss'
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
