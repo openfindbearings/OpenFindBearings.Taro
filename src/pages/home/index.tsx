@@ -18,6 +18,9 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
+// 改动说明（pro 扩展缝）：首页快捷三钮（语音/拍/扫）与智能模式页面已迁往自用 pro 包——
+// 开源构建时 @ofb/taro-pro 被 alias 指向 src/ext/pro.ts 占位（三钮渲染空、智能模式提示暂未上线）
+import { ProQuickActions, ProSearchExtras, ProSmartHome } from '@ofb/taro-pro'
 import './index.scss'
 
 const HISTORY_KEY = 'search_history'
@@ -80,11 +83,9 @@ export default function HomePage() {
     Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(keyword.trim())}` })
   }, [keyword, saveHistory])
 
-  // 改动说明：离线语音识别效果未达预期，暂停接入并保留云 ASR 扩展骨架；
-  // 语音入口回归"未上线"占位提示，与拍轴承/扫条码一致
-  const handleVoicePlaceholder = useCallback(() => {
-    Taro.showToast({ title: '语音搜索（开发中）', icon: 'none' })
-  }, [])
+  // 改动说明（pro 扩展缝）：语音/拍/扫三钮实现移入 pro 包，此处直接渲染 pro 扩展组件；
+  // 开源版占位返回 null（三钮不显示），自用版显示三钮
+  const quickActions = <ProQuickActions t={t} fs={fs} />
 
   const handleHistoryClick = useCallback((kw: string) => {
     setKeyword(kw)
@@ -117,55 +118,18 @@ export default function HomePage() {
         confirmType='search'
       />
       <View className='search-actions'>
-        <View className='action-icon' onClick={handleVoicePlaceholder}>
-          {/* 改动说明（v1.7.18）：搜索框内图标/占位色由硬编码灰改主题色——深色模式下
-              原 #475569/#64748B 在深底上几乎不可见；快捷三钮的渐变底+白图标保留
-              （品牌色语义，主流 App 深色模式同样不变色） */}
-          <Icon name='mic' size={22} color={t.textSecondary} />
-        </View>
-        <View className='action-icon' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
-          <Icon name="camera" size={22} color={t.textSecondary} />
-        </View>
+        {/* 改动说明（pro 扩展缝）：搜索框内语音/拍照快捷图标移入 pro 包，开源版不显示 */}
+        <ProSearchExtras t={t} />
       </View>
     </View>
   )
 
-  // 快捷三钮：实心圆 56dp + 白图标 28dp（v1.7.0 由浅底彩图标改实心，更明快）
-  const quickActions = (
-    <View className='quick-actions'>
-      <View className='quick-item' onClick={handleVoicePlaceholder}>
-        <View className='quick-icon quick-icon-voice'>
-          {/* 改动说明：图标 28→24，圆底 56dp 不变，占比 50%→43%（Material 标准），
-              修复小程序端白图标在饱和色底上偏满的观感，三端同步生效 */}
-          <Icon name='mic' size={24} color='#FFFFFF' />
-        </View>
-        <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>讲语音</Text>
-      </View>
-      <View className='quick-item' onClick={() => Taro.showToast({ title: '拍轴承（开发中）', icon: 'none' })}>
-        <View className='quick-icon quick-icon-camera'>
-          <Icon name="camera" size={24} color='#FFFFFF' />
-        </View>
-        <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>拍轴承</Text>
-      </View>
-      {/* 改动说明：扫码底层能力未接入，统一"暂未上线"停用文案 */}
-      <View className='quick-item' onClick={() => Taro.showToast({ title: '扫码功能暂未上线', icon: 'none' })}>
-        <View className='quick-icon quick-icon-scan'>
-          <Icon name="scan_line" size={24} color='#FFFFFF' />
-        </View>
-        <Text className='quick-label' style={{ ...fs(13), color: t.textSecondary }}>扫条码</Text>
-      </View>
-    </View>
-  )
-
-  // 智能模式：改动说明——聊天窗未接入真实大模型，先展示"暂未上线"占位提示，
-  // 保留模式设置数据，后续接入真实助手时恢复 ChatWindow 渲染
+  // 智能模式（pro 扩展缝）：页面骨架在主仓，内容由 pro 包渲染聊天窗；
+  // 开源版占位 ProSmartHome 渲染"智能模式暂未上线"提示（存量 homeMode=smart 数据的安全兜底）
   if (effectiveMode === 'smart') {
     return (
       <PageLayout nav={<NavBar title="智能助手" />} tabbar={<CustomTabBar />} scrollY={false}>
-        <View className='coming-soon' style={{ flex: 1, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <Icon name="sparkles" size={40} color={t.textTertiary} />
-          <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>智能模式暂未上线</Text>
-        </View>
+        <ProSmartHome t={t} fs={fs} />
       </PageLayout>
     )
   }

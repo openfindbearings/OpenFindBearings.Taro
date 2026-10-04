@@ -32,6 +32,8 @@ import { getAppVersion } from '../../utils/version'
 // 改动说明（v1.7.24 客服电话接线）：热线号码从硬编码占位改为站点配置 Site.CustomerService
 // （Admin 系统配置填号即时生效，不发版）；优先读启动缓存，缓存缺失时兜底拉一次
 import { getCachedSiteConfig, getSiteConfig } from '../../services/config-api'
+// 改动说明（pro 扩展缝）：首页模式的「智能」选项由自用 pro 包注入（开源版占位返回空数组）
+import { PRO_HOME_MODES } from '@ofb/taro-pro'
 import './settings.scss'
 
 const SETTINGS_KEY = 'app_settings'
@@ -247,14 +249,14 @@ export default function SettingsPage() {
                   [
                     { key: 'normal', label: '普通' },
                     { key: 'simple', label: '简洁' },
-                    { key: 'smart', label: '智能' }
+                    ...PRO_HOME_MODES
                   ] as const
                 ).map((opt) => (
                   <View
                     key={opt.key}
                     className={displayHomeMode === opt.key ? 'font-btn font-btn-active' : 'font-btn'}
                     style={{ backgroundColor: displayHomeMode === opt.key ? t.primary : t.bgInput }}
-                    onClick={() => handleHomeMode(opt.key)}
+                    onClick={() => handleHomeMode(opt.key as HomeMode)}
                   >
                     <Text
                       className={displayHomeMode === opt.key ? 'font-btn-text font-btn-text-active' : 'font-btn-text'}

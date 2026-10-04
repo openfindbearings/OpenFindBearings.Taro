@@ -14,7 +14,16 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY patches ./patches
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm run build:h5
+# 改动说明（pro 扩展缝）：自用构建（build-arg TARO_BUILD_PRO=1，由 workflow 注入 pro 源码）把
+# pro-src 装配为 node_modules/@ofb/taro-pro、注入"轴承帮"名字/官方图标后构建；开源构建（未设参数）
+# 走占位 alias 构建，公开 fork 行为一致。pro-src 由 deploy.yml 从私有库 FindBearings.Taro.Pro 拉取
+ARG TARO_BUILD_PRO
+RUN if [ "$TARO_BUILD_PRO" = "1" ]; then \
+      mkdir -p node_modules/@ofb && cp -r pro-src node_modules/@ofb/taro-pro && \
+      TARO_BUILD_PRO=1 node scripts/apply-pro.js && TARO_BUILD_PRO=1 pnpm run build:h5; \
+    else \
+      pnpm run build:h5; \
+    fi
 
 FROM nginx:alpine
 RUN rm /etc/nginx/conf.d/default.conf

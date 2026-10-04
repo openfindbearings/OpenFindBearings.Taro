@@ -26,6 +26,18 @@ Taro H5 → Mobile BFF → API + Identity
 | 入驻/商家 | 商家入驻申请/管理 | 商家行为（需入驻后） |
 | 我的 | 个人中心 | 收藏/关注/历史（需登录） |
 
+## open-core 扩展（pro）
+
+本项目采用开源（OpenFindBearings）/自用（轴承帮）双态构建：
+
+- **开源版**：功能精简——首页快捷三钮（语音/拍/扫）、智能模式、官方图标均不包含，App 名为 OpenFindBearings，公开 fork 可独立编译。
+- **自用版**：由私有库 [FindBearings.Taro.Pro](https://github.com/openfindbearings/FindBearings.Taro.Pro) 提供 pro 源码（首页三钮/智能模式/官方图标/轴承帮名），构建前注入。
+
+机制：
+- 扩展缝 `src/ext/pro.tsx`：开源构建时 webpack `alias` 把 `@ofb/taro-pro` 指到该占位（空实现），公开 fork 无私有依赖也能编译。
+- 自用构建：设 `TARO_BUILD_PRO=1` + 安装/链接 `@ofb/taro-pro`，`config/index.ts` 的 alias 指到真包源码，`scripts/apply-pro.js` 注入名字与官方图标（构建后 `git restore` 还原工作区）。
+- CI：`deploy.yml` 检测 `TARO_PRO_PAT`（仅读 Taro.Pro 的 PAT）——有则注入出 pro 版镜像/APK，无则出开源版；一条 workflow 出两版。
+
 ## 相关文档
 
 ### 设计文档

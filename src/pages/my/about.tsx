@@ -14,6 +14,8 @@ import NavBar from '../../components/NavBar'
 import { checkUpdateManually } from '../../services/update'
 import { getSiteConfig, getBeiAnForPlatform } from '../../services/config-api'
 import { getAppVersion } from '../../utils/version'
+// 改动说明（pro 扩展缝）：品牌名/版权行随构建版本呈现——开源版 OpenFindBearings，自用版"轴承帮"
+import { PRO_APP_DISPLAY_NAME } from '@ofb/taro-pro'
 import './settings.scss'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
@@ -37,7 +39,7 @@ export default function AboutPage() {
             改动说明：此前纯 View 手绘指针三角在 RN 渲染变形，位图方案根治且与桌面图标完全同源） */}
         <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 44, paddingBottom: 20 }}>
           <Image src={require('../../assets/icon/app-icon.png')} style={{ width: 80, height: 80, borderRadius: 40 }} />
-          <Text style={{ ...fs(19), color: t.textPrimary, fontWeight: '600', marginTop: 14 }}>OpenFindBearings</Text>
+          <Text style={{ ...fs(19), color: t.textPrimary, fontWeight: '600', marginTop: 14 }}>{PRO_APP_DISPLAY_NAME}</Text>
           <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 4 }}>版本 v{getAppVersion()}</Text>
         </View>
 
@@ -79,7 +81,7 @@ export default function AboutPage() {
           轴承信息撮合平台 · 寻货发布、商户应答、点对点直达
         </Text>
         <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 6 }}>
-          © 2026 OpenFindBearings · 保留所有权利
+          © 2026 {PRO_APP_DISPLAY_NAME} · 保留所有权利
         </Text>
         <View style={{ height: 40 }} />
       </View>
