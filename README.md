@@ -58,3 +58,6 @@ Taro H5 → Mobile BFF → API + Identity
 ### 关联项目
 
 - [Mobile BFF 设计](../OpenFindBearings.Mobile/doc/OpenFindBearings.Mobile-BFF设计-v1.0.0.md)
+## 部署
+
+K8s 部署清单模板见 [deploy/](./deploy/)（真实域名/集群细节占位符请在部署时替换为真实值，并自行创建 Secret 后 kubectl apply）。

@@ -1,9 +1,19 @@
-# deploy
+# deploy（OpenFindBearings.Taro 部署模板）
 
-本服务的集群部署清单统一收拢在私有仓库 **FindBearings.Infra**：
+本目录是 Taro 前端（H5 静态站 + APK 下载服务）的 K8s 清单模板。部署时请将占位符替换为真实域名。
 
-- K3s 清单：`apps/<服务名>/`
-- 密钥模板：`secrets/templates/`（真实值在 `secrets/real/`，不入库）
-- 部署手册：`runbooks/`
+## 步骤
 
-本仓库只保留代码、Dockerfile 与镜像构建/推送 CI（`.github/workflows/deploy.yml` 经 `kubectl set image` 滚动更新，不读本目录清单）。
+1. **替换占位符**：
+   - `<your-mobile-domain>`：H5 站点域名（deploy.yml Ingress，TLS 由 cert-manager 签发）
+   - `<your-bff-domain>`：BFF 域名（apk-server.yml 的 /dl 下载路径 Ingress，与 BFF 共用域名）
+2. **Secret**：apk-server 的 apk-sync CronJob 复用 `openfindbearings-api-secrets`（数据库连接串，见 API 仓库 deploy/secrets 模板）
+3. 镜像 `ghcr.io/openfindbearings/openfindbearings-taro`（公开；自用版"轴承帮"需配置 pro PAT 构建，见仓库 README）
+
+## apply
+
+```
+deploy.yml → apk-server.yml
+```
+
+> 完整运维清单（真实域名/密钥）在私有运维库，本目录只提供模板，占位符请在部署时替换为真实值。
