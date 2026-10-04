@@ -28,6 +28,8 @@ import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallCatalog } from '.
 // 改动说明（v2.10.0 商家金）：支付面板读站点配置的商家金兑换率显示个人代付折算价
 import { getSiteConfig } from '../../services/config-api'
 import { getTreasury } from '../../services/gifts'
+// Excel 批量导入依赖闭源 Sync 数据管线：开源版（PRO_MERCHANT_IMPORT_ENABLED=false）不渲染导入按钮
+import { PRO_MERCHANT_IMPORT_ENABLED } from '../../ext/pro'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 // Excel 文件选择平台分派（Metro 按 .rn 后缀解析 RN 版，H5/小程序走 index.ts）
 import { chooseExcelFile } from '../../services/importExcel'
@@ -381,7 +383,7 @@ export default function MerchantManagePage() {
           <Icon name="plus" size={14} color={t.textOnPrimary} />
           <Text style={{ ...fs(13), color: t.textOnPrimary, marginLeft: 4 }}>添加商品</Text>
         </View>
-        {isAdmin && (
+        {isAdmin && PRO_MERCHANT_IMPORT_ENABLED && (
           <View
             style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, marginLeft: 10 }}
             onClick={onImport}
