@@ -26,8 +26,12 @@ export type DocType =
   | 'privacy-manage'        // 隐私管理（您的权利）
   | 'user-agreement'        // 用户协议
 
-const APP_NAME = 'OpenFindBearings（轴承查询）'
-const OPERATOR = 'OpenFindBearings 运营团队'
+// 改动说明（pro 扩展缝）：App 名与运营主体名由 pro 扩展注入——开源版为 OpenFindBearings，
+// 自用版（含"轴承帮"）构建时 alias 指向 pro 包返回真实名，协议/隐私文本随之呈现对应主体
+import { PRO_APP_DISPLAY_NAME, PRO_OPERATOR_NAME } from '@ofb/taro-pro'
+
+const APP_NAME = PRO_APP_DISPLAY_NAME
+const OPERATOR = PRO_OPERATOR_NAME
 // 改动说明（v1.7.24 客服电话接线）：法务文本为静态模板不便注入运行时配置，
 // 原硬编码占位号码 400-xxx-xxxx 改为指向应用内实时入口（设置→服务热线读 Site.CustomerService）
 const CONTACT = '应用内"设置→服务热线"页面展示的客服电话'

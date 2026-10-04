@@ -65,7 +65,7 @@ jobs:
     # 改动说明（2026-09-29）：secrets 上下文不允许出现在 step 级 if（GitHub 限制），
     # 提升为 job 级 env 后由步骤 if 判 env——未配置 PAT 时注入步骤整体跳过
     env:
-      INFRA_ASSETS_PAT: ${{ secrets.INFRA_ASSETS_PAT }}
+      TARO_PRO_PAT: ${{ secrets.TARO_PRO_PAT }}
     needs: meta
     permissions:
       contents: read
@@ -76,24 +76,21 @@ jobs:
     steps:
     - uses: actions/checkout@v6.0.2
 
-    # open-core 素材拆分：从私有库 FindBearings.Infra 拉官方品牌图标，覆盖仓库内灰色 "OFB" 占位图。
-    # 未配置 INFRA_ASSETS_PAT（fine-grained PAT，仅 read FindBearings.Infra）时自动跳过——
-    # 公开自部署用占位图照常出包，官方发布配置 secret 后自动用真品牌素材
-    - name: 注入官方品牌素材（FindBearings.Infra/assets/taro）
-      if: ${{ env.INFRA_ASSETS_PAT != '' }}
+    # open-core 私有功能拆分（pro 扩展缝）：从私有库 FindBearings.Taro.Pro 拉自用 pro 源码（
+    # 首页三钮/智能模式/官方图标/轴承帮名字），注入后构建出 pro 版镜像。未配置 TARO_PRO_PAT
+    # （fine-grained PAT，仅 read FindBearings.Taro.Pro）时跳过——公开构建出开源版 OpenFindBearings
+    - name: 注入 pro 源码（FindBearings.Taro.Pro）
+      if: ${{ env.TARO_PRO_PAT != '' }}
       env:
-        INFRA_ASSETS_PAT: ${{ secrets.INFRA_ASSETS_PAT }}
+        TARO_PRO_PAT: ${{ secrets.TARO_PRO_PAT }}
       run: |
-        curl -sSL -H "Authorization: Bearer $INFRA_ASSETS_PAT" -o infra.zip \
-          https://api.github.com/repos/${{ github.repository_owner }}/FindBearings.Infra/zipball/main
-        unzip -q infra.zip -d infra_extract
-        ASSET_DIR=$(find infra_extract -maxdepth 2 -type d -path "*/assets/taro")
-        test -n "$ASSET_DIR" || { echo "infra assets/taro not found"; exit 1; }
-        cp -r "$ASSET_DIR/src" .
-        cp -r "$ASSET_DIR/static" .
-        cp -r "$ASSET_DIR/android" .
-        cp -r "$ASSET_DIR/ios" .
-        echo "品牌素材注入完成（app-icon/favicon/mipmap/appiconset 已替换为官方图）"
+        curl -sSL -H "Authorization: Bearer $TARO_PRO_PAT" -o pro.zip \
+          https://api.github.com/repos/${{ github.repository_owner }}/FindBearings.Taro.Pro/zipball/main
+        unzip -q pro.zip -d pro_extract
+        PRO_SRC=$(find pro_extract -maxdepth 3 -type d -path "*FindBearings.Taro.Pro*/src" | head -n1)
+        test -n "$PRO_SRC" || { echo "pro src not found"; exit 1; }
+        cp -r "$(dirname "$PRO_SRC")" pro-src
+        echo "pro 源码注入完成（$(find pro-src/src -type f | wc -l) 个源文件）"
 
     - name: Set tag
       id: set_tag
@@ -132,6 +129,8 @@ jobs:
         context: .
         file: Dockerfile
         push: true
+        build-args: |
+          TARO_BUILD_PRO=${{ env.TARO_PRO_PAT != '' && '1' || '' }}
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.set_tag.outputs.docker_tag }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -175,7 +174,7 @@ jobs:
     # 改动说明（2026-09-29）：secrets 上下文不允许出现在 step 级 if（GitHub 限制），
     # 提升为 job 级 env 后由步骤 if 判 env——未配置 PAT 时注入步骤整体跳过
     env:
-      INFRA_ASSETS_PAT: ${{ secrets.INFRA_ASSETS_PAT }}
+      TARO_PRO_PAT: ${{ secrets.TARO_PRO_PAT }}
     needs: meta
     if: github.event_name == 'release' || inputs.build_apk
     permissions:
@@ -183,24 +182,20 @@ jobs:
     steps:
     - uses: actions/checkout@v6.0.2
 
-    # open-core 素材拆分：从私有库 FindBearings.Infra 拉官方品牌图标，覆盖仓库内灰色 "OFB" 占位图。
-    # 未配置 INFRA_ASSETS_PAT（fine-grained PAT，仅 read FindBearings.Infra）时自动跳过——
-    # 公开自部署用占位图照常出包，官方发布配置 secret 后自动用真品牌素材
-    - name: 注入官方品牌素材（FindBearings.Infra/assets/taro）
-      if: ${{ env.INFRA_ASSETS_PAT != '' }}
+    # open-core 私有功能拆分（pro 扩展缝）：从私有库 FindBearings.Taro.Pro 拉自用 pro 源码，
+    # APK 装配后构建出自用版"轴承帮"；未配置 TARO_PRO_PAT 时跳过，出开源版 OpenFindBearings
+    - name: 注入 pro 源码（FindBearings.Taro.Pro）
+      if: ${{ env.TARO_PRO_PAT != '' }}
       env:
-        INFRA_ASSETS_PAT: ${{ secrets.INFRA_ASSETS_PAT }}
+        TARO_PRO_PAT: ${{ secrets.TARO_PRO_PAT }}
       run: |
-        curl -sSL -H "Authorization: Bearer $INFRA_ASSETS_PAT" -o infra.zip \
-          https://api.github.com/repos/${{ github.repository_owner }}/FindBearings.Infra/zipball/main
-        unzip -q infra.zip -d infra_extract
-        ASSET_DIR=$(find infra_extract -maxdepth 2 -type d -path "*/assets/taro")
-        test -n "$ASSET_DIR" || { echo "infra assets/taro not found"; exit 1; }
-        cp -r "$ASSET_DIR/src" .
-        cp -r "$ASSET_DIR/static" .
-        cp -r "$ASSET_DIR/android" .
-        cp -r "$ASSET_DIR/ios" .
-        echo "品牌素材注入完成（app-icon/favicon/mipmap/appiconset 已替换为官方图）"
+        curl -sSL -H "Authorization: Bearer $TARO_PRO_PAT" -o pro.zip \
+          https://api.github.com/repos/${{ github.repository_owner }}/FindBearings.Taro.Pro/zipball/main
+        unzip -q pro.zip -d pro_extract
+        PRO_SRC=$(find pro_extract -maxdepth 3 -type d -path "*FindBearings.Taro.Pro*/src" | head -n1)
+        test -n "$PRO_SRC" || { echo "pro src not found"; exit 1; }
+        cp -r "$(dirname "$PRO_SRC")" pro-src
+        echo "pro 源码注入完成（$(find pro-src/src -type f | wc -l) 个源文件）"
 
     # 改动说明：规范版本发布时以 meta 的 tag 反写 package.json.version（仅工作区，不 commit），
     # RN bundle 的 __APP_VERSION__ 与 gradle JsonSlurper 读到的 versionName 由此与 tag 单源一致
@@ -224,6 +219,15 @@ jobs:
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
+
+    # pro 扩展缝：把注入的 pro 源码装配为 node_modules/@ofb/taro-pro 并注入名字/图标，
+    # 随后的 RN bundle 构建在 TARO_BUILD_PRO=1 下把 pro 功能编译进 APK
+    - name: 装配 pro 包并注入资产
+      if: ${{ env.TARO_PRO_PAT != '' }}
+      run: |
+        mkdir -p node_modules/@ofb
+        cp -r pro-src node_modules/@ofb/taro-pro
+        node scripts/apply-pro.js
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -257,6 +261,8 @@ jobs:
     # bundle、真机启动即 "Unable to load script" 闪退，故加回。生成的 bundle 已被 .gitignore 忽略，
     # 仅存在于 CI 工作区。
     - name: Build RN bundle (Taro)
+      env:
+        TARO_BUILD_PRO: ${{ env.TARO_PRO_PAT != '' && '1' || '' }}
       run: npx taro build --type rn
 
     # 改动说明：chmod +x gradlew 修复 git 里 gradlew 缺执行位导致的 Linux Permission denied；

@@ -11,8 +11,8 @@
   <!-- 站点图标：static/favicon.png 是 src/assets/icon/app-icon.png 的副本（192x192），
        图标更新时需同步替换；apple-touch-icon 供 iOS/Android「添加到主屏幕」使用。
        改动说明（open-core 素材拆分）：仓库内 app-icon/favicon/Android mipmap/iOS appiconset 均为
-       灰色 "OFB" 占位图；官方品牌素材存私有库 FindBearings.Infra/assets/taro/，官方构建前经
-       sync-assets.ps1（或 CI 注入）回填同名文件，路径契约不变、代码零改动 -->
+       灰色 "OFB" 占位图；官方品牌素材存私有库 FindBearings.Taro.Pro/assets/icon/，自用构建前经
+       scripts/apply-pro.js 回填同名文件，路径契约不变、代码零改动 -->
   <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="apple-touch-icon" href="/static/favicon.png">
   <title>openfindbearings</title>

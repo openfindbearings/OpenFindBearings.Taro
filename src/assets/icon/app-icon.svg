@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <!-- open-core 占位图标：灰色圆角方块 + OFB 字样（官方真图见私有库 FindBearings.Infra/assets/taro/，构建时回填覆盖） -->
+  <!-- open-core 占位图标：灰色圆角方块 + OFB 字样（官方真图见私有库 FindBearings.Taro.Pro/assets/icon/，自用构建由 scripts/apply-pro.js 覆盖） -->
   <rect x="0" y="0" width="192" height="192" rx="34" ry="34" fill="#808080"/>
   <text x="96" y="96" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="58" fill="#FFFFFF">OFB</text>
 </svg>
