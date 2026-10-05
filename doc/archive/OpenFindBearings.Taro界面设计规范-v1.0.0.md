@@ -198,4 +198,4 @@ H5 和 React Native 共用同一套页面代码，通过条件编译实现主题
 - Taro 3.6.40 + React 18 + TypeScript + Sass + Webpack5
 - 图标库：lucide-react-taro v1.5.2
 - 状态管理：Zustand
-- H5 代理：`/mobile` → `https://bff.515813.xyz`
+- H5 代理：`/mobile` → `https://<your-bff-domain>`

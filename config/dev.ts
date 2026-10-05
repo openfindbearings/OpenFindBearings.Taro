@@ -29,14 +29,16 @@ module.exports = {
     },
     devServer: {
       proxy: {
+        // 开发代理默认指向本地 BFF（launchSettings 的 http://localhost:16020）；
+        // 开源脱敏：不再内置测试服务器域名，连别的环境时按需改 target
         '/mobile': {
-          target: 'https://bff.515813.xyz',
+          target: 'http://localhost:16020',
           changeOrigin: true,
           secure: false
         },
-        // 媒体源独立于 BFF：/media 由媒体服务器直出，开发期同源代理到线上媒体服务
+        // 媒体源独立于 BFF：/media 由媒体服务器直出；本地无媒体服务时 404 走占位图降级
         '/media': {
-          target: 'https://bff.515813.xyz',
+          target: 'http://localhost:16020',
           changeOrigin: true,
           secure: false
         }

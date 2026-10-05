@@ -28,7 +28,7 @@ export function buildQuery(params: Record<string, string | number | boolean | nu
 }
 
 /** BFF 线上绝对地址（RN/小程序无 dev proxy，必须走公网 https） */
-const BFF_PROD_BASE = 'https://bff.515813.xyz'
+const BFF_PROD_BASE = 'https://<your-bff-domain>'
 
 /**
  * 运行时媒体源 base 覆盖值：站点配置 /api/mobile/config 下发 Mobile.MediaBaseUrl 后写入。
@@ -48,7 +48,7 @@ export function setMediaBaseUrl(url?: string | null): void {
  * 改动说明：原实现无条件返回 ''，仅适用于 H5 开发期 webpack proxy；
  * RN 真机/模拟器无 proxy，相对路径会触发 Network request failed，
  * 故 RN 与小程序返回 BFF 公网绝对地址。H5 仍返回 ''（dev proxy / 同源）。
- * 可用环境变量 TARO_APP_BFF_BASE_URL 覆盖（默认 https://bff.515813.xyz）。
+ * 可用环境变量 TARO_APP_BFF_BASE_URL 覆盖（默认 https://<your-bff-domain>）。
  */
 export function getBaseUrl(): string {
   const env = process.env.TARO_ENV

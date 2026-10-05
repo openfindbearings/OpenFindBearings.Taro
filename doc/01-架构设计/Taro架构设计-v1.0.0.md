@@ -17,7 +17,7 @@ OpenFindBearings 移动端，一套代码多端编译。当前阶段专注 React
 | 状态 | Zustand |
 | 图标 | Icon 抽象层：RN=lucide-react-native+react-native-svg，H5=lucide-react |
 | 安全区 | react-native-safe-area-context（4.x） |
-| 网络 | 统一经 Mobile BFF（bff.515813.xyz/mobile/*），不直连 API/Identity |
+| 网络 | 统一经 Mobile BFF（<your-bff-domain>/mobile/*），不直连 API/Identity |
 | 目标平台 | rn（当前）/ h5 / weapp（后续） |
 
 ## 2. 三阶段路线
@@ -103,7 +103,7 @@ RN 无 CSS 变量、SCSS 颜色编译期常量 → 全站颜色 inline 接管。
 
 ## 8. 认证与网络
 
-- `getBaseUrl()` 按 `process.env.TARO_ENV`：H5 返回 `''`（dev proxy），RN/小程序返回绝对地址 `https://bff.515813.xyz`（env `TARO_APP_BFF_BASE_URL` 可覆盖）。RN 真机相对路径会 `Network request failed`。
+- `getBaseUrl()` 按 `process.env.TARO_ENV`：H5 返回 `''`（dev proxy），RN/小程序返回绝对地址 `https://<your-bff-domain>`（env `TARO_APP_BFF_BASE_URL` 可覆盖）。RN 真机相对路径会 `Network request failed`。
 - 登录：手机号+验证码/密码，经 BFF `/mobile/auth/*` 代理 Identity OAuth；`device_id`（本地随机 GUID）随登录/刷新携带，服务端绑定校验（设备间不共享登录态）。
 - token：access_token 内存、refresh_token 本地存储；401 自动刷新重放。
 - 查询串用 `buildQuery`（Hermes 无 URLSearchParams.set）；图片用 `usableImage`（仅绝对地址渲染，相对路径回退占位）。
