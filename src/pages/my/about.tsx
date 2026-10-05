@@ -15,7 +15,7 @@ import { checkUpdateManually } from '../../services/update'
 import { getSiteConfig, getBeiAnForPlatform } from '../../services/config-api'
 import { getAppVersion } from '../../utils/version'
 // 改动说明（pro 扩展缝）：品牌名/版权行随构建版本呈现——开源版 OpenFindBearings，自用版"轴承帮"
-import { PRO_APP_DISPLAY_NAME } from '@ofb/taro-pro'
+import { PRO_APP_DISPLAY_NAME } from '../../ext/pro'
 import './settings.scss'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供

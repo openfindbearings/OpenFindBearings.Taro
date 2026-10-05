@@ -2,7 +2,7 @@
 
 ## 概述
 
-Taro 前端通过 Mobile BFF（`bff.515813.xyz/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的完整接口清单、请求/响应结构、错误处理。
+Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的完整接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
 
@@ -22,7 +22,7 @@ function getBaseUrl(): string {
   // H5：相对路径（同源）
   if (Taro.getEnv() === Taro.ENV_TYPE.WEB) return ''
   // 小程序/App：BFF 公网域名
-  return process.env.TARO_APP_BFF_BASE_URL || 'https://bff.515813.xyz'
+  return process.env.TARO_APP_BFF_BASE_URL || 'https://<your-bff-domain>'
 }
 ```
 

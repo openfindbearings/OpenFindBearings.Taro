@@ -18,8 +18,8 @@ Taro 负责前端界面，通过 Mobile BFF（OpenFindBearings.Mobile）访问�
 
 - Taro 从 BFF 镜像中分离，独立部署到 nginx 容器。
 - 新增 Dockerfile（Node.js 构建 → nginx 托管静态文件）与 nginx.conf（SPA 路由 + gzip + 缓存）。
-- 新增 K3s 部署文件（Deployment + Service + Ingress，域名 mobile.515813.xyz）。
-- API 对接改为走 BFF 域名 bff.515813.xyz/mobile/*。
+- 新增 K3s 部署文件（Deployment + Service + Ingress，域名 <your-mobile-domain>）。
+- API 对接改为走 BFF 域名 <your-bff-domain>/mobile/*。
 - 认证流程更新为经 BFF 代理 Identity。
 
 ### v1.0.0 (2026-08-31)
@@ -241,8 +241,8 @@ Taro 与 Mobile BFF 独立部署，各司其职：
 
 | 项目 | 职责 | 域名 | 容器镜像 |
 |------|------|------|----------|
-| OpenFindBearings.Taro | 前端 H5 静态文件 | mobile.515813.xyz | nginx:alpine |
-| OpenFindBearings.Mobile | BFF API 代理 | bff.515813.xyz | aspnet:10.0 |
+| OpenFindBearings.Taro | 前端 H5 静态文件 | <your-mobile-domain> | nginx:alpine |
+| OpenFindBearings.Mobile | BFF API 代理 | <your-bff-domain> | aspnet:10.0 |
 
 Taro H5 构建产物打包到 nginx 容器，通过 Ingress 暴露公网域名。所有 API 请求走 BFF 域名，BFF 再通过 K8s 内部网络代理到 API/Identity。
 
@@ -250,9 +250,9 @@ Taro H5 构建产物打包到 nginx 容器，通过 Ingress 暴露公网域名�
 
 | 域名 | 用途 | TLS |
 |------|------|-----|
-| mobile.515813.xyz | Taro H5 静态文件 | cert-manager 自动签发 |
-| bff.515813.xyz | BFF API 代理 | cert-manager 自动签发 |
-| auth.abcsxl.com | Identity OAuth（登录页/回调） | 已部署 |
+| <your-mobile-domain> | Taro H5 静态文件 | cert-manager 自动签发 |
+| <your-bff-domain> | BFF API 代理 | cert-manager 自动签发 |
+| <your-identity-domain> | Identity OAuth（登录页/回调） | 已部署 |
 
 ### Dockerfile
 
@@ -280,7 +280,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ```nginx
 server {
     listen 80;
-    server_name mobile.515813.xyz;
+    server_name <your-mobile-domain>;
 
     root /usr/share/nginx/html;
     index index.html;
@@ -306,7 +306,7 @@ server {
 |------|------|------|
 | Deployment | openfindbearings-taro | 1 副本，nginx 容器 |
 | Service | openfindbearings-taro | ClusterIP，port 80 → targetPort 80 |
-| Ingress | openfindbearings-taro-ingress | host: mobile.515813.xyz，TLS 自动签发 |
+| Ingress | openfindbearings-taro-ingress | host: <your-mobile-domain>，TLS 自动签发 |
 
 ### CI/CD
 
@@ -314,7 +314,7 @@ Release 发布时 CI/CD 自动构建 Docker 镜像（Node.js 编译 Taro → ngi
 
 ## API 对接
 
-所有 API 请求走 BFF 域名 `bff.515813.xyz/mobile/*`，不直连 API 或 Identity。
+所有 API 请求走 BFF 域名 `<your-bff-domain>/mobile/*`，不直连 API 或 Identity。
 
 ### 基础地址
 
@@ -323,7 +323,7 @@ Release 发布时 CI/CD 自动构建 Docker 镜像（Node.js 编译 Taro → ngi
 // 小程序/App 模式：BFF 公网域名
 function getBaseUrl(): string {
   if (Taro.getEnv() === Taro.ENV_TYPE.WEB) return ''
-  return process.env.TARO_APP_BFF_BASE_URL || 'https://bff.515813.xyz'
+  return process.env.TARO_APP_BFF_BASE_URL || 'https://<your-bff-domain>'
 }
 ```
 
@@ -391,4 +391,4 @@ function getBaseUrl(): string {
 | Token 不持久化 access_token | 安全 | access_token 有效期短（10 分钟），内存存储防泄露；refresh_token 持久化用于自动续期 |
 | 认证走 Identity OAuth | 复用 | 与 Admin/Web 共用同一 Identity 认证中心，用户数据统一 |
 | Taro 与 BFF 分离部署 | 独立容器 | 前端静态文件用 nginx 更轻量、可 CDN 缓存；BFF 用 ASP.NET Core 专注 API 代理；两者独立扩缩容 |
-| API 走 BFF 域名 | bff.515813.xyz | 避免跨域；BFF 聚合请求减少前端请求次数；API 无需公网暴露 |
+| API 走 BFF 域名 | <your-bff-domain> | 避免跨域；BFF 聚合请求减少前端请求次数；API 无需公网暴露 |

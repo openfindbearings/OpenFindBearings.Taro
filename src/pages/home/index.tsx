@@ -20,7 +20,7 @@ import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 // 改动说明（pro 扩展缝）：首页快捷三钮（语音/拍/扫）与智能模式页面已迁往自用 pro 包——
 // 开源构建时 @ofb/taro-pro 被 alias 指向 src/ext/pro.ts 占位（三钮渲染空、智能模式提示暂未上线）
-import { ProQuickActions, ProSearchExtras, ProSmartHome } from '@ofb/taro-pro'
+import { ProQuickActions, ProSearchExtras, ProSmartHome } from '../../ext/pro'
 import './index.scss'
 
 const HISTORY_KEY = 'search_history'

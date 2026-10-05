@@ -2,7 +2,7 @@
 
 ## 概述
 
-Taro 前端通过 Mobile BFF（`bff.515813.xyz/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
+Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
 
@@ -34,7 +34,7 @@ Taro 前端通过 Mobile BFF（`bff.515813.xyz/mobile/*`）访问后端 API，�
 
 ### v1.1.0 (2026-09-08)
 
-- 校正 `getBaseUrl`：实际用 `process.env.TARO_ENV`（编译期常量）分支，非 `Taro.getEnv()`；RN/小程序返回绝对地址 `https://bff.515813.xyz`，H5 返回 `''`（dev proxy）。
+- 校正 `getBaseUrl`：实际用 `process.env.TARO_ENV`（编译期常量）分支，非 `Taro.getEnv()`；RN/小程序返回绝对地址 `https://<your-bff-domain>`，H5 返回 `''`（dev proxy）。
 - 校正请求封装：实际导出的是 `request(url, { method, data, auth })`，公开请求传 `auth: false`（非 `requestPublic`）。
 - 新增 `buildQuery`（手写 query，规避 Hermes 无 `URLSearchParams.set`）与 `usableImage`（仅绝对 http 地址才渲染图片）。
 - 校正商家/首页商家字段（companyName/type/productCount/logoUrl，contact→contactPerson）。
@@ -53,7 +53,7 @@ Taro 前端通过 Mobile BFF（`bff.515813.xyz/mobile/*`）访问后端 API，�
 ```typescript
 // src/services/config.ts
 export const API_PREFIX = '/mobile'
-const BFF_PROD_BASE = 'https://bff.515813.xyz'
+const BFF_PROD_BASE = 'https://<your-bff-domain>'
 
 export function getBaseUrl(): string {
   if (process.env.TARO_ENV === 'h5') return ''          // H5：相对路径 + dev proxy
