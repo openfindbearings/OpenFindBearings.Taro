@@ -12,6 +12,7 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
+import PublishIdentitySheet from '../../components/PublishIdentitySheet'
 import { vibrateSuccess } from '../../utils/haptics'
 import { useMerchantStore } from '../../stores/merchant'
 import { publishDemand, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
@@ -41,8 +42,10 @@ export default function PublishSourcingPage() {
   // 拉取失败静默为 null——NEED_POINTS 撞墙协议仍是最终兜底，展示层不承重
   const [quota, setQuota] = useState<SourcingQuota | null>(null)
 
-  // v2.12.0 商户名义发布：提交时弹窗选身份（表单不占行），可发布商户取自登录态 store
+  // v2.12.0 商户名义发布：提交时弹 sheet 选身份（表单不占行），可发布商户取自登录态 store
   const merchants = useMerchantStore((s) => s.merchants)
+  const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   useDidShow(() => {
     getSourcingQuota().then(setQuota).catch(() => { /* 未登录/网络失败：隐藏额度条 */ })
@@ -51,37 +54,28 @@ export default function PublishSourcingPage() {
   const setField = (key: keyof FormState, value: string) => setForm((prev) => ({ ...prev, [key]: value }))
 
   /**
-   * v2.12.0 发布身份选择（一步弹窗）：纯个人用户不打扰直接返回 null；
-   * 归属商户者弹 ActionSheet——商户行（多商户逐行列出）+ 个人行，
-   * 系统取消/返回键=中止本次发布返回 undefined（不弹第二层确认，弹窗数收敛）
-   */
-  const pickIdentity = async (): Promise<string | null | undefined> => {
-    if (merchants.length === 0) return null
-    const labels = merchants.map((m) => `以商户「${m.merchantName}」名义发布`)
-    labels.push('以个人名义发布')
-    try {
-      const res = await Taro.showActionSheet({ itemList: labels })
-      // 末行=个人名义；其余=选中对应商户（仅本单生效，不改全局当前商户）
-      return res.tapIndex >= merchants.length ? null : (merchants[res.tapIndex]?.merchantId ?? null)
-    } catch {
-      return undefined
-    }
-  }
-
-  /**
-   * 提交：首发（merchantId=undefined）先走身份弹窗；命中 NEED_POINTS 弹确认后
-   * 带已选身份重提交（不再弹身份框）
+   * 提交入口：身份未定时——纯个人用户直接提交（不打扰）；
+   * 归属商户者弹 PublishIdentitySheet（丙方案自绘弹层，logo+全名辨识度），
+   * 选定/取消由 sheet 回调驱动 doSubmit；NEED_POINTS 重提交带已选身份不再弹
    */
   const submit = async (usePoints: boolean, merchantId?: string | null) => {
     if (!form.partNumber.trim()) {
       Taro.showToast({ title: '请填写寻货型号', icon: 'none' })
       return
     }
-    let mid = merchantId
-    if (mid === undefined) {
-      mid = await pickIdentity()
-      if (mid === undefined) return
+    if (merchantId === undefined) {
+      if (merchants.length === 0) {
+        await doSubmit(usePoints, null)
+      } else {
+        setSheetOpen(true)
+      }
+      return
     }
+    await doSubmit(usePoints, merchantId)
+  }
+
+  /** 实际提交（身份已定） */
+  const doSubmit = async (usePoints: boolean, merchantId: string | null) => {
     setSubmitting(true)
     const body: PublishDemandBody = {
       partNumber: form.partNumber.trim(),
@@ -92,8 +86,8 @@ export default function PublishSourcingPage() {
       region: form.region.trim() || null,
       description: form.description.trim() || null,
       usePoints,
-      // v2.12.0 商户名义发布：弹窗选定的商户；个人名义为 null
-      merchantId: mid,
+      // v2.12.0 商户名义发布：sheet 选定的商户；个人名义为 null
+      merchantId,
     }
     const r = await publishDemand(body)
     setSubmitting(false)
@@ -110,7 +104,7 @@ export default function PublishSourcingPage() {
         content: `继续发布需花费 ${needPoints} 轴承币，确认发布？`,
         confirmText: '花轴承币发布',
       })
-      if (ok) await submit(true, mid)
+      if (ok) await doSubmit(true, merchantId)
       return
     }
     Taro.showToast({ title: r.message || '发布失败', icon: 'none' })
@@ -204,6 +198,14 @@ export default function PublishSourcingPage() {
           </Text>
         </View>
       </View>
+      {/* v2.12.0 发布身份选择弹层（丙方案自绘）：选定商户/个人即提交，取消=中止留在表单 */}
+      <PublishIdentitySheet
+        visible={sheetOpen}
+        items={merchants.map((m) => ({ id: m.merchantId, name: m.merchantName || '未命名商户', logoUrl: m.logoUrl }))}
+        currentId={currentMerchantId}
+        onPick={(mid) => { setSheetOpen(false); void doSubmit(false, mid) }}
+        onClose={() => setSheetOpen(false)}
+      />
     </PageLayout>
   )
 }

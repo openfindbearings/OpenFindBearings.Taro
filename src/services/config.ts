@@ -241,6 +241,8 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   SOURCING_OPPORTUNITIES: `${API_PREFIX}/sourcing/opportunities`,
   SOURCING_MY_DEMANDS: `${API_PREFIX}/sourcing/my/demands`,
   SOURCING_MY_RESPONSES: `${API_PREFIX}/sourcing/my/responses`,
+  /** v2.12.0 商户工作台"寻货管理-我发布的" */
+  SOURCING_MERCHANT_DEMANDS: `${API_PREFIX}/sourcing/merchant/demands`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,

@@ -63,7 +63,7 @@ export default function MerchantHomePage() {
   const actions = [
     { url: '/pages/merchant/manage', icon: 'boxes', label: '商品管理' },
     { url: '/pages/merchant/members', icon: 'users', label: isAdmin ? '成员管理' : '员工列表' },
-    { url: '/pages/merchant/responses', icon: 'search', label: '寻货应答' },
+    { url: '/pages/merchant/responses', icon: 'search', label: '寻货管理' },
     ...(isAdmin
       ? [
           { url: '/pages/merchant/gifts', icon: 'vault', label: '金库挂礼' },
