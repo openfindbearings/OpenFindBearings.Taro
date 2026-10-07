@@ -1,9 +1,6 @@
 // 商户商品管理页（v1.7.3 重构）
-// 列表 + 行内添加/编辑表单 + 上下架；Excel 导入降级为管理员二级入口。
+// 列表 + 行内添加/编辑表单 + 上下架。
 // 改动说明：
-//   1. 原顶部整行大蓝按钮（Excel 导入）观感差——改为操作栏两枚小按钮：
-//      ＋添加商品（成员均可）、Excel 导入（仅管理员；v1.7.7 三端打通：
-//      小程序会话文件 / H5 input file / RN document-picker，RN 需重装 APK 生效）；
 //   2. 添加商品改为"搜索选平台已有型号 + 填市场描述"（1688 上架同款交互）——
 //      原 createMyBearing 传 bearingPartNumber/price/stock 与后端 BearingId/PriceDescription 契约完全对不上，提交必失败；
 //   3. 行新增"编辑"（价格/库存/起订量/备注四项描述，PUT 后重新进审核）；
@@ -19,7 +16,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useMerchantStore } from '../../stores/merchant'
 import {
-  getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing, importInventory,
+  getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing,
   type MerchantBearingItem
 } from '../../services/merchant'
 import { searchBearings, type Bearing } from '../../services/bearing'
@@ -28,11 +25,7 @@ import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallCatalog } from '.
 // 改动说明（v2.10.0 商家金）：支付面板读站点配置的商家金兑换率显示个人代付折算价
 import { getSiteConfig } from '../../services/config-api'
 import { getTreasury } from '../../services/gifts'
-// Excel 批量导入依赖外部 Sync 数据管线：开源版（PRO_MERCHANT_IMPORT_ENABLED=false）不渲染导入按钮
-import { PRO_MERCHANT_IMPORT_ENABLED } from '../../ext/pro'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
-// Excel 文件选择平台分派（Metro 按 .rn 后缀解析 RN 版，H5/小程序走 index.ts）
-import { chooseExcelFile } from '../../services/importExcel'
 
 const PAGE_SIZE = 20
 
@@ -60,7 +53,6 @@ export default function MerchantManagePage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [importing, setImporting] = useState(false)
   const [filter, setFilter] = useState<Filter>('all')
 
   // 添加表单：null=收起；searchKw/搜索结果/已选型号
@@ -238,28 +230,6 @@ export default function MerchantManagePage() {
     }
   }
 
-  /** Excel 批量导入（管理员，v1.7.7 三端打通）：chooseExcelFile 平台分派
-   *  （小程序会话文件 / H5 input file / RN document-picker），选中后走 multipart 上传 */
-  const onImport = async () => {
-    if (importing) return
-    let picked
-    try {
-      picked = await chooseExcelFile()
-    } catch (e: any) {
-      Taro.showToast({ title: e?.message?.includes('cancel') ? '已取消选择' : '无法打开文件选择', icon: 'none' })
-      return
-    }
-    if (!picked) return
-    setImporting(true)
-    try {
-      const r = await importInventory(picked.path, picked.name, picked.mimeType)
-      Taro.showToast({ title: r?.message || '导入完成', icon: 'none', duration: 2500 })
-      load(1, false)
-    } catch {
-      Taro.showToast({ title: '导入失败', icon: 'none' })
-    } finally { setImporting(false) }
-  }
-
   /** 型号搜索输入（300ms 防抖，命中显示可点选结果） */
   const onSearchInput = (v: string) => {
     setSearchKw(v)
@@ -374,7 +344,7 @@ export default function MerchantManagePage() {
 
   return (
     <PageLayout nav={<NavBar title="商品管理" showBack />}>
-      {/* 操作栏：添加商品（成员均可）+ Excel 导入（仅管理员）——v1.7.3 替代原整行大按钮 */}
+      {/* 操作栏：添加商品（成员均可）——v1.7.3 替代原整行大按钮；改动说明：Excel 批量导入依赖外部 ETL 数据管线，本版本不提供该入口 */}
       <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 4 }}>
         <View
           style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
@@ -383,14 +353,6 @@ export default function MerchantManagePage() {
           <Icon name="plus" size={14} color={t.textOnPrimary} />
           <Text style={{ ...fs(13), color: t.textOnPrimary, marginLeft: 4 }}>添加商品</Text>
         </View>
-        {isAdmin && PRO_MERCHANT_IMPORT_ENABLED && (
-          <View
-            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, marginLeft: 10 }}
-            onClick={onImport}
-          >
-            <Text style={{ ...fs(13), color: importing ? t.textTertiary : t.primary }}>{importing ? '导入中…' : 'Excel 导入'}</Text>
-          </View>
-        )}
       </View>
 
       {/* 添加表单（内联展开）：搜索选型号 + 四项描述 */}
