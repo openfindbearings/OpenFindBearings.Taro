@@ -1,7 +1,9 @@
-// 发布寻货页（v1.7.19）：个人用户发布求购询价单。
+// 发布寻货页（v1.7.19）：发布求购询价单。
+// 改动说明（v2.12.0 商户名义发布）：归属商户的账号默认以当前商户身份发布（可切个人），
+//   多商户可点选切换（仅影响本单，不改全局当前商户）；身份选择记忆到本地存储。
 // 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹轴承币确认框 → usePoints=true 重提交
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
@@ -10,6 +12,8 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { vibrateSuccess } from '../../utils/haptics'
+import { getItem, setItem } from '../../utils/storage'
+import { useMerchantStore } from '../../stores/merchant'
 import { publishDemand, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
@@ -27,6 +31,9 @@ interface FormState {
 
 const EMPTY: FormState = { partNumber: '', brand: '', quantity: '', expectedDelivery: '', region: '', description: '' }
 
+/** 发布身份本地记忆键（v2.12.0）：'merchant' | 'personal'，未记录时按是否归属商户取默认 */
+const IDENTITY_KEY = 'sourcing_publish_identity'
+
 /** 发布寻货页 */
 export default function PublishSourcingPage() {
   const t = useTheme()
@@ -37,9 +44,59 @@ export default function PublishSourcingPage() {
   // 拉取失败静默为 null——NEED_POINTS 撞墙协议仍是最终兜底，展示层不承重
   const [quota, setQuota] = useState<SourcingQuota | null>(null)
 
+  // v2.12.0 商户名义发布：可发布的商户（在职 Active 商户）+ 本单身份状态
+  const merchants = useMerchantStore((s) => s.merchants)
+  const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
+  const [asMerchant, setAsMerchant] = useState(true)
+  // 本单发布商户（独立于全局当前商户——发完不改用户的全局上下文）
+  const [pubMerchantId, setPubMerchantId] = useState<string | null>(null)
+
   useDidShow(() => {
     getSourcingQuota().then(setQuota).catch(() => { /* 未登录/网络失败：隐藏额度条 */ })
   })
+
+  // 身份初始化：读本地记忆；无记录时默认=有商户则商户、否则个人。
+  // merchants 由登录后 fetchApplications 异步填充，故依赖 merchants 变化重算默认商户
+  useEffect(() => {
+    getItem(IDENTITY_KEY).then((saved) => {
+      const wantMerchant = saved ? saved === 'merchant' : merchants.length > 0
+      const target = wantMerchant
+        ? (merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0])
+        : null
+      if (wantMerchant && !target) {
+        // 记忆要商户身份但当前无归属商户（如注销了）→ 回落个人
+        setAsMerchant(false)
+        setPubMerchantId(null)
+      } else {
+        setAsMerchant(wantMerchant && !!target)
+        setPubMerchantId(target?.merchantId ?? null)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [merchants.length, currentMerchantId])
+
+  /** 切换发布身份（商户/个人），选择记忆到本地 */
+  const switchIdentity = (merchant: boolean) => {
+    setAsMerchant(merchant)
+    if (merchant && !pubMerchantId) {
+      const target = merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0]
+      setPubMerchantId(target?.merchantId ?? null)
+    }
+    void setItem(IDENTITY_KEY, merchant ? 'merchant' : 'personal')
+  }
+
+  /** 多商户时点选切换本单发布商户（仅改本单，不动全局当前商户） */
+  const pickMerchant = async () => {
+    if (merchants.length <= 1) return
+    try {
+      const names = merchants.map((m) => m.merchantName || '未命名商户')
+      const res = await Taro.showActionSheet({ itemList: names })
+      const picked = merchants[res.tapIndex]
+      if (picked) setPubMerchantId(picked.merchantId)
+    } catch { /* 用户取消 */ }
+  }
+
+  const pubMerchantName = asMerchant ? (merchants.find((m) => m.merchantId === pubMerchantId)?.merchantName ?? '') : ''
 
   const setField = (key: keyof FormState, value: string) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -59,6 +116,8 @@ export default function PublishSourcingPage() {
       region: form.region.trim() || null,
       description: form.description.trim() || null,
       usePoints,
+      // v2.12.0 商户名义发布：商户身份且选定商户时带 merchantId，个人身份为 null
+      merchantId: asMerchant ? pubMerchantId : null,
     }
     const r = await publishDemand(body)
     setSubmitting(false)
@@ -119,6 +178,33 @@ export default function PublishSourcingPage() {
           </View>
         ) : null}
         <View style={{ margin: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
+          {/* v2.12.0 商户名义发布：归属商户的账号可选"以商户名义/以个人名义"，默认商户。
+              商户名义时对外联系方式为商户公开电话（服务端决定），多商户可点商户名切换本单商户 */}
+          {merchants.length > 0 ? (
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 44, marginBottom: 6 }}>
+              <Text style={{ ...fs(14), color: t.textSecondary, width: 76 }}>发布身份</Text>
+              <View
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 15, backgroundColor: asMerchant ? t.primary : t.bgInput }}
+                onClick={() => switchIdentity(true)}
+              >
+                <Text style={{ ...fs(13), color: asMerchant ? '#FFFFFF' : t.textSecondary }}>商户名义</Text>
+              </View>
+              <View
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 8, paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 15, backgroundColor: !asMerchant ? t.primary : t.bgInput }}
+                onClick={() => switchIdentity(false)}
+              >
+                <Text style={{ ...fs(13), color: !asMerchant ? '#FFFFFF' : t.textSecondary }}>个人名义</Text>
+              </View>
+              {asMerchant && pubMerchantName ? (
+                <Text
+                  style={{ ...fs(12), color: t.primary, marginLeft: 10, flex: 1, textAlign: 'right' }}
+                  onClick={pickMerchant}
+                >
+                  {pubMerchantName.length > 8 ? pubMerchantName.slice(0, 8) + '…' : pubMerchantName}{merchants.length > 1 ? ' ▾' : ''}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
           {/* 改动说明（v1.5.0 证据力体系 引导文案）：讲清"填全的价值"——具体需求才能匹配精准报价 */}
           <View style={{ display: 'flex', marginBottom: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
             <Text style={{ ...fs(11), lineHeight: 17, color: t.primary }}>
@@ -143,7 +229,9 @@ export default function PublishSourcingPage() {
         </View>
 
         <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 16, marginRight: 16, marginTop: 4 }}>
-          发布后商户可应答报价，您从应答中选定一家后双方互见联系方式。寻货 14 天有效，请留意站内信通知。
+          {asMerchant
+            ? '以商户名义发布，被选中的商家将看到商户公开电话（非您的个人手机）。寻货 14 天有效，请留意站内信通知。'
+            : '发布后商户可应答报价，您从应答中选定一家后双方互见联系方式。寻货 14 天有效，请留意站内信通知。'}
         </Text>
 
         {/* 发布按钮三态（v1.7.21）：免费发布 → 花轴承币发布（额度已用完）→ 轴承币不足去赚（跳任务中心）。
