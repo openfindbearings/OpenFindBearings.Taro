@@ -332,7 +332,30 @@ export function cancelDemand(demandId: string) {
   return opWrap(() => request(`${API.SOURCING_DEMANDS}/${demandId}/cancel`, { method: 'POST' }))
 }
 
-/** 我发布的寻货 */
+/** 商户名义发布的寻货项（v2.12.0 商户工作台"寻货管理-我发布的"，含经办人） */
+export interface SourcingMerchantDemand {
+  id: string
+  partNumber: string
+  brand?: string | null
+  quantity?: string | null
+  status: number
+  responseCount: number
+  createdAt: string
+  expiryAt: string
+  isPinned?: boolean
+  pinnedUntil?: string | null
+  /** 经办人昵称（管理操作仅经办人本人，其他成员只读） */
+  publisherName?: string | null
+  /** 当前用户是否经办人 */
+  isMine?: boolean
+}
+
+/** 商户名义发布的寻货列表（v2.12.0 商户工作台"寻货管理-我发布的"） */
+export function getMerchantSourcingDemands() {
+  return request<SourcingMerchantDemand[]>(API.SOURCING_MERCHANT_DEMANDS)
+}
+
+/** 我发布的寻货（仅个人名义单——商户名义归商户工作台，v2.12.0 双体系拆分） */
 export function getMySourcingDemands() {
   return request<SourcingMyDemand[]>(API.SOURCING_MY_DEMANDS)
 }
