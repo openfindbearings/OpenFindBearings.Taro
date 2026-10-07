@@ -355,6 +355,11 @@ export function getMerchantSourcingDemands() {
   return request<SourcingMerchantDemand[]>(API.SOURCING_MERCHANT_DEMANDS)
 }
 
+/** 批量删除寻货需求（v2.12.0 列表删除：软删终态单，左滑单删=ids 传一个；进行中拒删计 skipped） */
+export async function batchDeleteDemands(ids: string[]): Promise<{ deleted: number; skipped: number }> {
+  const r = await request<{ success: boolean; deleted: number; skipped: number }>(API.SOURCING_BATCH_DELETE, { method: "POST", data: { ids } })
+  return { deleted: (r as any)?.deleted ?? 0, skipped: (r as any)?.skipped ?? 0 }
+}
 /** 我发布的寻货（仅个人名义单——商户名义归商户工作台，v2.12.0 双体系拆分） */
 export function getMySourcingDemands() {
   return request<SourcingMyDemand[]>(API.SOURCING_MY_DEMANDS)

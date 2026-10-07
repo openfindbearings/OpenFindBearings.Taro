@@ -237,6 +237,24 @@ export async function deleteMerchantHistory(merchantId: string) {
 }
 
 /** 清空浏览历史 */
+
+/** 批量取消收藏（v2.12.0 列表多选），返回成功数 */
+export async function batchRemoveFavorites(bearingIds: string[]): Promise<number> {
+  const r = await request<{ success: boolean; affected: number }>(API.FAVORITES_BATCH_REMOVE, { method: "POST", data: { ids: bearingIds } })
+  return (r as any)?.affected ?? 0
+}
+
+/** 批量取消关注（v2.12.0 列表多选），返回成功数 */
+export async function batchRemoveFollows(merchantIds: string[]): Promise<number> {
+  const r = await request<{ success: boolean; affected: number }>(API.FOLLOWS_BATCH_REMOVE, { method: "POST", data: { ids: merchantIds } })
+  return (r as any)?.affected ?? 0
+}
+
+/** 批量删除浏览历史（v2.12.0 列表多选；两组目标 ID 各删一张表），返回成功数 */
+export async function batchDeleteHistory(bearingIds: string[], merchantIds: string[]): Promise<number> {
+  const r = await request<{ success: boolean; affected: number }>(API.HISTORY_BATCH_DELETE, { method: "POST", data: { bearingIds, merchantIds } })
+  return (r as any)?.affected ?? 0
+}
 export async function clearHistory() {
   return request<OpResult>(API.HISTORY_CLEAR, { method: 'DELETE' })
 }

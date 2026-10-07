@@ -192,6 +192,9 @@ export const API = {
   // 改动说明：站内信（消息中心列表/未读数/已读标记），代理 BFF /mobile/notifications/*
   NOTIFICATIONS: `${API_PREFIX}/notifications`,
   NOTIFICATIONS_UNREAD_COUNT: `${API_PREFIX}/notifications/unread-count`,
+  /** v2.12.0 列表多选：批量已读/批量删除 */
+  NOTIFICATIONS_BATCH_READ: `${API_PREFIX}/notifications/batch-read`,
+  NOTIFICATIONS_BATCH_DELETE: `${API_PREFIX}/notifications/batch-delete`,
 NOTIFICATION_READ: (id: string) => `${API_PREFIX}/notifications/${id}/read`,
 NOTIFICATIONS_READ_ALL: `${API_PREFIX}/notifications/read-all`,
 // 改动说明（v1.7.9）：消息删除两路径（单条左滑删除 / 清空已读批量出口）
@@ -262,6 +265,10 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   HISTORY_RECORD_BEARING: (id: string) => `${API_PREFIX}/me/history/bearings/${id}`,
   HISTORY_RECORD_MERCHANT: (id: string) => `${API_PREFIX}/me/history/merchants/${id}`,
   HISTORY_CLEAR: `${API_PREFIX}/me/history/clear`,
+  /** v2.12.0 列表多选批量操作 */
+  FAVORITES_BATCH_REMOVE: `${API_PREFIX}/favorites/batch-remove`,
+  FOLLOWS_BATCH_REMOVE: `${API_PREFIX}/follows/batch-remove`,
+  HISTORY_BATCH_DELETE: `${API_PREFIX}/history/batch-delete`,
     // 信息纠错（v1.7.14）：字段清单/提交/我的列表（BFF /mobile/me/corrections/* 代理 API /api/me/corrections/*）
     CORRECTION_FIELDS: (targetType: string, targetId: string) => `${API_PREFIX}/me/corrections/fields/${targetType}/${targetId}`,
     CORRECTION_SUBMIT_BEARING: (id: string) => `${API_PREFIX}/me/corrections/bearings/${id}`,
