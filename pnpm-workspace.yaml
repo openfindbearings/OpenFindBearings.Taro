@@ -19,4 +19,6 @@ allowBuilds:
   esbuild: true
   swiper: true
 patchedDependencies:
+  babel-plugin-global-define@1.0.3: patches/babel-plugin-global-define@1.0.3.patch
+  '@tarojs/rn-runner@3.6.40': patches/@tarojs__rn-runner@3.6.40.patch
   react-native-image-picker@7.0.3: patches/react-native-image-picker@7.0.3.patch

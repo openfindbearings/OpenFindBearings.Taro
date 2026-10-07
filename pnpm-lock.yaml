@@ -8,6 +8,8 @@ overrides:
   react-native-reanimated: 3.6.3
 
 patchedDependencies:
+  '@tarojs/rn-runner@3.6.40': 0568be8917fa00415cc709cc3b50ea05365e71a9260147406725e1355460a6a5
+  babel-plugin-global-define@1.0.3: 341eef286208f619c2f3765f70760aacef29cb35a24d8c91a139eb67ee4641df
   react-native-image-picker@7.0.3: ccaae5d7d780d90af63d423e8dd1eaff02fb35d769f215c4905ba632af53ad52
 
 importers:
@@ -140,7 +142,7 @@ importers:
         version: 3.6.40(@tarojs/taro@3.6.40(@tarojs/helper@3.6.40(supports-color@8.1.1))(@tarojs/runtime@3.6.40(@tarojs/shared@3.6.40))(@types/react@18.3.31)(postcss@8.5.26))(@types/node@18.19.130)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@tarojs/rn-runner':
         specifier: 3.6.40
-        version: 3.6.40(@babel/core@7.29.7(supports-color@8.1.1))(@tarojs/runtime@3.6.40(@tarojs/shared@3.6.40))(@tarojs/shared@3.6.40)(@types/react@18.3.31)(acorn@8.18.0)(postcss@8.5.26)(react-native-svg@12.5.1(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(react@18.3.1))(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(rollup@2.75.6)(supports-color@8.1.1)
+        version: 3.6.40(patch_hash=0568be8917fa00415cc709cc3b50ea05365e71a9260147406725e1355460a6a5)(@babel/core@7.29.7(supports-color@8.1.1))(@tarojs/runtime@3.6.40(@tarojs/shared@3.6.40))(@tarojs/shared@3.6.40)(@types/react@18.3.31)(acorn@8.18.0)(postcss@8.5.26)(react-native-svg@12.5.1(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(react@18.3.1))(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(rollup@2.75.6)(supports-color@8.1.1)
       '@tarojs/rn-transformer':
         specifier: 3.6.40
         version: 3.6.40
@@ -1167,7 +1169,6 @@ packages:
 
   '@expo/bunyan@4.0.0':
     resolution: {integrity: sha512-Ydf4LidRB/EBI+YrB+cVLqIseiRfjUI/AeHBgjGMtq3GroraDu81OV7zqophRgupngoL3iS3JUMDMnxO7g39qA==}
-    engines: {'0': node >=0.10.0}
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
@@ -11619,7 +11620,7 @@ snapshots:
       '@expo/bunyan': 4.0.0
       '@expo/metro-config': 0.5.2(supports-color@8.1.1)
       '@expo/osascript': 2.0.33
-      '@expo/spawn-async': 1.8.0
+      '@expo/spawn-async': 1.5.0
       body-parser: 1.20.6(supports-color@8.1.1)
       chalk: 4.1.2
       connect: 3.7.0(supports-color@8.1.1)
@@ -11686,7 +11687,7 @@ snapshots:
 
   '@expo/osascript@2.0.33':
     dependencies:
-      '@expo/spawn-async': 1.8.0
+      '@expo/spawn-async': 1.5.0
       exec-async: 2.2.0
 
   '@expo/osascript@2.7.1':
@@ -11696,7 +11697,7 @@ snapshots:
   '@expo/package-manager@0.0.60':
     dependencies:
       '@expo/json-file': 8.3.3
-      '@expo/spawn-async': 1.8.0
+      '@expo/spawn-async': 1.5.0
       ansi-regex: 5.0.1
       chalk: 4.1.2
       find-up: 5.0.0
@@ -13114,7 +13115,7 @@ snapshots:
     transitivePeerDependencies:
       - react
 
-  '@tarojs/rn-runner@3.6.40(@babel/core@7.29.7(supports-color@8.1.1))(@tarojs/runtime@3.6.40(@tarojs/shared@3.6.40))(@tarojs/shared@3.6.40)(@types/react@18.3.31)(acorn@8.18.0)(postcss@8.5.26)(react-native-svg@12.5.1(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(react@18.3.1))(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(rollup@2.75.6)(supports-color@8.1.1)':
+  '@tarojs/rn-runner@3.6.40(patch_hash=0568be8917fa00415cc709cc3b50ea05365e71a9260147406725e1355460a6a5)(@babel/core@7.29.7(supports-color@8.1.1))(@tarojs/runtime@3.6.40(@tarojs/shared@3.6.40))(@tarojs/shared@3.6.40)(@types/react@18.3.31)(acorn@8.18.0)(postcss@8.5.26)(react-native-svg@12.5.1(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(react@18.3.1))(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(rollup@2.75.6)(supports-color@8.1.1)':
     dependencies:
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.29.7(supports-color@8.1.1))(rollup@2.75.6)(supports-color@8.1.1)
       '@rollup/plugin-commonjs': 20.0.0(rollup@2.75.6)
@@ -13183,7 +13184,7 @@ snapshots:
       '@tarojs/rn-transformer': 3.6.40
       '@tarojs/service': 3.6.40(@tarojs/shared@3.6.40)(@tarojs/taro@3.6.40(@tarojs/helper@3.6.40(supports-color@8.1.1))(@tarojs/runtime@3.6.40(@tarojs/shared@3.6.40))(@types/react@18.3.31)(postcss@8.5.26))(supports-color@8.1.1)
       '@tarojs/taro': 3.6.40(@tarojs/helper@3.6.40(supports-color@8.1.1))(@tarojs/runtime@3.6.40(@tarojs/shared@3.6.40))(@types/react@18.3.31)(postcss@8.5.26)
-      babel-plugin-global-define: 1.0.3
+      babel-plugin-global-define: 1.0.3(patch_hash=341eef286208f619c2f3765f70760aacef29cb35a24d8c91a139eb67ee4641df)
       babel-plugin-jsx-attributes-array-to-object: 0.3.0
       babel-plugin-transform-react-jsx-to-rn-stylesheet: 3.6.40
       lodash: 4.18.1
@@ -14482,7 +14483,7 @@ snapshots:
     dependencies:
       object.assign: 4.1.7
 
-  babel-plugin-global-define@1.0.3: {}
+  babel-plugin-global-define@1.0.3(patch_hash=341eef286208f619c2f3765f70760aacef29cb35a24d8c91a139eb67ee4641df): {}
 
   babel-plugin-jsx-attributes-array-to-object@0.3.0: {}
 

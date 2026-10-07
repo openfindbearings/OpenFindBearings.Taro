@@ -1,8 +1,6 @@
-// 开源版 pro 扩展占位（@ofb/taro-pro）
-// 说明：开源构建时 webpack resolve.alias 把 @ofb/taro-pro 指到此文件——占位实现
-//       返回空/空数组，因此开源版不显示首页快捷三钮、不提供智能模式选项；
-//       自用构建（TARO_BUILD_PRO=1 + 真包）才会解析到 FindBearings.Taro.Pro 的真实实现。
-//       新增 pro 能力时，此占位必须同步补同名导出（空实现），否则开源构建 import 失败。
+// 扩展点（src/ext/pro）：开源版占位实现——首页快捷三钮/搜索图标/智能模式/品牌名等高级功能的入口。
+// 开源版三钮与智能选项不渲染、品牌名为 OpenFindBearings；fork 用户要加私有功能时替换本文件实现即可，
+// 仓库其余代码零改动（消费方只 import 本路径）。新增导出需保持签名一致，否则消费方 import 失败。
 import { View, Text } from '@tarojs/components'
 import Icon from '../components/Icon'
 
@@ -38,11 +36,17 @@ export const ProSmartHome: React.FC<ProHomeProps> = ({ t }: ProHomeProps) => (
 /** 设置页"首页模式"的 pro 扩展选项：开源版为空数组（不出现「智能」） */
 export const PRO_HOME_MODES: Array<{ key: string; label: string }> = []
 
-/** 开源版 App 显示名（自用版由 pro 包覆盖为"轴承帮"） */
+/** 开源版 App 显示名（扩展点可覆盖为品牌名） */
 export const PRO_APP_DISPLAY_NAME = 'OpenFindBearings'
 
 /** 开源版运营主体名（协议/隐私说明用） */
 export const PRO_OPERATOR_NAME = 'OpenFindBearings 运营团队'
 
-/** 商家商品"Excel 批量导入"（依赖闭源 Sync 数据管线）：开源版禁用，管理页不渲染导入按钮 */
+/** 商家商品"Excel 批量导入"（依赖外部 ETL 数据管线）：开源版禁用，管理页不渲染导入按钮 */
 export const PRO_MERCHANT_IMPORT_ENABLED = false
+
+/** 隐私政策"第三方共享清单"中后端服务的呈现名（扩展点可覆盖为品牌口径） */
+export const PRO_SERVICE_NAMES = {
+  identity: 'OpenFindBearings Identity',
+  backend: 'OpenFindBearings API / BFF',
+}

@@ -6,9 +6,8 @@ const pkg = require('../package.json')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path')
 
-// 改动说明（开源化剥离）：pro 扩展已随闭源统一迁移至 FindBearings.Taro 私有仓库，
-// 本开源版不再包含任何 @ofb/taro-pro 依赖与注入机制（alias / TARO_BUILD_PRO / webpack include 全部移除）。
-
+// 改动说明：本仓库为纯开源版，不含私有扩展依赖与构建注入机制；
+// 高级功能入口见 src/ext/pro.tsx 占位扩展点，fork 用户可替换为自有实现。
 const config = {
   projectName: 'openfindbearings',
   date: '2026-9-3',

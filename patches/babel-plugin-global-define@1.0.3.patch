@@ -1,0 +1,87 @@
+diff --git a/lib/index.js b/lib/index.js
+index 9e720e86ee193b45352ee8a9096368dd7d217495..4c4d353f30de7cbe4a44315be7da97dbb8c2d127 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -10,20 +10,33 @@ exports.default = function (_ref) {
+     return {
+         visitor: {
+             MemberExpression: function MemberExpression(path, _ref2) {
++                // 改动说明（闭源补丁第二轮）：整体跳过 node_modules 文件。
++                // defineConstants 的本意是替换业务代码里的编译期常量；但 RN 构建时
++                // metro-runtime/regenerator-runtime 等 polyfill 也会流经本插件，
++                // 工具链注入的 define:false 键会把它们的模块注册函数 define()
++                // 引用位替换成 false，bundle 编译合法、运行即 "false is not a
++                // function" 闪退。声明位守卫（第一轮）拦不住引用位替换，故从
++                // 文件维度整体豁免。
++                if (isNodeModulesFile(_ref2)) {
++                    return;
++                }
+                 var params = _ref2.opts;
+ 
+                 Object.keys(params).forEach(function (key) {
+                     if (memberExpressionMatcher(path, key)) {
+-                        replacer(path, params[key], t.valueToNode);
++                        replacer(path, params[key], t.valueToNode, key, _ref2);
+                     }
+                 });
+             },
+             Identifier: function Identifier(path, _ref3) {
++                if (isNodeModulesFile(_ref3)) {
++                    return;
++                }
+                 var params = _ref3.opts;
+ 
+                 Object.keys(params).forEach(function (key) {
+                     if (identifierMatcher(path, key)) {
+-                        replacer(path, params[key], t.valueToNode);
++                        replacer(path, params[key], t.valueToNode, key, _ref3);
+                     }
+                 });
+             }
+@@ -31,6 +44,12 @@ exports.default = function (_ref) {
+     };
+ };
+ 
++// 判断当前文件是否位于 node_modules（polyfill/三方运行时不参与常量替换）
++var isNodeModulesFile = function isNodeModulesFile(state) {
++    var filename = (state && state.file && state.file.opts && state.file.opts.filename) || '';
++    return filename.indexOf('node_modules') >= 0;
++};
++
+ var memberExpressionMatcher = function memberExpressionMatcher(path, key) {
+     return path.matchesPattern(key);
+ };
+@@ -38,13 +57,30 @@ var identifierMatcher = function identifierMatcher(path, key) {
+     return path.node.name === key;
+ };
+ 
+-var replacer = function replacer(path, value, valueToNode) {
+-    path.replaceWith(valueToNode(value));
++// 改动说明（闭源补丁）：原实现对命中标识符无差别 replaceWith，会命中函数声明名等
++// 非法位置（如 regenerator-runtime 0.13.11 的 function define()/so() 恰好撞上布尔
++// defineConstants 键名时，声明名被替换成 BooleanLiteral，@babel/types 7.29 严格校验
++// 抛 TypeError，整个 RN bundle 构建中止、APK 无 JS 闪退）。
++// 现改为 try/catch：替换失败仅跳过该次替换并打印取证日志（文件/key/值/父节点类型），
++// 构建不再中止；日志用于在 CI 上定位真正的触发键名，后续再决定从配置源头删除该键。
++var replacer = function replacer(path, value, valueToNode, key, state) {
++    try {
++        path.replaceWith(valueToNode(value));
++    } catch (e) {
++        var filename = (state && state.file && state.file.opts && state.file.opts.filename) || '<unknown>';
++        var parentType = (path.parent && path.parent.type) || '<none>';
++        console.log('[global-define] 跳过非法替换: file=' + filename + ' key=' + key + ' value=' + JSON.stringify(value) + ' parent=' + parentType);
++        return;
++    }
+ 
+     if (path.parentPath.isBinaryExpression()) {
+         var result = path.parentPath.evaluate();
+         if (result.confident) {
+-            path.parentPath.replaceWith(valueToNode(result.value));
++            try {
++                path.parentPath.replaceWith(valueToNode(result.value));
++            } catch (e2) {
++                console.log('[global-define] 跳过常量折叠: key=' + key);
++            }
+         }
+     }
+ };

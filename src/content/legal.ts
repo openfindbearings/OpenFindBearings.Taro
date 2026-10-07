@@ -26,9 +26,9 @@ export type DocType =
   | 'privacy-manage'        // 隐私管理（您的权利）
   | 'user-agreement'        // 用户协议
 
-// 改动说明（pro 扩展缝）：App 名与运营主体名由 pro 扩展注入——开源版为 OpenFindBearings，
-// 自用版（含"轴承帮"）构建时 alias 指向 pro 包返回真实名，协议/隐私文本随之呈现对应主体
-import { PRO_APP_DISPLAY_NAME, PRO_OPERATOR_NAME } from '../ext/pro'
+// 改动说明（扩展点）：App 名/运营主体名/后端服务名由 src/ext/pro 扩展点导出提供，
+// 协议与隐私文本随之呈现对应口径；本文件为公共文件，请经扩展点定制、勿直接修改
+import { PRO_APP_DISPLAY_NAME, PRO_OPERATOR_NAME, PRO_SERVICE_NAMES } from '../ext/pro'
 
 const APP_NAME = PRO_APP_DISPLAY_NAME
 const OPERATOR = PRO_OPERATOR_NAME
@@ -163,8 +163,8 @@ const THIRD_PARTY_SHARE: LegalDoc = {
     {
       heading: '一、共享场景',
       paragraphs: [
-        '1. 身份认证服务（OpenFindBearings Identity，自建 OIDC 认证中心）—— 共享信息：手机号、登录凭证、设备标识 —— 目的：完成账号注册、登录与令牌签发 —— 方式：加密接口调用 —— 场景：登录/注册时。',
-        '2. 业务后端服务（OpenFindBearings API / BFF，自建）—— 共享信息：您的查询请求、登录态下的收藏/关注/入驻资料 —— 目的：提供轴承商家查询与入驻服务 —— 场景：使用查询与个人功能时。',
+        `1. 身份认证服务（${PRO_SERVICE_NAMES.identity}，自建 OIDC 认证中心）—— 共享信息：手机号、登录凭证、设备标识 —— 目的：完成账号注册、登录与令牌签发 —— 方式：加密接口调用 —— 场景：登录/注册时。`,
+        `2. 业务后端服务（${PRO_SERVICE_NAMES.backend}，自建）—— 共享信息：您的查询请求、登录态下的收藏/关注/入驻资料 —— 目的：提供轴承商家查询与入驻服务 —— 场景：使用查询与个人功能时。`,
         '3. 云基础设施与托管服务（服务器/数据库供应商）—— 共享信息：服务运行所必需的数据存储 —— 目的：保障应用运行与数据安全 —— 约束：供应商按数据处理协议不得另作他用。'
       ]
     },

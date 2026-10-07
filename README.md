@@ -1,6 +1,6 @@
 # OpenFindBearings.Taro
 
-移动端 H5 前端，基于 Taro 3.6.40 + React 18 + TypeScript 构建，一套代码编译到 H5（浏览器）、微信小程序、Android/iOS 原生 APP（React Native）。
+开源版移动端前端，一个基础的信息撮合平台：用户发布轴承寻货需求、商家应答并互换联系电话。基于 Taro 3.6.40 + React 18 + TypeScript 构建，一套代码编译到 H5（浏览器）、微信小程序、Android/iOS 原生 APP（React Native）。
 
 ## 技术栈
 
@@ -12,10 +12,10 @@
 
 ## 架构
 
-Taro H5 前端独立部署，通过 BFF访问后端服务。
+Taro 前端独立部署，通过 BFF 访问后端服务。
 
 ```
-Taro H5 → Mobile BFF → API + Identity
+Taro → Mobile BFF → API + Identity
 ```
 
 ## 功能特性
@@ -24,19 +24,21 @@ Taro H5 → Mobile BFF → API + Identity
 |-----|------|------|
 | 首页 | 轴承/商家搜索 | 核心查询功能，无需登录 |
 | 入驻/商家 | 商家入驻申请/管理 | 商家行为（需入驻后） |
-| 我的 | 个人中心 | 收藏/关注/历史（需登录） |
+| 我的 | 个人中心 | 收藏/关注/历史/勋章/积分（需登录） |
 
-## open-core 扩展（pro）
+## 扩展点
 
-本项目采用开源（OpenFindBearings）/自用（轴承帮）双态构建：
+`src/ext/pro.tsx` 是高级功能扩展点（首页快捷入口、智能模式、品牌名等）：开源版为占位空实现（对应功能不渲染），你可以在此文件实现自己的私有功能——仓库其余代码只 import 该路径，无需任何改动即可编译出自己的版本。
 
-- **开源版**：功能精简——首页快捷三钮（语音/拍/扫）、智能模式、官方图标均不包含，App 名为 OpenFindBearings，公开 fork 可独立编译。
-- **自用版**：由私有库 [FindBearings.Taro.Pro](https://github.com/openfindbearings/FindBearings.Taro.Pro) 提供 pro 源码（首页三钮/智能模式/官方图标/轴承帮名），构建前注入。
+## 构建
 
-机制：
-- 扩展缝 `src/ext/pro.tsx`：开源构建时 webpack `alias` 把 `@ofb/taro-pro` 指到该占位（空实现），公开 fork 无私有依赖也能编译。
-- 自用构建：设 `TARO_BUILD_PRO=1` + 安装/链接 `@ofb/taro-pro`，`config/index.ts` 的 alias 指到真包源码，`scripts/apply-pro.js` 注入名字与官方图标（构建后 `git restore` 还原工作区）。
-- CI：`deploy.yml` 检测 `TARO_PRO_PAT`（仅读 Taro.Pro 的 PAT）——有则注入出 pro 版镜像/APK，无则出开源版；一条 workflow 出两版。
+```bash
+pnpm install
+pnpm run dev:h5        # H5 开发（端口 10086）
+pnpm run build:h5      # H5 产物
+pnpm run dev:rn        # RN 开发（Metro 8081，需 adb reverse tcp:8081 tcp:8081）
+pnpm run build:weapp   # 微信小程序产物（微信开发者工具导入 dist/）
+```
 
 ## 相关文档
 
@@ -58,6 +60,7 @@ Taro H5 → Mobile BFF → API + Identity
 ### 关联项目
 
 - [Mobile BFF 设计](../OpenFindBearings.Mobile/doc/OpenFindBearings.Mobile-BFF设计-v1.0.0.md)
+
 ## 部署
 
 K8s 部署清单模板见 [deploy/](./deploy/)（真实域名/集群细节占位符请在部署时替换为真实值，并自行创建 Secret 后 kubectl apply）。
