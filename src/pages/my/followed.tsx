@@ -16,6 +16,7 @@ import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/
 import BatchBar from '../../components/ListKit/BatchBar'
 import { useListSelection } from '../../components/ListKit/useListSelection'
 import { useAuthStore } from '../../stores/auth'
+import MediaImage from '../../components/MediaImage'
 import { getFollowedMerchants, toggleFollow, batchRemoveFollows, type FollowedItem } from '../../services/user'
 
 definePageConfig({ disableScroll: true })
@@ -127,8 +128,9 @@ export default function FollowedPage() {
                 {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
               </View>
             )}
-            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 12 }}>
-              <Icon name="store" size={20} color={t.primary} />
+            {/* 行图标（v2.12.0）：商家真实 logo（BFF 补透传 LogoUrl），无 logo/加载失败回退 store 默认图标 */}
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 12, overflow: 'hidden' }}>
+              <MediaImage url={item.merchant.logo} fallbackIcon="store" fallbackColor={t.primary} fallbackSize={20} style={{ width: 40, height: 40, borderRadius: 20 }} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ ...fs(16), color: t.textPrimary }}>{item.merchant.name}</Text>

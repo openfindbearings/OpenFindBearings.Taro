@@ -96,11 +96,17 @@ export default function MySourcingPage() {
       confirmColor: t.danger,
     })
     if (!ok) return
-    const r = await batchDeleteDemands(ids)
-    if (r.deleted > 0) {
-      Taro.showToast({ title: r.skipped > 0 ? `已删 ${r.deleted} 条，${r.skipped} 条进行中未删` : '已删除', icon: 'none' })
-    } else {
-      Taro.showToast({ title: '没有可删除的记录（进行中请先取消）', icon: 'none' })
+    // 改动说明（v2.12.0）：包 try/catch——网络/服务端失败转 toast 提示，
+    // 不再冒泡成 RN LogBox "Unhandled Promise Rejection" 弹层
+    try {
+      const r = await batchDeleteDemands(ids)
+      if (r.deleted > 0) {
+        Taro.showToast({ title: r.skipped > 0 ? `已删 ${r.deleted} 条，${r.skipped} 条进行中未删` : '已删除', icon: 'none' })
+      } else {
+        Taro.showToast({ title: '没有可删除的记录（进行中请先取消）', icon: 'none' })
+      }
+    } catch {
+      Taro.showToast({ title: '删除失败，请稍后重试', icon: 'none' })
     }
     sel.reset()
     reload()
