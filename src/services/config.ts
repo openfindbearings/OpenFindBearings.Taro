@@ -246,6 +246,8 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   SOURCING_MY_RESPONSES: `${API_PREFIX}/sourcing/my/responses`,
   /** v2.12.0 商户工作台"寻货管理-我发布的" */
   SOURCING_MERCHANT_DEMANDS: `${API_PREFIX}/sourcing/merchant/demands`,
+  /** v2.12.0 列表删除：批量软删寻货终态单（左滑单删=ids 传一个）。改动说明：上一批插入脚本因 PS ${} 插值静默失败漏了本行，致 RN 端 URL 拼成 ...undefined 报 Network request failed */
+  SOURCING_BATCH_DELETE: `${API_PREFIX}/sourcing/demands/batch-delete`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,
