@@ -8,7 +8,7 @@
    - `<your-mobile-domain>`：H5 站点域名（deploy.yml Ingress，TLS 由 cert-manager 签发）
    - `<your-bff-domain>`：BFF 域名（apk-server.yml 的 /dl 下载路径 Ingress，与 BFF 共用域名）
 2. **Secret**：apk-server 的 apk-sync CronJob 复用 `openfindbearings-api-secrets`（数据库连接串，见 API 仓库 deploy/secrets 模板）
-3. 镜像 `ghcr.io/openfindbearings/openfindbearings-taro`（公开；自用版"轴承帮"需配置 pro PAT 构建，见仓库 README）
+3. 镜像：自行构建，或使用公开镜像 `ghcr.io/openfindbearings/openfindbearings-taro`（公开包）
 
 ## apply
 

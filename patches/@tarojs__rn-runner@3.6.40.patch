@@ -1,0 +1,28 @@
+diff --git a/dist/index.js b/dist/index.js
+index 14b152bbcd467a1043cfb7e555e7d97d3c5e160b..06f7b419f90ca8c0b179d64f630d28640c984113 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -68,7 +68,10 @@ function build(_appPath, config) {
+             }
+             try {
+                 (0, child_process_1.spawn)(npxCmd, ['react-native', 'start'].concat(cliParams), {
+-                    stdio: 'inherit'
++                    stdio: 'inherit',
++                    // 改动说明（闭源固化补丁）：Windows 下 npx.cmd 是批处理文件，新版 Node（>=18.20）
++                    // 直接 spawn 会抛 EINVAL，需 shell 包装；CI Linux 不走此路径，isWin 恒 false 无影响
++                    shell: isWin
+                 });
+                 if (config.qr) {
+                     (0, rn_supporter_1.previewDev)({
+@@ -113,7 +116,10 @@ function build(_appPath, config) {
+                     '--entry-file',
+                     'index.js'
+                 ].concat(cliParams), {
+-                    stdio: 'inherit'
++                    stdio: 'inherit',
++                    // 改动说明（闭源固化补丁）：Windows 下 npx.cmd 是批处理文件，新版 Node（>=18.20）
++                    // 直接 spawn 会抛 EINVAL，需 shell 包装；CI Linux 不走此路径，isWin 恒 false 无影响
++                    shell: isWin
+                 });
+                 if (config.qr) {
+                     process.on('beforeExit', () => {

@@ -14,7 +14,7 @@ import NavBar from '../../components/NavBar'
 import { checkUpdateManually } from '../../services/update'
 import { getSiteConfig, getBeiAnForPlatform } from '../../services/config-api'
 import { getAppVersion } from '../../utils/version'
-// 改动说明（pro 扩展缝）：品牌名/版权行随构建版本呈现——开源版 OpenFindBearings，自用版"轴承帮"
+// 改动说明（扩展点）：品牌名/版权行由 src/ext/pro 扩展点导出呈现
 import { PRO_APP_DISPLAY_NAME } from '../../ext/pro'
 import './settings.scss'
 

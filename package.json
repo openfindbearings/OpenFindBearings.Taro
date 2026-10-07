@@ -32,8 +32,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "podInstall": "pod-install",
-    "upgradePeerdeps": "install-peerdeps @tarojs/taro-rn@3.6.40 -o -Y && install-peerdeps @tarojs/components-rn@3.6.40 -o -Y && install-peerdeps @tarojs/router-rn@3.6.40 -o -Y && pod-install",
-    "apply:pro": "node scripts/apply-pro.js"
+    "upgradePeerdeps": "install-peerdeps @tarojs/taro-rn@3.6.40 -o -Y && install-peerdeps @tarojs/components-rn@3.6.40 -o -Y && install-peerdeps @tarojs/router-rn@3.6.40 -o -Y && pod-install"
   },
   "browserslist": [
     "last 3 versions",

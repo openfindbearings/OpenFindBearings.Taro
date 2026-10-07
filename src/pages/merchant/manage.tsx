@@ -28,7 +28,7 @@ import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallCatalog } from '.
 // 改动说明（v2.10.0 商家金）：支付面板读站点配置的商家金兑换率显示个人代付折算价
 import { getSiteConfig } from '../../services/config-api'
 import { getTreasury } from '../../services/gifts'
-// Excel 批量导入依赖闭源 Sync 数据管线：开源版（PRO_MERCHANT_IMPORT_ENABLED=false）不渲染导入按钮
+// Excel 批量导入依赖外部 Sync 数据管线：开源版（PRO_MERCHANT_IMPORT_ENABLED=false）不渲染导入按钮
 import { PRO_MERCHANT_IMPORT_ENABLED } from '../../ext/pro'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 // Excel 文件选择平台分派（Metro 按 .rn 后缀解析 RN 版，H5/小程序走 index.ts）
