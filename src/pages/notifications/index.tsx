@@ -2,6 +2,8 @@
 // 交互对标主流：点消息 → 弹底部详情面板（不再一点就跳转），面板内〔去处理〕才标已读+跳转；
 // 未读消息不可左滑删（防误删漏看），只留"清空已读"批量出口；
 // 进入与返回时刷新未读数（联动 TabBar 角标 store）。
+// v2.12.0 列表统一改造：状态 chips（全部/未读/已读）+ 长按上下文菜单（已读/删除/多选）
+//   + 多选批量条（标已读+删除双动作）——多选模式内删除是显式操作，允许含未读
 // RN 约束：仅 flex 布局、无 fixed/vh（覆盖层用 absolute）、Text 包裹、lineHeight 数值。
 import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
@@ -15,15 +17,26 @@ import PageLayout from '../../platforms/PageLayout'
 import LoginGuide from '../../components/LoginGuide'
 import NavBar from '../../components/NavBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
+import ListChips from '../../components/ListKit/ListChips'
+import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
+import BatchBar from '../../components/ListKit/BatchBar'
+import { useListSelection } from '../../components/ListKit/useListSelection'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import {
   getNotifications, markNotificationRead, markAllNotificationsRead,
-  deleteNotification, clearReadNotifications, type SiteNotification
+  deleteNotification, clearReadNotifications, batchMarkRead, batchDeleteNotifications, type SiteNotification
 } from '../../services/notification'
 import { formatTime } from '../../utils/format'
 
 /** 每页条数 */
 const PAGE_SIZE = 20
+
+/** 状态 chips（v2.12.0 同类型数据状态一律 chips） */
+const CHIPS = [
+  { key: 'all', label: '全部' },
+  { key: 'unread', label: '未读' },
+  { key: 'read', label: '已读' },
+]
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供（滚动区规范）
 definePageConfig({ disableScroll: true })
@@ -51,6 +64,10 @@ export default function NotificationsPage() {
   const [detail, setDetail] = useState<SiteNotification | null>(null)
   // 左滑互斥：同一时刻只允许一行展开
   const [openedId, setOpenedId] = useState<string | null>(null)
+  // v2.12.0 状态 chips + 长按菜单目标 + 多选模式
+  const [chip, setChip] = useState('all')
+  const [sheetFor, setSheetFor] = useState<SiteNotification | null>(null)
+  const sel = useListSelection()
 
   const hasUnread = items.some((n) => !n.isRead)
   const hasRead = items.some((n) => n.isRead)
@@ -149,7 +166,53 @@ export default function NotificationsPage() {
     }
   }
 
+  /** v2.12.0 批量标已读（多选模式） */
+  const onBatchRead = async () => {
+    const ids = sel.selected
+    const n = await batchMarkRead(ids)
+    if (n > 0) {
+      setItems((prev) => prev.map((x) => (ids.includes(x.id) ? { ...x, isRead: true } : x)))
+      void fetchUnread()
+      Taro.showToast({ title: `已标 ${n} 条已读`, icon: 'none' })
+    }
+    sel.reset()
+  }
+
+  /** v2.12.0 批量删除（多选模式；显式操作允许含未读） */
+  const onBatchDelete = async () => {
+    const ids = sel.selected
+    const ok = await showConfirmDialog({
+      title: '删除消息',
+      content: `确认删除选中的 ${ids.length} 条消息？删除后不可恢复。`,
+      confirmText: '删除',
+      confirmColor: t.danger
+    })
+    if (!ok) return
+    const n = await batchDeleteNotifications(ids)
+    if (n > 0) {
+      setItems((prev) => prev.filter((x) => !ids.includes(x.id)))
+      setTotal((t2) => Math.max(0, t2 - n))
+      void fetchUnread()
+    }
+    sel.reset()
+  }
+
+  // v2.12.0 长按上下文菜单：未读=标已读+多选；已读=删除+多选
+  const sheetActions: ListSheetAction[] = sheetFor
+    ? sheetFor.isRead
+      ? [
+        { key: 'delete', label: '删除', danger: true, icon: 'trash-2', onPress: () => void onDelete(sheetFor) },
+        { key: 'multi', label: '多选', icon: 'list-checks', onPress: () => sel.enter(sheetFor.id) },
+      ]
+      : [
+        { key: 'read', label: '标为已读', icon: 'mail-check', onPress: () => void onTapItem(sheetFor) },
+        { key: 'multi', label: '多选', icon: 'list-checks', onPress: () => sel.enter(sheetFor.id) },
+      ]
+    : []
+
   const hasMore = items.length < total
+  // 状态 chips 过滤（本地过滤已加载分页；未读=无 isRead）
+  const shown = items.filter((n) => (chip === 'all' ? true : chip === 'unread' ? !n.isRead : n.isRead))
 
   return (
     <PageLayout nav={<NavBar title='消息中心' showBack rightSlot={
@@ -175,24 +238,35 @@ export default function NotificationsPage() {
               <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无消息</Text>
             </View>
           ) : (
-            items.map((n) => {
-              // 改动说明（v1.7.9）：已读行左滑出"删除"；未读行不给滑删（防误删漏看，主流口径）
-              const actions: SwipeCellAction[] = n.isRead
-                ? [{ key: 'delete', label: '删除', color: '#FFFFFF', bg: t.danger, onPress: () => void onDelete(n) }]
-                : []
-              return (
-                <SwipeCell
-                  key={n.id}
-                  actions={actions}
-                  opened={openedId === n.id}
-                  onOpenChange={(o) => setOpenedId(o ? n.id : null)}
-                  radius={12}
-                  containerStyle={{ marginBottom: 10 }}
-                >
+            <>
+              {/* v2.12.0 状态 chips（有数据才出） */}
+              {items.length > 0 && <View style={{ marginBottom: 10 }}><ListChips items={CHIPS} active={chip} onChange={setChip} /></View>}
+              {shown.length === 0 && (
+                <View style={{ display: 'flex', alignItems: 'center', paddingTop: 40 }}>
+                  <Text style={{ ...fs(13), color: t.textTertiary }}>该状态下暂无消息</Text>
+                </View>
+              )}
+              {shown.map((n) => {
+                // 改动说明（v1.7.9）：已读行左滑出"删除"；未读行不给滑删（防误删漏看，主流口径）
+                const actions: SwipeCellAction[] = n.isRead && !sel.selectMode
+                  ? [{ key: 'delete', label: '删除', color: '#FFFFFF', bg: t.danger, onPress: () => void onDelete(n) }]
+                  : []
+                const checked = sel.selected.includes(n.id)
+                const card = (
                   <View
                     style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}
-                    onClick={() => void onTapItem(n)}
+                    onLongPress={() => { if (!sel.selectMode) setSheetFor(n) }}
+                    onClick={() => {
+                      if (sel.selectMode) { sel.toggle(n.id); return }
+                      void onTapItem(n)
+                    }}
                   >
+                    {/* 多选模式勾选框 */}
+                    {sel.selectMode && (
+                      <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: checked ? t.primary : t.textTertiary, backgroundColor: checked ? t.primary : 'transparent', alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 8, marginTop: 8 }}>
+                        {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
+                      </View>
+                    )}
                     <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Icon name={typeIcon(n.type)} size={18} color={t.primary} />
                     </View>
@@ -207,11 +281,29 @@ export default function NotificationsPage() {
                       <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }} numberOfLines={2}>{n.body}</Text>
                       <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>{formatTime(n.createdAt)}</Text>
                     </View>
-                    <Icon name='chevron-right' size={16} color={t.textTertiary} />
+                    {!sel.selectMode ? <Icon name='chevron-right' size={16} color={t.textTertiary} /> : null}
                   </View>
-                </SwipeCell>
-              )
-            })
+                )
+                return sel.selectMode ? (
+                  <View key={n.id} style={{ marginBottom: 10 }}>
+                    {card}
+                  </View>
+                ) : (
+                  <SwipeCell
+                    key={n.id}
+                    actions={actions}
+                    opened={openedId === n.id}
+                    onOpenChange={(o) => setOpenedId(o ? n.id : null)}
+                    radius={12}
+                    containerStyle={{ marginBottom: 10 }}
+                  >
+                    {card}
+                  </SwipeCell>
+                )
+              })}
+              {/* v2.12.0 多选批量条：标已读（次）+删除（主红） */}
+              <BatchBar visible={sel.selectMode} count={sel.count} actionLabel="删除" secondaryLabel="标为已读" onAction={() => void onBatchDelete()} onSecondary={() => void onBatchRead()} onExit={sel.exit} />
+            </>
           )}
           {loading && (
             <View style={{ display: 'flex', alignItems: 'center', padding: 10 }}>
@@ -220,6 +312,9 @@ export default function NotificationsPage() {
           )}
         </View>
       </View>
+
+      {/* v2.12.0 长按上下文菜单 */}
+      <ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.title : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
 
       {/* 消息详情面板（v1.7.9，自绘覆盖层 absolute 于页面根，与成员详情面板同款）
           改动说明：点行不再直接跳转商户页——先看详情，〔去处理〕才跳转（主流消息中心交互） */}

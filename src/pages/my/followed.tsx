@@ -1,4 +1,5 @@
-// 我的关注商家页：分页列表 + 行内取消关注。数据经 BFF /mobile/followed（API /api/me/follows/merchants）。
+// 我的关注商家页（v2.12.0 列表统一改造）：三级手势——左滑取消关注 / 长按菜单（取消关注|多选）/
+// 多选批量取关；行内垃圾桶按钮移除。数据经 BFF /mobile/followed（API /api/me/follows/merchants）。
 // 与收藏页同范式：登录态订阅 store，未登录展示引导空态。
 import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
@@ -10,14 +11,18 @@ import { useFs } from '../../hooks/useFontScale'
 import { formatTime } from '../../utils/format'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
+import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
+import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
+import BatchBar from '../../components/ListKit/BatchBar'
+import { useListSelection } from '../../components/ListKit/useListSelection'
 import { useAuthStore } from '../../stores/auth'
-import { getFollowedMerchants, toggleFollow, type FollowedItem } from '../../services/user'
+import { getFollowedMerchants, toggleFollow, batchRemoveFollows, type FollowedItem } from '../../services/user'
 
 definePageConfig({ disableScroll: true })
 
 const PAGE_SIZE = 20
 
-/** 关注商家列表页：展示商家名称/公司与关注时间，支持逐条取关与分页加载 */
+/** 关注商家列表页：展示商家名称/公司与关注时间，左滑/长按/多选取消关注，分页加载 */
 export default function FollowedPage() {
   const t = useTheme()
   const fs = useFs()
@@ -27,7 +32,9 @@ export default function FollowedPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [busyId, setBusyId] = useState('')
+  const [openedId, setOpenedId] = useState<string | null>(null)
+  const [sheetFor, setSheetFor] = useState<FollowedItem | null>(null)
+  const sel = useListSelection()
 
   /** 加载关注分页（append=true 追加下一页） */
   const load = async (p: number, append: boolean) => {
@@ -43,21 +50,42 @@ export default function FollowedPage() {
 
   useDidShow(() => { load(1, false) })
 
-  /** 取消关注（确认后调 DELETE 代理，成功即本地移除该行） */
+  /** 取消关注单条（确认→toggle→本地移除） */
   const onUnfollow = (item: FollowedItem) => {
     showConfirmDialog({ title: '取消关注', content: `不再关注「${item.merchant.name}」？` }).then(async (ok) => {
-        if (!ok) return
-        setBusyId(item.merchant.id)
-        try {
-          await toggleFollow(item.merchant.id, true)
-          setItems((prev) => prev.filter((x) => x.id !== item.id))
-          setTotal((n) => Math.max(0, n - 1))
-          Taro.showToast({ title: '已取消关注', icon: 'none' })
-        } catch {
-          Taro.showToast({ title: '操作失败', icon: 'none' })
-        } finally { setBusyId('') }
-      })
+      if (!ok) return
+      try {
+        await toggleFollow(item.merchant.id, true)
+        setItems((prev) => prev.filter((x) => x.id !== item.id))
+        setTotal((n) => Math.max(0, n - 1))
+        Taro.showToast({ title: '已取消关注', icon: 'none' })
+      } catch {
+        Taro.showToast({ title: '操作失败', icon: 'none' })
+      }
+    })
   }
+
+  /** 批量取消关注（多选模式；ids=merchantId 集） */
+  const onBatchUnfollow = async () => {
+    const merchantIds = items.filter((x) => sel.selected.includes(x.id)).map((x) => x.merchant.id)
+    const ok = await showConfirmDialog({ title: '取消关注', content: `确认取消关注选中的 ${merchantIds.length} 个商家？`, confirmText: '取消关注', confirmColor: t.danger })
+    if (!ok) return
+    const n = await batchRemoveFollows(merchantIds)
+    if (n > 0) {
+      setItems((prev) => prev.filter((x) => !sel.selected.includes(x.id)))
+      setTotal((x) => Math.max(0, x - n))
+      Taro.showToast({ title: `已取消关注 ${n} 个商家`, icon: 'none' })
+    }
+    sel.reset()
+  }
+
+  // 长按菜单：取消关注 + 多选
+  const sheetActions: ListSheetAction[] = sheetFor
+    ? [
+      { key: 'unfollow', label: '取消关注', danger: true, icon: 'user-minus', onPress: () => onUnfollow(sheetFor) },
+      { key: 'multi', label: '多选', icon: 'list-checks', onPress: () => sel.enter(sheetFor.id) },
+    ]
+    : []
 
   const goDetail = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
   const hasMore = items.length < total
@@ -82,35 +110,51 @@ export default function FollowedPage() {
           <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>还没有关注，去商家详情页看看吧</Text>
         </View>
       )}
-      {items.map((item) => (
-        <View
-          key={item.id}
-          style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
-          onClick={() => goDetail(item.merchant.id)}
-        >
-          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 12 }}>
-            <Icon name="store" size={20} color={t.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ ...fs(16), color: t.textPrimary }}>{item.merchant.name}</Text>
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
-              {item.merchant.companyName || (item.merchant.isVerified ? '认证商家' : '')}
-              {'\n'}关注于 {formatTime(item.createdAt)}
-            </Text>
-          </View>
+      {items.map((item) => {
+        const checked = sel.selected.includes(item.id)
+        const actions: SwipeCellAction[] = sel.selectMode ? [] : [{ key: 'unfollow', label: '取消关注', color: '#FFFFFF', bg: t.danger, onPress: () => onUnfollow(item) }]
+        const card = (
           <View
-            style={{ padding: 10, opacity: busyId === item.merchant.id ? 0.4 : 1 }}
-            onClick={() => { if (busyId !== item.merchant.id) onUnfollow(item) }}
+            style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+            onLongPress={() => { if (!sel.selectMode) setSheetFor(item) }}
+            onClick={() => {
+              if (sel.selectMode) { sel.toggle(item.id); return }
+              goDetail(item.merchant.id)
+            }}
           >
-            <Icon name="trash-2" size={18} color={t.danger} />
+            {sel.selectMode && (
+              <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: checked ? t.primary : t.textTertiary, backgroundColor: checked ? t.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
+                {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
+              </View>
+            )}
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 12 }}>
+              <Icon name="store" size={20} color={t.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...fs(16), color: t.textPrimary }}>{item.merchant.name}</Text>
+              <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
+                {item.merchant.companyName || (item.merchant.isVerified ? '认证商家' : '')}
+                {'\n'}关注于 {formatTime(item.createdAt)}
+              </Text>
+            </View>
+            {!sel.selectMode ? <Icon name="chevron-right" size={16} color={t.textTertiary} /> : null}
           </View>
-        </View>
-      ))}
+        )
+        return sel.selectMode ? (
+          <View key={item.id}>{card}</View>
+        ) : (
+          <SwipeCell key={item.id} actions={actions} opened={openedId === item.id} onOpenChange={(o) => setOpenedId(o ? item.id : null)} radius={0}>
+            {card}
+          </SwipeCell>
+        )
+      })}
+      <BatchBar visible={sel.selectMode} count={sel.count} actionLabel="取消关注" onAction={() => void onBatchUnfollow()} onExit={sel.exit} />
       {isLoggedIn && hasMore && (
         <View style={{ display: 'flex', alignItems: 'center', paddingTop: 14, paddingBottom: 14 }} onClick={() => { if (!loading) load(page + 1, true) }}>
           <Text style={{ ...fs(14), color: t.primaryText }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
       )}
+      <ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.merchant.name : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
     </PageLayout>
   )
 }

@@ -39,6 +39,17 @@ export function markNotificationRead(id: string) {
 }
 
 /** 全部标记已读 */
+/** 批量标记已读（v2.12.0 列表多选），返回成功数 */
+export async function batchMarkRead(ids: string[]): Promise<number> {
+  const r = await request<{ success: boolean; affected: number }>(API.NOTIFICATIONS_BATCH_READ, { method: "POST", data: { ids } })
+  return (r as any)?.affected ?? 0
+}
+
+/** 批量删除站内信（v2.12.0 列表多选），返回成功数 */
+export async function batchDeleteNotifications(ids: string[]): Promise<number> {
+  const r = await request<{ success: boolean; affected: number }>(API.NOTIFICATIONS_BATCH_DELETE, { method: "POST", data: { ids } })
+  return (r as any)?.affected ?? 0
+}
 export function markAllNotificationsRead() {
   return request<{ success: boolean }>(API.NOTIFICATIONS_READ_ALL, { method: 'POST' })
 }

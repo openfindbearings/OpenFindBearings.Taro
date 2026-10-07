@@ -1,7 +1,8 @@
-// 我的寻货页（v1.7.19）：个人用户发布的寻货列表（全状态倒序），点击进详情。
-// 八格"我的寻货"入口落地（原占位 toast）
-// v2.10.0 寻货置顶：进行中的需求可购买"寻货置顶卡"（24h/72h，个人轴承币支付），
-// 兑换成功后该需求在公开大厅排前并带角标
+// 我的寻货页（v1.7.19）：个人名义发布的寻货列表（全状态倒序），点击进详情。
+// v2.10.0 寻货置顶：进行中的需求可购买"寻货置顶卡"（24h/72h，个人轴承币支付）
+// v2.12.0 列表统一改造：① 子 tab 换状态 chips（全部/进行中/已选定/已取消/已过期/已下架）；
+//   ② 三级手势删除——左滑单删（SwipeCell）/长按上下文菜单（ListActionSheet）/多选批量（useListSelection+BatchBar），
+//   仅终态单可删（进行中须先取消走通知流程）；③ 商户名义单已归商户工作台（后端过滤，本页恒个人单，徽章死码移除）
 import { useState } from 'react'
 import { View, Text} from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
@@ -11,12 +12,28 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import LoginGuide from '../../components/LoginGuide'
 import NavBar from '../../components/NavBar'
+import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
+import ListChips from '../../components/ListKit/ListChips'
+import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
+import BatchBar from '../../components/ListKit/BatchBar'
+import { useListSelection } from '../../components/ListKit/useListSelection'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
-import { getMySourcingDemands, demandStatusText, DEMAND_STATUS, type SourcingMyDemand } from '../../services/sourcing'
+import { getMySourcingDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, type SourcingMyDemand } from '../../services/sourcing'
 import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallItem } from '../../services/mall'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
 definePageConfig({ disableScroll: true })
+
+/** 状态 chips 定义（与 DEMAND_STATUS 常量对齐） */
+const CHIPS = [
+  { key: 'all', label: '全部' },
+  { key: '1', label: '进行中' },
+  { key: '2', label: '已选定' },
+  { key: '4', label: '已取消' },
+  { key: '3', label: '已过期' },
+  { key: '5', label: '已下架' },
+]
 
 /** 我的寻货页 */
 export default function MySourcingPage() {
@@ -24,16 +41,22 @@ export default function MySourcingPage() {
   const fs = useFs()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [items, setItems] = useState<SourcingMyDemand[]>([])
-  // 改动说明（v1.7.29 分组收敛）：子 tab 进行中|已结束——终态单不与进行中混排（列表卫生），
-  // 前端分组（一次拉全量后过滤），置顶仅进行中可见故默认 open
-  const [gTab, setGTab] = useState<'open' | 'closed'>('open')
+  // v2.12.0 状态筛选 chips（取代"进行中|已结束"二分 tab——同类型数据状态一律 chips）
+  const [chip, setChip] = useState('all')
+  // 左滑互斥（同通知页模式：同时只展开一个）
+  const [openedId, setOpenedId] = useState<string | null>(null)
+  // 长按上下文菜单目标
+  const [sheetFor, setSheetFor] = useState<SourcingMyDemand | null>(null)
+  // 多选模式
+  const sel = useListSelection()
   // v2.10.0 寻货置顶：选卡弹层状态（选中需求 + 需求置顶卡目录）
   const [pinFor, setPinFor] = useState<SourcingMyDemand | null>(null)
   const [demandPins, setDemandPins] = useState<MallItem[]>([])
   const [pinning, setPinning] = useState(false)
 
+  const reload = () => { void getMySourcingDemands().then((r) => setItems(r || [])) }
   useDidShow(() => {
-    if (isLoggedIn) void getMySourcingDemands().then((r) => setItems(r || []))
+    if (isLoggedIn) reload()
   })
 
   // 打开选卡弹层：懒加载需求置顶卡目录（TargetKind=2 且未兑完）
@@ -45,8 +68,7 @@ export default function MySourcingPage() {
     }
   }
 
-  // 兑换置顶卡：requestId 幂等键带需求与时间戳防重复提交；
-  // request 层失败抛后端 message（轴承币不足/越权），此处 catch 转 toast
+  // 兑换置顶卡：requestId 幂等键带需求与时间戳防重复提交
   const doPin = async (card: MallItem) => {
     if (!pinFor || pinning) return
     setPinning(true)
@@ -54,7 +76,7 @@ export default function MySourcingPage() {
       await redeemMallItem(card.id, pinFor.id, `dpin-${pinFor.id}-${Date.now()}`)
       Taro.showToast({ title: '已置顶，大厅可见', icon: 'success' })
       setPinFor(null)
-      void getMySourcingDemands().then((rr) => setItems(rr || []))
+      reload()
     } catch (e: any) {
       Taro.showToast({ title: e?.message || '置顶失败，稍后再试', icon: 'none' })
     } finally {
@@ -62,35 +84,50 @@ export default function MySourcingPage() {
     }
   }
 
-  const openCount = items.filter((it) => it.status === DEMAND_STATUS.published).length
-  // 分组视图：进行中=published；已结束=已选定/已取消/已过期/已下架
-  const shown = items.filter((it) => (gTab === 'open' ? it.status === DEMAND_STATUS.published : it.status !== DEMAND_STATUS.published))
+  /** 是否终态（可删）：非进行中 */
+  const isClosed = (it: SourcingMyDemand) => it.status !== DEMAND_STATUS.published
+
+  /** 删除执行（单删/批删共用）：二次确认 → batchDelete → 刷新 */
+  const doDelete = async (ids: string[]) => {
+    const ok = await showConfirmDialog({
+      title: '删除寻货记录',
+      content: ids.length === 1 ? '删除后该记录从列表移除，应答数据保留。确认删除？' : `确认删除选中的 ${ids.length} 条寻货记录？`,
+      confirmText: '删除',
+      confirmColor: t.danger,
+    })
+    if (!ok) return
+    const r = await batchDeleteDemands(ids)
+    if (r.deleted > 0) {
+      Taro.showToast({ title: r.skipped > 0 ? `已删 ${r.deleted} 条，${r.skipped} 条进行中未删` : '已删除', icon: 'none' })
+    } else {
+      Taro.showToast({ title: '没有可删除的记录（进行中请先取消）', icon: 'none' })
+    }
+    sel.reset()
+    reload()
+  }
+
+  // 长按菜单动作（终态单：删除/多选）
+  const sheetActions: ListSheetAction[] = sheetFor
+    ? [
+      { key: 'delete', label: '删除记录', danger: true, icon: 'trash-2', onPress: () => void doDelete([sheetFor.id]) },
+      { key: 'multi', label: '多选', icon: 'list-checks', onPress: () => sel.enter(sheetFor.id) },
+    ]
+    : []
+
+  // 左滑动作（仅终态单出删除）
+  const swipeActions = (item: SourcingMyDemand): SwipeCellAction[] =>
+    isClosed(item)
+      ? [{ key: 'delete', label: '删除', color: '#FFFFFF', bg: t.danger, onPress: () => void doDelete([item.id]) }]
+      : []
+
+  const shown = items.filter((it) => chip === 'all' || String(it.status) === chip)
 
   return (
     <PageLayout nav={<NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />}>
       <View>
         {!isLoggedIn && <LoginGuide icon="compass" text="登录后可查看我发布的寻货" />}
-        {/* 子 tab（双态 chips，search 同款 pill）：有数据才出 tab 行 */}
-        {isLoggedIn && items.length > 0 && (
-          <View style={{ display: 'flex', flexDirection: 'row', marginLeft: 12, marginRight: 12, marginTop: 12 }}>
-            {([
-              { key: 'open' as const, label: `进行中 ${openCount}` },
-              { key: 'closed' as const, label: `已结束 ${items.length - openCount}` },
-            ]).map((tb) => (
-              <View
-                key={tb.key}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  paddingLeft: 14, paddingRight: 14, paddingTop: 5, paddingBottom: 5, borderRadius: 15, marginRight: 8,
-                  backgroundColor: gTab === tb.key ? t.primary : t.bgInput,
-                }}
-                onClick={() => setGTab(tb.key)}
-              >
-                <Text style={{ ...fs(13), color: gTab === tb.key ? '#FFFFFF' : t.textSecondary }}>{tb.label}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+        {/* v2.12.0 状态 chips（有数据才出） */}
+        {isLoggedIn && items.length > 0 && <ListChips items={CHIPS} active={chip} onChange={setChip} />}
         {isLoggedIn && items.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
@@ -100,29 +137,31 @@ export default function MySourcingPage() {
         {isLoggedIn && items.length > 0 && shown.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
             <Icon name='compass' size={40} color={t.textTertiary} />
-            <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>
-              {gTab === 'open' ? '没有进行中的寻货' : '还没有已结束的寻货'}
-            </Text>
+            <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>该状态下暂无寻货</Text>
           </View>
         )}
         {shown.map((item, i) => {
-          const open = item.status === DEMAND_STATUS.published
-          return (
+          const open = !isClosed(item)
+          const checked = sel.selected.includes(item.id)
+          const card = (
             <View
-              key={item.id}
-              style={{ marginLeft: 12, marginRight: 12, marginTop: i === 0 ? 12 : 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
-              onClick={() => Taro.navigateTo({ url: `/pages/discover/detail?id=${item.id}` })}
+              style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
+              onLongPress={() => { if (!sel.selectMode && isClosed(item)) setSheetFor(item) }}
+              onClick={() => {
+                if (sel.selectMode) { if (isClosed(item)) sel.toggle(item.id); return }
+                Taro.navigateTo({ url: `/pages/discover/detail?id=${item.id}` })
+              }}
             >
               <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                {/* 多选模式勾选框（终态单可勾，进行中灰态不可选） */}
+                {sel.selectMode && (
+                  <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: checked ? t.primary : (isClosed(item) ? t.textTertiary : t.border), backgroundColor: checked ? t.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                    {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
+                  </View>
+                )}
                 <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>
                   寻 {item.partNumber}
                 </Text>
-                {/* 改动说明（v2.12.0 商户名义发布）：商户名义发的单带"商户"徽章区分个人单 */}
-                {item.publisherType === 'merchant' && (
-                  <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
-                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>商户</Text>
-                  </View>
-                )}
                 {item.isPinned && (
                   <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.warning, marginRight: 6 }}>
                     <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '700' }}>置顶中</Text>
@@ -136,8 +175,8 @@ export default function MySourcingPage() {
                 <Text style={{ ...fs(13), color: t.textTertiary, flex: 1 }}>
                   {[item.brand, item.quantity].filter(Boolean).join(' · ') || '—'} · {item.responseCount} 条应答
                 </Text>
-                {/* v2.10.0 寻货置顶：进行中的需求才出置顶按钮（点按不冒泡进详情） */}
-                {open && (
+                {/* v2.10.0 寻货置顶：进行中的需求才出置顶按钮（点按不冒泡进详情；多选模式隐藏） */}
+                {open && !sel.selectMode && (
                   <View
                     onClick={(e) => { e?.stopPropagation?.(); void openPinPicker(item) }}
                     style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderWidth: 1, borderColor: t.primary }}
@@ -149,11 +188,32 @@ export default function MySourcingPage() {
               </View>
             </View>
           )
+          return sel.selectMode ? (
+            <View key={item.id} style={{ marginLeft: 12, marginRight: 12, marginTop: i === 0 ? 12 : 8 }}>
+              {card}
+            </View>
+          ) : (
+            <SwipeCell
+              key={item.id}
+              actions={swipeActions(item)}
+              opened={openedId === item.id}
+              onOpenChange={(o) => setOpenedId(o ? item.id : null)}
+              radius={12}
+              containerStyle={{ marginLeft: 12, marginRight: 12, marginTop: i === 0 ? 12 : 8, marginBottom: 0 }}
+            >
+              {card}
+            </SwipeCell>
+          )
         })}
+        {/* v2.12.0 多选批量条（列表尾，RN 无 fixed） */}
+        <BatchBar visible={sel.selectMode} count={sel.count} actionLabel="删除" onAction={() => void doDelete(sel.selected)} onExit={sel.exit} />
         <View style={{ height: 30 }} />
       </View>
 
-      {/* v2.10.0 寻货置顶：选卡弹层（遮罩自绘，RN 兼容无 fixed——用全屏绝对定位替代方案：ScrollView 内浮层高度 100%） */}
+      {/* v2.12.0 长按上下文菜单 */}
+      <ListActionSheet visible={!!sheetFor} title={sheetFor ? `寻 ${sheetFor.partNumber}` : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
+
+      {/* v2.10.0 寻货置顶：选卡弹层 */}
       {pinFor && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end', display: 'flex' }}>
           <View style={{ backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16 }}>
