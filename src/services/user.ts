@@ -24,14 +24,16 @@ export interface OpResult {
 export interface FavoriteItem {
   id: string
   createdAt: string
-  bearing: { id: string; partNumber: string; brandName?: string; bearingType?: string }
+  // 改动说明（v2.12.0）：补 3D/2D 图 URL——收藏行显示轴承真图（3D 优先、2D 兜底、皆无出默认图标）
+  bearing: { id: string; partNumber: string; brandName?: string; bearingType?: string; image3DUrl?: string; image2DUrl?: string }
 }
 
 /** 关注项（嵌套商家摘要） */
 export interface FollowedItem {
   id: string
   createdAt: string
-  merchant: { id: string; name: string; companyName?: string; isVerified: boolean }
+  // 改动说明（v2.12.0）：补 logo——关注行显示商家真实 logo（BFF MerchantBrief 透传 LogoUrl）
+  merchant: { id: string; name: string; companyName?: string; isVerified: boolean; logo?: string }
 }
 
 /** 轴承浏览历史条目 */

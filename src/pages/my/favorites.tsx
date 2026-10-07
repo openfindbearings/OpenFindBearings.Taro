@@ -17,6 +17,7 @@ import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/
 import BatchBar from '../../components/ListKit/BatchBar'
 import { useListSelection } from '../../components/ListKit/useListSelection'
 import { useAuthStore } from '../../stores/auth'
+import MediaImage from '../../components/MediaImage'
 import { getFavorites, toggleFavorite, batchRemoveFavorites, type FavoriteItem } from '../../services/user'
 
 definePageConfig({ disableScroll: true })
@@ -118,6 +119,10 @@ export default function FavoritesPage() {
                 {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
               </View>
             )}
+            {/* 行图标（v2.12.0）：轴承真图 3D 优先→2D 兜底→皆无/加载失败出 box 默认图标，与关注行 store 同款版式 */}
+            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 12, overflow: 'hidden' }}>
+              <MediaImage url={item.bearing.image3DUrl} fallbacks={[item.bearing.image2DUrl]} fallbackIcon="box" fallbackColor={t.primary} fallbackSize={20} style={{ width: 40, height: 40, borderRadius: 20 }} />
+            </View>
             <View style={{ flex: 1 }}>
               <Text style={{ ...fs(16), color: t.textPrimary }}>{item.bearing.partNumber}</Text>
               <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>

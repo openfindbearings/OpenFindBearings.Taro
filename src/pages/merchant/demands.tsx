@@ -59,11 +59,16 @@ export default function MerchantDemandsPage() {
       confirmColor: t.danger,
     })
     if (!ok) return
-    const r = await batchDeleteDemands(ids)
-    if (r.deleted > 0) {
-      Taro.showToast({ title: r.skipped > 0 ? `已删 ${r.deleted} 条，${r.skipped} 条不可删` : '已删除', icon: 'none' })
-    } else {
-      Taro.showToast({ title: '没有可删除的记录（进行中或非本人发布）', icon: 'none' })
+    // 改动说明（v2.12.0）：包 try/catch——失败转 toast，不冒泡成 RN LogBox 未处理拒绝弹层
+    try {
+      const r = await batchDeleteDemands(ids)
+      if (r.deleted > 0) {
+        Taro.showToast({ title: r.skipped > 0 ? `已删 ${r.deleted} 条，${r.skipped} 条不可删` : '已删除', icon: 'none' })
+      } else {
+        Taro.showToast({ title: '没有可删除的记录（进行中或非本人发布）', icon: 'none' })
+      }
+    } catch {
+      Taro.showToast({ title: '删除失败，请稍后重试', icon: 'none' })
     }
     sel.reset()
     reload()
