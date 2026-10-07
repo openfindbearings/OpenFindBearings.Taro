@@ -182,7 +182,6 @@ export const API = {
   MERCHANT_BEARING_OFF_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/offshelf`,
   // v1.7.21 三态销售状态：置为补货中（eta 走 query）
   MERCHANT_BEARING_RESTOCK: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/restock`,
-  MERCHANT_INVENTORY_IMPORT: `${API_PREFIX}/merchant/inventory/import`,
   /** 营业执照上传（店铺认证） */
   // v1.7.0 材料泛化：执照单轨升级为证照材料多类型（GET 列表 / POST 上传带 type）
   MERCHANT_DOCUMENTS: `${API_PREFIX}/merchant/documents`,

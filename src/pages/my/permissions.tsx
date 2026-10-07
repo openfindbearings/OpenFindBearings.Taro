@@ -16,7 +16,7 @@ definePageConfig({ disableScroll: true })
 /** 权限条目：名称 + 使用场景说明（与实际用到的能力一致，不虚标） */
 const PERMISSIONS = [
   { icon: 'camera', name: '相机', desc: '用于拍摄并上传轴承照片、营业执照等证照材料' },
-  { icon: 'image', name: '照片与媒体', desc: '用于从相册选择证照材料、商品图片与 Excel 导入文件' },
+  { icon: 'image', name: '照片与媒体', desc: '用于从相册选择证照材料与商品图片' },
 ]
 
 export default function PermissionsPage() {

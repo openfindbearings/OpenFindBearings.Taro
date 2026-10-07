@@ -42,8 +42,6 @@ export const PRO_APP_DISPLAY_NAME = 'OpenFindBearings'
 /** 开源版运营主体名（协议/隐私说明用） */
 export const PRO_OPERATOR_NAME = 'OpenFindBearings 运营团队'
 
-/** 商家商品"Excel 批量导入"（依赖外部 ETL 数据管线）：开源版禁用，管理页不渲染导入按钮 */
-export const PRO_MERCHANT_IMPORT_ENABLED = false
 
 /** 隐私政策"第三方共享清单"中后端服务的呈现名（扩展点可覆盖为品牌口径） */
 export const PRO_SERVICE_NAMES = {
