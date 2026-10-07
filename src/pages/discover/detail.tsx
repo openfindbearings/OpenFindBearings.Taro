@@ -172,6 +172,20 @@ export default function SourcingDetailPage() {
               <Text style={{ ...fs(12), color: isOpen ? t.primary : t.textTertiary }}>{demandStatusText(detail.status)}</Text>
             </View>
           </View>
+          {/* 改动说明（v2.12.0 商户名义发布）：商户单显示"商户发布"行，商户名可点进商家主页看全貌 */}
+          {detail.publisherType === 'merchant' && detail.publisherMerchantId ? (
+            <View
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 8 }}
+              onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${detail.publisherMerchantId}` })}
+            >
+              <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 8 }}>
+                <Text style={{ ...fs(11), color: t.primary }}>商户发布</Text>
+              </View>
+              <Text style={{ ...fs(13), color: t.primary, fontWeight: '500', flex: 1 }} numberOfLines={1}>
+                {detail.publisherMerchantName} ›
+              </Text>
+            </View>
+          ) : null}
           {rows.filter(([, v]) => v).map(([k, v]) => (
             <View key={k} style={{ display: 'flex', flexDirection: 'row', marginTop: 10 }}>
               <Text style={{ ...fs(13), color: t.textTertiary, width: 72 }}>{k}</Text>

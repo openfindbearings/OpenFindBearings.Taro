@@ -321,6 +321,12 @@ export default function DiscoverPage() {
                 </View>
               )}
               {/* 改动说明（v1.7.29）：本页恒为进行中单，原 mine 状态章随双态收敛删除；"我发布"角标仅登录发布者可见 */}
+              {/* 改动说明（v2.12.0 商户名义发布）：商户单显"商户"徽章（全名与跳转在详情页） */}
+              {item.publisherType === 'merchant' && (
+                <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 6 }}>
+                  <Text style={{ ...fs(11), color: t.primary }}>商户</Text>
+                </View>
+              )}
               {item.isMine && (
                 <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 6 }}>
                   <Text style={{ ...fs(11), color: t.primary }}>我发布</Text>

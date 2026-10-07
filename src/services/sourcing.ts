@@ -22,6 +22,10 @@ export interface SourcingFeedItem {
   isPinned?: boolean
   /** 置顶到期时刻（ISO UTC） */
   pinnedUntil?: string | null
+  /** v2.12.0 商户名义发布：发布方身份（徽章展示与商户主页跳转） */
+  publisherMerchantId?: string | null
+  publisherMerchantName?: string | null
+  publisherType?: 'merchant' | 'individual' | null
 }
 
 /** 应答型号行（v1.5.0 多行标书：每条应答含多行型号，可引用在售商品） */
@@ -82,8 +86,12 @@ export interface SourcingDetail {
   myResponse?: SourcingMyResponse | null
   /** 选定后解锁：被选商户联系电话（发布人视角） */
   selectedMerchantContact?: string | null
-  /** 选定后解锁：发布人手机号（被选商户视角） */
+  /** 选定后解锁：发布方联系电话（被选商户视角；v2.12.0 商户单=商户公开电话，个人单=注册手机） */
   publisherContact?: string | null
+  /** v2.12.0 商户名义发布：发布方身份 */
+  publisherMerchantId?: string | null
+  publisherMerchantName?: string | null
+  publisherType?: 'merchant' | 'individual' | null
 }
 
 /** 我发布的寻货项 */
@@ -100,6 +108,10 @@ export interface SourcingMyDemand {
   isPinned?: boolean
   /** 置顶到期时刻（ISO UTC） */
   pinnedUntil?: string | null
+  /** v2.12.0 商户名义发布：发布身份徽章 */
+  publisherMerchantId?: string | null
+  publisherMerchantName?: string | null
+  publisherType?: 'merchant' | 'individual' | null
 }
 
 /** 商户应答记录项 */
@@ -274,6 +286,8 @@ export interface PublishDemandBody {
   region?: string | null
   description?: string | null
   usePoints: boolean
+  /** v2.12.0 商户名义发布：以该商户名义发布（须为在职成员）；缺省/空=个人名义 */
+  merchantId?: string | null
 }
 
 /** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案） */
