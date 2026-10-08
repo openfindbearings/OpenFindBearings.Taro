@@ -3,7 +3,7 @@
 // 图片解析出地址却加载 404 时渲染为空白（首页搜索结果轴承图即此症状）。收敛到本组件，
 // 空地址与加载失败统一降级为占位图标，跨端（H5/RN/小程序）行为一致。
 import { Component, ReactNode } from 'react'
-import { Image } from '@tarojs/components'
+import { Image, View } from '@tarojs/components'
 import { usableImage } from '../../services/config'
 import Icon from '../Icon'
 
@@ -29,9 +29,12 @@ interface MediaImageProps {
 }
 
 interface MediaImageState {
-  // 当前尝试到的候选下标；超过候选链长度即"全部失败"，渲染占位
+  // 当前尝试到的候选下标；超过候选链长度即"全部失败"，显示占位层
   idx: number
 }
+
+// 无候选/隐藏图片层时使用的 1x1 透明 GIF（data URI 三端皆可解析、必不触发 onError）
+const EMPTY_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 
 export default class MediaImage extends Component<MediaImageProps, MediaImageState> {
   state: MediaImageState = { idx: 0 }
@@ -68,19 +71,28 @@ export default class MediaImage extends Component<MediaImageProps, MediaImageSta
       }
     }
     const src = candidates[this.state.idx]
-    if (!src) {
-      if (fallback !== undefined) return fallback
-      return <Icon name={fallbackIcon} size={fallbackSize} color={fallbackColor} />
-    }
+    const showImg = !!src
+    // 改动说明（RN 崩溃根治 v3）：原"有图渲染 Image、无图/全失败切换占位子树"的条件渲染，
+    // 在列表成批图片异步失败时产生 Image↔占位 子树挂载/卸载的结构 ops（manageChildren），
+    // 与页面大列表首挂/切页卸载的 UI 队列打架，RN legacy 确定性崩溃
+    // （IllegalViewOperationException: ViewManager for tag could not be found，收藏/寻货页复现）。
+    // 改为图片层与占位层双常驻 + display 切换：显隐只产生样式 props，零结构 ops。
+    // 尺寸语义保持：className/style 移到外层容器（内层两分支均铺满），overflow hidden 保圆角裁切。
     return (
-      <Image
-        className={className}
-        style={style}
-        src={src}
-        mode={mode as any}
-        // 加载失败自动前进到下一个候选，候选耗尽则本组件下一帧渲染占位
-        onError={() => this.setState({ idx: this.state.idx + 1 })}
-      />
+      <View className={className} style={{ overflow: 'hidden', ...(style || {}) }}>
+        <View style={{ width: '100%', height: '100%', display: showImg ? 'flex' : 'none' }}>
+          <Image
+            src={src || EMPTY_SRC}
+            style={{ width: '100%', height: '100%' }}
+            mode={mode as any}
+            // 加载失败自动前进到下一个候选，候选耗尽切换到占位层
+            onError={() => this.setState({ idx: this.state.idx + 1 })}
+          />
+        </View>
+        <View style={{ width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', display: showImg ? 'none' : 'flex' }}>
+          {fallback !== undefined ? fallback : <Icon name={fallbackIcon} size={fallbackSize} color={fallbackColor} />}
+        </View>
+      </View>
     )
   }
 }
