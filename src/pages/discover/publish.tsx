@@ -133,7 +133,17 @@ export default function PublishSourcingPage() {
   const insufficient = overFree && !!pq && !!quota && quota.balance < pq.pointsPrice
 
   return (
-    <PageLayout nav={<NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />}>
+    <PageLayout nav={<NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />} overlay={
+      /* v2.12.0 发布身份选择弹层（丙方案自绘）：选定商户/个人即提交，取消=中止留在表单。
+         已移至 PageLayout overlay 根层插槽（RN fixed 非法致崩根治） */
+      <PublishIdentitySheet
+        visible={sheetOpen}
+        items={merchants.map((m) => ({ id: m.merchantId, name: m.merchantName || '未命名商家', logoUrl: m.logoUrl }))}
+        currentId={currentMerchantId}
+        onPick={(mid) => { setSheetOpen(false); void doSubmit(false, mid) }}
+        onClose={() => setSheetOpen(false)}
+      />
+    }>
       <View>
         {/* 额度条（v1.7.21 额度可见化）：常驻展示今日剩余免费额度与超限单价，
             不再"撞墙才可见"；quota 拉取失败（未登录等）整条隐藏 */}
@@ -198,14 +208,6 @@ export default function PublishSourcingPage() {
           </Text>
         </View>
       </View>
-      {/* v2.12.0 发布身份选择弹层（丙方案自绘）：选定商户/个人即提交，取消=中止留在表单 */}
-      <PublishIdentitySheet
-        visible={sheetOpen}
-        items={merchants.map((m) => ({ id: m.merchantId, name: m.merchantName || '未命名商户', logoUrl: m.logoUrl }))}
-        currentId={currentMerchantId}
-        onPick={(mid) => { setSheetOpen(false); void doSubmit(false, mid) }}
-        onClose={() => setSheetOpen(false)}
-      />
     </PageLayout>
   )
 }

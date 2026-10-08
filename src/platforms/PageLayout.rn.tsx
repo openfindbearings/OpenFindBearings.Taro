@@ -31,9 +31,15 @@ interface PageLayoutProps {
   onScrollY?: (scrollTop: number) => void
   /** 触底回调（v1.7.19 发现页分页加载）：内部 ScrollView onScrollToLower 透传 */
   onEndReached?: () => void
+  /**
+   * 全屏浮层插槽（v1.7.32 RN 崩溃根治）：弹层/遮罩类节点渲染在页面根 View 直下
+   * （ScrollView 之外）。RN 不支持 position:fixed，根层 absolute 四向 0 即全屏覆盖；
+   * 弹层若留在 ScrollView 内，absolute 相对滚动内容会随滚动漂移错位。
+   */
+  overlay?: ReactNode
 }
 
-export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
   // RN 根节点显式高度 = windowHeight（dp，inline 不缩放）
   const h = getWindowHeight()
   // 页面底色随主题模式运行时切换，inline 覆盖 scss 静态 $bg-page
@@ -60,6 +66,7 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
         {/* 改动说明（v1.7.11 修复）：immersive 下 ScrollView/nav 均为 absolute 不占布局，
             tabbar 若留在流内会被顶到列首（真机现象：TabBar 跑到屏幕顶上）——同样 absolute 钉底 */}
         {tabbar ? <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>{tabbar}</View> : null}
+        {overlay}
       </View>
     )
   }
@@ -74,6 +81,8 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
         {children}
       </ScrollView>
       {tabbar}
+      {/* overlay 浮层插槽：根 View 直下末位子节点，absolute 四向 0 即全屏（RN 无 fixed） */}
+      {overlay}
     </View>
   )
 }

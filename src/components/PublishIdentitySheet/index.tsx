@@ -42,9 +42,11 @@ export default function PublishIdentitySheet({ visible, items, currentId, onPick
   if (!visible) return null
   const rows = items.map((m) => ({ key: m.id, name: m.name, logoUrl: m.logoUrl, isCurrent: m.id === currentId }))
   rows.push({ key: PERSONAL, name: '以个人名义发布', logoUrl: null, isCurrent: false })
+  // 改动说明（RN 崩溃根治 v4）：fixed 在 RN 非法致 UI 队列崩溃，RN 端改 absolute
+  // （页面已放 PageLayout overlay 根层插槽），H5/小程序保留 fixed
   return (
     <View
-      style={{ position: 'fixed', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 9999 }}
+      style={{ position: process.env.TARO_ENV === 'rn' ? 'absolute' : 'fixed', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 9999 }}
       onClick={onClose}
     >
       <View

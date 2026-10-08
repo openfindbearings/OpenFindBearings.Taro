@@ -76,7 +76,9 @@ export default function PrivacyDialog() {
   return (
     <View
       style={{
-        position: 'fixed',
+        // 改动说明（RN 崩溃根治 v4）：fixed 在 RN 非法致 UI 队列崩溃，RN 端改 absolute
+        // （本组件挂 app 根容器，根容器满屏即等效遮罩），H5/小程序保留 fixed
+        position: process.env.TARO_ENV === 'rn' ? 'absolute' : 'fixed',
         top: 0,
         left: 0,
         right: 0,

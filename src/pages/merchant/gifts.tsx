@@ -164,11 +164,12 @@ export default function MerchantGiftsPage() {
                 <Text style={{ ...fs(10), color: '#8B5CF6', backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
               ) : null}
             </View>
-            <Text style={{ ...fs(28), color: t.primary, fontWeight: '700', marginTop: 2 }}>
-              {treasury?.balance ?? 0}
-              {/* 改动说明（v2.10.0 商家金）：金库货币定名"商家金"，与个人轴承币彻底区分 */}
-              <Text style={{ ...fs(13), color: t.textTertiary }}> 商家金</Text>
-            </Text>
+            {/* 改动说明（RN 布局修复）：原"大数字 Text 内嵌小 Text"写法在 Taro RN 渲染异常
+                （余额数字丢失、单位样式错乱），展平为 row+baseline 双 Text，三端一致 */}
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', marginTop: 4 }}>
+              <Text style={{ ...fs(28), color: t.primary, fontWeight: '700' }}>{String(treasury?.balance ?? 0)}</Text>
+              <Text style={{ ...fs(13), color: t.textTertiary, marginLeft: 6 }}>商家金</Text>
+            </View>
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>
               累计入账 {treasury?.totalEarned ?? 0} · 累计支出 {treasury?.totalSpent ?? 0}
             </Text>

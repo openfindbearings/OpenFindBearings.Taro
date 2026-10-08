@@ -132,7 +132,7 @@ export default function MySourcingPage() {
   const shown = items.filter((it) => chip === 'all' || String(it.status) === chip)
 
   return (
-    <PageLayout nav={<NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />}>
+    <PageLayout nav={<NavBar title='我的寻货' onBack={() => Taro.navigateBack()} showBack />} overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? `寻 ${sheetFor.partNumber}` : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}>
       <View>
         {!isLoggedIn && <LoginGuide icon="compass" text="登录后可查看我发布的寻货" />}
         {/* v2.12.0 状态 chips（有数据才出） */}
@@ -219,8 +219,7 @@ export default function MySourcingPage() {
         <View style={{ height: 30 }} />
       </View>
 
-      {/* v2.12.0 长按上下文菜单 */}
-      <ListActionSheet visible={!!sheetFor} title={sheetFor ? `寻 ${sheetFor.partNumber}` : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
+      {/* v2.12.0 长按上下文菜单：已移至 PageLayout overlay 根层插槽（RN fixed 非法致崩根治） */}
 
       {/* v2.10.0 寻货置顶：选卡弹层 */}
       {pinFor && (

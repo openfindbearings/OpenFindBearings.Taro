@@ -97,7 +97,7 @@ export default function FavoritesPage() {
   const hasMore = items.length < total
 
   return (
-    <PageLayout nav={<NavBar title="我的收藏" showBack />}>
+    <PageLayout nav={<NavBar title="我的收藏" showBack />} overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.bearing.partNumber : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}>
       {!isLoggedIn && <LoginGuide icon='heart' text='登录后可查看收藏' />}
       {isLoggedIn && items.length === 0 && !loading && (
         <View style={{ display: 'flex', alignItems: 'center', paddingTop: 80 }}>
@@ -150,7 +150,6 @@ export default function FavoritesPage() {
           <Text style={{ ...fs(14), color: t.primaryText }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
       )}
-      <ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.bearing.partNumber : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
     </PageLayout>
   )
 }

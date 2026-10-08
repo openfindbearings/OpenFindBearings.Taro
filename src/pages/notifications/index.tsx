@@ -230,6 +230,7 @@ export default function NotificationsPage() {
     } />}
     // 改动说明（v1.7.19 weapp 适配）：页内 ScrollView 移除（PageLayout 统一滚动），触底加载走 onEndReached
     onEndReached={() => { if (hasMore && !loading) void load(page + 1, true) }}
+    overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.title : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}
   >
       <View>
         <View style={{ padding: 16 }}>
@@ -316,8 +317,7 @@ export default function NotificationsPage() {
         </View>
       </View>
 
-      {/* v2.12.0 长按上下文菜单 */}
-      <ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.title : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
+      {/* v2.12.0 长按上下文菜单：已移至 PageLayout overlay 根层插槽（RN fixed 非法致崩根治） */}
 
       {/* 消息详情面板（v1.7.9，自绘覆盖层 absolute 于页面根，与成员详情面板同款）
           改动说明：点行不再直接跳转商户页——先看详情，〔去处理〕才跳转（主流消息中心交互） */}
