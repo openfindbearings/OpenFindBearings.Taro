@@ -95,7 +95,7 @@ export default function FollowedPage() {
   const hasMore = items.length < total
 
   return (
-    <PageLayout nav={<NavBar title="我的关注" showBack />}>
+    <PageLayout nav={<NavBar title="我的关注" showBack />} overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.merchant.name : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}>
       {!isLoggedIn && (
         <View style={{ display: 'flex', alignItems: 'center', paddingTop: 80 }}>
           <Icon name="users" size={48} color={t.textTertiary} />
@@ -159,7 +159,6 @@ export default function FollowedPage() {
           <Text style={{ ...fs(14), color: t.primaryText }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
       )}
-      <ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.merchant.name : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
     </PageLayout>
   )
 }

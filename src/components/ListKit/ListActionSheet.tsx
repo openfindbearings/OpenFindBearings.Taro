@@ -37,11 +37,15 @@ const MAX_ACTIONS = 3
 export default function ListActionSheet({ visible, title, actions, onClose }: Props) {
   const t = useTheme()
   const fs = useFs()
+  // 改动说明（RN 崩溃根治 v4·真凶）：position:'fixed' 在 RN 是非法值，样式 setter 抛
+  // JSApplicationIllegalArgumentException 打断 UI 队列，次生崩溃
+  // （ViewManager for tag could not be found）——RN 端改 absolute，配合页面把本组件
+  // 放进 PageLayout overlay 插槽（根 View 直下）即等同全屏遮罩；H5/小程序保留 fixed
   return (
-    <View
-      style={{ position: 'fixed', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: visible ? 'flex' : 'none', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 9998 }}
-      onClick={onClose}
-    >
+      <View
+        style={{ position: process.env.TARO_ENV === 'rn' ? 'absolute' : 'fixed', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: visible ? 'flex' : 'none', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 9998 }}
+        onClick={onClose}
+      >
       <View
         style={{ backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 24 }}
         onClick={(e) => e.stopPropagation()}

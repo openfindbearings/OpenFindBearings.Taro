@@ -33,9 +33,14 @@ interface PageLayoutProps {
    * 页面不再自套 ScrollView（weapp 嵌套 ScrollView 高度塌陷）
    */
   onEndReached?: () => void
+  /**
+   * 全屏浮层插槽（v1.7.32 RN 崩溃根治）：弹层类节点渲染在页面根末尾，与 RN/H5 版接口对齐
+   * （weapp 支持 fixed，弹层放根层仅为三端用法统一）。
+   */
+  overlay?: ReactNode
 }
 
-export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
   // 页面底色随主题模式运行时切换
   const t = useTheme()
 
@@ -62,6 +67,7 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
           </View>
         ) : null}
         {tabbar ? <View className='pl-wx-overlay-bottom'>{tabbar}</View> : null}
+        {overlay}
       </View>
     )
   }
@@ -77,6 +83,7 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
         <View style={{ paddingBottom: tabbar ? 64 : 0 }}>{children}</View>
       </ScrollView>
       {tabbar ? <View className='pl-wx-tabbar'>{tabbar}</View> : null}
+      {overlay}
     </View>
   )
 }

@@ -36,9 +36,15 @@ interface PageLayoutProps {
   onScrollY?: (scrollTop: number) => void
   /** 触底回调（v1.7.19 发现页分页加载）：H5 文档滚动近底时触发 */
   onEndReached?: () => void
+  /**
+   * 全屏浮层插槽（v1.7.32 RN 崩溃根治）：弹层类节点渲染在页面根末尾，
+   * 与 RN 版接口对齐——RN 端弹层必须脱离 ScrollView 才能相对视口定位；
+   * H5 端 fixed 本就以视口为包含块，放根层仅为三端用法统一。
+   */
+  overlay?: ReactNode
 }
 
-export default function PageLayout({ nav, tabbar, children, immersive, onScrollY, onEndReached, subHeader }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, children, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
   // 页面底色随主题模式运行时切换
   const t = useTheme()
   // subHeader 吸顶偏移 = 状态栏高 + 导航基准高 44（$navbar-height，weapp 端状态栏非 0）
@@ -64,6 +70,7 @@ export default function PageLayout({ nav, tabbar, children, immersive, onScrollY
           {children}
         </View>
         {tabbar ? <View className='pl-h5-tabbar'>{tabbar}</View> : null}
+        {overlay}
       </View>
     )
   }
@@ -80,6 +87,7 @@ export default function PageLayout({ nav, tabbar, children, immersive, onScrollY
         {children}
       </View>
       {tabbar ? <View className='pl-h5-tabbar'>{tabbar}</View> : null}
+      {overlay}
     </View>
   )
 }

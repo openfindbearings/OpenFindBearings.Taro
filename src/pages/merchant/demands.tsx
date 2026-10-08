@@ -93,7 +93,7 @@ export default function MerchantDemandsPage() {
   const shown = items.filter((it) => chip === 'all' || String(it.status) === chip)
 
   return (
-    <PageLayout nav={<NavBar title='寻货发布' onBack={() => Taro.navigateBack()} showBack />}>
+    <PageLayout nav={<NavBar title='寻货发布' onBack={() => Taro.navigateBack()} showBack />} overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? `寻 ${sheetFor.partNumber}` : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}>
       <View>
         {!currentMerchant && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
@@ -174,8 +174,6 @@ export default function MerchantDemandsPage() {
         <BatchBar visible={sel.selectMode} count={sel.count} actionLabel="删除" onAction={() => void doDelete(sel.selected)} onExit={sel.exit} />
         <View style={{ height: 30 }} />
       </View>
-
-      <ListActionSheet visible={!!sheetFor} title={sheetFor ? `寻 ${sheetFor.partNumber}` : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
     </PageLayout>
   )
 }

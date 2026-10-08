@@ -197,7 +197,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <PageLayout nav={<NavBar title="浏览历史" showBack rightIcons={rightIcons} />}>
+    <PageLayout nav={<NavBar title="浏览历史" showBack rightIcons={rightIcons} />} overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.label : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}>
       {/* 主 tab：轴承|商家（不同实体保留 tab，符合列表规范分层原则） */}
       <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border }}>
         {([
@@ -252,7 +252,6 @@ export default function HistoryPage() {
           <Text style={{ ...fs(14), color: t.primaryText }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
       )}
-      <ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.label : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />
     </PageLayout>
   )
 }
