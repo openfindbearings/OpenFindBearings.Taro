@@ -16,6 +16,7 @@ import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
 import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
 import BatchBar from '../../components/ListKit/BatchBar'
 import { useListSelection } from '../../components/ListKit/useListSelection'
+import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { useAuthStore } from '../../stores/auth'
 import MediaImage from '../../components/MediaImage'
 import { getFavorites, toggleFavorite, batchRemoveFavorites, type FavoriteItem } from '../../services/user'
@@ -37,6 +38,8 @@ export default function FavoritesPage() {
   // 左滑互斥 + 长按菜单目标 + 多选模式
   const [openedId, setOpenedId] = useState<string | null>(null)
   const [sheetFor, setSheetFor] = useState<FavoriteItem | null>(null)
+  // 长按菜单走"松手才弹"安全封装（RN 按住即 setState 会触发 UI 队列竞态崩溃）
+  const menuHandlers = useLongPressMenu<FavoriteItem>(setSheetFor)
   const sel = useListSelection()
 
   /** 加载收藏分页（append=true 追加下一页） */
@@ -108,7 +111,7 @@ export default function FavoritesPage() {
         const card = (
           <View
             style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
-            onLongPress={() => { if (!sel.selectMode) setSheetFor(item) }}
+            {...menuHandlers(item, !sel.selectMode)}
             onClick={() => {
               if (sel.selectMode) { sel.toggle(item.id); return }
               goDetail(item.bearing.id)

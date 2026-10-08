@@ -41,7 +41,9 @@ export default function ListActionSheet({ visible, title, actions, onClose }: Pr
         style={{ backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 24 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {title ? <Text style={{ ...fs(13), lineHeight: `${fs(13).fontSize}px`, color: t.textTertiary, textAlign: 'center', marginBottom: 6 }}>{title}</Text> : null}
+        {/* 改动说明：删除手动 lineHeight——fs(13) 已按平台输出正确行高（RN 数值/H5 px 串），
+            原 `${fs(13).fontSize}px` 在 RN 端产出字符串样式、H5 端产出 "16pxpx" 无效值 */}
+        {title ? <Text style={{ ...fs(13), color: t.textTertiary, textAlign: 'center', marginBottom: 6 }}>{title}</Text> : null}
         {actions.map((a) => (
           <View
             key={a.key}

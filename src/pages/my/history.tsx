@@ -15,6 +15,7 @@ import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
 import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
 import BatchBar from '../../components/ListKit/BatchBar'
 import { useListSelection } from '../../components/ListKit/useListSelection'
+import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { useAuthStore } from '../../stores/auth'
 import {
   getBearingHistory, getMerchantHistory,
@@ -43,6 +44,9 @@ export default function HistoryPage() {
   const [openedId, setOpenedId] = useState<string | null>(null)
   // 长按菜单目标（记录行 id 字符串，跨两类实体统一）
   const [sheetFor, setSheetFor] = useState<{ id: string; label: string; targetId: string } | null>(null)
+  // 长按菜单走"松手才弹"安全封装（RN 按住即 setState 会触发 UI 队列竞态崩溃）
+  const menuHandlers = useLongPressMenu<{ id: string; title: string; targetId: string }>(
+    (it) => setSheetFor({ id: it.id, label: it.title, targetId: it.targetId }))
   const sel = useListSelection()
 
   /** 按当前 Tab 加载分页（append=true 追加下一页） */
@@ -165,7 +169,7 @@ export default function HistoryPage() {
     const card = (
       <View
         style={{ backgroundColor: t.bgCard, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
-        onLongPress={() => { if (!sel.selectMode) setSheetFor({ id: opts.id, label: opts.title, targetId: opts.targetId }) }}
+        {...menuHandlers({ id: opts.id, title: opts.title, targetId: opts.targetId }, !sel.selectMode)}
         onClick={() => {
           if (sel.selectMode) { sel.toggle(opts.id); return }
           opts.onPress()
