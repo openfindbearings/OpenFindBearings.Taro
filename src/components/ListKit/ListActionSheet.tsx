@@ -27,14 +27,19 @@ interface Props {
   onClose: () => void
 }
 
+/** 弹层固定动作槽位数（全站最长菜单=通知"标已读/删除/多选"3 项）。
+ *  改动说明（RN 崩溃根治 v2）：行数恒定 + 常驻挂载 + display 切换 = 任意显隐/内容变化
+ *  都只产生 updateView 样式与文本 props，零 manageChildren 结构 ops，
+ *  与列表重渲染的 UI 队列竞态从源头消失；页面无需保证 actions 数组长度恒定。 */
+const MAX_ACTIONS = 3
+
 /** 长按上下文菜单弹层 */
 export default function ListActionSheet({ visible, title, actions, onClose }: Props) {
   const t = useTheme()
   const fs = useFs()
-  if (!visible) return null
   return (
     <View
-      style={{ position: 'fixed', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 9998 }}
+      style={{ position: 'fixed', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: visible ? 'flex' : 'none', flexDirection: 'column', justifyContent: 'flex-end', zIndex: 9998 }}
       onClick={onClose}
     >
       <View
@@ -42,18 +47,23 @@ export default function ListActionSheet({ visible, title, actions, onClose }: Pr
         onClick={(e) => e.stopPropagation()}
       >
         {/* 改动说明：删除手动 lineHeight——fs(13) 已按平台输出正确行高（RN 数值/H5 px 串），
-            原 `${fs(13).fontSize}px` 在 RN 端产出字符串样式、H5 端产出 "16pxpx" 无效值 */}
-        {title ? <Text style={{ ...fs(13), color: t.textTertiary, textAlign: 'center', marginBottom: 6 }}>{title}</Text> : null}
-        {actions.map((a) => (
-          <View
-            key={a.key}
-            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 50, borderRadius: 12, marginBottom: 8, backgroundColor: a.danger ? t.danger : t.bgInput }}
-            onClick={() => { onClose(); a.onPress() }}
-          >
-            {a.icon ? <View style={{ marginRight: 6 }}><Icon name={a.icon} size={18} color={a.danger ? '#FFFFFF' : t.textPrimary} /></View> : null}
-            <Text style={{ ...fs(15), color: a.danger ? '#FFFFFF' : t.textPrimary }}>{a.label}</Text>
-          </View>
-        ))}
+            原 `${fs(13).fontSize}px` 在 RN 端产出字符串样式、H5 端产出 "16pxpx" 无效值。
+            Text 常驻（无标题时空串），避免条件挂载结构 ops */}
+        <Text style={{ ...fs(13), color: t.textTertiary, textAlign: 'center', marginBottom: 6 }}>{title || ''}</Text>
+        {Array.from({ length: MAX_ACTIONS }, (_, i) => {
+          const a = actions[i]
+          return (
+            <View
+              key={`slot-${i}`}
+              style={{ display: a ? 'flex' : 'none', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 50, borderRadius: 12, marginBottom: 8, backgroundColor: a?.danger ? t.danger : t.bgInput }}
+              onClick={() => { if (a) { onClose(); a.onPress() } }}
+            >
+              {/* Icon 常驻（无动作时容器 display 隐藏、name 用兜底值），保证行内零结构变化 */}
+              <View style={{ marginRight: 6, display: a?.icon ? 'flex' : 'none' }}><Icon name={a?.icon || 'trash-2'} size={18} color={a?.danger ? '#FFFFFF' : t.textPrimary} /></View>
+              <Text style={{ ...fs(15), color: a?.danger ? '#FFFFFF' : t.textPrimary }}>{a?.label || ''}</Text>
+            </View>
+          )
+        })}
         <View style={{ display: 'flex', alignItems: 'center', height: 44, justifyContent: 'center' }} onClick={onClose}>
           <Text style={{ ...fs(15), color: t.textTertiary }}>取消</Text>
         </View>
