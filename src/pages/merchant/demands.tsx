@@ -14,6 +14,7 @@ import ListChips from '../../components/ListKit/ListChips'
 import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
 import BatchBar from '../../components/ListKit/BatchBar'
 import { useListSelection } from '../../components/ListKit/useListSelection'
+import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useMerchantStore } from '../../stores/merchant'
 import { getMerchantSourcingDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, type SourcingMerchantDemand } from '../../services/sourcing'
@@ -40,6 +41,8 @@ export default function MerchantDemandsPage() {
   const [chip, setChip] = useState('all')
   const [openedId, setOpenedId] = useState<string | null>(null)
   const [sheetFor, setSheetFor] = useState<SourcingMerchantDemand | null>(null)
+  // 长按菜单走"松手才弹"安全封装（RN 按住即 setState 会触发 UI 队列竞态崩溃）
+  const menuHandlers = useLongPressMenu<SourcingMerchantDemand>(setSheetFor)
   const sel = useListSelection()
 
   const reload = () => { void getMerchantSourcingDemands().then((r) => setItems(r || [])).catch(() => { /* 降级空列表 */ }) }
@@ -118,7 +121,7 @@ export default function MerchantDemandsPage() {
           const card = (
             <View
               style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
-              onLongPress={() => { if (!sel.selectMode && canDelete(item)) setSheetFor(item) }}
+              {...menuHandlers(item, !sel.selectMode && canDelete(item))}
               onClick={() => {
                 if (sel.selectMode) { if (canDelete(item)) sel.toggle(item.id); return }
                 Taro.navigateTo({ url: `/pages/discover/detail?id=${item.id}` })

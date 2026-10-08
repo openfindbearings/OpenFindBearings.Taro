@@ -21,6 +21,7 @@ import ListChips from '../../components/ListKit/ListChips'
 import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
 import BatchBar from '../../components/ListKit/BatchBar'
 import { useListSelection } from '../../components/ListKit/useListSelection'
+import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import {
   getNotifications, markNotificationRead, markAllNotificationsRead,
@@ -67,6 +68,8 @@ export default function NotificationsPage() {
   // v2.12.0 状态 chips + 长按菜单目标 + 多选模式
   const [chip, setChip] = useState('all')
   const [sheetFor, setSheetFor] = useState<SiteNotification | null>(null)
+  // 长按菜单走"松手才弹"安全封装（RN 按住即 setState 会触发 UI 队列竞态崩溃）
+  const menuHandlers = useLongPressMenu<SiteNotification>(setSheetFor)
   const sel = useListSelection()
 
   const hasUnread = items.some((n) => !n.isRead)
@@ -255,7 +258,7 @@ export default function NotificationsPage() {
                 const card = (
                   <View
                     style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', backgroundColor: t.bgCard, borderRadius: 12, padding: 14 }}
-                    onLongPress={() => { if (!sel.selectMode) setSheetFor(n) }}
+                    {...menuHandlers(n, !sel.selectMode)}
                     onClick={() => {
                       if (sel.selectMode) { sel.toggle(n.id); return }
                       void onTapItem(n)

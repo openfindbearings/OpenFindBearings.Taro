@@ -17,6 +17,7 @@ import ListChips from '../../components/ListKit/ListChips'
 import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
 import BatchBar from '../../components/ListKit/BatchBar'
 import { useListSelection } from '../../components/ListKit/useListSelection'
+import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
 import { getMySourcingDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, type SourcingMyDemand } from '../../services/sourcing'
@@ -47,6 +48,8 @@ export default function MySourcingPage() {
   const [openedId, setOpenedId] = useState<string | null>(null)
   // 长按上下文菜单目标
   const [sheetFor, setSheetFor] = useState<SourcingMyDemand | null>(null)
+  // 长按菜单走"松手才弹"安全封装（RN 按住即 setState 会触发 UI 队列竞态崩溃）
+  const menuHandlers = useLongPressMenu<SourcingMyDemand>(setSheetFor)
   // 多选模式
   const sel = useListSelection()
   // v2.10.0 寻货置顶：选卡弹层状态（选中需求 + 需求置顶卡目录）
@@ -152,7 +155,7 @@ export default function MySourcingPage() {
           const card = (
             <View
               style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
-              onLongPress={() => { if (!sel.selectMode && isClosed(item)) setSheetFor(item) }}
+              {...menuHandlers(item, !sel.selectMode && isClosed(item))}
               onClick={() => {
                 if (sel.selectMode) { if (isClosed(item)) sel.toggle(item.id); return }
                 Taro.navigateTo({ url: `/pages/discover/detail?id=${item.id}` })
