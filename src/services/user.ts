@@ -32,8 +32,9 @@ export interface FavoriteItem {
 export interface FollowedItem {
   id: string
   createdAt: string
-  // 改动说明（v2.12.0）：补 logo——关注行显示商家真实 logo（BFF MerchantBrief 透传 LogoUrl）
-  merchant: { id: string; name: string; companyName?: string; isVerified: boolean; logo?: string }
+  // 改动说明（v2.12.0 修复）：字段名对齐 API/BFF 实际输出 logoUrl（原误写 logo 恒 undefined，
+  // 关注行永远回退 store 占位图标）——关注行显示商家真实 logo
+  merchant: { id: string; name: string; companyName?: string; isVerified: boolean; logoUrl?: string }
 }
 
 /** 轴承浏览历史条目 */
