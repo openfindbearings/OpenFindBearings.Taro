@@ -22,7 +22,9 @@ interface Props {
 }
 
 /** 多选批量操作条 */
-export default function BatchBar({ visible, count, actionLabel, danger = true, onAction, onExit }: Props) {
+// 改动说明（RN 报错修复）：函数签名原漏解构 secondaryLabel/onSecondary，
+// 函数体引用未声明标识符在 Hermes 严格模式下抛 ReferenceError（多选模式一显示即崩）——补齐解构
+export default function BatchBar({ visible, count, actionLabel, secondaryLabel, onSecondary, danger = true, onAction, onExit }: Props) {
   const t = useTheme()
   const fs = useFs()
   if (!visible) return null
