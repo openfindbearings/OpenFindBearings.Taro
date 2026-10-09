@@ -1,4 +1,5 @@
 // 收支明细页（v1.7.17 轴承币底座；v1.7.19 标题由"轴承币明细"改"收支明细"，与商家金流水页同名不同币种）：余额概览 + 收支流水分页（触底加载）
+// 改动说明（v2.12.0 等级玩法）：等级卡升级段位彩牌（色带徽标）+ 升档进度条（距升 X 还差 Y 币与升档礼预告）
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值
 import { useState } from 'react'
 import { View, Text } from '@tarojs/components'
@@ -9,6 +10,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { getPointAccount, getPointTransactions, GRANT_TYPE_LABELS, type PointAccount, type PointTransaction } from '../../services/points'
 import { formatTime } from '../../utils/format'
+import { getLevelBand } from '../../utils/level'
 
 /** 每页条数 */
 const PAGE_SIZE = 20
@@ -66,16 +68,37 @@ export default function PointsPage() {
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center' }}>
           <Text style={{ ...fs(34), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
           <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>当前轴承币</Text>
-          {/* v2.7.0 G7：等级徽章（累计获得轴承币落档） */}
-          {account.level != null && account.level > 1 && (
-            <View style={{ marginTop: 8, backgroundColor: t.primary, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 }}>
-              <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>Lv.{account.level} {account.levelName ?? ''}</Text>
-            </View>
-          )}
+          {/* v2.12.0 等级玩法：段位彩牌（青铜~王者七色带，Lv1 也亮牌） */}
+          <View style={{ marginTop: 8, backgroundColor: getLevelBand(account.level).bg, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 }}>
+            <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>Lv.{account.level ?? 1} {account.levelName ?? ''}</Text>
+          </View>
           <View style={{ display: 'flex', flexDirection: 'row', marginTop: 12 }}>
             <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 16 }}>累计获得 {account.totalEarned}</Text>
             <Text style={{ ...fs(12), color: t.textTertiary }}>累计消耗 {account.totalSpent}</Text>
           </View>
+          {/* v2.12.0 等级玩法：升档进度条——距下一档还差多少币、跨档发多少升档礼（终身一次） */}
+          {account.nextLevelMin != null && account.nextLevelMin > 0 ? (
+            <View style={{ width: '100%', marginTop: 14 }}>
+              <View style={{ height: 6, borderRadius: 3, backgroundColor: t.border, overflow: 'hidden' }}>
+                <View style={{
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: getLevelBand(account.level).bg,
+                  width: `${Math.min(100, Math.max(2, Math.round((account.totalEarned / account.nextLevelMin) * 100)))}%`,
+                }} />
+              </View>
+              <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+                <Text style={{ ...fs(11), color: t.textTertiary }}>
+                  距升「{account.nextLevelName ?? ''}」还差 {Math.max(0, account.nextLevelMin - account.totalEarned)} 币
+                </Text>
+                {account.nextLevelBonus != null && account.nextLevelBonus > 0 && (
+                  <Text style={{ ...fs(11), color: t.primary }}>升档礼 +{account.nextLevelBonus}</Text>
+                )}
+              </View>
+            </View>
+          ) : (
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>已达最高段位</Text>
+          )}
         </View>
 
         {/* 流水列表 */}

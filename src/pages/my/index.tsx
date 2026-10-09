@@ -23,6 +23,8 @@ import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notification'
 // 改动说明（v1.7.17 轴承币底座）：账户/签到服务 + 签到成功长震反馈
 import { getPointAccount, type PointAccount } from '../../services/points'
+// v2.12.0 等级玩法：段位彩牌色带（青铜~王者）
+import { getLevelBand } from '../../utils/level'
 // v2.1.0 成就子系统：个人徽章排（我的页轴承币卡下方横向徽章条）
 import { getMyAchievements, getMyTitles, type AchievementWall } from '../../services/achievements'
 import './index.scss'
@@ -247,12 +249,10 @@ export default function MyPage() {
         <View className='member-head'>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的轴承币</Text>
-            {/* v2.7.0 G7：用户轴承币等级徽章（按累计获得轴承币落档，纯展示无特权）；后端缺省等级 1 */}
-            {points.level != null && points.level > 1 && (
-              <View style={{ marginLeft: 8, backgroundColor: t.primary, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
-                <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>Lv.{points.level} {points.levelName ?? ''}</Text>
-              </View>
-            )}
+            {/* v2.12.0 等级玩法：段位彩牌（青铜~王者七色带，低段也亮牌）；后端缺省等级 1 */}
+            <View style={{ marginLeft: 8, backgroundColor: getLevelBand(points.level).bg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+              <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>Lv.{points.level ?? 1} {points.levelName ?? ''}</Text>
+            </View>
           </View>
           <View className='member-detail' onClick={handlePointsDetail}>
             <Text style={{ ...fs(13), color: t.textSecondary }}>收支明细</Text>

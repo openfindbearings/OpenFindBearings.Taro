@@ -117,8 +117,15 @@ export default function TasksPage() {
         Taro.showToast({ title: `签到成功 +${r.amount} 轴承币`, icon: 'success' })
       }
       // v2.1.0 成就子系统：签到顺带点亮成就时补一条 toast（延迟错开签到 toast）
+      let nextDelay = 0
       if (r.unlockedAchievements && r.unlockedAchievements.length > 0) {
+        nextDelay = 1600
         setTimeout(() => Taro.showToast({ title: `点亮 ${r.unlockedAchievements!.length} 枚勋章`, icon: 'none' }), 1600)
+      }
+      // v2.12.0 等级玩法：签到跨档（含升档礼推档）播"恭喜升段"toast，再错开成就提示
+      if (r.leveledUp && r.levelName) {
+        const delay = nextDelay > 0 ? 3200 : 1600
+        setTimeout(() => Taro.showToast({ title: `恭喜升段「${r.levelName!}」，升档礼已到账`, icon: 'none' }), delay)
       }
     }
     await refresh()

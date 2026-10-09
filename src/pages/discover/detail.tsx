@@ -15,6 +15,8 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 // 改动说明（v1.7.19 真机修复）：发布日期原用 toLocaleDateString('zh-CN')，
 //   Android 微信 JSCore 无 Intl 会回落英文串，统一改走 utils/format
 import { formatDate } from '../../utils/format'
+// v2.12.0 等级玩法铭牌曝光：应答经办人段位彩牌色带
+import { getLevelBand } from '../../utils/level'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { vibrateSuccess } from '../../utils/haptics'
@@ -254,6 +256,10 @@ export default function SourcingDetailPage() {
                   >
                     {r.merchantName || '商户'}
                   </Text>
+                  {/* v2.12.0 等级玩法铭牌曝光：经办人段位彩牌（真人信任信号，发布人比价参考） */}
+                  <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 6, backgroundColor: getLevelBand(r.responderLevel).bg, marginRight: 6 }}>
+                    <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '600' }}>Lv.{r.responderLevel ?? 1} {r.responderLevelName ?? ''}</Text>
+                  </View>
                   {r.isVerified && (
                     <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
                       <Text style={{ ...fs(10), color: t.primary }}>已认证</Text>

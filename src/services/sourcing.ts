@@ -54,6 +54,9 @@ export interface SourcingResponseDetail {
   remark: string
   status: number
   createdAt: string
+  /** v2.12.0 等级玩法铭牌曝光：经办人段位（号+名，发布人比价信任信号） */
+  responderLevel?: number
+  responderLevelName?: string | null
 }
 
 /** 我（当前商户）的应答 */
