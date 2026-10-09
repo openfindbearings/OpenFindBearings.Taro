@@ -52,6 +52,8 @@ export function treasurySceneText(scene: string): string {
     case 'treasury_burn': return '关店清算'
     // v2.6.0 M3：商家集体任务达标入账
     case 'merchant_task_reward': return '集体任务奖励'
+    // v2.12.0 等级玩法：商家升档礼（每店每档终身一次）
+    case 'grade_up_bonus': return '商家升档礼'
     default: return scene
   }
 }

@@ -198,6 +198,17 @@ export default function MerchantHomePage() {
               </Text>
             ) : null}
           </View>
+          {/* v2.12.0 等级玩法保级倒计时卡：本店视角挂起降档钟时展示（graceUntil 仅本店返回） */}
+          {(() => {
+            const g = buff?.graceUntil
+            if (!g) return null
+            const days = Math.max(0, Math.ceil((new Date(g).getTime() - Date.now()) / 86400000))
+            return days > 0 ? (
+              <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: '#FEF3C7' }}>
+                <Text style={{ ...fs(12), color: '#92400E' }}>保级缓冲中：剩余 {days} 天，在售回升至阈值即可维持当前等级（到期仍不达标将降档）</Text>
+              </View>
+            ) : null
+          })()}
           {buff && buff.rank > 0 ? (
             <>
               <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>以下加成对本店全体在职成员自动生效：</Text>
@@ -212,7 +223,9 @@ export default function MerchantHomePage() {
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>商家通过认证后解锁成员福利（登录/纠错/发布加成）</Text>
           )}
           {buff?.nextHint ? (
-            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>升级：{buff.nextHint}</Text>
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>
+              升级：{buff.nextHint}{buff.gradeUpBonus != null && buff.gradeUpBonus > 0 ? `，升档礼 +${buff.gradeUpBonus} 商家金（终身一次）` : ''}
+            </Text>
           ) : null}
         </View>
 

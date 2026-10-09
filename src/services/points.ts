@@ -12,9 +12,13 @@ export interface PointAccount {
   todayCheckedIn: boolean
   /** 当前连续签到天数（阶梯展示用） */
   consecutiveDays: number
-  /** v2.7.0 G7：用户积分等级（按累计获得积分落档，纯展示） */
+  /** v2.7.0 G7：用户积分等级（按累计获得积分落档） */
   level?: number
   levelName?: string
+  /** v2.12.0 等级玩法：下一档阈值/段位名/升档礼（进度条"距升 X 还差 Y 币"；已达最高档为 null） */
+  nextLevelMin?: number | null
+  nextLevelName?: string | null
+  nextLevelBonus?: number | null
   /** 业务日界偏移小时数（v1.36.1 后端下发，对应 BusinessClock 配置；缺省按 +8 北京兜底） */
   tzOffsetHours?: number
 }
@@ -28,6 +32,10 @@ export interface CheckinResult {
   unlockedAchievements?: string[]
   /** v2.8.0 G1：暴击倍数（1=无暴击 / 2=双倍 / 5=传说，供动画 toast） */
   critMultiplier?: number
+  /** v2.12.0 等级玩法：签到后最终段位 + 是否跨档（leveledUp=true 播"恭喜升级"toast） */
+  level?: number | null
+  levelName?: string | null
+  leveledUp?: boolean
 }
 
 /** 积分流水项（对齐 BFF PointTransactionItem） */
@@ -58,8 +66,10 @@ export const GRANT_TYPE_LABELS: Record<string, string> = {
   merchant_task: '商家集体任务奖励',
   // v2.7.0 G2：每日任务板三件套（签到 + 纠错 + 应答）额外奖励
   daily_combo: '每日任务板三件套',
-  // 名词统一（成就/徽章→勋章）：勋章点亮解锁的一次性甜头
+  // 名词统一（成就/徽章→勋章）：历史流水保留展示（v2.12.0 起勋章纯荣誉不再产币）
   achievement_unlock: '勋章解锁奖励',
+  // v2.12.0 等级玩法：跨入新段位一次性发放的升档礼
+  level_up_bonus: '段位升档礼',
 }
 
 /** 拉取积分账户（失败返回零值兜底，不打扰页面） */
@@ -115,6 +125,10 @@ export interface MerchantBuff {
   rank: number
   labels: string[]
   nextHint: string
+  /** v2.12.0 等级玩法：下一档升档礼（商家金，终身一次；最高档 null） */
+  gradeUpBonus?: number | null
+  /** v2.12.0 等级玩法：本店保级截止时刻（UTC ISO；仅 merchantId 本店视角返回，掉级倒计时卡数据源） */
+  graceUntil?: string | null
 }
 
 /** 拉取商家福利卡；v2.6.0 任务中心拆分：传 merchantId 查"本店给成员的 buff"（商家管理页），
