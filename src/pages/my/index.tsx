@@ -220,7 +220,14 @@ export default function MyPage() {
                       </View>
                     )}
                   </View>
-                  {authUser?.phoneNumber && <Text className='phone' style={{ ...fs(13), color: 'rgba(255,255,255,0.85)' }}>{authUser.phoneNumber}</Text>}
+                  {/* v2.13.0 等级玩法：段位彩牌挪至用户信息卡（对标主流账号卡版式，替代手机号行），
+                      点击进段位详情页；手机号在资料编辑页仍可见 */}
+                  <View onClick={() => { if (isLoggedIn) void Taro.navigateTo({ url: '/pages/my/level' }) }}>
+                    <View style={{ alignSelf: 'flex-start', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: getLevelBand(points.level).bg, borderRadius: 10, paddingLeft: 8, paddingRight: 5, paddingTop: 2, paddingBottom: 2, marginTop: 4 }}>
+                      <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>Lv.{points.level ?? 1} {points.levelName ?? ''}</Text>
+                      <Icon name='chevron-right' size={12} color='#FFFFFF' />
+                    </View>
+                  </View>
                 </View>
                 <Icon name="chevron-right" size={18} color="rgba(255,255,255,0.85)" />
               </View>
@@ -249,10 +256,7 @@ export default function MyPage() {
         <View className='member-head'>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>我的轴承币</Text>
-            {/* v2.12.0 等级玩法：段位彩牌（青铜~王者七色带，低段也亮牌）；后端缺省等级 1 */}
-            <View style={{ marginLeft: 8, backgroundColor: getLevelBand(points.level).bg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
-              <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>Lv.{points.level ?? 1} {points.levelName ?? ''}</Text>
-            </View>
+            {/* 改动说明（v2.13.0）：段位彩牌上移至用户信息卡（此处撤除防双份） */}
           </View>
           <View className='member-detail' onClick={handlePointsDetail}>
             <Text style={{ ...fs(13), color: t.textSecondary }}>收支明细</Text>

@@ -22,3 +22,43 @@ export function getLevelBand(level?: number): LevelBand {
   if (lv <= 9) return { band: '星耀', bg: '#8B5CF6' }
   return { band: '王者', bg: '#E5484D' }
 }
+
+/**
+ * 商家等级枚举值 → 单调序数（与后端 MerchantBuffs.Rank 同表：1入驻/3认证→2/2活跃→3/4金牌→4；
+ * 枚举数值非单调是历史映射，前端任何等级比较必须先经此换算）
+ */
+export function merchantGradeToRank(grade?: number): number {
+  switch (grade ?? 0) {
+    case 1: return 1
+    case 3: return 2
+    case 2: return 3
+    case 4: return 4
+    default: return 0
+  }
+}
+
+/**
+ * 商家等级序数 → 展示名（与后端 Merchant.GetGradeDisplayName 同表；
+ * v2.13.0 商家头部彩牌用——buff 接口只回 grade/rank 不回名称，前端映射避免多打一次接口）
+ */
+export const MERCHANT_GRADE_LABELS: Record<number, string> = {
+  1: '入驻商家',
+  2: '认证商家',
+  3: '活跃供给',
+  4: '金牌商家',
+}
+
+/**
+ * 商家等级彩牌色带（v2.13.0 商家等级页/头部铭牌）：按等级序数 rank 取色——
+ * Lv1 入驻石板灰 / Lv2 认证紫 / Lv3 活跃供给蓝 / Lv4 金牌琥珀。
+ * 注意入参是 rank（1~4 单调序数）而非 grade 枚举值（数值非单调，须经 MerchantBuffs.Rank 换算）
+ */
+export function getMerchantGradeBand(rank?: number): LevelBand {
+  switch (rank ?? 0) {
+    case 1: return { band: '入驻', bg: '#64748B' }
+    case 2: return { band: '认证', bg: '#8B5CF6' }
+    case 3: return { band: '活跃供给', bg: '#2563EB' }
+    case 4: return { band: '金牌', bg: '#D97706' }
+    default: return { band: '未定级', bg: '#94A3B8' }
+  }
+}
