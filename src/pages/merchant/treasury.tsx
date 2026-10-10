@@ -51,7 +51,7 @@ export default function MerchantTreasuryPage() {
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
-              {/* 等级徽章（入驻/认证/活跃供给/金牌——buff 与信任的可视化） */}
+              {/* 等级徽章（入驻/认证/口碑/金牌——buff 与信任的可视化；v2.13.0 Lv3 改名口碑商家） */}
               {treasury?.gradeDisplay ? (
                 <Text style={{ ...fs(10), color: '#8B5CF6', backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
               ) : null}

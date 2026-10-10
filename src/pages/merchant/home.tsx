@@ -112,10 +112,11 @@ export default function MerchantHomePage() {
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>{current.merchantName}</Text>
             </View>
-            {/* v2.13.0 等级玩法：商家等级彩牌挪至副标题行（管理员/员工皆可见，数据源=福利卡本店视角），
-                点击进商家等级详情页；原右侧 gradeDisplay/认证徽章撤除防双份 */}
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-              <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 8 }}>{isAdmin ? '管理员' : '员工'} · 与成员共同经营</Text>
+            {/* v2.13.0 等级玩法真机调整：删冗余副标题"与成员共同经营"（角色已由彩牌表达，
+                共经营是默认事实无信息量）；第二行=角色文字 + 商家等级彩牌（独立成行不再挤名字行），
+                彩牌点击进等级详情页；原右侧 gradeDisplay/认证徽章撤除防双份 */}
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+              <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 8 }}>{isAdmin ? '管理员' : '员工'}</Text>
               {buff && buff.rank > 0 && (
                 <View
                   style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: getMerchantGradeBand(buff.rank).bg, borderRadius: 8, paddingLeft: 6, paddingRight: 4, paddingTop: 1, paddingBottom: 1 }}
@@ -201,7 +202,7 @@ export default function MerchantHomePage() {
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家福利</Text>
             {buff && buff.rank > 0 ? (
               <Text style={{ ...fs(12), color: '#8B5CF6' }}>
-                {buff.rank === 1 ? 'Lv1 入驻' : buff.rank === 2 ? 'Lv2 认证' : buff.rank === 3 ? 'Lv3 活跃供给' : 'Lv4 金牌'}
+                {buff.rank === 1 ? 'Lv1 入驻' : buff.rank === 2 ? 'Lv2 认证' : buff.rank === 3 ? 'Lv3 口碑' : 'Lv4 金牌'}
               </Text>
             ) : null}
           </View>
