@@ -138,6 +138,63 @@ export function getMerchantBuff(merchantId?: string) {
   return request<MerchantBuff>(url)
 }
 
+/** 段位阶梯档（v2.13.0 段位详情页；reached=已达档，bonusClaimed=该档升档礼终身已领） */
+export interface PointLadderItem {
+  level: number
+  name: string
+  minTotalEarned: number
+  levelUpBonus: number
+  reached: boolean
+  bonusClaimed: boolean
+}
+
+/** 段位阶梯表响应（对齐 BFF PointLadderResponse） */
+export interface PointLadder {
+  totalEarned: number
+  currentLevel: number
+  currentLevelName: string
+  levels: PointLadderItem[]
+}
+
+/** 段位阶梯表（失败返回空表兜底，不打扰页面） */
+export async function getPointLadder(): Promise<PointLadder | null> {
+  try {
+    return await request<PointLadder>(API.POINTS_LEVELS)
+  } catch {
+    return null
+  }
+}
+
+/** 商家等级详情（v2.13.0 商家等级页；对齐 BFF MerchantGradeResponse，在职成员可见） */
+export interface MerchantGradeDetail {
+  merchantId: string
+  merchantName?: string | null
+  grade: number
+  rank: number
+  gradeDisplay: string
+  isVerified: boolean
+  onSaleCount: number
+  treasuryEarned: number
+  lv3OnSaleMin: number
+  lv4OnSaleMin: number
+  lv4TreasuryMin: number
+  bonusLv2: number
+  bonusLv3: number
+  bonusLv4: number
+  claimedRanks: number[]
+  graceUntil?: string | null
+  labels: string[]
+}
+
+/** 商家等级详情（失败返回 null，调用方兜底） */
+export async function getMerchantGrade(merchantId: string): Promise<MerchantGradeDetail | null> {
+  try {
+    return await request<MerchantGradeDetail>(`${API.POINTS_MERCHANT_GRADE}?merchantId=${merchantId}`)
+  } catch {
+    return null
+  }
+}
+
 /** 商家集体任务项（v2.6.0 M3；period 1 周/2 月，rewardType 1 成员/2 金库，done=本周期已达成） */
 export interface MerchantTask {
   taskKey: string

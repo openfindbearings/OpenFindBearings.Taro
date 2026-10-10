@@ -212,6 +212,9 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   // v2.6.0 M3：商家集体任务板 + 商家实力月榜（代理 BFF /mobile/points/merchant-tasks|ranking）
   POINTS_MERCHANT_TASKS: `${API_PREFIX}/points/merchant-tasks`,
   POINTS_MERCHANT_RANKING: `${API_PREFIX}/points/merchant-ranking`,
+  // v2.13.0 等级玩法：段位阶梯表 + 商家等级详情（代理 BFF /mobile/points/levels|merchant-grade）
+  POINTS_LEVELS: `${API_PREFIX}/points/levels`,
+  POINTS_MERCHANT_GRADE: `${API_PREFIX}/points/merchant-grade`,
   // 游戏中心（v2.10.1 插件架构）：通用端点组，按游戏 key 路由
   GAMES: `${API_PREFIX}/games`,
   // v2.1.0 成就子系统：成就墙/我的徽章排/商户徽章排，走 BFF /mobile/achievements/*

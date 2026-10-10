@@ -8,6 +8,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
+import Icon from '../../components/Icon'
 import { getPointAccount, getPointTransactions, GRANT_TYPE_LABELS, type PointAccount, type PointTransaction } from '../../services/points'
 import { formatTime } from '../../utils/format'
 import { getLevelBand } from '../../utils/level'
@@ -68,9 +69,12 @@ export default function PointsPage() {
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center' }}>
           <Text style={{ ...fs(34), color: t.primary, fontWeight: 'bold' }}>{account.balance}</Text>
           <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }}>当前轴承币</Text>
-          {/* v2.12.0 等级玩法：段位彩牌（青铜~王者七色带，Lv1 也亮牌） */}
-          <View style={{ marginTop: 8, backgroundColor: getLevelBand(account.level).bg, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 }}>
-            <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>Lv.{account.level ?? 1} {account.levelName ?? ''}</Text>
+          {/* v2.12.0 等级玩法：段位彩牌（青铜~王者七色带，Lv1 也亮牌）；v2.13.0 点击进段位详情页 */}
+          <View style={{ marginTop: 8 }} onClick={() => Taro.navigateTo({ url: '/pages/my/level' })}>
+            <View style={{ alignSelf: 'flex-start', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: getLevelBand(account.level).bg, borderRadius: 12, paddingLeft: 10, paddingRight: 5, paddingTop: 3, paddingBottom: 3 }}>
+              <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>Lv.{account.level ?? 1} {account.levelName ?? ''}</Text>
+              <Icon name='chevron-right' size={12} color='#FFFFFF' />
+            </View>
           </View>
           <View style={{ display: 'flex', flexDirection: 'row', marginTop: 12 }}>
             <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 16 }}>累计获得 {account.totalEarned}</Text>

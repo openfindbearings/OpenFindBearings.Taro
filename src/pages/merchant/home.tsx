@@ -19,6 +19,8 @@ import { getTreasury, type TreasuryAccount } from '../../services/gifts'
 import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
 // v2.6.0 任务中心拆分：商家级"帮派任务"内容（福利/集体任务/实力榜）全部归本页
 import { getMerchantTasks, getMerchantBuff, getMerchantRanking, type MerchantTasksResult, type MerchantBuff, type MerchantRanking } from '../../services/points'
+// v2.13.0 等级玩法：头部商家等级彩牌（色带+序数名映射）
+import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
@@ -109,16 +111,21 @@ export default function MerchantHomePage() {
           <View style={{ flex: 1, marginLeft: 10 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>{current.merchantName}</Text>
-              {isAdmin && treasury?.gradeDisplay ? (
-                <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: treasury.grade === 4 ? '#D97706' : treasury.grade === 2 ? '#8B5CF6' : '#F59E0B' }}>
-                  <Icon name='badge-check' size={11} color='#FFFFFF' />
-                  <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>{treasury.gradeDisplay}</Text>
-                </View>
-              ) : (!isAdmin && current.isVerified ? (
-                <Text style={{ ...fs(11), color: '#F59E0B' }}>认证商家</Text>
-              ) : null)}
             </View>
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>{isAdmin ? '管理员' : '员工'} · 与成员共同经营</Text>
+            {/* v2.13.0 等级玩法：商家等级彩牌挪至副标题行（管理员/员工皆可见，数据源=福利卡本店视角），
+                点击进商家等级详情页；原右侧 gradeDisplay/认证徽章撤除防双份 */}
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+              <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 8 }}>{isAdmin ? '管理员' : '员工'} · 与成员共同经营</Text>
+              {buff && buff.rank > 0 && (
+                <View
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: getMerchantGradeBand(buff.rank).bg, borderRadius: 8, paddingLeft: 6, paddingRight: 4, paddingTop: 1, paddingBottom: 1 }}
+                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/level' })}
+                >
+                  <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '600' }}>{MERCHANT_GRADE_LABELS[buff.rank] ?? ''}</Text>
+                  <Icon name='chevron-right' size={11} color='#FFFFFF' />
+                </View>
+              )}
+            </View>
           </View>
         </View>
 

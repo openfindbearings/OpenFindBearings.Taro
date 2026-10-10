@@ -35,7 +35,10 @@ export default defineAppConfig({
     'pages/my/followed',
     'pages/my/history',
     'pages/my/corrections',
-'pages/my/points',
+ 'pages/my/points',
+    // v2.13.0 等级玩法：个人段位详情页 + 商家等级详情页
+    'pages/my/level',
+    'pages/merchant/level',
     'pages/my/tasks',
     'pages/my/achievements',
 'pages/my/permissions',
