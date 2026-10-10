@@ -44,20 +44,20 @@ export function merchantGradeToRank(grade?: number): number {
 export const MERCHANT_GRADE_LABELS: Record<number, string> = {
   1: '入驻商家',
   2: '认证商家',
-  3: '活跃供给',
+  3: '口碑商家',
   4: '金牌商家',
 }
 
 /**
  * 商家等级彩牌色带（v2.13.0 商家等级页/头部铭牌）：按等级序数 rank 取色——
- * Lv1 入驻石板灰 / Lv2 认证紫 / Lv3 活跃供给蓝 / Lv4 金牌琥珀。
+ * Lv1 入驻石板灰 / Lv2 认证紫 / Lv3 口碑蓝 / Lv4 金牌琥珀（v2.13.0 Lv3 改名口碑）。
  * 注意入参是 rank（1~4 单调序数）而非 grade 枚举值（数值非单调，须经 MerchantBuffs.Rank 换算）
  */
 export function getMerchantGradeBand(rank?: number): LevelBand {
   switch (rank ?? 0) {
     case 1: return { band: '入驻', bg: '#64748B' }
     case 2: return { band: '认证', bg: '#8B5CF6' }
-    case 3: return { band: '活跃供给', bg: '#2563EB' }
+    case 3: return { band: '口碑', bg: '#2563EB' }
     case 4: return { band: '金牌', bg: '#D97706' }
     default: return { band: '未定级', bg: '#94A3B8' }
   }

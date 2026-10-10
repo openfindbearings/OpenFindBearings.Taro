@@ -22,7 +22,7 @@ definePageConfig({ disableScroll: true })
 const GRADE_STEPS: { rank: number; name: string; cond: string }[] = [
   { rank: 1, name: '入驻商家', cond: '审核通过即得' },
   { rank: 2, name: '认证商家', cond: '证照审核通过' },
-  { rank: 3, name: '活跃供给', cond: '认证 + 在售达阈值' },
+  { rank: 3, name: '口碑商家', cond: '认证 + 在售达阈值' },
   { rank: 4, name: '金牌商家', cond: '认证 + 在售达阈值 + 金库累计达阈值' },
 ]
 

@@ -102,8 +102,8 @@ export default function MerchantDetailPage() {
               {detail?.isVerified && (
                 // 改动说明（v1.7.11）：文案"入驻商家"是认证等级上线前的旧词已失真（入驻=已生效是另一回事），
                 //   统一为与商户页同款金色"已认证"徽标（主流：徽标在所有露出点一致）
-                // 改动说明（v2.5.0 商家经济）：徽章直接展示商家等级中文名（认证商家/活跃供给/金牌商家），
-                //   等级是 B2B 信任资产——金牌琥珀、活跃紫、认证金，徽标在所有露出点保持一致
+                // 改动说明（v2.5.0 商家经济）：徽章直接展示商家等级中文名（认证商家/口碑商家/金牌商家，v2.13.0 Lv3 改名口碑），
+                //   等级是 B2B 信任资产——金牌琥珀、口碑蓝、认证金，徽标在所有露出点保持一致
                 <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: detail.grade === 'Gold' ? '#D97706' : detail.grade === 'Premium' ? '#8B5CF6' : '#F59E0B', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Icon name="badge-check" size={11} color="#FFFFFF" />
                   <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>{detail.gradeDisplay || '已认证'}</Text>

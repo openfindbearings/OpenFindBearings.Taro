@@ -77,20 +77,25 @@ export default function LevelPage() {
 
   return (
     <PageLayout nav={<NavBar title='我的段位' showBack onBack={() => Taro.navigateBack()} />}>
-      {/* 顶部段位 tab 条（美团式横滑，当前档下划线标记） */}
-      <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 44, backgroundColor: t.bgCard }}>
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 12, paddingRight: 12 }}>
-          {levels.map((l) => {
-            const active = l.level === selected
-            return (
-              <View key={l.level} style={{ paddingLeft: 10, paddingRight: 10, height: 44, justifyContent: 'center' }} onClick={() => setSelected(l.level)}>
-                <Text style={{ ...fs(13), color: active ? t.textPrimary : t.textTertiary, fontWeight: active ? '700' : '400' }}>{l.name}</Text>
-                {active && <View style={{ height: 2, backgroundColor: t.primary, marginTop: 3, borderRadius: 1 }} />}
-              </View>
-            )
-          })}
-        </View>
-      </ScrollView>
+      {/* 顶部段位 tab 条（美团式横滑，当前档下划线标记）
+          改动说明（v2.13.0 真机修复）：Taro RN 的 ScrollView 内部默认样式会覆盖 style 上的
+          height:44（其源码注释明言"ScrollView 外面要套一个设了高度的 View"）——外层 View 定高
+          44 + overflow hidden 裁剪，横向 ScrollView 撑出部分被裁，不再出现大片空白 */}
+      <View style={{ height: 44, backgroundColor: t.bgCard, overflow: 'hidden' }}>
+        <ScrollView scrollX showsHorizontalScrollIndicator={false}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 12, paddingRight: 12 }}>
+            {levels.map((l) => {
+              const active = l.level === selected
+              return (
+                <View key={l.level} style={{ paddingLeft: 10, paddingRight: 10, height: 44, justifyContent: 'center' }} onClick={() => setSelected(l.level)}>
+                  <Text style={{ ...fs(13), color: active ? t.textPrimary : t.textTertiary, fontWeight: active ? '700' : '400' }}>{l.name}</Text>
+                  {active && <View style={{ height: 2, backgroundColor: t.primary, marginTop: 3, borderRadius: 1 }} />}
+                </View>
+              )
+            })}
+          </View>
+        </ScrollView>
+      </View>
 
       {/* 段位大卡（选中档色带底；当前档附进度条与升档礼预告） */}
       <View style={{ margin: 12, borderRadius: 14, padding: 20, backgroundColor: band.bg }}>
