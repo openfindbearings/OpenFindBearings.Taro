@@ -135,8 +135,8 @@ export interface MallFeedItem {
   priceDescription?: string | null
   isPriceVisible: boolean
   numericPrice?: number | null
-  isOnSale: boolean
-  isRestocking: boolean
+  /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中 */
+  saleState: number
   restockEta?: string | null
 }
 

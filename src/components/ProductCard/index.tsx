@@ -49,7 +49,7 @@ export default function ProductCard({ item, onPress, onMerchant }: ProductCardPr
         {/* 型号 + 在售/补货态 */}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
           <Text numberOfLines={1} style={{ ...fs(15, true), color: t.textPrimary, flex: 1 }}>{item.bearingPartNumber || '—'}</Text>
-          {item.isRestocking ? (
+          {item.saleState === 2 ? (
             <View style={{ backgroundColor: t.warning || '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1, marginLeft: 4 }}>
               <Text style={{ ...fs(10), color: '#FFFFFF' }}>补货中</Text>
             </View>
