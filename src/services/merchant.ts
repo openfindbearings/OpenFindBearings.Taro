@@ -57,7 +57,8 @@ export interface MerchantBearing {
   outerDiameter?: number | null
   width?: number | null
   price?: string | null
-  isOnSale: boolean
+  /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中（替代 isOnSale） */
+  saleState: number
 }
 
 /** 商户入驻状态项（对齐 BFF MerchantApplicationItem） */
@@ -372,22 +373,33 @@ export interface MerchantBearingItem {
   outerDiameter?: number | null
   width?: number | null
   price?: string | null
-  isOnSale: boolean
-  /** v1.7.3 编辑回填与审核角标（对齐 BFF MyMerchantBearingItem 扩展字段） */
+  /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中 */
+  saleState: number
+  /** v1.7.3 编辑回填（对齐 BFF MyMerchantBearingItem 扩展字段） */
+  restockEta?: string | null
   priceDescription?: string | null
   stockDescription?: string | null
   minOrderDescription?: string | null
   remarks?: string | null
-  isPendingApproval: boolean
+  /** v2.15.0 状态统一：审核位 0=仓库中/1=审核中/2=已通过/3=已驳回 */
+  reviewStatus: number
+  /** 审核驳回理由（已驳回时下发） */
+  approvalComment?: string | null
 }
 
-/** 获取自家在售商品列表 */
-export function getMyBearings(params: { page?: number; pageSize?: number; onlyOnSale?: boolean; pendingOnly?: boolean }) {
+/** v2.15.0 状态统一：销售态取值（与 API SaleState 对齐） */
+export const SALE_STATE = { OFF_SHELF: 0, ON_SALE: 1, RESTOCKING: 2 } as const
+
+/** v2.15.0 状态统一：审核位取值（与 API ListingReviewStatus 对齐） */
+export const REVIEW_STATUS = { WAREHOUSE: 0, PENDING: 1, APPROVED: 2, REJECTED: 3 } as const
+
+/** 获取自家在售商品列表（v2.15.0：筛选改用 reviewStatus 审核位 + onlyOnSale 出售中） */
+export function getMyBearings(params: { page?: number; pageSize?: number; onlyOnSale?: boolean; reviewStatus?: number }) {
   const qs = buildQuery({
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
     onlyOnSale: params.onlyOnSale == null ? undefined : String(params.onlyOnSale),
-    pendingOnly: params.pendingOnly == null ? undefined : String(params.pendingOnly)
+    reviewStatus: params.reviewStatus == null ? undefined : String(params.reviewStatus)
   })
   return request<Paged<MerchantBearingItem>>(`${API.MERCHANT_BEARINGS_MINE}?${qs}`)
 }

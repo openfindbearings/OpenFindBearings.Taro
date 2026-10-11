@@ -139,7 +139,7 @@ export default function BearingDetailPage() {
                   {m.isPinned ? (
                     <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
                   ) : null}
-                  {m.isRestocking ? (
+                  {m.saleState === 2 ? (
                     <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
                   ) : null}
                 </View>

@@ -40,9 +40,8 @@ export interface BearingMerchant {
   merchantId: string
   merchantName: string
   price?: string | null
-  isOnSale: boolean
-  /** 补货中（v1.7.21 三态：商家有该型号但当前无货，仍展示带徽标） */
-  isRestocking?: boolean
+  /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中 */
+  saleState: number
   /** 补货预计到货时间（自由文本） */
   restockEta?: string | null
   /** 置顶中（v2.3.0 商城置顶卡：商家花积分买曝光，列表已按置顶优先排序） */

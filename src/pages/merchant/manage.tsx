@@ -4,7 +4,8 @@
 //   2. 添加商品改为"搜索选平台已有型号 + 填市场描述"（1688 上架同款交互）——
 //      原 createMyBearing 传 bearingPartNumber/price/stock 与后端 BearingId/PriceDescription 契约完全对不上，提交必失败；
 //   3. 行新增"编辑"（价格/库存/起订量/备注四项描述，PUT 后重新进审核）；
-//   4. 待审核商品显示"审核中"角标（isPendingApproval），支持"审核中"筛选。
+//   4. 商品状态（v2.15.0 状态统一）：仓库中 / 审核中 / 出售中 / 已驳回 / 补充中 / 已下架；
+//      列表右侧状态徽标由 reviewStatus + saleState 派生，支持对应页签筛选。
 import { useState } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
@@ -38,8 +39,37 @@ interface FormState {
 }
 const EMPTY_FORM: FormState = { priceDescription: '', stockDescription: '', minOrderDescription: '', remarks: '' }
 
-/** 列表筛选态：全部 / 在售 / 审核中 */
-type Filter = 'all' | 'onSale' | 'pending'
+/** 列表筛选态：全部 / 仓库中 / 审核中 / 出售中 / 已驳回（v2.15.0 状态统一） */
+type Filter = 'all' | 'warehouse' | 'pending' | 'onSale' | 'rejected'
+
+/** v2.15.0 状态统一：列表右侧状态徽标文案（审核位优先，其次销售态） */
+function stateBadgeText(item: MerchantBearingItem): string {
+  if (item.reviewStatus === 0) return '仓库中'
+  if (item.reviewStatus === 3) return '已驳回'
+  if (item.reviewStatus === 1) return '审核中'
+  if (item.saleState === 1) return '出售中'
+  if (item.saleState === 2) return '补货中'
+  return '已下架'
+}
+
+/** v2.15.0 状态统一：状态徽标色（绿=出售中，橙=审核中/补货中，红=已驳回，灰=仓库中/已下架） */
+function stateBadgeColor(item: MerchantBearingItem): string {
+  if (item.reviewStatus === 0) return '#94A3B8'
+  if (item.reviewStatus === 3) return '#EF4444'
+  if (item.reviewStatus === 1) return '#F59E0B'
+  if (item.saleState === 1) return '#16A34A'
+  if (item.saleState === 2) return '#F59E0B'
+  return '#94A3B8'
+}
+
+/** v2.15.0 状态统一：筛选态 → 查询参数（审核位/在售） */
+function filterParams(f: Filter): { onlyOnSale?: boolean; reviewStatus?: number } {
+  if (f === 'onSale') return { onlyOnSale: true }
+  if (f === 'warehouse') return { reviewStatus: 0 }
+  if (f === 'pending') return { reviewStatus: 1 }
+  if (f === 'rejected') return { reviewStatus: 3 }
+  return {}
+}
 
 export default function MerchantManagePage() {
   const t = useTheme()
@@ -73,8 +103,7 @@ export default function MerchantManagePage() {
     getMyBearings({
       page: p,
       pageSize: PAGE_SIZE,
-      onlyOnSale: filter === 'onSale' ? true : undefined,
-      pendingOnly: filter === 'pending' ? true : undefined
+      ...filterParams(filter)
     })
       .then((r) => {
         setItems((prev) => (append ? [...prev, ...(r?.items ?? [])] : r?.items ?? []))
@@ -99,8 +128,7 @@ export default function MerchantManagePage() {
     getMyBearings({
       page: 1,
       pageSize: PAGE_SIZE,
-      onlyOnSale: f === 'onSale' ? true : undefined,
-      pendingOnly: f === 'pending' ? true : undefined
+      ...filterParams(f)
     })
       .then((r) => {
         setItems(r?.items ?? [])
@@ -156,8 +184,8 @@ export default function MerchantManagePage() {
    * 余额不足不直接报错，而是引导去任务中心赚轴承币（额度/价格前置可见原则）
    */
   const onPin = async (item: MerchantBearingItem) => {
-    if (!item.isOnSale) {
-      Taro.showToast({ title: '仅在售商品可置顶', icon: 'none' })
+    if (item.saleState !== 1) {
+      Taro.showToast({ title: '仅出售中商品可置顶', icon: 'none' })
       return
     }
     setBusyId(item.id)
@@ -263,7 +291,7 @@ export default function MerchantManagePage() {
       remarks: form.remarks.trim() || undefined
     })
       .then((r) => {
-        Taro.showToast({ title: r?.message || '添加成功，等待审核', icon: 'none' })
+        Taro.showToast({ title: r?.message || '添加成功，已放入仓库中', icon: 'none' })
         setAdding(false); setSearchKw(''); setSearchList([]); setPicked(null); setForm(EMPTY_FORM)
         load(1, false)
       })
@@ -294,7 +322,7 @@ export default function MerchantManagePage() {
       remarks: form.remarks.trim() || undefined
     })
       .then((r) => {
-        Taro.showToast({ title: r?.message || '更新成功，等待审核', icon: 'none' })
+        Taro.showToast({ title: r?.message || '更新成功', icon: 'none' })
         setEditingId(null); setForm(EMPTY_FORM)
         load(1, false)
       })
@@ -411,8 +439,10 @@ export default function MerchantManagePage() {
       {/* 筛选页签 */}
       <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 14, paddingRight: 14, paddingTop: 10, paddingBottom: 2 }}>
         {filterTab('all', '全部')}
-        {filterTab('onSale', '在售')}
+        {filterTab('warehouse', '仓库中')}
         {filterTab('pending', '审核中')}
+        {filterTab('onSale', '出售中')}
+        {filterTab('rejected', '已驳回')}
       </View>
 
       <View style={{ paddingLeft: 14, paddingRight: 14, marginTop: 8 }}>
@@ -430,21 +460,21 @@ export default function MerchantManagePage() {
               >
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(15), color: t.textPrimary, flex: 1 }} numberOfLines={1}>{item.bearingPartNumber}</Text>
-                  {item.isPendingApproval && (
-                    <View style={{ borderRadius: 4, backgroundColor: '#F59E0B', paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, marginRight: 8 }}>
-                      <Text style={{ ...fs(10), color: '#fff' }}>审核中</Text>
-                    </View>
-                  )}
-                  <View style={{ width: 52, height: 20, borderRadius: 10, backgroundColor: item.isOnSale ? '#16A34A' : t.textTertiary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <Text style={{ ...fs(11), color: '#fff' }}>{item.isOnSale ? '在售' : '下架'}</Text>
+                  {/* v2.15.0 状态统一：右侧状态徽标（审核位优先，其次销售态），替代原双徽标 */}
+                  <View style={{ width: 60, height: 20, borderRadius: 10, backgroundColor: stateBadgeColor(item), alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Text style={{ ...fs(11), color: '#fff' }}>{stateBadgeText(item)}</Text>
                   </View>
                 </View>
                 <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
                   {[item.brandName, item.bearingTypeName, item.priceDescription || item.price].filter(Boolean).join(' · ') || '暂无规格'}
                 </Text>
+                {/* v2.15.0 状态统一：已驳回显示理由（可改重提） */}
+                {item.reviewStatus === 3 && item.approvalComment ? (
+                  <Text style={{ ...fs(12), color: '#EF4444', marginTop: 4 }}>驳回原因：{item.approvalComment}</Text>
+                ) : null}
                 {/* 行操作：置顶（商城权益） + 编辑 + 状态 */}
                 <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
-                  {item.isOnSale && (
+                  {item.saleState === 1 && (
                     <View
                       style={{ backgroundColor: t.bgInput, borderRadius: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, marginRight: 8 }}
                       onClick={() => onPin(item)}
