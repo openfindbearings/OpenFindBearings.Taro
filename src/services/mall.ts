@@ -1,7 +1,8 @@
 // 商城服务（v2.3.0 商城虚拟权益）：目录 / 积分兑换 / 我的订单，走 BFF /mobile/mall/*
 // 一期实装置顶卡：兑换须带 targetRef=MerchantBearingId（商品管理页"置顶"入口）
+// 改动说明（v2.14.0 商城导购）：新增货源流 getMallFeed——商城 Tab 商品瀑布流数据源
 import { request } from './request'
-import { API } from './config'
+import { API, buildQuery } from './config'
 import type { Paged } from './bearing'
 
 /** 商城商品类别（与 API MallItemCategory 对齐） */
@@ -112,4 +113,68 @@ export function redeemGift(itemId: string, receiverName: string, receiverPhone: 
 /** 确认收货（买家）：触发积分结算进商家金库 */
 export function confirmReceipt(orderId: string) {
   return request<{ settled: number }>(API.MALL_CONFIRM_RECEIPT(orderId), { method: 'POST', data: {} })
+}
+
+// ============ v2.14.0 商城导购：货源流 ============
+
+/** 货源流条目（对齐 BFF MallFeedItem）：一条=某商家在某轴承上的在售货源，商品卡数据源 */
+export interface MallFeedItem {
+  id: string
+  merchantId: string
+  merchantName?: string | null
+  merchantGrade?: string | null
+  merchantIsVerified: boolean
+  bearingId: string
+  bearingPartNumber: string
+  bearingOldNumber?: string | null
+  bearingTypeName?: string | null
+  brandName?: string | null
+  dimensions?: string | null
+  image3DUrl?: string | null
+  image2DUrl?: string | null
+  priceDescription?: string | null
+  isPriceVisible: boolean
+  numericPrice?: number | null
+  isOnSale: boolean
+  isRestocking: boolean
+  restockEta?: string | null
+}
+
+/** 货源流查询参数（品牌/类型/尺寸/类别过滤 + 排序分页） */
+export interface MallFeedParams {
+  keyword?: string
+  brandId?: string
+  bearingTypeId?: string
+  category?: number
+  minInnerDiameter?: number
+  maxInnerDiameter?: number
+  minOuterDiameter?: number
+  maxOuterDiameter?: number
+  minWidth?: number
+  maxWidth?: number
+  sortBy?: 'price' | 'viewcount' | 'created'
+  sortOrder?: 'asc' | 'desc'
+  page?: number
+  pageSize?: number
+}
+
+/** 拉取商城货源流（商品瀑布流，匿名可访问） */
+export function getMallFeed(params: MallFeedParams) {
+  const qs = buildQuery({
+    keyword: params.keyword,
+    brandId: params.brandId,
+    bearingTypeId: params.bearingTypeId,
+    category: params.category,
+    minInnerDiameter: params.minInnerDiameter,
+    maxInnerDiameter: params.maxInnerDiameter,
+    minOuterDiameter: params.minOuterDiameter,
+    maxOuterDiameter: params.maxOuterDiameter,
+    minWidth: params.minWidth,
+    maxWidth: params.maxWidth,
+    sortBy: params.sortBy,
+    sortOrder: params.sortOrder,
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 20
+  })
+  return request<Paged<MallFeedItem>>(`${API.MALL_FEED}?${qs}`, { auth: false })
 }

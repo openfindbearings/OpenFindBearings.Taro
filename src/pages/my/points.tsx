@@ -105,6 +105,16 @@ export default function PointsPage() {
           )}
         </View>
 
+        {/* v2.14.0 商城导购：权益兑换入口（置顶卡/挂礼，轴承币与商家金兑换） */}
+        <View
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, paddingLeft: 16, paddingRight: 16, paddingTop: 13, paddingBottom: 13 }}
+          onClick={() => Taro.navigateTo({ url: '/pages/my/redeem' })}
+        >
+          <Icon name='gift' size={18} color={t.primary} />
+          <Text style={{ ...fs(14), color: t.textPrimary, marginLeft: 8, flex: 1 }}>权益兑换</Text>
+          <Icon name='chevron-right' size={16} color={t.textTertiary} />
+        </View>
+
         {/* 流水列表 */}
         <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12 }}>
           {items.length === 0 && (
