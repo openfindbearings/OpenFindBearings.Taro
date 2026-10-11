@@ -36,6 +36,28 @@ export const ProSmartHome: React.FC<ProHomeProps> = ({ t }: ProHomeProps) => (
 /** 设置页"首页模式"的 pro 扩展选项：开源版为空数组（不出现「智能」） */
 export const PRO_HOME_MODES: Array<{ key: string; label: string }> = []
 
+/** 商品卡操作位 props（v2.14.0 商城导购）：主题色板 + 字号缩放 + 点击回调。
+ *  fs 用宽松签名以兼容各端 useFs 返回类型（取 fontSize 使用）；闭源实现须签名对齐。 */
+export interface ProProductActionProps {
+  t: {
+    primary?: string
+    textOnPrimary?: string
+  }
+  fs?: (size: number, bold?: boolean) => any
+  onPress: () => void
+}
+
+/** 商品卡操作位（v2.14.0 商城导购）：开源版渲染"联系商家"（落到货源详情，信息撮合闭环）；
+ *  闭源自用版在 ext/pro 目录内替换为"加入购物车/立即购买"；共享商品卡只 import 本导出，签名须对齐。 */
+export const ProProductAction: React.FC<ProProductActionProps> = ({ t, fs, onPress }: ProProductActionProps) => (
+  <View
+    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t?.primary || '#2563EB', borderRadius: 14, paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5 }}
+    onClick={onPress}
+  >
+    <Text style={{ ...(fs ? fs(12, true) : { fontSize: 12, fontWeight: 600 }), color: t?.textOnPrimary || '#FFFFFF' }}>联系商家</Text>
+  </View>
+)
+
 /** 开源版 App 显示名（扩展点可覆盖为品牌名） */
 export const PRO_APP_DISPLAY_NAME = 'OpenFindBearings'
 

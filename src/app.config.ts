@@ -36,6 +36,8 @@ export default defineAppConfig({
     'pages/my/history',
     'pages/my/corrections',
  'pages/my/points',
+    // v2.14.0 商城导购：权益兑换主体迁至"我的"线（商城 Tab 顶部留入口）
+    'pages/my/redeem',
     // v2.13.0 等级玩法：个人段位详情页 + 商家等级详情页
     'pages/my/level',
     'pages/merchant/level',

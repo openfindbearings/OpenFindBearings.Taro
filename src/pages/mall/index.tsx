@@ -1,324 +1,327 @@
-// 商城页（v2.3.0 商城虚拟权益；改动说明：标题由"轴承币商城"改"商城"——商城不止轴承币兑换）：虚拟权益目录 + 我的兑换订单。
-// 一期上架置顶卡（商户买曝光）；兑换入口在商品管理页"置顶"按钮（需选定具体商品），
-// 本页承担"看得见价格与库存"的橱窗职责 + 订单凭据查询。
-// 合规三纪律沿用：轴承币不可充值、不可提现、不可转让；虚拟权益非实物商品。
-// RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight 数值、无多值简写。
+// 商城页（v2.14.0 商城导购）：从"积分权益橱窗"升级为"货源导购"——全站在售货源商品瀑布流。
+// 信息架构：商城 Tab = 供给侧货源导购（对比 首页=工具查询、发现=需求侧寻货）。
+// 数据源：BFF /mobile/mall/feed（匿名可访问）；卡片进货源详情（轴承详情），商家行进店铺页。
+// 权益兑换主体迁至"我的-积分"线（pages/my/redeem），本页顶部留小入口。
+// 交易能力（购物车/下单/支付）为闭源增量，经扩展点 ProProductAction 后插，本页不含成交。
+// RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight/fontSize 数值。
 import { useState } from 'react'
-import { View, Text, Input } from '@tarojs/components'
+import { View, Text, Input, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
-import { useTheme } from '../../hooks/useTheme'
-import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
-import LoginGuide from '../../components/LoginGuide'
-import { useAuthStore } from '../../stores/auth'
-import { useMerchantStore } from '../../stores/merchant'
-import { getMallItems, getMallOrders, redeemGift, confirmReceipt, MALL_CATEGORY, MALL_ORDER_STATUS, type MallCatalog, type MallOrder, type MallItem } from '../../services/mall'
-import { showConfirmDialog } from '../../components/ConfirmDialog'
-import { vibrateSuccess } from '../../utils/haptics'
-import { formatTime } from '../../utils/format'
+import ProductCard from '../../components/ProductCard'
+import { useTheme } from '../../hooks/useTheme'
+import { useFs } from '../../hooks/useFontScale'
+import { getMallFeed, type MallFeedItem, type MallFeedParams } from '../../services/mall'
+import { getHome, type HomeRef } from '../../services/home'
 
-// 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
+// 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 统一提供
 definePageConfig({ disableScroll: true })
 
-/** 订单状态中文名（与 API MallOrderStatus 对齐） */
-function statusText(s: number): string {
-  switch (s) {
-    case MALL_ORDER_STATUS.FULFILLED: return '已生效'
-    case MALL_ORDER_STATUS.FAILED: return '失败已退分'
-    case MALL_ORDER_STATUS.REFUNDED: return '已退款'
-    default: return '处理中'
-  }
-}
+/** 每页条数 */
+const PAGE_SIZE = 20
 
-/** 订单状态色（已生效绿、失败/退款橙、处理中灰） */
-function statusColor(s: number, t: any): string {
-  if (s === MALL_ORDER_STATUS.FULFILLED) return '#16A34A'
-  if (s === MALL_ORDER_STATUS.FAILED || s === MALL_ORDER_STATUS.REFUNDED) return '#F59E0B'
-  return t.textTertiary
-}
+/** 排序栏选项（对应 API sortBy） */
+const SORTS: { key: 'created' | 'price' | 'viewcount'; label: string }[] = [
+  { key: 'created', label: '综合' },
+  { key: 'price', label: '价格' },
+  { key: 'viewcount', label: '热度' }
+]
 
-/** 商城页：虚拟权益橱窗 + 我的订单 */
+/** 尺寸筛选内部状态 */
+interface SizeState { minIn?: number; maxIn?: number; minOut?: number; maxOut?: number; minW?: number; maxW?: number }
+
+/** 商城货源导购页 */
 export default function MallPage() {
   const t = useTheme()
   const fs = useFs()
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
-  const [catalog, setCatalog] = useState<MallCatalog | null>(null)
-  const [orders, setOrders] = useState<MallOrder[]>([])
 
-  // 进页/回页刷新（兑换后返回本页余额与订单需同步）
-  useDidShow(() => {
-    if (!isLoggedIn) { setCatalog(null); setOrders([]); return }
-    void getMallItems().then((r) => setCatalog(r || null)).catch(() => { /* 静默 */ })
-    void getMallOrders(1, 10).then((r) => setOrders(r?.items || [])).catch(() => { /* 静默 */ })
+  // 搜索
+  const [input, setInput] = useState('')
+  const [keyword, setKeyword] = useState('')
+  // 排序
+  const [sortBy, setSortBy] = useState<'created' | 'price' | 'viewcount'>('created')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  // 筛选
+  const [showFilter, setShowFilter] = useState(false)
+  const [brand, setBrand] = useState<HomeRef | null>(null)
+  const [type, setType] = useState<HomeRef | null>(null)
+  const [sizeInput, setSizeInput] = useState({ minIn: '', maxIn: '', minOut: '', maxOut: '', minW: '', maxW: '' })
+  const [size, setSize] = useState<SizeState>({})
+  const [brands, setBrands] = useState<HomeRef[]>([])
+  const [types, setTypes] = useState<HomeRef[]>([])
+  // 列表
+  const [items, setItems] = useState<MallFeedItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  /** 组装货源流查询参数（关键词 + 品牌/类型/尺寸 + 排序 + 分页），over 覆盖变更字段 */
+  const buildParams = (p: number, over?: Partial<MallFeedParams>): MallFeedParams => ({
+    keyword: keyword.trim() || undefined,
+    brandId: brand?.id,
+    bearingTypeId: type?.id,
+    sortBy,
+    sortOrder,
+    minInnerDiameter: size.minIn,
+    maxInnerDiameter: size.maxIn,
+    minOuterDiameter: size.minOut,
+    maxOuterDiameter: size.maxOut,
+    minWidth: size.minW,
+    maxWidth: size.maxW,
+    page: p,
+    pageSize: PAGE_SIZE,
+    ...over
   })
 
-  /** 置顶卡兑换入口：跳商品管理页选具体商品（无在职商户则引导入驻） */
-  // 改动说明（v2.10.0 寻货置顶）：置顶卡按对象类型分流——
-  // 需求卡（targetKind=2）去"我的寻货"选需求兑换（个人轴承币）；商品卡进商家管理选在售商品
-  const goPin = (item: MallItem) => {
-    if ((item.targetKind ?? 1) === 2) {
-      Taro.navigateTo({ url: '/pages/my/sourcing' })
-      return
-    }
-    const m = useMerchantStore.getState().currentMerchant()
-    if (!m) {
-      Taro.showToast({ title: '入驻商户后才能置顶', icon: 'none' })
-      return
-    }
-    Taro.navigateTo({ url: '/pages/merchant/manage' })
-  }
-
-  // ===== v2.4.0 商家挂礼：收货信息弹层 + 托管兑换 =====
-  const user = useAuthStore((s) => s.user)
-  const [giftItem, setGiftItem] = useState<MallItem | null>(null)
-  const [gName, setGName] = useState('')
-  const [gPhone, setGPhone] = useState('')
-  const [gAddr, setGAddr] = useState('')
-  const [gBusy, setGBusy] = useState(false)
-
-  /** 打开收货弹层：昵称/电话从登录资料预填省输入 */
-  const openGift = (item: MallItem) => {
-    setGiftItem(item)
-    setGName(user?.nickname || user?.userName || '')
-    setGPhone(user?.phoneNumber || '')
-    setGAddr('')
-  }
-
-  /** 提交礼品兑换（托管扣分；失败原因直接 toast） */
-  const doRedeemGift = async () => {
-    if (!giftItem) return
-    if (!gName.trim() || !gPhone.trim() || !gAddr.trim()) {
-      Taro.showToast({ title: '收货人/电话/地址都要填哦', icon: 'none' })
-      return
-    }
-    setGBusy(true)
+  /** 拉取货源流（reset=true 覆盖，false 追加下一页） */
+  const load = async (reset: boolean, over?: Partial<MallFeedParams>) => {
+    const p = reset ? 1 : page + 1
+    if (reset) setLoading(true)
+    else setLoadingMore(true)
     try {
-      const r = await redeemGift(giftItem.id, gName.trim(), gPhone.trim(), gAddr.trim(), `gift-${giftItem.id}-${Date.now()}`)
-      setGiftItem(null)
-      void vibrateSuccess()
-      Taro.showToast({ title: `兑换成功 -${r.pointsSpent} 轴承币`, icon: 'success' })
-      const list = await getMallOrders(1, 10).catch(() => null)
-      if (list) setOrders(list.items || [])
-    } catch (e: any) {
-      Taro.showToast({ title: e?.message || '兑换失败', icon: 'none' })
-    } finally {
-      setGBusy(false)
+      const r = await getMallFeed(buildParams(p, over))
+      const list = r?.items || []
+      setItems((prev) => (reset ? list : [...prev, ...list]))
+      setTotal(r?.totalCount ?? 0)
+      setPage(p)
+    } catch {
+      if (reset) { setItems([]); setTotal(0) }
     }
+    setLoading(false)
+    setLoadingMore(false)
   }
 
-  /** 确认收货：轴承币结算进商家金库（二次确认防误点） */
-  const doConfirm = async (o: MallOrder) => {
-    const ok = await showConfirmDialog({
-      title: '确认收货',
-      content: `确认已收到「${o.itemName}」？确认后 ${o.pointsSpent} 轴承币将结算给商家。若未收到请勿确认，可联系平台处理。`
-    })
-    if (!ok) return
-    try {
-      const r = await confirmReceipt(o.id)
-      void vibrateSuccess()
-      Taro.showToast({ title: r.settled > 0 ? '已确认收货' : '已确认收货', icon: 'success' })
-      const list = await getMallOrders(1, 10).catch(() => null)
-      if (list) setOrders(list.items || [])
-      void getMallItems().then((c2) => setCatalog(c2 || null)).catch(() => { /* 静默 */ })
-    } catch (e: any) {
-      Taro.showToast({ title: e?.message || '操作失败', icon: 'none' })
-    }
+  // 进页/回页加载（品牌/类型字典一次性拉取，供筛选面板）
+  useDidShow(() => {
+    void load(true)
+    getHome().then((h) => { setBrands(h?.brands || []); setTypes(h?.bearingTypes || []) }).catch(() => { /* 静默 */ })
+  })
+
+  /** 关键词搜索 */
+  const doSearch = () => {
+    const k = input.trim()
+    setKeyword(k)
+    setPage(1)
+    void load(true, { keyword: k || undefined })
   }
 
-  /** 礼品物流态文案（与 API ShipStatus 对齐） */
-  const shipText = (s?: number) => {
-    if (s === 1) return '待商家发货'
-    if (s === 2) return '已发货·待确认'
-    if (s === 3) return '已收货'
-    if (s === 4) return '已退款'
+  /** 排序：点击已选字段切换升降序，否则选中新字段（热度默认降序，其余升序） */
+  const handleSort = (key: 'created' | 'price' | 'viewcount') => {
+    let order: 'asc' | 'desc'
+    if (sortBy === key) order = sortOrder === 'asc' ? 'desc' : 'asc'
+    else order = key === 'created' ? 'desc' : 'asc'
+    setSortBy(key)
+    setSortOrder(order)
+    setPage(1)
+    void load(true, { sortBy: key, sortOrder: order })
+  }
+
+  /** 选/清品牌筛选 */
+  const selectBrand = (b: HomeRef | null) => { setBrand(b); setPage(1); void load(true, { brandId: b?.id }) }
+  /** 选/清类型筛选 */
+  const selectType = (x: HomeRef | null) => { setType(x); setPage(1); void load(true, { bearingTypeId: x?.id }) }
+
+  /** 应用尺寸筛选 */
+  const applySize = () => {
+    const num = (s: string) => (s.trim() === '' ? undefined : Number(s))
+    const sf: SizeState = { minIn: num(sizeInput.minIn), maxIn: num(sizeInput.maxIn), minOut: num(sizeInput.minOut), maxOut: num(sizeInput.maxOut), minW: num(sizeInput.minW), maxW: num(sizeInput.maxW) }
+    setSize(sf)
+    setShowFilter(false)
+    setPage(1)
+    void load(true, { minInnerDiameter: sf.minIn, maxInnerDiameter: sf.maxIn, minOuterDiameter: sf.minOut, maxOuterDiameter: sf.maxOut, minWidth: sf.minW, maxWidth: sf.maxW })
+  }
+
+  /** 清空尺寸筛选 */
+  const clearSize = () => {
+    setSize({})
+    setSizeInput({ minIn: '', maxIn: '', minOut: '', maxOut: '', minW: '', maxW: '' })
+    setPage(1)
+    void load(true, { minInnerDiameter: undefined, maxInnerDiameter: undefined, minOuterDiameter: undefined, maxOuterDiameter: undefined, minWidth: undefined, maxWidth: undefined })
+  }
+
+  /** 触底加载下一页 */
+  const loadMore = () => {
+    if (loadingMore || loading || items.length >= total) return
+    void load(false)
+  }
+
+  const goBearing = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })
+  const goMerchant = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
+
+  const hasFilter = !!(brand || type || size.minIn != null || size.maxIn != null || size.minOut != null || size.maxOut != null || size.minW != null || size.maxW != null)
+
+  /** 尺寸范围文案 */
+  const fmtRange = (min?: number, max?: number) => {
+    if (min != null && max != null) return `${min}-${max}`
+    if (min != null) return `≥${min}`
+    if (max != null) return `≤${max}`
     return ''
   }
 
   return (
-    <PageLayout nav={<NavBar title='商城' />} tabbar={<CustomTabBar />}>
-      {!isLoggedIn && <LoginGuide icon='gift' text='登录后即可用轴承币兑换权益' />}
-      {isLoggedIn && (
-        <View>
-          {/* 余额条：兑换能力前置可见，不足直接引导去赚 */}
-          <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <Text style={{ ...fs(24), color: t.primary, fontWeight: '700' }}>{catalog?.balance ?? 0}</Text>
-              <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>我的轴承币</Text>
-            </View>
-            <View
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary, borderRadius: 16, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
-              onClick={() => Taro.navigateTo({ url: '/pages/my/tasks' })}
-            >
-              <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去赚轴承币</Text>
-            </View>
-          </View>
+    <PageLayout nav={<NavBar title='商城' />} tabbar={<CustomTabBar />} onEndReached={loadMore}>
+      <View>
+        {/* 顶部：权益兑换入口（主体已迁至"我的-积分"线，此处留小入口） */}
+        <View
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 11, paddingBottom: 11 }}
+          onClick={() => Taro.navigateTo({ url: '/pages/my/redeem' })}
+        >
+          <Icon name='gift' size={18} color={t.primary} />
+          <Text style={{ ...fs(14), color: t.textPrimary, marginLeft: 8, flex: 1 }}>轴承币权益兑换</Text>
+          <Text style={{ ...fs(12), color: t.textTertiary }}>置顶卡 · 挂礼</Text>
+          <Icon name='chevron-right' size={16} color={t.textTertiary} />
+        </View>
 
-          {/* v2.4.0 挂礼收货信息面板：RN 不支持 fixed，作为常规块内嵌于目录之上 */}
-          {giftItem && (
-            <View style={{ display: 'flex', flexDirection: 'column', backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
-              <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>兑换：{giftItem.name}</Text>
-              <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
-                {giftItem.price} 轴承币 · 确认收货后才会结算给商家，收货前可联系平台退款
-              </Text>
-              <Input
-                style={{ ...fs(15), backgroundColor: t.bgInput, borderRadius: 8, padding: 10, marginTop: 10, color: t.textPrimary }}
-                placeholder='收货人姓名'
-                placeholderTextColor={t.textTertiary}
-                value={gName}
-                onInput={(e: any) => setGName(e.detail.value)}
-              />
-              <Input
-                style={{ ...fs(15), backgroundColor: t.bgInput, borderRadius: 8, padding: 10, marginTop: 8, color: t.textPrimary }}
-                placeholder='联系电话'
-                placeholderTextColor={t.textTertiary}
-                type='number'
-                value={gPhone}
-                onInput={(e: any) => setGPhone(e.detail.value)}
-              />
-              <Input
-                style={{ ...fs(15), backgroundColor: t.bgInput, borderRadius: 8, padding: 10, marginTop: 8, color: t.textPrimary }}
-                placeholder='详细收货地址'
-                placeholderTextColor={t.textTertiary}
-                value={gAddr}
-                onInput={(e: any) => setGAddr(e.detail.value)}
-              />
-              <View style={{ display: 'flex', flexDirection: 'row', marginTop: 12 }}>
-                <View
-                  style={{ flex: 1, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.bgInput }}
-                  onClick={() => setGiftItem(null)}
-                >
-                  <Text style={{ ...fs(14), color: t.textSecondary }}>取消</Text>
-                </View>
-                <View
-                  style={{ flex: 1, marginLeft: 10, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: gBusy ? t.textTertiary : t.primary }}
-                  onClick={() => { if (!gBusy) doRedeemGift() }}
-                >
-                  <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: '600' }}>{gBusy ? '提交中…' : `花 ${giftItem.price} 轴承币兑换`}</Text>
-                </View>
-              </View>
+        {/* 搜索输入行 */}
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 20, paddingLeft: 12, paddingRight: 12 }}>
+          <Icon name='search' size={18} color={t.textTertiary} />
+          <Input
+            style={{ ...fs(15), color: t.textPrimary, flex: 1, marginLeft: 8, paddingTop: 8, paddingBottom: 8 }}
+            type='text'
+            placeholder='搜型号、品牌、类型...'
+            placeholderTextColor={t.textTertiary}
+            value={input}
+            onInput={(e: any) => setInput(e.detail.value)}
+            onConfirm={doSearch}
+            confirmType='search'
+          />
+          {input.length > 0 && (
+            <View onClick={doSearch} style={{ paddingLeft: 8 }}>
+              <Text style={{ ...fs(13), color: t.primary }}>搜索</Text>
             </View>
           )}
-
-          {/* 权益目录 */}
-          <View style={{ marginLeft: 12, marginRight: 12, marginTop: 12 }}>
-            <Text style={{ ...fs(13), color: t.textSecondary }}>可兑换权益</Text>
-            {(catalog?.items || []).map((item) => (
-              <View
-                key={item.id}
-                style={{
-                  backgroundColor: t.bgCard, borderRadius: 12, padding: 12, marginTop: 10,
-                  display: 'flex', flexDirection: 'row', alignItems: 'center',
-                  opacity: item.soldOut ? 0.6 : 1
-                }}
-              >
-                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <Icon name={item.icon || 'gift'} size={22} color={t.primary} />
-                </View>
-                <View style={{ display: 'flex', flexDirection: 'column', flex: 1, marginLeft: 10 }}>
-                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>{item.name}</Text>
-                    {item.flashing && (
-                      <View style={{ backgroundColor: '#EF4444', borderRadius: 4, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1, marginLeft: 6 }}>
-                        <Text style={{ ...fs(10), color: '#FFFFFF' }}>闪购</Text>
-                      </View>
-                    )}
-                    {item.soldOut && (
-                      <View style={{ backgroundColor: t.textTertiary, borderRadius: 4, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1, marginLeft: 6 }}>
-                        <Text style={{ ...fs(10), color: '#FFFFFF' }}>已兑完</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>{item.description}</Text>
-                  {/* v2.4.0 挂礼：展示来源商户（信任来自具体商家而非平台） */}
-                  {item.ownerMerchantName ? (
-                    <Text style={{ ...fs(11), color: t.primary, marginTop: 3 }}>来自 {item.ownerMerchantName}</Text>
-                  ) : null}
-                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                    <Text style={{ ...fs(15), color: t.primary, fontWeight: '700' }}>{item.price}</Text>
-                    {/* 改动说明（v2.10.0 商家金）：商品置顶卡按商家金定价（金库支付），其余权益仍是个人轴承币 */}
-                    <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 4 }}>
-                      {item.category === MALL_CATEGORY.PIN_CARD && (item.targetKind ?? 1) === 1 ? '商家金' : '轴承币'}
-                    </Text>
-                    {item.flashing && item.originalPrice != null && (
-                      <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 6, textDecoration: 'line-through' }}>原价 {item.originalPrice}</Text>
-                    )}
-                    {item.stock > 0 && (
-                      <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 8 }}>限量 {item.stock} 份·已兑 {item.soldCount}</Text>
-                    )}
-                  </View>
-                </View>
-                <View
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    backgroundColor: item.soldOut ? t.bgInput : t.primary,
-                    borderRadius: 16, paddingLeft: 12, paddingRight: 12, paddingTop: 7, paddingBottom: 7
-                  }}
-                  onClick={() => {
-                    if (item.soldOut) return
-                    if (item.category === MALL_CATEGORY.PIN_CARD) goPin(item)
-                    else if (item.category === MALL_CATEGORY.GIFT) openGift(item)
-                    else Taro.showToast({ title: '该权益即将上线', icon: 'none' })
-                  }}
-                >
-                  <Text style={{ ...fs(12), color: item.soldOut ? t.textTertiary : '#FFFFFF', fontWeight: '600' }}>
-                    {item.soldOut ? '兑完' : item.category === MALL_CATEGORY.PIN_CARD ? '去置顶' : item.category === MALL_CATEGORY.GIFT ? '兑换' : '即将上线'}
-                  </Text>
-                </View>
-              </View>
-            ))}
-            {(catalog?.items || []).length === 0 && (
-              <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24, paddingBottom: 24 }}>
-                <Text style={{ ...fs(13), color: t.textTertiary }}>暂无上架权益</Text>
-              </View>
-            )}
-          </View>
-
-          {/* 我的订单：兑换凭据（失败/退款可见，减少客服问询） */}
-          <View style={{ marginLeft: 12, marginRight: 12, marginTop: 16 }}>
-            <Text style={{ ...fs(13), color: t.textSecondary }}>我的兑换</Text>
-            {orders.map((o) => (
-              <View key={o.id} style={{ backgroundColor: t.bgCard, borderRadius: 10, padding: 12, marginTop: 8, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ ...fs(14), color: t.textPrimary }}>{o.itemName}</Text>
-                  <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 3 }}>{formatTime(o.createdAt)}</Text>
-                  {o.remark ? <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{o.remark}</Text> : null}
-                </View>
-                <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <Text style={{ ...fs(14), color: t.textPrimary }}>-{o.pointsSpent}</Text>
-                  <Text style={{ ...fs(11), color: statusColor(o.status, t), marginTop: 3 }}>
-                    {o.shipStatus ? `${statusText(o.status)}·${shipText(o.shipStatus)}` : statusText(o.status)}
-                  </Text>
-                  {/* v2.4.0 挂礼：已发货未收货提供确认收货入口 */}
-                  {o.shipStatus === 2 && (
-                    <View
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary, borderRadius: 12, paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, marginTop: 6 }}
-                      onClick={() => doConfirm(o)}
-                    >
-                      <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>确认收货</Text>
-                    </View>
-                  )}
-                  {o.shipStatus === 2 && o.shipTracking ? (
-                    <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }}>单号 {o.shipTracking}</Text>
-                  ) : null}
-                </View>
-              </View>
-            ))}
-            {orders.length === 0 && (
-              <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 16, paddingBottom: 16 }}>
-                <Text style={{ ...fs(12), color: t.textTertiary }}>还没有兑换记录</Text>
-              </View>
-            )}
-          </View>
-
-          <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 16, marginBottom: 8 }}>
-            轴承币不可充值、不可提现、不可转让，仅可在平台内兑换权益
-          </Text>
-          <View style={{ height: 80 }} />
         </View>
-      )}
+
+        {/* 排序栏 + 筛选开关 */}
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 10, paddingBottom: 10 }}>
+          {SORTS.map((s) => (
+            <View key={s.key} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginRight: 18 }} onClick={() => handleSort(s.key)}>
+              <Text style={{ ...fs(13, sortBy === s.key), color: sortBy === s.key ? t.primary : t.textSecondary }}>{s.label}</Text>
+              {sortBy === s.key && s.key !== 'created' && (
+                <Text style={{ ...fs(11), color: t.primary }}>{sortOrder === 'asc' ? ' ↑' : ' ↓'}</Text>
+              )}
+            </View>
+          ))}
+          <View style={{ flex: 1 }} />
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={() => setShowFilter((v) => !v)}>
+            <Icon name='filter' size={15} color={hasFilter ? t.primary : t.textSecondary} />
+            <Text style={{ ...fs(13), color: hasFilter ? t.primary : t.textSecondary, marginLeft: 4 }}>筛选</Text>
+          </View>
+        </View>
+
+        {/* 已选筛选 chips */}
+        {hasFilter && (
+          <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginLeft: 12, marginRight: 12, marginTop: 10 }}>
+            {brand && (
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primaryLight, borderRadius: 14, paddingLeft: 10, paddingRight: 8, paddingTop: 4, paddingBottom: 4, marginRight: 8, marginBottom: 6 }} onClick={() => selectBrand(null)}>
+                <Text style={{ ...fs(12, true), color: t.primary }}>品牌:{brand.name}</Text>
+                <Icon name='x' size={12} color={t.primary} />
+              </View>
+            )}
+            {type && (
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primaryLight, borderRadius: 14, paddingLeft: 10, paddingRight: 8, paddingTop: 4, paddingBottom: 4, marginRight: 8, marginBottom: 6 }} onClick={() => selectType(null)}>
+                <Text style={{ ...fs(12, true), color: t.primary }}>类型:{type.name}</Text>
+                <Icon name='x' size={12} color={t.primary} />
+              </View>
+            )}
+            {(size.minIn != null || size.maxIn != null) && (
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primaryLight, borderRadius: 14, paddingLeft: 10, paddingRight: 8, paddingTop: 4, paddingBottom: 4, marginRight: 8, marginBottom: 6 }} onClick={clearSize}>
+                <Text style={{ ...fs(12, true), color: t.primary }}>内径:{fmtRange(size.minIn, size.maxIn)}</Text>
+                <Icon name='x' size={12} color={t.primary} />
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 筛选面板：品牌 / 类型 / 尺寸 */}
+        {showFilter && (
+          <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 10, borderRadius: 12, padding: 14 }}>
+            {/* 品牌 */}
+            <Text style={{ ...fs(13), color: t.textSecondary }}>品牌</Text>
+            <ScrollView scrollX style={{ display: 'flex', flexDirection: 'row', marginTop: 8, whiteSpace: 'nowrap' }}>
+              {brands.map((b) => (
+                <View key={b.id} style={{ display: 'flex', flexDirection: 'row', backgroundColor: brand?.id === b.id ? t.primary : t.bgInput, borderRadius: 14, paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5, marginRight: 8 }} onClick={() => selectBrand(brand?.id === b.id ? null : b)}>
+                  <Text style={{ ...fs(12), color: brand?.id === b.id ? '#FFFFFF' : t.textSecondary }}>{b.name}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            {/* 类型 */}
+            <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 12 }}>类型</Text>
+            <ScrollView scrollX style={{ display: 'flex', flexDirection: 'row', marginTop: 8, whiteSpace: 'nowrap' }}>
+              {types.map((x) => (
+                <View key={x.id} style={{ display: 'flex', flexDirection: 'row', backgroundColor: type?.id === x.id ? t.primary : t.bgInput, borderRadius: 14, paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5, marginRight: 8 }} onClick={() => selectType(type?.id === x.id ? null : x)}>
+                  <Text style={{ ...fs(12), color: type?.id === x.id ? '#FFFFFF' : t.textSecondary }}>{x.name}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            {/* 尺寸 */}
+            <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 12 }}>尺寸范围 (mm)</Text>
+            <FilterRange label='内径' t={t} fs={fs} min={sizeInput.minIn} max={sizeInput.maxIn} onMin={(v: string) => setSizeInput((s) => ({ ...s, minIn: v }))} onMax={(v: string) => setSizeInput((s) => ({ ...s, maxIn: v }))} />
+            <FilterRange label='外径' t={t} fs={fs} min={sizeInput.minOut} max={sizeInput.maxOut} onMin={(v: string) => setSizeInput((s) => ({ ...s, minOut: v }))} onMax={(v: string) => setSizeInput((s) => ({ ...s, maxOut: v }))} />
+            <FilterRange label='宽度' t={t} fs={fs} min={sizeInput.minW} max={sizeInput.maxW} onMin={(v: string) => setSizeInput((s) => ({ ...s, minW: v }))} onMax={(v: string) => setSizeInput((s) => ({ ...s, maxW: v }))} />
+            <View style={{ display: 'flex', flexDirection: 'row', marginTop: 14 }}>
+              <View style={{ flex: 1, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.border }} onClick={clearSize}>
+                <Text style={{ ...fs(14), color: t.textSecondary }}>重置</Text>
+              </View>
+              <View style={{ flex: 1, marginLeft: 10, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary }} onClick={applySize}>
+                <Text style={{ ...fs(14), color: '#FFFFFF', fontWeight: 'bold' }}>确定</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 商品瀑布流（两列） */}
+        <View style={{ marginLeft: 12, marginRight: 12, marginTop: 12 }}>
+          {loading && (
+            <View style={{ padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ ...fs(14), color: t.textSecondary }}>加载中…</Text>
+            </View>
+          )}
+          {!loading && (
+            <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              {items.map((it) => (
+                <View key={it.id} style={{ width: '48.5%' }}>
+                  <ProductCard item={it} onPress={() => goBearing(it.bearingId)} onMerchant={() => goMerchant(it.merchantId)} />
+                </View>
+              ))}
+            </View>
+          )}
+          {!loading && items.length === 0 && (
+            <View style={{ paddingTop: 48, paddingBottom: 48, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Icon name='package' size={48} color={t.border} />
+              <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>暂无货源</Text>
+              <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 6 }}>试试其他关键词或筛选条件</Text>
+            </View>
+          )}
+          {!loading && items.length > 0 && items.length < total && (
+            <View style={{ paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center' }} onClick={loadMore}>
+              <Text style={{ ...fs(14), color: t.primary }}>{loadingMore ? '加载中…' : '加载更多'}</Text>
+            </View>
+          )}
+          {!loading && items.length > 0 && (
+            <View style={{ paddingTop: 4, paddingBottom: 8, display: 'flex', alignItems: 'center' }}>
+              <Text style={{ ...fs(12), color: t.textTertiary }}>共 {total} 条货源</Text>
+            </View>
+          )}
+        </View>
+        <View style={{ height: 80 }} />
+      </View>
     </PageLayout>
+  )
+}
+
+/** 单个尺寸区间输入行（内径/外径/宽度） */
+function FilterRange({ label, t, fs, min, max, onMin, onMax }: any) {
+  return (
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+      <Text style={{ ...fs(13), color: t.textSecondary, width: 40 }}>{label}</Text>
+      <Input style={{ ...fs(13), color: t.textPrimary, backgroundColor: t.bgInput, flex: 1, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6 }} type='digit' placeholder='最小' placeholderTextColor={t.textTertiary} value={min} onInput={(e: any) => onMin(e.detail.value)} />
+      <Text style={{ ...fs(13), color: t.textTertiary, marginLeft: 8, marginRight: 8 }}>—</Text>
+      <Input style={{ ...fs(13), color: t.textPrimary, backgroundColor: t.bgInput, flex: 1, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6 }} type='digit' placeholder='最大' placeholderTextColor={t.textTertiary} value={max} onInput={(e: any) => onMax(e.detail.value)} />
+    </View>
   )
 }
