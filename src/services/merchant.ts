@@ -416,20 +416,25 @@ export function updateMyBearing(id: string, body: { priceDescription?: string; s
   return request<OpResult>(API.MERCHANT_BEARING_UPDATE(id), { method: 'PUT', data: body })
 }
 
-/** 上架在售商品 */
-export function putOnShelf(bearingId: string) {
-  return request<OpResult>(API.MERCHANT_BEARING_ON_SHELF(bearingId), { method: 'POST' })
+/** 上架在售商品（id=关联主键 MerchantBearingId） */
+export function putOnShelf(id: string) {
+  return request<OpResult>(API.MERCHANT_BEARING_ON_SHELF(id), { method: 'POST' })
 }
 
-/** 下架在售商品 */
-export function takeOffShelf(bearingId: string) {
-  return request<OpResult>(API.MERCHANT_BEARING_OFF_SHELF(bearingId), { method: 'POST' })
+/** 下架在售商品（id=关联主键 MerchantBearingId） */
+export function takeOffShelf(id: string) {
+  return request<OpResult>(API.MERCHANT_BEARING_OFF_SHELF(id), { method: 'POST' })
 }
 
-/** 置为补货中（v1.7.21 三态）：有该型号暂时缺货，买家侧仍展示带徽标；eta 为预计到货自由文本 */
-export function restockBearing(bearingId: string, eta?: string) {
+/** 置为补货中（v1.7.21 三态，id=关联主键 MerchantBearingId）：有该型号暂时缺货，买家侧仍展示带徽标；eta 为预计到货自由文本 */
+export function restockBearing(id: string, eta?: string) {
   const qs = eta ? `?eta=${encodeURIComponent(eta)}` : ''
-  return request<OpResult>(`${API.MERCHANT_BEARING_RESTOCK(bearingId)}${qs}`, { method: 'POST' })
+  return request<OpResult>(`${API.MERCHANT_BEARING_RESTOCK(id)}${qs}`, { method: 'POST' })
+}
+
+/** 删除商品（v2.15.0 商家删除）：出售中/补货中需先下架，其余物理删除；失败抛后端 message */
+export function deleteMyBearing(id: string) {
+  return request<OpResult>(API.MERCHANT_BEARING_DELETE(id), { method: 'DELETE' })
 }
 
 /** 带当前商户上下文头的上传请求头 */

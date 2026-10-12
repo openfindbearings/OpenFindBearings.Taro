@@ -180,6 +180,8 @@ export const API = {
   MERCHANT_BEARING_UPDATE: (id: string) => `${API_PREFIX}/merchant/bearings/${id}`,
   MERCHANT_BEARING_ON_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/onshelf`,
   MERCHANT_BEARING_OFF_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/offshelf`,
+  // v2.15.0 商家删除：删除商品（出售中/补货中需先下架，其余物理删除）
+  MERCHANT_BEARING_DELETE: (id: string) => `${API_PREFIX}/merchant/bearings/${id}`,
   // v1.7.21 三态销售状态：置为补货中（eta 走 query）
   MERCHANT_BEARING_RESTOCK: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/restock`,
   /** 营业执照上传（店铺认证） */

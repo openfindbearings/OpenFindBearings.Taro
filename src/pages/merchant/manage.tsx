@@ -17,7 +17,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useMerchantStore } from '../../stores/merchant'
 import {
-  getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing,
+  getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing, deleteMyBearing,
   type MerchantBearingItem
 } from '../../services/merchant'
 import { searchBearings, type Bearing } from '../../services/bearing'
@@ -140,6 +140,8 @@ export default function MerchantManagePage() {
   }
 
   const onToggleShelf = (item: MerchantBearingItem) => {
+    // 改动说明（v2.15.0 修复）：上下架/补货的 API 路由以"关联主键 item.id"为参数，原误传 item.bearingId
+    // （平台轴承 ID），导致命中"关联不存在"而失败；编辑一直用 item.id 故未暴露。
     // 改动说明（v1.7.21 三态销售状态）：上/下架二选一升级为 ActionSheet 三态——
     // 在售 / 补货中（可选填预计到货）/ 下架；补货中在买家侧商家列表仍展示带徽标
     Taro.showActionSheet({ itemList: ['置为在售', '置为补货中', '置为下架'] })
@@ -148,7 +150,7 @@ export default function MerchantManagePage() {
         setBusyId(item.id)
         try {
           if (res.tapIndex === 0) {
-            await putOnShelf(item.bearingId)
+            await putOnShelf(item.id)
           } else if (res.tapIndex === 1) {
             // eta 可选：showModal editable（H5/小程序支持编辑；RN 端不支持 editable，
             // Taro 类型未声明该字段——cast 绕过，RN 上退化为确认框、eta 留空）
@@ -161,9 +163,9 @@ export default function MerchantManagePage() {
             }).catch(() => null)
             if (!m || !m.confirm) { setBusyId(null); return }
             eta = (m.content || '').trim()
-            await restockBearing(item.bearingId, eta || undefined)
+            await restockBearing(item.id, eta || undefined)
           } else {
-            await takeOffShelf(item.bearingId)
+            await takeOffShelf(item.id)
           }
           void vibrateSuccess()
           Taro.showToast({ title: '操作成功', icon: 'success' })
@@ -175,6 +177,27 @@ export default function MerchantManagePage() {
         }
       })
       .catch(() => { /* 取消 */ })
+  }
+
+  /** 删除商品（v2.15.0 商家删除）：出售中/补货中前置引导先下架（后端亦守卫）；否则二次确认后物理删除 */
+  const onDelete = async (item: MerchantBearingItem) => {
+    if (item.saleState === 1 || item.saleState === 2) {
+      Taro.showToast({ title: '出售中/补货中的商品请先下架再删除', icon: 'none' })
+      return
+    }
+    const ok = await showConfirmDialog({ title: '删除商品', content: `确定删除「${item.bearingPartNumber}」？删除后不可恢复。` })
+    if (!ok) return
+    setBusyId(item.id)
+    try {
+      await deleteMyBearing(item.id)
+      void vibrateSuccess()
+      Taro.showToast({ title: '已删除', icon: 'success' })
+      load(page, false)
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '删除失败', icon: 'none' })
+    } finally {
+      setBusyId(null)
+    }
   }
 
   /**
@@ -493,6 +516,13 @@ export default function MerchantManagePage() {
                     onClick={() => onToggleShelf(item)}
                   >
                     <Text style={{ ...fs(12), color: t.primary }}>状态</Text>
+                  </View>
+                  {/* v2.15.0 商家删除：出售中/补货中点击会提示先下架 */}
+                  <View
+                    style={{ backgroundColor: t.bgInput, borderRadius: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, marginLeft: 8 }}
+                    onClick={() => onDelete(item)}
+                  >
+                    <Text style={{ ...fs(12), color: '#EF4444' }}>删除</Text>
                   </View>
                 </View>
                 {/* 编辑表单（行内展开） */}
