@@ -50,13 +50,24 @@ export interface BearingMerchant {
   pinnedUntil?: string | null
 }
 
-/** 轴承替代品项（对齐 BFF InterchangeItem） */
+/** 轴承替代品项（对齐 BFF InterchangeItem，v2.16.0 三级治理：含类型标签与责任提示字段） */
 export interface Interchange {
   id: string
+  /** 替代品（对方）轴承ID，供导航 */
+  bearingId: string
   partNumber: string
-  brandName: string
-  bearingType: string
+  brandName?: string | null
+  bearingType?: string | null
+  innerDiameter: number
+  outerDiameter: number
+  width: number
+  /** exact=标准等效替代 / conditional=条件替代 / functional=仅供参考 */
+  interchangeType?: string | null
+  typeLabel: string
   confidence: number
+  remarks?: string | null
+  isBidirectional: boolean
+  isAutoRecommendable: boolean
 }
 
 /** 分页结果（BFF PagedResult 透传） */
