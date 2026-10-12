@@ -150,19 +150,30 @@ export default function BearingDetailPage() {
           ))}
         </View>
 
-        {/* 替代品 */}
+        {/* 替代品（v2.16.0 三级治理：标准等效替代 / 条件替代（需评估） / 仅供参考；含责任提示） */}
         {interchanges.length > 0 && (
           <View className='bd-card' style={{ backgroundColor: t.bgCard }}>
             <Text className='bd-card-title' style={{ ...fs(15), color: t.textPrimary }}>替代品</Text>
-            {interchanges.map((it) => (
-              <View key={it.id} className='bd-list-row' onClick={() => goBearing(it.id)}>
-                <View className='bd-list-main'>
-                  <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{it.partNumber}</Text>
-                  <Text className='bd-list-sub' style={{ ...fs(12), color: t.textTertiary }}>{it.brandName} · {it.bearingType} · 置信度 {it.confidence}</Text>
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2, marginBottom: 6 }}>替代关系经平台审核；“需评估/仅供参考”档请人工确认工况适配</Text>
+            {interchanges.map((it) => {
+              const badgeColor = it.interchangeType === 'exact' ? '#16A34A'
+                : it.interchangeType === 'conditional' ? '#F59E0B' : t.textTertiary
+              return (
+                <View key={it.id} className='bd-list-row' onClick={() => it.bearingId && goBearing(it.bearingId)}>
+                  <View className='bd-list-main'>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                      <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{it.partNumber}</Text>
+                      <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: badgeColor, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{it.typeLabel}</Text>
+                    </View>
+                    <Text className='bd-list-sub' style={{ ...fs(12), color: t.textTertiary }}>
+                      {it.brandName || '—'} · {it.innerDiameter}×{it.outerDiameter}×{it.width}
+                    </Text>
+                    {it.remarks ? <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{it.remarks}</Text> : null}
+                  </View>
+                  <Icon name="chevron_right" size={18} color={t.textTertiary} />
                 </View>
-                <Icon name="chevron_right" size={18} color={t.textTertiary} />
-              </View>
-            ))}
+              )
+            })}
           </View>
         )}
 

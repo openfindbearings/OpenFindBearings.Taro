@@ -2,7 +2,7 @@
 // 信息架构：商城 Tab = 供给侧货源导购（对比 首页=工具查询、发现=需求侧寻货）。
 // 数据源：BFF /mobile/mall/feed（匿名可访问）；卡片进货源详情（轴承详情），商家行进店铺页。
 // 权益兑换主体迁至"我的-积分"线（pages/my/redeem），本页顶部留小入口。
-// 交易能力（购物车/下单/支付）为闭源增量，经扩展点 ProProductAction 后插，本页不含成交。
+// 本页只做货源导购展示，不含成交流程；后续增量经扩展点 ProProductAction 后插。
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight/fontSize 数值。
 import { useState } from 'react'
 import { View, Text, Input, ScrollView } from '@tarojs/components'

@@ -393,6 +393,52 @@ export const SALE_STATE = { OFF_SHELF: 0, ON_SALE: 1, RESTOCKING: 2 } as const
 /** v2.15.0 状态统一：审核位取值（与 API ListingReviewStatus 对齐） */
 export const REVIEW_STATUS = { WAREHOUSE: 0, PENDING: 1, APPROVED: 2, REJECTED: 3 } as const
 
+/** 替代关系中的轴承引用（v2.16.0 替代品治理） */
+export interface InterchangeRef {
+  id: string
+  partNumber: string
+  brandName?: string | null
+  bearingType?: string | null
+  innerDiameter: number
+  outerDiameter: number
+  width: number
+}
+
+/** 我的替代提交项（对齐 BFF InterchangeSubmissionItem，v2.16.0） */
+export interface MyInterchange {
+  id: string
+  sourceBearing: InterchangeRef
+  targetBearing: InterchangeRef
+  interchangeType?: string | null
+  typeLabel: string
+  confidence: number
+  remarks?: string | null
+  isBidirectional: boolean
+  /** 审核状态 0=已生效 1=待审核 2=已驳回 */
+  reviewStatus: number
+  reviewStatusLabel: string
+  reviewComment?: string | null
+  createdAt: string
+}
+
+/** 提交替代候选（v2.16.0）：targetBearingId=本店可交付的替代型号，提交后待平台审核 */
+export function submitInterchange(body: {
+  sourceBearingId: string
+  targetBearingId: string
+  interchangeType: string
+  confidence: number
+  source?: string
+  remarks?: string
+  isBidirectional: boolean
+}) {
+  return request<OpResult>(API.MERCHANT_INTERCHANGES, { method: 'POST', data: body })
+}
+
+/** 我的替代提交（v2.16.0）：含各审核状态与驳回理由 */
+export function getMyInterchanges() {
+  return request<MyInterchange[]>(API.MERCHANT_INTERCHANGES)
+}
+
 /** 获取自家在售商品列表（v2.15.0：筛选改用 reviewStatus 审核位 + onlyOnSale 出售中） */
 export function getMyBearings(params: { page?: number; pageSize?: number; onlyOnSale?: boolean; reviewStatus?: number }) {
   const qs = buildQuery({

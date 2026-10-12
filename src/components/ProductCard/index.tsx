@@ -1,5 +1,5 @@
 // 商品卡（v2.14.0 商城导购）：两列网格卡片——图 + 型号 + 品牌/尺寸 + 价格 + 商家 + 操作位。
-// 操作位走扩展点 ProProductAction：开源版"联系商家"，闭源版"加入购物车"（共享骨架、行为差异收敛在 ext/pro）。
+// 操作位走扩展点 ProProductAction（默认"联系商家"，实现由 ext/pro 覆盖；共享骨架、行为差异收敛在扩展点）。
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight/fontSize 数值。
 import { View, Text } from '@tarojs/components'
 import MediaImage from '../MediaImage'
@@ -87,7 +87,7 @@ export default function ProductCard({ item, onPress, onMerchant }: ProductCardPr
           ) : null}
         </View>
 
-        {/* 操作位（扩展点：开源"联系商家" / 闭源"加入购物车"） */}
+        {/* 操作位（扩展点：默认"联系商家"，实现由 ext/pro 覆盖） */}
         <View style={{ marginTop: 8, display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
           <ProProductAction t={t} fs={fs} onPress={onPress} />
         </View>
