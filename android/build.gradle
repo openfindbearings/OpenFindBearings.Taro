@@ -16,11 +16,14 @@ buildscript {
         }
     }
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        // 改动说明（CI 修复）：权威源优先、阿里云镜像兜底。
+        // 原顺序把 maven.aliyun.com/repository/public 排在 google() 之前，
+        // androidx.camera:*（仅 Google Maven 有）先被查该镜像，遇 5xx（502）Gradle 直接中止、走不到 google() 兜底。
         google()
         mavenCentral()
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
     }
     dependencies {
         classpath("com.android.tools.build:gradle:7.4.2")
@@ -48,6 +51,10 @@ allprojects {
             // Android JSC is installed from npm
             url("$rootDir/../node_modules/jsc-android/dist")
         }
+        // 改动说明（CI 修复）：权威源优先、阿里云镜像兜底。
+        // androidx.camera:* 仅 Google Maven 有，原顺序先查阿里云 public 遇 502 中止、走不到 google()；
+        // 调整后 androidx 直接命中 google()，阿里云 public 仅作 Central 兜底、不再挡住 Google 构件。
+        google()
         mavenCentral {
             // We don't want to fetch react-native from Maven Central as there are
             // older versions over there.
@@ -55,10 +62,9 @@ allprojects {
                 excludeGroup "com.facebook.react"
             }
         }
-        maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-        google()
         maven { url 'https://www.jitpack.io' }
     }
 }
