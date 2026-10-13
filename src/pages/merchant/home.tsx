@@ -1,6 +1,9 @@
-// 商家管理页（v2.6.0 双界面拆分）：自家管理员/员工的"帮派总部"，
-// 三卡镜像个人我的页——商家金库卡（仅管理员，对应个人积分卡）、功能宫格卡（对应功能四宫格）、
-// 商家勋章卡（对应我的勋章卡），底部集体任务进度板（帮派 raid 板）。
+// 商家中心（v2.16.0 dashboard 改版）：自家管理员/员工的"经营驾驶舱"，
+// 对标抖音创作者中心——自上而下：店铺概况 → 数据概览(KPI) → 待办中心 → 金库 → 福利等级 →
+// 功能宫格 → 勋章 → 集体任务 → 实力榜。
+// 改动说明（v2.16.0）：原"三卡镜像个人我的页"信息罗列式布局，升级为 dashboard——
+//   新增数据概览（在售商品/成员/金库/等级）与待办中心（待审商品/待发货订单/待确认邀请），
+//   把"要商家动手的事"前置；数据全部复用既有 BFF 端点，无后端改动。
 // 公开展示界面见 merchantDetail.tsx（门面+勋章园+商品+关注/纠错），两界面互留导航。
 import { useState } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
@@ -15,15 +18,31 @@ import MediaImage from '../../components/MediaImage'
 import LoginGuide from '../../components/LoginGuide'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
-import { getTreasury, type TreasuryAccount } from '../../services/gifts'
+import { getTreasury, getGiftOrders, type TreasuryAccount } from '../../services/gifts'
 import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
 // v2.6.0 任务中心拆分：商家级"帮派任务"内容（福利/集体任务/实力榜）全部归本页
 import { getMerchantTasks, getMerchantBuff, getMerchantRanking, type MerchantTasksResult, type MerchantBuff, type MerchantRanking } from '../../services/points'
 // v2.13.0 等级玩法：头部商家等级彩牌（色带+序数名映射）
 import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
+// v2.16.0 dashboard：待办/数据概览数据源（复用既有端点）
+import { getMyBearings, getMerchantStaff, getPendingStaffInvitations } from '../../services/merchant'
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
+
+/** 待办/概览统计（v2.16.0）：各计数优先级不高、失败即降级为 0，不影响页面主体 */
+interface DashStats {
+  /** 在售商品数（saleState=出售中/补货中） */
+  onSale: number
+  /** 待审商品数（reviewStatus=审核中） */
+  pendingReview: number
+  /** 待发货礼品订单数（shipStatus=待发货） */
+  toShip: number
+  /** 在职成员数 */
+  staff: number
+  /** 待确认成员邀请数 */
+  invites: number
+}
 
 export default function MerchantHomePage() {
   const t = useTheme()
@@ -37,6 +56,8 @@ export default function MerchantHomePage() {
   // v2.6.0 拆分：本店福利卡 + 实力榜（"本店给成员的 buff"与"本店名次"，商家视角）
   const [buff, setBuff] = useState<MerchantBuff | null>(null)
   const [ranking, setRanking] = useState<MerchantRanking | null>(null)
+  // v2.16.0 dashboard 概览/待办
+  const [stats, setStats] = useState<DashStats>({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0 })
 
   const isAdmin = current?.role === 'MerchantAdmin'
 
@@ -44,6 +65,7 @@ export default function MerchantHomePage() {
     const mid = current?.merchantId
     if (!isLoggedIn || !mid) {
       setTreasury(null); setAch(null); setMtasks(null); setBuff(null); setRanking(null)
+      setStats({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0 })
       return
     }
     // 金库仅管理员有权限（员工不渲染金额，接口也不请求）
@@ -53,6 +75,23 @@ export default function MerchantHomePage() {
     void getMerchantTasks(mid).then(setMtasks).catch(() => setMtasks(null))
     void getMerchantBuff(mid).then(setBuff).catch(() => setBuff(null))
     void getMerchantRanking(mid).then(setRanking).catch(() => setRanking(null))
+
+    // v2.16.0 dashboard：概览/待办统计（各请求独立、失败降级 0，不阻塞主体）
+    void getMyBearings({ onlyOnSale: true, page: 1, pageSize: 1 })
+      .then((r) => setStats((s) => ({ ...s, onSale: r.totalCount ?? 0 })))
+      .catch(() => {})
+    void getMyBearings({ reviewStatus: 1, page: 1, pageSize: 1 })
+      .then((r) => setStats((s) => ({ ...s, pendingReview: r.totalCount ?? 0 })))
+      .catch(() => {})
+    void getGiftOrders(1, 1, 1)
+      .then((r) => setStats((s) => ({ ...s, toShip: r.totalCount ?? 0 })))
+      .catch(() => {})
+    void getMerchantStaff()
+      .then((r) => setStats((s) => ({ ...s, staff: (r.items ?? []).filter((m) => m.status === 'Active').length })))
+      .catch(() => {})
+    void getPendingStaffInvitations()
+      .then((r) => setStats((s) => ({ ...s, invites: (r ?? []).length })))
+      .catch(() => {})
   })
 
   // 勋章展示序：最近点亮优先（与个人勋章卡同口径），最多 12 枚
@@ -78,15 +117,15 @@ export default function MerchantHomePage() {
 
   if (!isLoggedIn) {
     return (
-      <PageLayout nav={<NavBar title='商家管理' showBack />}>
-        <LoginGuide icon='store' text='登录后查看商家管理' />
+      <PageLayout nav={<NavBar title='商家中心' showBack />}>
+        <LoginGuide icon='store' text='登录后查看商家中心' />
       </PageLayout>
     )
   }
 
   if (!current?.merchantId) {
     return (
-      <PageLayout nav={<NavBar title='商家管理' showBack />}>
+      <PageLayout nav={<NavBar title='商家中心' showBack />}>
         <View style={{ display: 'flex', alignItems: 'center', marginTop: 60 }}>
           <Icon name='store' size={40} color={t.textTertiary} />
           <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无生效中的商家，可在商家 tab 入驻或受聘</Text>
@@ -95,10 +134,25 @@ export default function MerchantHomePage() {
     )
   }
 
+  // 概览指标（KPI 四宫格）
+  const kpis = [
+    { label: '在售商品', value: `${stats.onSale}`, unit: '件' },
+    { label: '在职成员', value: `${stats.staff}`, unit: '人' },
+    { label: '商家金库', value: isAdmin ? `${treasury?.balance ?? 0}` : '—', unit: isAdmin ? '商家金' : '' },
+    { label: '商家等级', value: buff && buff.rank > 0 ? (MERCHANT_GRADE_LABELS[buff.rank] ?? `Lv${buff.rank}`) : '未定级', unit: '' },
+  ]
+
+  // 待办事项（有则前置，点击直达处理入口）
+  const todos = [
+    { key: 'pendingReview', label: '待审商品', count: stats.pendingReview, hint: '提交上架待平台审核', url: '/pages/merchant/manage' },
+    { key: 'toShip', label: '待发货礼品', count: stats.toShip, hint: '成员兑换实物礼品待发货', url: '/pages/merchant/gifts' },
+    { key: 'invites', label: '待确认成员邀请', count: stats.invites, hint: '其他商家邀你加入', url: '/pages/merchant/members' },
+  ].filter((x) => x.count > 0)
+
   return (
-    <PageLayout nav={<NavBar title='商家管理' showBack />}>
+    <PageLayout nav={<NavBar title='商家中心' showBack />}>
       <View>
-        {/* 头部：商家 Logo + 名称 + 等级徽章（管理员取金库接口等级，员工按认证态简化显示） */}
+        {/* 头部：店铺概况——Logo + 名称 + 角色 + 等级彩牌 */}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <MediaImage
             url={current.logoUrl}
@@ -131,7 +185,47 @@ export default function MerchantHomePage() {
           </View>
         </View>
 
-        {/* 1. 商家金库卡（仅管理员，镜像个人积分卡；员工不经手钱货不渲染） */}
+        {/* 1. 数据概览（KPI 四宫格，v2.16.0 dashboard）：一眼看清经营基本盘 */}
+        <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
+          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>数据概览</Text>
+          <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+            {kpis.map((k) => (
+              <View key={k.label} style={{ width: '25%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4, paddingBottom: 4 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}>
+                  <Text style={{ ...fs(18), color: t.primary, fontWeight: 'bold' }} numberOfLines={1}>{k.value}</Text>
+                  {k.unit ? <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 2 }}>{k.unit}</Text> : null}
+                </View>
+                <Text style={{ ...fs(11), color: t.textSecondary, marginTop: 3 }}>{k.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* 2. 待办中心（v2.16.0 dashboard）：把"要商家动手的事"前置，无待办则不渲染 */}
+        {todos.length > 0 && (
+          <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>待办中心</Text>
+              <Text style={{ ...fs(12), color: t.textTertiary }}>{todos.length} 项待处理</Text>
+            </View>
+            {todos.map((td, i) => (
+              <View
+                key={td.key}
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.borderLight }}
+                onClick={() => Taro.navigateTo({ url: td.url })}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...fs(13), color: t.textPrimary }}>{td.label}</Text>
+                  <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{td.hint}</Text>
+                </View>
+                <Text style={{ ...fs(16), color: t.primary, fontWeight: '600', marginRight: 4 }}>{td.count}</Text>
+                <Icon name='chevron-right' size={14} color={t.textTertiary} />
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* 3. 商家金库卡（仅管理员，镜像个人积分卡；员工不经手钱货不渲染） */}
         {isAdmin && (
           <View
             style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 16, marginTop: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}
@@ -150,7 +244,7 @@ export default function MerchantHomePage() {
           </View>
         )}
 
-        {/* 2. 功能宫格卡（镜像我的页功能四宫格） */}
+        {/* 4. 功能宫格卡（镜像我的页功能四宫格） */}
         <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>商家功能</Text>
           <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 }}>
@@ -165,7 +259,7 @@ export default function MerchantHomePage() {
           </View>
         </View>
 
-        {/* 3. 商家勋章卡（镜像我的勋章卡）
+        {/* 5. 商家勋章卡（镜像我的勋章卡）
             改动说明（用户定案）：点击进商家勋章展示页（medals，镜像个人勋章页），
             不进 public 详情页——自家荣誉看自家展厅 */}
         <View
@@ -197,7 +291,7 @@ export default function MerchantHomePage() {
           )}
         </View>
 
-        {/* 4. 商家福利卡（v2.6.0 拆分自个人任务中心）：本店给全体在职成员的被动加成 */}
+        {/* 6. 商家福利卡（v2.6.0 拆分自个人任务中心）：本店给全体在职成员的被动加成 */}
         <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家福利</Text>
@@ -238,7 +332,7 @@ export default function MerchantHomePage() {
           ) : null}
         </View>
 
-        {/* 5. 集体任务进度板（帮派 raid 板，数据按本商家查询） */}
+        {/* 7. 集体任务进度板（帮派 raid 板，数据按本商家查询） */}
         {mtasks && mtasks.tasks.length > 0 && (
           <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -268,7 +362,7 @@ export default function MerchantHomePage() {
           </View>
         )}
 
-        {/* 6. 商家实力月榜（v2.6.0 拆分自个人任务中心）：本月金库入账 Top5 + 本店名次回显 */}
+        {/* 8. 商家实力月榜（v2.6.0 拆分自个人任务中心）：本月金库入账 Top5 + 本店名次回显 */}
         <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家实力榜</Text>
