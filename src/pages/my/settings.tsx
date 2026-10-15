@@ -332,6 +332,16 @@ export default function SettingsPage() {
       <View className='section'>
         <Text className='section-title' style={{ ...fs(15), color: t.textTertiary }}>消息</Text>
         <View className='list' style={{ backgroundColor: t.bgCard }}>
+          {/* v1.6.0 通知设置：用户自勾选接收渠道（站内信恒开；短信/微信/邮件可勾） */}
+          <View className='list-item' style={{ borderBottomColor: t.border }} onClick={() => Taro.navigateTo({ url: '/pages/my/notification-settings' })}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="mail" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>通知设置</Text>
+            </View>
+            <Icon name="chevron_right" size={18} color={t.textTertiary} />
+          </View>
           <View className='list-item' style={{ borderBottomColor: t.border }}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>

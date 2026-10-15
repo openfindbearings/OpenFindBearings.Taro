@@ -47,6 +47,8 @@ function typeIcon(type: string): string {
   if (type === 'merchant_approved') return 'check'
   if (type === 'merchant_rejected') return 'x'
   if (type === 'nomination_accepted') return 'user-plus'
+  // v1.6.0 寻货通知：匹配寻货/应答/选定等一律 sourcing 类型
+  if (type === 'sourcing') return 'search'
   return 'bell'
 }
 
@@ -112,6 +114,8 @@ export default function NotificationsPage() {
     setDetail(null)
     if (n.bizType === 'nomination') Taro.navigateTo({ url: '/pages/merchant/apply' })
     else if (n.bizType === 'merchant') Taro.navigateTo({ url: '/pages/merchant/index' })
+    // v1.6.0 深链修复：寻货通知（匹配寻货/应答/选定/关闭）跳寻货详情
+    else if (n.bizType === 'sourcing_demand' && n.bizId) Taro.navigateTo({ url: `/pages/discover/detail?id=${n.bizId}` })
   }
 
   /** 全部已读（v1.7.9 常驻显示，无未读时置灰不可点） */
@@ -346,7 +350,7 @@ export default function NotificationsPage() {
               >
                 <Text style={{ ...fs(15), color: t.textPrimary }}>知道了</Text>
               </View>
-              {detail.bizType === 'merchant' || detail.bizType === 'nomination' ? (
+              {detail.bizType === 'merchant' || detail.bizType === 'nomination' || detail.bizType === 'sourcing_demand' ? (
                 <View
                   style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: t.primary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 12 }}
                   onClick={() => onGoHandle(detail)}

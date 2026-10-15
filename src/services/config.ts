@@ -204,6 +204,8 @@ NOTIFICATIONS_READ_ALL: `${API_PREFIX}/notifications/read-all`,
 // 改动说明（v1.7.9）：消息删除两路径（单条左滑删除 / 清空已读批量出口）
 NOTIFICATION_ITEM: (id: string) => `${API_PREFIX}/notifications/${id}`,
 NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
+// v1.6.0 通知设置：渠道开关读取/保存（代理 BFF /mobile/notifications/preferences）
+NOTIFICATION_PREFERENCES: `${API_PREFIX}/notifications/preferences`,
 
   // 改动说明（v1.7.17 积分底座）：账户/签到/流水三路径，代理 BFF /mobile/points/*
   POINTS_ACCOUNT: `${API_PREFIX}/points/account`,
@@ -253,6 +255,8 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   // v1.7.21 应答预填（我的在售同款）与需求信号（反向导购横幅）
   SOURCING_MY_OFFERING: `${API_PREFIX}/sourcing/my-offering`,
   SOURCING_OPPORTUNITIES: `${API_PREFIX}/sourcing/opportunities`,
+  // v1.6.0 搜索寻货联动：为你匹配的寻货（商户侧聚合 tab）
+  SOURCING_MATCHED: `${API_PREFIX}/sourcing/matched`,
   SOURCING_MY_DEMANDS: `${API_PREFIX}/sourcing/my/demands`,
   SOURCING_MY_RESPONSES: `${API_PREFIX}/sourcing/my/responses`,
   /** v2.12.0 商户工作台"寻货管理-我发布的" */

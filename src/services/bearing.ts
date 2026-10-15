@@ -34,6 +34,13 @@ export interface BearingDetail {
   image2DUrl?: string | null
   viewCount: number
   favoriteCount: number
+  /** v1.6.0 数据可信联动：参数来源（Internet/OcrExtract/SeedData=仅供参考） */
+  dataSource?: string | null
+}
+
+/** v1.6.0 数据可信联动：判断参数来源是否"仅供参考"（互联网采集/OCR/种子三源） */
+export function isReferenceSource(dataSource?: string | null): boolean {
+  return dataSource === 'Internet' || dataSource === 'OcrExtract' || dataSource === 'SeedData'
 }
 
 /** 轴承在售商家项（对齐 BFF BearingMerchantItem） */
@@ -49,6 +56,8 @@ export interface BearingMerchant {
   isPinned?: boolean
   /** 置顶到期时间（UTC） */
   pinnedUntil?: string | null
+  /** v1.6.0 数据可信联动：商家是否已认证（询价行动门只对认证商家开放） */
+  isVerified?: boolean
 }
 
 /** 轴承替代品项（对齐 BFF InterchangeItem，v2.16.0 三级治理：含类型标签与责任提示字段） */

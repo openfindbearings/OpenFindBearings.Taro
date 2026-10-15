@@ -5,15 +5,17 @@
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useRouter, useDidShow } from '@tarojs/taro'
+import Taro, { useRouter, useDidShow, useShareAppMessage } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import MedalImage from '../../components/MedalImage'
+import ShareButton from '../../components/ShareButton'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
+import { setObject } from '../../utils/storage'
 import { checkFollow, toggleFollow, recordMerchantView } from '../../services/user'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
 import MediaImage from '../../components/MediaImage'
@@ -81,10 +83,36 @@ export default function MerchantDetailPage() {
   // 改动说明（v1.7.14）：纠错从占位 toast 改为打开结构化纠错面板
   const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); setCorrectVisible(true) }
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
-  const callPhone = (p?: string | null) => { if (p) Taro.makePhoneCall({ phoneNumber: p }).catch(() => {}) }
+
+  // v1.6.0 微信/抖音小程序原生分享内容（H5/RN 为 no-op）：分享商家主页引流
+  useShareAppMessage(() => ({
+    title: `${detail?.name || ''} · 认证轴承商家`,
+    path: `/pages/merchant/merchantDetail?id=${id}`,
+  }))
+
+  /**
+   * 向该商家发起询价（v1.6.0 电话单轨）：商家主页不再直接亮号码，只给此入口；
+   * 预填目标商户后跳发布页（型号留空由用户填），撮合达成后双方互给电话。
+   */
+  const handleInquire = () => {
+    if (!isLoggedIn) return requireLogin()
+    void setObject('sourcing_publish_prefill', {
+      partNumber: '',
+      brand: '',
+      bearingId: null,
+      targetMerchantId: id,
+    })
+    Taro.navigateTo({ url: '/pages/discover/publish' })
+  }
 
   return (
-    <PageLayout nav={<NavBar title="商家主页" showBack />}>
+    <PageLayout nav={<NavBar title="商家主页" showBack rightSlot={
+        <ShareButton
+          title={`${detail?.name || ''} · 认证轴承商家`}
+          path={`/pages/merchant/merchantDetail?id=${id}`}
+          label="分享"
+        />
+      } />}>
       <View className='md'>
         {/* 头部：Logo + 名称 + 认证 + 类型 */}
         <View className='md-hero' style={{ backgroundColor: t.bgCard }}>
@@ -171,24 +199,17 @@ export default function MerchantDetailPage() {
               <Text className='md-v' style={{ ...fs(13), color: t.textPrimary }}>{detail.contactPerson}</Text>
             </View>
           )}
-          {/* 改动说明：电话行改为始终显示（无值显示"暂无"），避免商家无联系方式时整行消失、用户以为没加载 */}
-          <View className='md-row' onClick={() => callPhone(detail?.mobile || detail?.phone)}>
-            <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系电话</Text>
-            {(detail?.mobile || detail?.phone) ? (
-              <View className='md-v-call'>
-                <Text className='md-v' style={{ ...fs(13), color: t.primaryText }}>{detail?.mobile || detail?.phone}</Text>
-                <Icon name="phone" size={16} color={t.primaryText} />
-              </View>
-            ) : (
-              <Text className='md-v-empty' style={{ ...fs(13), color: t.textTertiary }}>暂无</Text>
-            )}
-          </View>
-          {detail?.email && (
-            <View className='md-row'>
-              <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>邮箱</Text>
-              <Text className='md-v' style={{ ...fs(13), color: t.textPrimary }}>{detail.email}</Text>
+          {/* v1.6.0 电话单轨：本页不再直接显示号码，只给"发起询价"入口（号码撮合达成后互给） */}
+          <View className='md-row' onClick={handleInquire}>
+            <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
+            <View className='md-v-call'>
+              <Text className='md-v' style={{ ...fs(13), color: t.primaryText }}>
+                {isLoggedIn ? '发起询价后互给' : '登录后发起询价'}
+              </Text>
+              <Icon name="search" size={16} color={t.primaryText} />
             </View>
-          )}
+          </View>
+          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在询价撮合达成后由双方互给</Text>
           {detail?.address && (
             <View className='md-row'>
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>地址</Text>
