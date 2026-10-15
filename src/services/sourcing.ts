@@ -180,6 +180,25 @@ export function responseStatusText(status: number): string {
   }
 }
 
+/** 需求状态筛选 chips（唯一来源，v2.13.2 收敛：原"我的寻货"与商户寻货页各写一份）。
+ *  key 为字符串以贴合筛选态传参口径；顺序=全部/进行中/已选定/已取消/已过期/已下架 */
+export const DEMAND_STATUS_CHIPS = [
+  { key: 'all', label: '全部' },
+  { key: String(DEMAND_STATUS.published), label: demandStatusText(DEMAND_STATUS.published) },
+  { key: String(DEMAND_STATUS.closed), label: demandStatusText(DEMAND_STATUS.closed) },
+  { key: String(DEMAND_STATUS.cancelled), label: demandStatusText(DEMAND_STATUS.cancelled) },
+  { key: String(DEMAND_STATUS.expired), label: demandStatusText(DEMAND_STATUS.expired) },
+  { key: String(DEMAND_STATUS.takenDown), label: demandStatusText(DEMAND_STATUS.takenDown) },
+]
+
+/** 应答状态筛选 chips（唯一来源，v2.13.2 收敛：全部/待处理/已选定/未选中） */
+export const RESPONSE_STATUS_CHIPS = [
+  { key: 'all', label: '全部' },
+  { key: String(RESPONSE_STATUS.pending), label: responseStatusText(RESPONSE_STATUS.pending) },
+  { key: String(RESPONSE_STATUS.adopted), label: responseStatusText(RESPONSE_STATUS.adopted) },
+  { key: String(RESPONSE_STATUS.notSelected), label: responseStatusText(RESPONSE_STATUS.notSelected) },
+]
+
 /** feed 分页选项（v1.7.29 大厅筛选）：brand/region 包含匹配、sort 发布时间升降序 */
 export interface SourcingFeedOptions {
   brand?: string

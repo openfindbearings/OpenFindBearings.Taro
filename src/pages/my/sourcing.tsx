@@ -20,21 +20,14 @@ import { useListSelection } from '../../components/ListKit/useListSelection'
 import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
-import { getMySourcingDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, type SourcingMyDemand } from '../../services/sourcing'
+import { getMySourcingDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, DEMAND_STATUS_CHIPS, type SourcingMyDemand } from '../../services/sourcing'
 import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallItem } from '../../services/mall'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
 definePageConfig({ disableScroll: true })
 
-/** 状态 chips 定义（与 DEMAND_STATUS 常量对齐） */
-const CHIPS = [
-  { key: 'all', label: '全部' },
-  { key: '1', label: '进行中' },
-  { key: '2', label: '已选定' },
-  { key: '4', label: '已取消' },
-  { key: '3', label: '已过期' },
-  { key: '5', label: '已下架' },
-]
+/** 状态 chips：改动说明（v2.13.2 收敛）改取 services/sourcing 唯一来源 */
+const CHIPS = DEMAND_STATUS_CHIPS
 
 /** 我的寻货页 */
 export default function MySourcingPage() {

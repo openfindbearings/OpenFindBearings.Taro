@@ -53,13 +53,14 @@ function stateBadgeText(item: MerchantBearingItem): string {
 }
 
 /** v2.15.0 状态统一：状态徽标色（绿=出售中，橙=审核中/补货中，红=已驳回，灰=仓库中/已下架） */
-function stateBadgeColor(item: MerchantBearingItem): string {
-  if (item.reviewStatus === 0) return '#94A3B8'
-  if (item.reviewStatus === 3) return '#EF4444'
-  if (item.reviewStatus === 1) return '#F59E0B'
-  if (item.saleState === 1) return '#16A34A'
-  if (item.saleState === 2) return '#F59E0B'
-  return '#94A3B8'
+function stateBadgeColor(item: MerchantBearingItem, t: any): string {
+  // 改动说明（v2.13.2 配色统一）：硬编码色改走主题 token（原先绿/橙/红/灰为另一套值，与主题分叉）
+  if (item.reviewStatus === 0) return t.textTertiary
+  if (item.reviewStatus === 3) return t.danger
+  if (item.reviewStatus === 1) return t.warning
+  if (item.saleState === 1) return t.success
+  if (item.saleState === 2) return t.warning
+  return t.textTertiary
 }
 
 /** v2.15.0 状态统一：筛选态 → 查询参数（审核位/在售） */
@@ -484,12 +485,12 @@ export default function MerchantManagePage() {
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(15), color: t.textPrimary, flex: 1 }} numberOfLines={1}>{item.bearingPartNumber}</Text>
                   {/* v2.15.0 状态统一：右侧状态徽标（审核位优先，其次销售态），替代原双徽标 */}
-                  <View style={{ width: 60, height: 20, borderRadius: 10, backgroundColor: stateBadgeColor(item), alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <View style={{ width: 60, height: 20, borderRadius: 10, backgroundColor: stateBadgeColor(item, t), alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ ...fs(11), color: '#fff' }}>{stateBadgeText(item)}</Text>
                   </View>
                 </View>
                 <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
-                  {[item.brandName, item.bearingTypeName, item.priceDescription || item.price].filter(Boolean).join(' · ') || '暂无规格'}
+                  {[item.brandName, item.bearingTypeName, item.priceDescription].filter(Boolean).join(' · ') || '暂无规格'}
                 </Text>
                 {/* v2.15.0 状态统一：已驳回显示理由（可改重提） */}
                 {item.reviewStatus === 3 && item.approvalComment ? (

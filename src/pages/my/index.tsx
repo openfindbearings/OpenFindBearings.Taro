@@ -28,22 +28,11 @@ import { getLevelBand } from '../../utils/level'
 // v2.1.0 成就子系统：个人徽章排（我的页轴承币卡下方横向徽章条）
 import { getMyAchievements, getMyTitles, type AchievementWall } from '../../services/achievements'
 import './index.scss'
+// 改动说明（v2.13.2 菜单收敛）：四宫格与路由改由共享 ./menu 提供，消除与"全部功能"页的分叉
+import { getGridMenuItems, MY_MENU_ROUTES } from './menu'
 
-// 功能菜单配置（横向四宫格：收藏/关注/历史/全部功能）
-// 第4项为"全部功能"（layout_grid 图标），设置仅在 NavBar 右上角
-const menuItems = [
-  { key: 'favorites', label: '收藏轴承', icon: 'heart', color: '#EF4444' },
-  { key: 'followed', label: '关注商家', icon: 'users', color: '#0EA5E9' },
-  { key: 'history', label: '浏览历史', icon: 'clock', color: '#10B981' },
-  // v1.7.18 补：我的纠错上第一行（此前实施遗漏）
-  { key: 'corrections', label: '我的纠错', icon: 'file_text', color: '#EF4444' },
-  // v1.7.18 第二行：我的寻货（占位）、任务中心（赚分）、设置、全部功能兜底（寻货与任务中心按需求换序）
-  { key: 'sourcing', label: '我的寻货', icon: 'search', color: '#0EA5E9' },
-  { key: 'tasks', label: '任务中心', icon: 'gift', color: '#F59E0B' },
-  // 改动说明（v2.10.1 游戏中心）：宫格"设置"位换成"游戏中心"（设置入口保留在 NavBar 右上角不丢）
-  { key: 'games', label: '游戏中心', icon: 'puzzle', color: '#0EA5E9' },
-  { key: 'all_features', label: '全部功能', icon: 'layout_grid', color: '#6366F1' }
-]
+// 功能菜单配置（横向四宫格，唯一数据源见 ./menu）
+const menuItems = getGridMenuItems()
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
@@ -98,19 +87,9 @@ export default function MyPage() {
     }
     // 改动说明：收藏/关注/历史三入口从"开发中"占位改为跳转真实页面；
     // 页面内部自带未登录引导空态，此处不再弹窗拦截（少一层打断）
-    const menuUrls: Record<string, string> = {
-      favorites: '/pages/my/favorites',
-      followed: '/pages/my/followed',
-      history: '/pages/my/history',
-      // v1.7.18：任务中心/设置/我的纠错直跳页面；v1.7.19：我的寻货转正（原占位 toast）
-      tasks: '/pages/my/tasks',
-      corrections: '/pages/my/corrections',
-      sourcing: '/pages/my/sourcing',
-      settings: '/pages/my/settings',
-      games: '/pages/games/index'
-    }
-    if (menuUrls[key]) {
-      Taro.navigateTo({ url: menuUrls[key] })
+    const url = MY_MENU_ROUTES[key]
+    if (url) {
+      Taro.navigateTo({ url })
       return
     }
     Taro.showToast({ title: '功能暂未上线', icon: 'none' })
@@ -132,13 +111,15 @@ export default function MyPage() {
     Taro.navigateTo({ url: '/pages/my/profile-edit' })
   }
 
-  // 会员卡（v1.7.17）：收支明细接轴承币流水页；去兑换仍占位（商城 P8 未上线）
+  // 会员卡（v1.7.17）：收支明细接轴承币流水页
   const handlePointsDetail = () => {
     Taro.navigateTo({ url: '/pages/my/points' })
   }
 
+  // 改动说明（v2.13.2 漏接线修复）：去兑换原为占位 toast（"商城 P8 未上线"已过时），
+  // 权益兑换页 pages/my/redeem 早已上线（v2.14.0 迁至"我的-积分"线），接真实跳转
   const handleRedeem = () => {
-    Taro.showToast({ title: '轴承币兑换暂未上线', icon: 'none' })
+    Taro.navigateTo({ url: '/pages/my/redeem' })
   }
 
   // NavBar 右侧：Bell + Settings。改用声明式 rightIcons 交给 NavBar 内部渲染——

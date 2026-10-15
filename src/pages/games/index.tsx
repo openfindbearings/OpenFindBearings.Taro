@@ -70,7 +70,7 @@ export default function GamesPage() {
                     {locked ? (
                       <Text style={{ ...fs(10), color: t.textTertiary, backgroundColor: t.bgInput, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>敬请期待</Text>
                     ) : (
-                      <Text style={{ ...fs(10), color: '#16A34A', backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>可玩</Text>
+                      <Text style={{ ...fs(10), color: t.success, backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>可玩</Text>
                     )}
                   </View>
                   <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>{g.desc}</Text>

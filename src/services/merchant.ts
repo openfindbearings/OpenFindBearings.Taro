@@ -9,6 +9,22 @@ import type { Paged } from './bearing'
 //   Metro 不做类型检查所以运行时未爆雷，tsc --noEmit 报 Cannot find name——补 import 消掉
 import type { OpResult } from './user'
 
+/** 商户成员角色码 → 中文（唯一来源，v2.13.2 收敛：商户页与 RN 切换器各写一份） */
+export function merchantRoleLabel(role?: string | null): string {
+  if (role === 'MerchantAdmin') return '管理员'
+  if (role === 'MerchantStaff') return '员工'
+  return ''
+}
+
+/** 商户类型（与 API MerchantType 对齐：1生产厂家/2授权经销商/3分销商/4贸易商）。
+ *  改动说明（v2.13.2 收敛）：商户资料页与入驻申请页各写一份，统一于此（含枚举名 name 供回填解析） */
+export const MERCHANT_TYPES = [
+  { value: 1, label: '生产厂家', name: 'Manufacturer' },
+  { value: 2, label: '授权经销商', name: 'AuthorizedDealer' },
+  { value: 3, label: '分销商', name: 'Distributor' },
+  { value: 4, label: '贸易商', name: 'Trader' },
+] as const
+
 /** 搜索结果项（对齐 BFF MerchantItem） */
 export interface Merchant {
   id: string
@@ -46,17 +62,17 @@ export interface MerchantDetail {
   completedTaskCount?: number
 }
 
-/** 商家在售轴承项（对齐 BFF MerchantBearingItem） */
+/** 商家在售轴承项（对齐 BFF MerchantBearingItem）。
+ *  改动说明（v2.13.2 幻影字段修复）：oldNumber/innerDiameter/outerDiameter/width/price 在 BFF 上游不存在，
+ *  对齐 bearingOldNumber/dimensions/priceDescription（服务端 MerchantBearingDto 真实字段名） */
 export interface MerchantBearing {
   bearingId: string
   bearingPartNumber: string
-  oldNumber?: string | null
+  bearingOldNumber?: string | null
   bearingTypeName?: string | null
   brandName?: string | null
-  innerDiameter?: number | null
-  outerDiameter?: number | null
-  width?: number | null
-  price?: string | null
+  dimensions?: string | null
+  priceDescription?: string | null
   /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中（替代 isOnSale） */
   saleState: number
 }
@@ -366,13 +382,12 @@ export interface MerchantBearingItem {
   id: string
   bearingId: string
   bearingPartNumber: string
-  oldNumber?: string | null
+  // 改动说明（v2.13.2 幻影字段修复）：oldNumber/innerDiameter/outerDiameter/width/price 在 BFF 上游不存在，
+  //   对齐为 bearingOldNumber/dimensions/priceDescription（服务端 MerchantBearingDto 真实字段名）
+  bearingOldNumber?: string | null
   bearingTypeName?: string | null
   brandName?: string | null
-  innerDiameter?: number | null
-  outerDiameter?: number | null
-  width?: number | null
-  price?: string | null
+  dimensions?: string | null
   /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中 */
   saleState: number
   /** v1.7.3 编辑回填（对齐 BFF MyMerchantBearingItem 扩展字段） */

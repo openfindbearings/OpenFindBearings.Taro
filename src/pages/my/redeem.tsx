@@ -33,8 +33,9 @@ function statusText(s: number): string {
 
 /** 订单状态色（已生效绿、失败/退款橙、处理中灰） */
 function statusColor(s: number, t: any): string {
-  if (s === MALL_ORDER_STATUS.FULFILLED) return '#16A34A'
-  if (s === MALL_ORDER_STATUS.FAILED || s === MALL_ORDER_STATUS.REFUNDED) return '#F59E0B'
+  // 改动说明（v2.13.2 配色统一）：硬编码绿/橙改走主题 token（防与暗色主题分叉）
+  if (s === MALL_ORDER_STATUS.FULFILLED) return t.success
+  if (s === MALL_ORDER_STATUS.FAILED || s === MALL_ORDER_STATUS.REFUNDED) return t.warning
   return t.textTertiary
 }
 

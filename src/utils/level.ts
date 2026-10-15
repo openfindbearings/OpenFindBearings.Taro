@@ -38,6 +38,20 @@ export function merchantGradeToRank(grade?: number): number {
 }
 
 /**
+ * 商家等级枚举名 → 单调序数（API DTO 的 Grade 走 enum.ToString() 回名称：Standard/Verified/Premium/Gold；
+ * 与 merchantGradeToRank 同表）。详情等按名称返回等级的接口用此换算，避免各页再硬编码一套配色
+ */
+export function merchantGradeNameToRank(gradeName?: string | null): number {
+  switch (gradeName) {
+    case 'Standard': return 1
+    case 'Verified': return 2
+    case 'Premium': return 3
+    case 'Gold': return 4
+    default: return 0
+  }
+}
+
+/**
  * 商家等级序数 → 展示名（与后端 Merchant.GetGradeDisplayName 同表；
  * v2.13.0 商家头部彩牌用——buff 接口只回 grade/rank 不回名称，前端映射避免多打一次接口）
  */

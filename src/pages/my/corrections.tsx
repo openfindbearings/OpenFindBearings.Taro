@@ -18,11 +18,12 @@ definePageConfig({ disableScroll: true })
 
 const PAGE_SIZE = 20
 
-/** 状态徽标映射（API status：Pending/Approved/Rejected） */
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  Pending: { label: '审核中', color: '#F59E0B' },
-  Approved: { label: '已采纳', color: '#10B981' },
-  Rejected: { label: '未采纳', color: '#EF4444' }
+/** 状态徽标（API status：Pending/Approved/Rejected）。
+ *  改动说明（v2.13.2 配色统一）：原模块级硬编码色改走主题 token，函数化以取得 t */
+function statusBadge(status: string, t: any): { label: string; color: string } {
+  if (status === 'Approved') return { label: '已采纳', color: t.success }
+  if (status === 'Rejected') return { label: '未采纳', color: t.danger }
+  return { label: '审核中', color: t.warning }
 }
 
 /** 我的纠错页：分页列表，滚动到底加载下一页 */
@@ -69,7 +70,7 @@ export default function MyCorrectionsPage() {
           </View>
         )}
         {items.map((item) => {
-          const st = STATUS_MAP[item.status] || STATUS_MAP.Pending
+          const st = statusBadge(item.status, t)
           return (
             <View key={item.id} style={{ backgroundColor: t.bgCard, borderRadius: 12, marginLeft: 12, marginRight: 12, marginTop: 10, padding: 14 }}>
               <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

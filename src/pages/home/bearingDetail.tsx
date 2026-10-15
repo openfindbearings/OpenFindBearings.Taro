@@ -13,7 +13,7 @@ import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { checkFavorite, toggleFavorite, recordBearingView } from '../../services/user'
 import {
-  getBearingDetail, getBearingMerchants, getBearingInterchanges,
+  getBearingDetail, getBearingMerchants, getBearingInterchanges, interchangeTone,
   type BearingDetail, type BearingMerchant, type Interchange
 } from '../../services/bearing'
 import MediaImage from '../../components/MediaImage'
@@ -91,7 +91,6 @@ export default function BearingDetailPage() {
           <Text className='bd-part' style={{ ...fs(22), color: t.textPrimary }}>{detail?.partNumber || '—'}</Text>
           {detail?.oldNumber ? <Text className='bd-old' style={{ ...fs(13), color: t.textTertiary }}>旧型号：{detail.oldNumber}</Text> : null}
           <Text className='bd-sub' style={{ ...fs(14), color: t.textSecondary }}>{detail?.bearingType}{detail?.brandName ? ` · ${detail.brandName}` : ''}</Text>
-          {detail?.englishName ? <Text className='bd-sub' style={{ ...fs(12), color: t.textTertiary }}>{detail.englishName}</Text> : null}
         </View>
 
         {/* 基本参数 */}
@@ -156,8 +155,8 @@ export default function BearingDetailPage() {
             <Text className='bd-card-title' style={{ ...fs(15), color: t.textPrimary }}>替代品</Text>
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2, marginBottom: 6 }}>替代关系经平台审核；“需评估/仅供参考”档请人工确认工况适配</Text>
             {interchanges.map((it) => {
-              const badgeColor = it.interchangeType === 'exact' ? '#16A34A'
-                : it.interchangeType === 'conditional' ? '#F59E0B' : t.textTertiary
+              // 改动说明（v2.13.2 收敛）：替代类型取色改走 services/bearing.interchangeTone 唯一来源
+              const badgeColor = interchangeTone(it.interchangeType, t)
               return (
                 <View key={it.id} className='bd-list-row' onClick={() => it.bearingId && goBearing(it.bearingId)}>
                   <View className='bd-list-main'>

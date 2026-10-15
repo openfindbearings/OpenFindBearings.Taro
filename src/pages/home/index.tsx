@@ -250,8 +250,9 @@ export default function HomePage() {
                 </Text>
               </View>
               {m.isVerified && (
+                // 改动说明（v2.13.2 认证徽标统一）：文案"认证"→"已认证"，与商户页/商品卡/寻货详情一致
                 <View className='merchant-badge' style={{ backgroundColor: t.primaryLight }}>
-                  <Text className='merchant-badge-text' style={{ ...fs(11), color: t.primaryText }}>认证</Text>
+                  <Text className='merchant-badge-text' style={{ ...fs(11), color: t.primary }}>已认证</Text>
                 </View>
               )}
             </View>

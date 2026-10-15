@@ -19,6 +19,8 @@ import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type Merch
 import MediaImage from '../../components/MediaImage'
 // v2.1.0 成就子系统：商家勋章园（B2B 信任信号）
 import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
+// 改动说明（v2.13.2 配色统一）：等级徽章色统一走全局色带 getMerchantGradeBand
+import { getMerchantGradeBand, merchantGradeNameToRank } from '../../utils/level'
 import './merchantDetail.scss'
 
 export default function MerchantDetailPage() {
@@ -102,9 +104,10 @@ export default function MerchantDetailPage() {
               {detail?.isVerified && (
                 // 改动说明（v1.7.11）：文案"入驻商家"是认证等级上线前的旧词已失真（入驻=已生效是另一回事），
                 //   统一为与商户页同款金色"已认证"徽标（主流：徽标在所有露出点一致）
-                // 改动说明（v2.5.0 商家经济）：徽章直接展示商家等级中文名（认证商家/口碑商家/金牌商家，v2.13.0 Lv3 改名口碑），
-                //   等级是 B2B 信任资产——金牌琥珀、口碑蓝、认证金，徽标在所有露出点保持一致
-                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: detail.grade === 'Gold' ? '#D97706' : detail.grade === 'Premium' ? '#8B5CF6' : '#F59E0B', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                // 改动说明（v2.5.0 商家经济）：徽章直接展示商家等级中文名（认证商家/口碑商家/金牌商家，v2.13.0 Lv3 改名口碑）
+                // 改动说明（v2.13.2 配色统一）：原按枚举名内联三元（Gold/Premium/else）与全局色带分叉
+                //   （认证应紫却琥珀、口碑应蓝却紫、入驻应石板却琥珀），改用唯一权威 getMerchantGradeBand 按单调序数取色
+                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: getMerchantGradeBand(merchantGradeNameToRank(detail.grade)).bg, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Icon name="badge-check" size={11} color="#FFFFFF" />
                   <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>{detail.gradeDisplay || '已认证'}</Text>
                 </View>
@@ -209,7 +212,7 @@ export default function MerchantDetailPage() {
                   {b.bearingTypeName}{b.brandName ? ` · ${b.brandName}` : ''}
                 </Text>
               </View>
-              {b.price ? <Text className='md-list-price' style={{ ...fs(14), color: t.primaryText }}>{b.price}</Text> : null}
+              {b.priceDescription ? <Text className='md-list-price' style={{ ...fs(14), color: t.primaryText }}>{b.priceDescription}</Text> : null}
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           ))}

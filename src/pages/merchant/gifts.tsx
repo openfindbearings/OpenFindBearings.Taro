@@ -25,14 +25,17 @@ import {
 } from '../../services/gifts'
 import type { Paged } from '../../services/bearing'
 import { formatTime } from '../../utils/format'
+// 改动说明（v2.13.2 配色统一）：等级徽章色统一走全局色带（原先一律紫，与详情/头部不一致）
+import { getMerchantGradeBand, merchantGradeToRank } from '../../utils/level'
 
 definePageConfig({ disableScroll: true })
 
 /** 礼品审核态徽章（中文+色） */
 function auditBadge(g: MyGift, t: any): { text: string; color: string } {
-  if (g.auditState === GIFT_AUDIT.PENDING) return { text: '待审核', color: '#F59E0B' }
-  if (g.auditState === GIFT_AUDIT.REJECTED) return { text: '已驳回', color: '#EF4444' }
-  if (g.enabled) return { text: `在售 ${g.pointPrice}分`, color: '#16A34A' }
+  // 改动说明（v2.13.2 配色统一）：硬编码橙/红改走主题 token
+  if (g.auditState === GIFT_AUDIT.PENDING) return { text: '待审核', color: t.warning }
+  if (g.auditState === GIFT_AUDIT.REJECTED) return { text: '已驳回', color: t.danger }
+  if (g.enabled) return { text: `在售 ${g.pointPrice}分`, color: t.success }
   return { text: '已下架', color: t.textTertiary }
 }
 
@@ -159,9 +162,9 @@ export default function MerchantGiftsPage() {
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
-              {/* v2.5.0 商家经济：等级徽章（入驻/认证/口碑/金牌——buff 与信任的可视化；v2.13.0 Lv3 改名口碑商家） */}
+              {/* v2.5.0 商家经济：等级徽章（入驻/认证/口碑/金牌——buff 与信任的可视化；v2.13.0 Lv3 改名口碑商家；v2.13.2 改用全局色带） */}
               {treasury?.gradeDisplay ? (
-                <Text style={{ ...fs(10), color: '#8B5CF6', backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
+                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: getMerchantGradeBand(merchantGradeToRank(treasury.grade)).bg, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
               ) : null}
             </View>
             {/* 改动说明（RN 布局修复）：原"大数字 Text 内嵌小 Text"写法在 Taro RN 渲染异常
@@ -273,7 +276,7 @@ export default function MerchantGiftsPage() {
                 <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>{o.receiverAddress}</Text>
                 <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>{formatTime(o.createdAt)} 兑换</Text>
                 {o.shipStatus === SHIP_STATUS.SHIPPED && (
-                  <Text style={{ ...fs(11), color: '#16A34A', marginTop: 4 }}>已发货 · 单号 {o.shipTracking}（发货满 7 天自动确认结算）</Text>
+                  <Text style={{ ...fs(11), color: t.success, marginTop: 4 }}>已发货 · 单号 {o.shipTracking}（发货满 7 天自动确认结算）</Text>
                 )}
                 {o.shipStatus === SHIP_STATUS.PENDING && (
                   shipFor === o.id ? (

@@ -21,7 +21,7 @@ export interface BearingDetail {
   id: string
   partNumber: string
   oldNumber?: string | null
-  englishName?: string | null
+  // 改动说明（v2.13.2 幻影字段修复）：englishName 上游不存在，移除；类型用 bearingType
   bearingType: string
   innerDiameter: number
   outerDiameter: number
@@ -68,6 +68,21 @@ export interface Interchange {
   remarks?: string | null
   isBidirectional: boolean
   isAutoRecommendable: boolean
+}
+
+/** 三级替代类型（唯一来源，v2.13.2 收敛：原 interchanges 页与详情页各写一份）。
+ *  exact=标准等效替代 / conditional=条件替代（需评估）/ functional=仅供参考 */
+export const INTERCHANGE_TYPES: { key: string; label: string }[] = [
+  { key: 'exact', label: '标准等效替代' },
+  { key: 'conditional', label: '条件替代（需评估）' },
+  { key: 'functional', label: '仅供参考' },
+]
+
+/** 替代类型语义色（走主题 token：exact=正 / conditional=警 / 其余=弱），供各露出点统一取色 */
+export function interchangeTone(type: string | null | undefined, t: { success: string; warning: string; textTertiary: string }): string {
+  if (type === 'exact') return t.success
+  if (type === 'conditional') return t.warning
+  return t.textTertiary
 }
 
 /** 分页结果（BFF PagedResult 透传） */

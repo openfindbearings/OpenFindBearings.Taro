@@ -14,16 +14,17 @@ import LoginGuide from '../../components/LoginGuide'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { getMerchantGrade, type MerchantGradeDetail } from '../../services/points'
-import { getMerchantGradeBand } from '../../utils/level'
+import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 
 definePageConfig({ disableScroll: true })
 
-/** 四档阶梯静态骨架（阈值/升档礼数值来自接口，档位语义与后端 MerchantGrade 定案一致） */
+/** 四档阶梯静态骨架（阈值/升档礼数值来自接口，档位语义与后端 MerchantGrade 定案一致）。
+ *  改动说明（v2.13.2 文案统一）：档位名改取自 MERCHANT_GRADE_LABELS，避免与色带工具重复维护 */
 const GRADE_STEPS: { rank: number; name: string; cond: string }[] = [
-  { rank: 1, name: '入驻商家', cond: '审核通过即得' },
-  { rank: 2, name: '认证商家', cond: '证照审核通过' },
-  { rank: 3, name: '口碑商家', cond: '认证 + 在售达阈值' },
-  { rank: 4, name: '金牌商家', cond: '认证 + 在售达阈值 + 金库累计达阈值' },
+  { rank: 1, name: MERCHANT_GRADE_LABELS[1], cond: '审核通过即得' },
+  { rank: 2, name: MERCHANT_GRADE_LABELS[2], cond: '证照审核通过' },
+  { rank: 3, name: MERCHANT_GRADE_LABELS[3], cond: '认证 + 在售达阈值' },
+  { rank: 4, name: MERCHANT_GRADE_LABELS[4], cond: '认证 + 在售达阈值 + 金库累计达阈值' },
 ]
 
 export default function MerchantLevelPage() {
@@ -159,7 +160,7 @@ export default function MerchantLevelPage() {
         ) : (
           detail.labels.map((lb, i) => (
             <View key={i} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-              <Text style={{ ...fs(12), color: '#16A34A', marginRight: 6 }}>✓</Text>
+              <Text style={{ ...fs(12), color: t.success, marginRight: 6 }}>✓</Text>
               <Text style={{ ...fs(12), color: t.textSecondary, flex: 1 }}>{lb}</Text>
             </View>
           ))

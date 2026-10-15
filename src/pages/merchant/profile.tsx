@@ -10,20 +10,14 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import { getMerchantProfile, updateMerchantProfile, uploadMerchantLogo, getMyDocuments, submitDocument, closeMerchant, type MerchantProfile, type MerchantDocumentItem } from '../../services/merchant'
+import { getMerchantProfile, updateMerchantProfile, uploadMerchantLogo, getMyDocuments, submitDocument, closeMerchant, MERCHANT_TYPES, type MerchantProfile, type MerchantDocumentItem } from '../../services/merchant'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useMerchantStore } from '../../stores/merchant'
 import { usableImage } from '../../services/config'
 
 definePageConfig({ disableScroll: true })
 
-/** 商家类型（对齐后端 MerchantType 枚举 value/名称/中文） */
-const MERCHANT_TYPES = [
-  { value: 1, label: '生产厂家', name: 'Manufacturer' },
-  { value: 2, label: '授权经销商', name: 'AuthorizedDealer' },
-  { value: 3, label: '分销商', name: 'Distributor' },
-  { value: 4, label: '贸易商', name: 'Trader' }
-]
+// 商家类型：改动说明（v2.13.2 收敛）改取 services/merchant.MERCHANT_TYPES 唯一来源
 
 /** 把后端返回的类型（枚举名/中文/数字串）统一解析为枚举 value，无法识别返回 0 */
 function resolveType(t?: string | null): number {
