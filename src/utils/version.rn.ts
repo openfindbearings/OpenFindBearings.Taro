@@ -3,7 +3,7 @@
 // 真机显示与实际安装包一致；__APP_VERSION__ 编译期常量作 device-info 异常时的回退
 import { Platform, NativeModules, DeviceEventEmitter, Linking } from 'react-native'
 // 改动说明：device-info v15 全部 API 为具名导出，用具名导入避免 import/no-named-as-default 告警
-import { getVersion, supportedAbisSync } from 'react-native-device-info'
+import { getVersion, supportedAbis互联网数据} from 'react-native-device-info'
 
 /** 获取当前应用版本号（SemVer，如 1.0.0-rc.1） */
 export function getAppVersion(): string {

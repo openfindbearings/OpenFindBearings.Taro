@@ -61,7 +61,7 @@ export function getBaseUrl(): string {
 /**
  * 媒体资源公网 base（与业务 API 解耦的独立静态源）。
  * 改动说明：图片不再经 BFF /mobile/media 逐字节代理（应用不应代理二进制，反模式），
- * 改由独立 nginx 媒体服务在 /media 路径直出，Sync/API 各自的落盘目录只读挂载进去。
+ * 改由独立 nginx 媒体服务在 /media 路径直出，各服务落盘目录只读挂载进去。
  * 将来切换对象存储（MinIO/OSS/CDN）只需改此 base（或站点配置下发的 MediaBaseUrl），
  * 库内相对键不变，故为"轻松切换"的唯一切换点。可用环境变量 TARO_APP_MEDIA_BASE_URL 覆盖。
  */

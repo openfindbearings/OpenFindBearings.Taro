@@ -142,7 +142,7 @@ export default function MerchantProfilePage() {
       const r = await updateMerchantProfile({
         name: form.name.trim(),
         // 改动说明（v1.7.12）：联系方式/简介/官网等字段直传空串=清除（后端 null=保留、''=写入清除）——
-        //   原 `|| undefined` 让爬虫残留值（如邮箱列存着地址）永远删不掉，是死路；现在清空输入框保存即可删
+        //   原 `|| undefined` 让互联网残留值（如邮箱列存着地址）永远删不掉，是死路；现在清空输入框保存即可删
         // 改动说明（v1.7.7）：type 不再回传（商家类型锁定，原回传同值属噪音）
         // 信用代码：仅历史空值时提交补录（非空锁定，后端同口径）
         unifiedSocialCreditCode: form.unifiedSocialCreditCode.trim() || undefined,
