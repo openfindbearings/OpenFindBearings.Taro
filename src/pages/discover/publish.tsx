@@ -16,6 +16,10 @@ import PublishIdentitySheet from '../../components/PublishIdentitySheet'
 import { vibrateSuccess } from '../../utils/haptics'
 import { useMerchantStore } from '../../stores/merchant'
 import { publishDemand, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
+import { getObject, removeItem } from '../../utils/storage'
+
+/** 发布寻货跨页预填 storage 键（轴承详情"发起寻货"/"询价"写入） */
+const PREFILL_KEY = 'sourcing_publish_prefill'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
 definePageConfig({ disableScroll: true })
@@ -47,8 +51,21 @@ export default function PublishSourcingPage() {
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
   const [sheetOpen, setSheetOpen] = useState(false)
 
+  // v1.6.0 搜索寻货联动：跨页预填上下文——bearingId 贯通（关联平台轴承）+ 定向目标商户
+  const [meta, setMeta] = useState<{ bearingId?: string | null; targetMerchantId?: string | null }>({})
+  const [prefilled, setPrefilled] = useState(false)
+
   useDidShow(() => {
     getSourcingQuota().then(setQuota).catch(() => { /* 未登录/网络失败：隐藏额度条 */ })
+    // 预填：从轴承详情"发起寻货"/"询价"写入的 storage 读取，读完即清（防后续普通进入被脏预填）
+    void (async () => {
+      const pre = await getObject<{ partNumber?: string; brand?: string; bearingId?: string | null; targetMerchantId?: string | null }>(PREFILL_KEY)
+      if (!pre) return
+      setForm((prev) => ({ ...prev, partNumber: pre.partNumber || prev.partNumber, brand: pre.brand || prev.brand }))
+      setMeta({ bearingId: pre.bearingId ?? null, targetMerchantId: pre.targetMerchantId ?? null })
+      setPrefilled(true)
+      await removeItem(PREFILL_KEY)
+    })()
   })
 
   const setField = (key: keyof FormState, value: string) => setForm((prev) => ({ ...prev, [key]: value }))
@@ -79,7 +96,7 @@ export default function PublishSourcingPage() {
     setSubmitting(true)
     const body: PublishDemandBody = {
       partNumber: form.partNumber.trim(),
-      bearingId: null,
+      bearingId: meta.bearingId ?? null,
       brand: form.brand.trim() || null,
       quantity: form.quantity.trim() || null,
       expectedDelivery: form.expectedDelivery.trim() || null,
@@ -88,6 +105,8 @@ export default function PublishSourcingPage() {
       usePoints,
       // v2.12.0 商户名义发布：sheet 选定的商户；个人名义为 null
       merchantId,
+      // v1.6.0 定向询价：来自轴承详情"询价"入口时带目标商户；普通发布为 null（广播）
+      targetMerchantId: meta.targetMerchantId ?? null,
     }
     const r = await publishDemand(body)
     setSubmitting(false)
@@ -160,6 +179,14 @@ export default function PublishSourcingPage() {
         <View style={{ margin: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           {/* 改动说明（v2.12.0 交互改向）：发布身份不再占表单行——点"发布"时一步弹窗选择
               （归属商户才弹，纯个人直接提交），表单保持纯输入、逐步引导完成流程 */}
+          {/* v1.6.0 搜索寻货联动：来自轴承详情的预填提示（定向询价则加注） */}
+          {prefilled ? (
+            <View style={{ display: 'flex', marginBottom: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
+              <Text style={{ ...fs(11), lineHeight: 17, color: t.primary }}>
+                已按轴承货源预填，可修改{meta.targetMerchantId ? '（定向询价：仅推送给该商家）' : ''}
+              </Text>
+            </View>
+          ) : null}
           {/* 改动说明（v1.5.0 证据力体系 引导文案）：讲清"填全的价值"——具体需求才能匹配精准报价 */}
           <View style={{ display: 'flex', marginBottom: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
             <Text style={{ ...fs(11), lineHeight: 17, color: t.primary }}>

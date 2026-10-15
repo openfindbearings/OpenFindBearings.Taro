@@ -46,6 +46,8 @@ export default defineAppConfig({
     'pages/my/achievements',
 'pages/my/permissions',
 'pages/my/about',
+    // v1.6.0 通知设置：用户自勾选接收通知的渠道
+    'pages/my/notification-settings',
     'pages/my/profile-edit',
     // 改动说明（短信登录上线）：设置/修改登录密码（验证码登录注册的账号首次设密）
     'pages/my/change-password',

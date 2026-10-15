@@ -47,9 +47,7 @@ export interface MerchantDetail {
   /** 类型中文展示名（v2.13.2 新增：详情页此前直接渲染枚举名英文） */
   typeDisplay?: string | null
   contactPerson?: string | null
-  phone?: string | null
-  mobile?: string | null
-  email?: string | null
+  // v1.6.0 电话单轨：phone/mobile/email 移出公共查询面（号码只在寻货撮合达成后互给）
   address?: string | null
   isVerified: boolean
   status?: string | null

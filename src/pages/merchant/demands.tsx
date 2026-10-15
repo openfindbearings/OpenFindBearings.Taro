@@ -17,7 +17,7 @@ import { useListSelection } from '../../components/ListKit/useListSelection'
 import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useMerchantStore } from '../../stores/merchant'
-import { getMerchantSourcingDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, DEMAND_STATUS_CHIPS, type SourcingMerchantDemand } from '../../services/sourcing'
+import { getMerchantSourcingDemands, getMatchedDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, DEMAND_STATUS_CHIPS, type SourcingMerchantDemand, type MatchedDemand } from '../../services/sourcing'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
 definePageConfig({ disableScroll: true })
@@ -25,12 +25,21 @@ definePageConfig({ disableScroll: true })
 /** 状态 chips：改动说明（v2.13.2 收敛）改取 services/sourcing 唯一来源 */
 const CHIPS = DEMAND_STATUS_CHIPS
 
+/** 顶部双面切换（v1.6.0 搜索寻货联动）：为你匹配 / 我发布的 */
+const MODE_CHIPS = [
+  { key: 'matched', label: '为你匹配' },
+  { key: 'mine', label: '我发布的' },
+]
+
 /** 商户寻货发布页 */
 export default function MerchantDemandsPage() {
   const t = useTheme()
   const fs = useFs()
   const currentMerchant = useMerchantStore((s) => s.currentMerchant())
   const [items, setItems] = useState<SourcingMerchantDemand[]>([])
+  // v1.6.0 搜索寻货联动：顶部双面切换——「为你匹配的寻货」/「我发布的」
+  const [mode, setMode] = useState<'matched' | 'mine'>('matched')
+  const [matched, setMatched] = useState<MatchedDemand[]>([])
   const [chip, setChip] = useState('all')
   const [openedId, setOpenedId] = useState<string | null>(null)
   const [sheetFor, setSheetFor] = useState<SourcingMerchantDemand | null>(null)
@@ -38,7 +47,11 @@ export default function MerchantDemandsPage() {
   const menuHandlers = useLongPressMenu<SourcingMerchantDemand>(setSheetFor)
   const sel = useListSelection()
 
-  const reload = () => { void getMerchantSourcingDemands().then((r) => setItems(r || [])).catch(() => { /* 降级空列表 */ }) }
+  const reload = () => {
+    void getMerchantSourcingDemands().then((r) => setItems(r || [])).catch(() => { /* 降级空列表 */ })
+    // v1.6.0：为你匹配的寻货（定向给我的 + 匹配我在售型号的进行中寻货）
+    void getMatchedDemands().then((r) => setMatched(r || [])).catch(() => { /* 降级空列表 */ })
+  }
   useDidShow(() => {
     if (currentMerchant) reload()
   })
@@ -93,8 +106,39 @@ export default function MerchantDemandsPage() {
             <Text style={{ ...fs(14), color: t.textTertiary }}>请先在商家 Tab 选择当前商户</Text>
           </View>
         )}
-        {currentMerchant && items.length > 0 && <ListChips items={CHIPS} active={chip} onChange={setChip} />}
-        {currentMerchant && items.length === 0 && (
+        {currentMerchant && (
+          <ListChips items={MODE_CHIPS} active={mode} onChange={(k) => setMode(k as 'matched' | 'mine')} />
+        )}
+        {/* 为你匹配（v1.6.0）：定向给我的 + 匹配我在售型号的进行中寻货 */}
+        {currentMerchant && mode === 'matched' && (matched.length === 0 ? (
+          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
+            <Icon name='search' size={40} color={t.textTertiary} />
+            <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12, paddingLeft: 32, paddingRight: 32, textAlign: 'center' }}>
+              暂无为你匹配的寻货——买家寻货型号与你在售一致、或买家定向向你询价时会出现在这里
+            </Text>
+          </View>
+        ) : matched.map((d, i) => (
+          <View key={d.id} style={{ marginLeft: 12, marginRight: 12, marginTop: i === 0 ? 12 : 8 }}>
+            <View
+              style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
+              onClick={() => Taro.navigateTo({ url: `/pages/discover/detail?id=${d.id}` })}
+            >
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>寻 {d.partNumber}</Text>
+                {d.isTargeted && (
+                  <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
+                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>定向询价</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 6 }} numberOfLines={1}>
+                {[d.brand, d.quantity, d.region].filter(Boolean).join(' · ') || '—'}
+              </Text>
+            </View>
+          </View>
+        )))}
+        {currentMerchant && mode === 'mine' && items.length > 0 && <ListChips items={CHIPS} active={chip} onChange={setChip} />}
+        {currentMerchant && mode === 'mine' && items.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='clipboard-list' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12, paddingLeft: 32, paddingRight: 32, textAlign: 'center' }}>
@@ -102,13 +146,13 @@ export default function MerchantDemandsPage() {
             </Text>
           </View>
         )}
-        {currentMerchant && items.length > 0 && shown.length === 0 && (
+        {currentMerchant && mode === 'mine' && items.length > 0 && shown.length === 0 && (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 }}>
             <Icon name='clipboard-list' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>该状态下暂无寻货</Text>
           </View>
         )}
-        {shown.map((item, i) => {
+        {mode === 'mine' && shown.map((item, i) => {
           const open = item.status === DEMAND_STATUS.published
           const checked = sel.selected.includes(item.id)
           const card = (

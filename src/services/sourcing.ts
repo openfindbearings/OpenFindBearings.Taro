@@ -95,6 +95,8 @@ export interface SourcingDetail {
   publisherMerchantId?: string | null
   publisherMerchantName?: string | null
   publisherType?: 'merchant' | 'individual' | null
+  /** v1.6.0 定向询价：是否定向单（前端出"定向询价"徽章） */
+  isTargeted?: boolean
 }
 
 /** 我发布的寻货项 */
@@ -310,6 +312,8 @@ export interface PublishDemandBody {
   usePoints: boolean
   /** v2.12.0 商户名义发布：以该商户名义发布（须为在职成员）；缺省/空=个人名义 */
   merchantId?: string | null
+  /** v1.6.0 定向询价：定向目标商户；缺省/空=广播进大厅 + 匹配推送 */
+  targetMerchantId?: string | null
 }
 
 /** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案） */
@@ -396,6 +400,31 @@ export function getMySourcingResponses() {
 export async function getBrands(): Promise<HomeRef[]> {
   try {
     const r = await request<HomeRef[]>(API.BRANDS, { auth: false })
+    return r || []
+  } catch {
+    return []
+  }
+}
+
+/** 为你匹配的寻货项（v1.6.0 商户侧聚合面；对齐 BFF /mobile/sourcing/matched） */
+export interface MatchedDemand {
+  id: string
+  partNumber: string
+  brand?: string | null
+  quantity?: string | null
+  region?: string | null
+  status: number
+  responseCount: number
+  createdAt: string
+  expiryAt: string
+  /** 是否定向给我的询价单（前端出"定向询价"徽章） */
+  isTargeted: boolean
+}
+
+/** 拉取为你匹配的寻货（v1.6.0 商户工作台聚合 tab；失败返回空数组降级空态） */
+export async function getMatchedDemands(): Promise<MatchedDemand[]> {
+  try {
+    const r = await request<MatchedDemand[]>(API.SOURCING_MATCHED)
     return r || []
   } catch {
     return []

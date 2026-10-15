@@ -63,3 +63,27 @@ export function deleteNotification(id: string) {
 export function clearReadNotifications() {
   return request<{ success: boolean }>(API.NOTIFICATIONS_CLEAR_READ, { method: 'DELETE' })
 }
+
+/** 通知偏好（v1.6.0 通知设置；站内信恒开不在其中） */
+export interface NotificationPreferences {
+  smsNotificationEnabled: boolean
+  weChatNotificationEnabled: boolean
+  emailNotificationEnabled: boolean
+  /** 短信通道是否就绪（未接网关时前端隐藏短信开关） */
+  smsGatewayReady: boolean
+}
+
+/** 读取通知偏好（失败回落全默认，开关不阻页面） */
+export async function getNotificationPreferences(): Promise<NotificationPreferences> {
+  try {
+    const r = await request<NotificationPreferences>(API.NOTIFICATION_PREFERENCES)
+    return r || { smsNotificationEnabled: false, weChatNotificationEnabled: true, emailNotificationEnabled: true, smsGatewayReady: false }
+  } catch {
+    return { smsNotificationEnabled: false, weChatNotificationEnabled: true, emailNotificationEnabled: true, smsGatewayReady: false }
+  }
+}
+
+/** 保存通知偏好（部分更新，null=不改该项） */
+export function updateNotificationPreferences(patch: Partial<Pick<NotificationPreferences, 'smsNotificationEnabled' | 'weChatNotificationEnabled' | 'emailNotificationEnabled'>>) {
+  return request<{ success: boolean }>(API.NOTIFICATION_PREFERENCES, { method: 'PUT', data: patch })
+}
