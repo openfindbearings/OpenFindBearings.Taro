@@ -43,7 +43,7 @@ export interface PointRules {
   levelBonusMin: number
   /** 段位升档礼区间上限 */
   levelBonusMax: number
-  /** 业务切日时区偏移小时数 */
+  /** 业务切日时区偏移小时数（默认 8） */
   tzOffsetHours: number
   /** 签到 buff 最大加数 */
   buffCheckinMax: number

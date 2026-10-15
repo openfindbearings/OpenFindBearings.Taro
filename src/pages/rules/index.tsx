@@ -160,7 +160,8 @@ export default function RulesPage() {
             <RuleSection t={t} fs={fs} title='规则与边界' rows={[
               { label: '段位只升不降', note: '段位按累计获得轴承币落档（青铜→王者十档），只升不降；段位享彩牌铭牌与升档礼，不影响赚币倍率（倍率归商家 buff）' },
               { label: '每日上限', note: `各赚币场景有日上限（如纠错 ${r.correctionDailyLimit}/日），防刷分` },
-              { label: '切日口径', value: `UTC+${r.tzOffsetHours}`, note: '"每天"按北京时间零点切分' },
+              // 改动说明（v2.17.0）：值随配置偏移；注释同步走条件文案，避免偏移非 8 时"北京时间"与之矛盾
+              { label: '切日口径', value: `UTC+${r.tzOffsetHours}`, note: r.tzOffsetHours === 8 ? '"每天"按北京时间（东八区）零点切分' : `"每天"按 UTC+${r.tzOffsetHours} 零点切分` },
               { label: '不过期', note: '当前轴承币无过期时间；平台保留后续引入过期策略的可能' },
               { label: '不可提现转让', note: '轴承币不能换钱、不能转给他人（含店铺），唯一去向是平台内消费' },
             ]} />
