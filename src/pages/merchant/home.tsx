@@ -296,8 +296,10 @@ export default function MerchantHomePage() {
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家福利</Text>
             {buff && buff.rank > 0 ? (
-              <Text style={{ ...fs(12), color: '#8B5CF6' }}>
-                {buff.rank === 1 ? 'Lv1 入驻' : buff.rank === 2 ? 'Lv2 认证' : buff.rank === 3 ? 'Lv3 口碑' : 'Lv4 金牌'}
+              // 改动说明（v2.13.2 配色/文案统一）：原一律紫 + 自写"Lv2 认证"短名，与等级色带和展示名分叉；
+              //   改用唯一色带 getMerchantGradeBand + MERCHANT_GRADE_LABELS
+              <Text style={{ ...fs(12), color: getMerchantGradeBand(buff.rank).bg }}>
+                {MERCHANT_GRADE_LABELS[buff.rank] ?? ''}
               </Text>
             ) : null}
           </View>
@@ -317,7 +319,7 @@ export default function MerchantHomePage() {
               <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>以下加成对本店全体在职成员自动生效：</Text>
               {(buff.labels || []).map((lb, i) => (
                 <View key={i} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
-                  <Text style={{ ...fs(12), color: '#16A34A', marginRight: 6 }}>✓</Text>
+                  <Text style={{ ...fs(12), color: t.success, marginRight: 6 }}>✓</Text>
                   <Text style={{ ...fs(12), color: t.textSecondary, flex: 1 }}>{lb}</Text>
                 </View>
               ))}
@@ -346,11 +348,11 @@ export default function MerchantHomePage() {
                   <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ ...fs(13), color: t.textPrimary, flex: 1 }}>{mt.period === 2 ? '月' : '周'}·{mt.name}</Text>
                     {mt.done
-                      ? <Text style={{ ...fs(12), color: '#16A34A', fontWeight: '600' }}>已达成</Text>
+                      ? <Text style={{ ...fs(12), color: t.success, fontWeight: '600' }}>已达成</Text>
                       : <Text style={{ ...fs(12), color: t.textSecondary }}>{mt.current}/{mt.target}</Text>}
                   </View>
                   <View style={{ display: 'flex', flexDirection: 'row', height: 6, borderRadius: 3, backgroundColor: t.bgInput, marginTop: 5, overflow: 'hidden' }}>
-                    <View style={{ flex: Math.max(pct, 0.02), backgroundColor: mt.done ? '#16A34A' : t.primary }} />
+                    <View style={{ flex: Math.max(pct, 0.02), backgroundColor: mt.done ? t.success : t.primary }} />
                     <View style={{ flex: Math.max(1 - pct, 0.02) }} />
                   </View>
                   <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>

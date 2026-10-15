@@ -8,6 +8,8 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View, Image, ScrollView } fr
 import Icon from '../Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { usableImage } from '../../services/config'
+// 改动说明（v2.13.2 收敛）：角色中文取 services/merchant 唯一来源
+import { merchantRoleLabel } from '../../services/merchant'
 
 /** 切换器商户条目 */
 export interface MerchantSwitchItem {
@@ -67,12 +69,8 @@ function settle(result: MerchantSwitchResult) {
   pendingResolve = null
 }
 
-/** 角色码转中文副标题 */
-function roleLabel(role?: string): string {
-  if (role === 'MerchantAdmin') return '管理员'
-  if (role === 'MerchantStaff') return '员工'
-  return ''
-}
+/** 角色码转中文副标题：改动说明（v2.13.2 收敛）委托 merchantRoleLabel 唯一来源 */
+const roleLabel = merchantRoleLabel
 
 /** RN 端商户切换器：挂载于 App 根，响应命令式信号 */
 export default function MerchantSwitchSheet() {

@@ -29,18 +29,13 @@ import {
   getApplicationDetail,
   resubmitApplication,
   uploadDocumentFile,
+  MERCHANT_TYPES,
   type ClaimableMerchant,
   type PendingNomination,
   type DocumentInput
 } from '../../services/merchant'
 
-/** 商家类型（对齐后端 MerchantType：1生产厂家 / 2授权经销商 / 3分销商 / 4贸易商） */
-const MERCHANT_TYPES = [
-  { value: 1, label: '生产厂家' },
-  { value: 2, label: '授权经销商' },
-  { value: 3, label: '分销商' },
-  { value: 4, label: '贸易商' }
-]
+// 商家类型：改动说明（v2.13.2 收敛）改取 services/merchant.MERCHANT_TYPES 唯一来源
 
 /** 向导三步标题（步骤条展示，与 search/mode/form 相位一一对应） */
 const STEP_LABELS = ['查找方式', '操作方式', '提交']
@@ -755,7 +750,7 @@ export default function MerchantApplyPage() {
         )}
         {results.map((item) => {
           // 改动说明（v1.7.4）：状态徽标——可认领蓝、我的商户绿、其余灰（不可点选）
-          const badgeColor = item.isMine ? '#16A34A' : item.isClaimable ? t.primary : t.textTertiary
+          const badgeColor = item.isMine ? t.success : item.isClaimable ? t.primary : t.textTertiary
           return (
             <View
               key={item.id}

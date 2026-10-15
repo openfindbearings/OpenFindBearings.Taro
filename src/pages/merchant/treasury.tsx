@@ -12,6 +12,8 @@ import { useAuthStore } from '../../stores/auth'
 import LoginGuide from '../../components/LoginGuide'
 import { getTreasury, getTreasuryTransactions, treasurySceneText, type TreasuryAccount, type TreasuryTx } from '../../services/gifts'
 import { formatTime } from '../../utils/format'
+// 改动说明（v2.13.2 配色统一）：等级徽章色统一走全局色带（原先一律紫，与详情/头部不一致）
+import { getMerchantGradeBand, merchantGradeToRank } from '../../utils/level'
 
 definePageConfig({ disableScroll: true })
 
@@ -51,9 +53,9 @@ export default function MerchantTreasuryPage() {
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
-              {/* 等级徽章（入驻/认证/口碑/金牌——buff 与信任的可视化；v2.13.0 Lv3 改名口碑商家） */}
+              {/* 等级徽章（入驻/认证/口碑/金牌——buff 与信任的可视化；v2.13.0 Lv3 改名口碑商家；v2.13.2 改用全局色带） */}
               {treasury?.gradeDisplay ? (
-                <Text style={{ ...fs(10), color: '#8B5CF6', backgroundColor: t.primaryLight, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
+                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: getMerchantGradeBand(merchantGradeToRank(treasury.grade)).bg, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
               ) : null}
             </View>
             {/* 改动说明（RN 布局修复）：原"大数字 Text 内嵌小 Text"写法在 Taro RN 渲染异常
@@ -80,7 +82,7 @@ export default function MerchantTreasuryPage() {
                     <Text style={{ ...fs(13), color: t.textPrimary }}>{treasurySceneText(tx.scene)}</Text>
                     <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 3 }}>{tx.remark || ''} {formatTime(tx.createdAt)}</Text>
                   </View>
-                  <Text style={{ ...fs(15), color: tx.direction === 1 ? '#16A34A' : '#EF4444', fontWeight: '600' }}>
+                  <Text style={{ ...fs(15), color: tx.direction === 1 ? t.success : t.danger, fontWeight: '600' }}>
                     {tx.direction === 1 ? '+' : '-'}{tx.amount}
                   </Text>
                 </View>

@@ -14,20 +14,15 @@ import ListChips from '../../components/ListKit/ListChips'
 import { useMerchantStore } from '../../stores/merchant'
 import {
   getMySourcingResponses, responseStatusText, getOpportunities,
-  RESPONSE_STATUS, DEMAND_STATUS, type SourcingMerchantResponse, type OpportunityItem,
+  RESPONSE_STATUS, RESPONSE_STATUS_CHIPS, type SourcingMerchantResponse, type OpportunityItem,
 } from '../../services/sourcing'
 import { setItem } from '../../utils/storage'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
 definePageConfig({ disableScroll: true })
 
-/** 应答状态 chips（应答三态：待处理/已选定/未选中；需求关闭的归入对应应答状态展示） */
-const CHIPS = [
-  { key: 'all', label: '全部' },
-  { key: '1', label: '待处理' },
-  { key: '2', label: '已选定' },
-  { key: '3', label: '未选中' },
-]
+/** 应答状态 chips：改动说明（v2.13.2 收敛）改取 services/sourcing 唯一来源 */
+const CHIPS = RESPONSE_STATUS_CHIPS
 
 /** 商家寻货应答页 */
 export default function MerchantResponsesPage() {

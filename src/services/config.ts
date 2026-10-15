@@ -276,10 +276,11 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   HISTORY_RECORD_BEARING: (id: string) => `${API_PREFIX}/me/history/bearings/${id}`,
   HISTORY_RECORD_MERCHANT: (id: string) => `${API_PREFIX}/me/history/merchants/${id}`,
   HISTORY_CLEAR: `${API_PREFIX}/me/history/clear`,
-  /** v2.12.0 列表多选批量操作 */
-  FAVORITES_BATCH_REMOVE: `${API_PREFIX}/favorites/batch-remove`,
-  FOLLOWS_BATCH_REMOVE: `${API_PREFIX}/follows/batch-remove`,
-  HISTORY_BATCH_DELETE: `${API_PREFIX}/history/batch-delete`,
+  /** v2.12.0 列表多选批量操作。改动说明（v2.13.2 路径漂移修复）：BFF 批量端点挂在 /mobile/me/* 下
+   *  （与单条 /me/favorites/{id} 同组），原配置缺 /me 段恒 404，补齐与 BFF 对齐 */
+  FAVORITES_BATCH_REMOVE: `${API_PREFIX}/me/favorites/batch-remove`,
+  FOLLOWS_BATCH_REMOVE: `${API_PREFIX}/me/follows/batch-remove`,
+  HISTORY_BATCH_DELETE: `${API_PREFIX}/me/history/batch-delete`,
     // 信息纠错（v1.7.14）：字段清单/提交/我的列表（BFF /mobile/me/corrections/* 代理 API /api/me/corrections/*）
     CORRECTION_FIELDS: (targetType: string, targetId: string) => `${API_PREFIX}/me/corrections/fields/${targetType}/${targetId}`,
     CORRECTION_SUBMIT_BEARING: (id: string) => `${API_PREFIX}/me/corrections/bearings/${id}`,

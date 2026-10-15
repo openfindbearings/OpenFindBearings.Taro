@@ -8,22 +8,19 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import { searchBearings, type Bearing } from '../../services/bearing'
+import { searchBearings, INTERCHANGE_TYPES, type Bearing } from '../../services/bearing'
 import { submitInterchange, getMyInterchanges, type MyInterchange } from '../../services/merchant'
 
 definePageConfig({ disableScroll: true })
 
-/** 三级替代类型（与 API InterchangeType 对齐，口径=标准等效/条件/仅供参考） */
-const TYPES = [
-  { key: 'exact', label: '标准等效替代' },
-  { key: 'conditional', label: '条件替代（需评估）' },
-  { key: 'functional', label: '仅供参考' },
-]
+/** 三级替代类型：改动说明（v2.13.2 收敛）改取 services/bearing 的唯一来源 */
+const TYPES = INTERCHANGE_TYPES
 
 /** 审核状态语义色（0=已生效 1=待审核 2=已驳回） */
 function statusColor(t: ReturnType<typeof useTheme>, s: number): string {
-  if (s === 0) return '#16A34A'
-  if (s === 1) return '#F59E0B'
+  // 改动说明（v2.13.2 配色统一）：硬编码绿/橙改走主题 token
+  if (s === 0) return t.success
+  if (s === 1) return t.warning
   return t.danger
 }
 

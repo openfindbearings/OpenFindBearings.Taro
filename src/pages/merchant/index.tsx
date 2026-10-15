@@ -22,7 +22,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
-import { withdrawApplication, deleteApplication, requestVerifyMerchant, getPendingStaffInvitations, acceptStaffInvitation, declineStaffInvitation, type MerchantApplication, type PendingStaffInvitation } from '../../services/merchant'
+import { withdrawApplication, deleteApplication, requestVerifyMerchant, getPendingStaffInvitations, acceptStaffInvitation, declineStaffInvitation, merchantRoleLabel, type MerchantApplication, type PendingStaffInvitation } from '../../services/merchant'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { usableImage } from '../../services/config'
 import './index.scss'
@@ -30,12 +30,8 @@ import './index.scss'
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
 
-/** 角色码转中文 */
-function roleLabel(role?: string | null): string {
-  if (role === 'MerchantAdmin') return '管理员'
-  if (role === 'MerchantStaff') return '员工'
-  return ''
-}
+/** 角色码转中文：改动说明（v2.13.2 收敛）委托 merchantRoleLabel 唯一来源 */
+const roleLabel = merchantRoleLabel
 
 /** 状态徽标元数据（文案 + 语义色），主题 token 由调用方传入 */
 function statusMeta(t: ReturnType<typeof useTheme>, s: string): { label: string; color: string } {
@@ -178,8 +174,10 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.merchantName}</Text>
             {isActive && m.isVerified && (
-              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: '#F59E0B' }}>
-                <Text style={{ ...fs(10), color: '#FFFFFF' }}>已认证</Text>
+              // 改动说明（v2.13.2 认证徽标统一）：原固定橙底白字，与首页/商品卡/寻货详情（主题色浅底主色字）分叉，
+              //   统一为主题色浅底 + 主色字，文案"已认证"
+              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.primaryLight }}>
+                <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>已认证</Text>
               </View>
             )}
           </View>

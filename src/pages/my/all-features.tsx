@@ -9,52 +9,23 @@ import { useTheme } from '../../hooks/useTheme'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import './all-features.scss'
+// 改动说明（v2.13.2 菜单收敛）：列表与路由改由共享 ./menu 提供，消除与我的页四宫格的分叉
+import { MY_MENU_ITEMS, MY_MENU_ROUTES } from './menu'
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
 
-// 全部功能列表
-// 改动说明（v1.7.21）：补齐任务中心/轴承币明细/我的寻货三个新功能（此前只列了旧四项）
-const featureList = [
-  { key: 'favorites', label: '收藏轴承', desc: '我收藏的轴承型号', icon: 'heart', color: '#EF4444' },
-  { key: 'followed', label: '关注商家', desc: '我关注的商家', icon: 'users', color: '#0EA5E9' },
-  { key: 'history', label: '浏览历史', desc: '最近浏览记录', icon: 'clock', color: '#10B981' },
-  { key: 'corrections', label: '我的纠错', desc: '提交记录与审核结果', icon: 'edit', color: '#8B5CF6' },
-  { key: 'tasks', label: '任务中心', desc: '签到与赚轴承币任务', icon: 'gift', color: '#F59E0B' },
-  // 改动说明（v2.10.1 游戏中心）：我的宫格换入口后，全部功能页同步补常驻条目
-  { key: 'games', label: '游戏中心', desc: '轴承连连看，玩一局赚币', icon: 'puzzle', color: '#0EA5E9' },
-  { key: 'achievements', label: '我的勋章', desc: '点亮勋章与称号', icon: 'award', color: '#A855F7' },
-  { key: 'points', label: '收支明细', desc: '轴承币收支流水', icon: 'list', color: '#14B8A6' },
-  { key: 'sourcing', label: '我的寻货', desc: '我发布的寻货需求', icon: 'compass', color: '#3B82F6' },
-  { key: 'messages', label: '消息中心', desc: '系统通知与消息', icon: 'bell', color: '#F97316' },
-  { key: 'settings', label: '设置', desc: '通用设置与隐私', icon: 'settings', color: '#64748B' }
-]
+// 全部功能列表（唯一数据源见 ./menu）
+const featureList = MY_MENU_ITEMS
 
 export default function AllFeaturesPage() {
   // 全局字号缩放 + 主题色板
   const fs = useFs()
   const t = useTheme()
   const handleClick = (key: string) => {
-    if (key === 'settings') {
-      Taro.navigateTo({ url: '/pages/my/settings' })
-      return
-    }
-    // 改动说明：收藏/关注/历史已实现，跳转真实页面（页面内含未登录引导）；
-    //   消息中心随站内信功能上线，跳转真实收件箱页
-    const urls: Record<string, string> = {
-      favorites: '/pages/my/favorites',
-      followed: '/pages/my/followed',
-      history: '/pages/my/history',
-      corrections: '/pages/my/corrections',
-      tasks: '/pages/my/tasks',
-      achievements: '/pages/my/achievements',
-      points: '/pages/my/points',
-      sourcing: '/pages/my/sourcing',
-      games: '/pages/games/index',
-      messages: '/pages/notifications/index'
-    }
-    if (urls[key]) {
-      Taro.navigateTo({ url: urls[key] })
+    const url = MY_MENU_ROUTES[key]
+    if (url) {
+      Taro.navigateTo({ url })
       return
     }
     Taro.showToast({ title: '功能暂未上线', icon: 'none' })

@@ -82,7 +82,8 @@ export default function ProductCard({ item, onPress, onMerchant }: ProductCardPr
           {item.merchantIsVerified ? (
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 4 }}>
               <Icon name='check-circle' size={12} color={t.primary} />
-              <Text style={{ ...fs(10), color: t.primary, marginLeft: 2 }}>认证</Text>
+              {/* 改动说明（v2.13.2 认证徽标统一）：文案"认证"→"已认证" */}
+              <Text style={{ ...fs(10), color: t.primary, marginLeft: 2 }}>已认证</Text>
             </View>
           ) : null}
         </View>
