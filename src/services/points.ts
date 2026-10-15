@@ -1,6 +1,7 @@
 // 积分服务（v1.7.17 积分底座）：账户概览 / 每日签到 / 流水分页，代理 BFF /mobile/points/*
 import { request } from './request'
 import { API } from './config'
+import { DEFAULT_PAGE_SIZE } from '../utils/paging'
 import type { Paged } from './bearing'
 
 /** 积分账户概览（对齐 BFF PointAccountResponse） */
@@ -87,7 +88,7 @@ export function dailyCheckin() {
 }
 
 /** 积分流水分页 */
-export function getPointTransactions(page = 1, pageSize = 20) {
+export function getPointTransactions(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<PointTransaction>>(`${API.POINTS_TRANSACTIONS}?page=${page}&pageSize=${pageSize}`)
 }
 

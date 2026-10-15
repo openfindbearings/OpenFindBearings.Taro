@@ -2,6 +2,7 @@
 // 全部走 BFF /mobile/merchant/*，依赖 X-Merchant-Id 当前商户上下文（merchantContext 自动带头）
 import { request } from './request'
 import { API, getBaseUrl } from './config'
+import { DEFAULT_PAGE_SIZE } from '../utils/paging'
 import { getToken } from './request'
 import { uploadFileNormalized } from './upload'
 import type { Paged } from './bearing'
@@ -94,7 +95,7 @@ export function getTreasury() {
 }
 
 /** 金库流水分页 */
-export function getTreasuryTransactions(page = 1, pageSize = 20) {
+export function getTreasuryTransactions(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<TreasuryTx>>(`${API.MERCHANT_TREASURY_TX}?page=${page}&pageSize=${pageSize}`)
 }
 
@@ -137,7 +138,7 @@ export async function uploadGiftImage(filePath: string): Promise<string> {
 }
 
 /** 礼品订单列表（shipStatus: 1 待发货 / 2 已发货 / 不传=全部） */
-export function getGiftOrders(shipStatus?: number, page = 1, pageSize = 20) {
+export function getGiftOrders(shipStatus?: number, page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   const q = shipStatus ? `&shipStatus=${shipStatus}` : ''
   return request<Paged<GiftOrder>>(`${API.MERCHANT_GIFT_ORDERS}?page=${page}&pageSize=${pageSize}${q}`)
 }

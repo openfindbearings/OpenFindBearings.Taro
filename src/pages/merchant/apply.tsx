@@ -328,7 +328,9 @@ export default function MerchantApplyPage() {
           // 改动说明（v1.7.12）：企业名称预填商家名称兜底——互联网数据抓来的商家名多为执照全称，
           //   预填后由认领人对照执照核对修正（主流认领做法），省去从零输入；无值时仍留空必填
           companyName: d.companyName || d.name || '',
-          type: MERCHANT_TYPES.find((x) => x.label === d.type)?.value ?? 0,
+          // 改动说明（v2.13.2 修复）：d.type 是枚举名（Manufacturer 等），原与中文 label 比较恒 false → 认领预填类型永远丢失；
+          //   改与 name（枚举名）比较
+          type: MERCHANT_TYPES.find((x) => x.name === d.type)?.value ?? 0,
           contactPerson: selfContactPerson || d.contactPerson || '',
           // 改动说明：客服电话优先商户已有对外电话（互联网数据值供核对），无值时回退登录账号手机号
           phone: d.phone || d.mobile || selfPhone,
@@ -793,7 +795,7 @@ export default function MerchantApplyPage() {
           <View style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 14, marginBottom: 12 }}>
             <Text style={{ ...fs(16), color: t.textPrimary }}>{selected.name}</Text>
             {selected.companyName ? <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>{selected.companyName}</Text> : null}
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.type}</Text>
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.typeDisplay}</Text>
           </View>
           {optionCard('store', '我当管理员经营', '认领该商家并核对资料，由你作为管理员维护', onClaimGo)}
           {optionCard('user-plus', '邀请别人当管理员', '把该商家提名给他人认领，你以员工身份入伙', onNominateGo)}
@@ -862,7 +864,7 @@ export default function MerchantApplyPage() {
           <View style={{ backgroundColor: t.bgCard, borderRadius: 12, padding: 14, marginBottom: 12 }}>
             <Text style={{ ...fs(16), color: t.textPrimary }}>{selected.name}</Text>
             {selected.companyName ? <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>{selected.companyName}</Text> : null}
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.type}</Text>
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>类型：{selected.typeDisplay}</Text>
           </View>
           {fieldColumn('被提名人手机号 *', nomineePhone, setNomineePhone, '对方需已注册的手机号', 'number')}
           {/* 改动说明：原"我同时以员工身份加入"勾选框已移除，发起人固定以员工身份入伙 */}

@@ -115,7 +115,8 @@ export default function MerchantDetailPage() {
             </View>
             {detail?.companyName ? <Text className='md-sub' style={{ ...fs(13), color: t.textTertiary }} numberOfLines={1}>{detail.companyName}</Text> : null}
             {/* 改动说明：type 脏数据可能是 "0"/空，过滤掉避免眉部显示无意义的 "0" */}
-            {detail?.type && detail.type !== '0' ? <Text className='md-sub' style={{ ...fs(12), color: t.textTertiary }}>{detail.type}</Text> : null}
+            {/* 改动说明（v2.13.2）：改用 typeDisplay，此前直接渲染枚举名英文（Manufacturer 等） */}
+                  {detail?.typeDisplay ? <Text className='md-sub' style={{ ...fs(12), color: t.textTertiary }}>{detail.typeDisplay}</Text> : null}
           </View>
         </View>
 

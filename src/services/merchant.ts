@@ -1,6 +1,7 @@
 // 商家服务：搜索、详情、在售轴承、入驻申请与状态（入驻需登录，走 BFF 代理）
 import { request, getToken } from './request'
 import { API, buildQuery, getBaseUrl } from './config'
+import { DEFAULT_PAGE_SIZE } from '../utils/paging'
 import { getCurrentMerchantId } from './merchantContext'
 import { uploadFileNormalized } from './upload'
 import { pickImagePath } from './pickImage'
@@ -43,6 +44,8 @@ export interface MerchantDetail {
   name: string
   companyName?: string | null
   type?: string | null
+  /** 类型中文展示名（v2.13.2 新增：详情页此前直接渲染枚举名英文） */
+  typeDisplay?: string | null
   contactPerson?: string | null
   phone?: string | null
   mobile?: string | null
@@ -100,6 +103,8 @@ export interface ClaimableMerchant {
   name: string
   companyName?: string | null
   type?: string
+  /** 类型中文展示名（v2.13.2：type 语义统一为枚举名，展示改用此字段） */
+  typeDisplay?: string
   /** 可认领（未认证+无在职成员+无提名锁定） */
   isClaimable?: boolean
   /** 当前用户已是该商户在职成员（去管理入口） */
@@ -240,7 +245,7 @@ export function getMerchantDetail(id: string) {
 
 /** 商家在售轴承 */
 export function getMerchantBearings(id: string) {
-  return request<Paged<MerchantBearing>>(`${API.MERCHANT_BEARINGS(id)}?page=1&pageSize=20`, { auth: false })
+  return request<Paged<MerchantBearing>>(`${API.MERCHANT_BEARINGS(id)}?page=1&pageSize=${DEFAULT_PAGE_SIZE}`, { auth: false })
 }
 
 /** 提交入驻申请（self 新建 / claim 认领） */
