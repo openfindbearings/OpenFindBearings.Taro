@@ -1,6 +1,7 @@
 // 轴承服务：搜索、详情、在售商家、替代品（均调 BFF public 端点，auth:false）
 import { request } from './request'
 import { API, buildQuery } from './config'
+import { DEFAULT_PAGE_SIZE } from '../utils/paging'
 
 /** 轴承搜索结果项（对齐 BFF BearingItem） */
 export interface Bearing {
@@ -137,7 +138,7 @@ export function getBearingDetail(id: string) {
 
 /** 轴承在售商家 */
 export function getBearingMerchants(id: string) {
-  return request<Paged<BearingMerchant>>(`${API.BEARING_MERCHANTS(id)}?page=1&pageSize=20`, { auth: false })
+  return request<Paged<BearingMerchant>>(`${API.BEARING_MERCHANTS(id)}?page=1&pageSize=${DEFAULT_PAGE_SIZE}`, { auth: false })
 }
 
 /** 轴承替代品 */

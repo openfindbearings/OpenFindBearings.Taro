@@ -4,6 +4,7 @@
  */
 import { request, ensureAccessToken } from './request'
 import { API, getBaseUrl } from './config'
+import { DEFAULT_PAGE_SIZE } from '../utils/paging'
 import { uploadFileNormalized } from './upload'
 
 /** BFF 分页包装（与 API PagedResult 对齐） */
@@ -164,12 +165,12 @@ export async function uploadAvatar(filePath: string): Promise<OpResult & { url?:
 }
 
 /** 获取收藏列表 */
-export async function getFavorites(page = 1, pageSize = 20) {
+export async function getFavorites(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<FavoriteItem>>(`${API.FAVORITES}?page=${page}&pageSize=${pageSize}`)
 }
 
 /** 获取关注列表 */
-export async function getFollowedMerchants(page = 1, pageSize = 20) {
+export async function getFollowedMerchants(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<FollowedItem>>(`${API.FOLLOWED}?page=${page}&pageSize=${pageSize}`)
 }
 
@@ -210,12 +211,12 @@ export async function checkFollow(merchantId: string): Promise<boolean> {
 }
 
 /** 轴承浏览历史（分页） */
-export async function getBearingHistory(page = 1, pageSize = 20) {
+export async function getBearingHistory(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<BearingHistoryItem>>(`${API.HISTORY_BEARINGS}?page=${page}&pageSize=${pageSize}`)
 }
 
 /** 商家浏览历史（分页） */
-export async function getMerchantHistory(page = 1, pageSize = 20) {
+export async function getMerchantHistory(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<MerchantHistoryItem>>(`${API.HISTORY_MERCHANTS}?page=${page}&pageSize=${pageSize}`)
 }
 
@@ -297,6 +298,6 @@ export async function submitCorrection(targetType: 'Bearing' | 'Merchant', targe
 }
 
 /** 我的纠错列表（分页） */
-export async function getMyCorrections(page = 1, pageSize = 20) {
+export async function getMyCorrections(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<CorrectionItem>>(`${API.MY_CORRECTIONS}?page=${page}&pageSize=${pageSize}`)
 }

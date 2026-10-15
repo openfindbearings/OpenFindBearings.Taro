@@ -211,6 +211,8 @@ NOTIFICATIONS_CLEAR_READ: `${API_PREFIX}/notifications/read`,
   POINTS_TRANSACTIONS: `${API_PREFIX}/points/transactions`,
   // v1.7.18 任务中心：赚分任务清单（规则+完成态，daily 任务每日自动刷新）
   POINTS_TASKS: `${API_PREFIX}/points/tasks`,
+  // v2.17.0 规则数据源：轴承币/商家金规则页数值下发（代理 BFF /mobile/points/rules，匿名）
+  POINT_RULES: `${API_PREFIX}/points/rules`,
   // v2.5.0 商家经济：商家福利卡（最佳商家等级/buff 清单/升级提示）
   POINTS_MERCHANT_BUFF: `${API_PREFIX}/points/merchant-buff`,
   // v2.6.0 M3：商家集体任务板 + 商家实力月榜（代理 BFF /mobile/points/merchant-tasks|ranking）

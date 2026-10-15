@@ -3,6 +3,7 @@
 // 改动说明（v2.14.0 商城导购）：新增货源流 getMallFeed——商城 Tab 商品瀑布流数据源
 import { request } from './request'
 import { API, buildQuery } from './config'
+import { DEFAULT_PAGE_SIZE } from '../utils/paging'
 import type { Paged } from './bearing'
 
 /** 商城商品类别（与 API MallItemCategory 对齐） */
@@ -95,7 +96,7 @@ export function redeemMallItem(itemId: string, targetRef?: string, requestId?: s
 }
 
 /** 我的兑换订单（分页） */
-export function getMallOrders(page = 1, pageSize = 20) {
+export function getMallOrders(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<MallOrder>>(`${API.MALL_ORDERS}?page=${page}&pageSize=${pageSize}`)
 }
 
