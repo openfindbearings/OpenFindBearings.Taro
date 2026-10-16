@@ -87,7 +87,7 @@ export default function MerchantDetailPage() {
 
   // v1.6.0 微信/抖音小程序原生分享内容（H5 由框架注入；RN 平台不支持，包装内静默跳过）：分享商家主页引流
   useShareMessage(() => ({
-    title: `${detail?.name || ''} · 认证轴承商家`,
+    title: `${detail?.name || ''} · ${detail?.isVerified ? '认证商家' : '轴承商家'}`,
     path: `/pages/merchant/merchantDetail?id=${id}`,
   }))
 
@@ -109,8 +109,8 @@ export default function MerchantDetailPage() {
   return (
     <PageLayout nav={<NavBar title="商家主页" showBack rightSlot={
         <ShareButton
-          title={`${detail?.name || ''} · 认证轴承商家`}
-          path={`/pages/merchant/merchantDetail?id=${id}`}
+          title={`${detail?.name || ''} · ${detail?.isVerified ? '认证商家' : '轴承商家'}`}
+          path={`/s/merchant/${id}`}
           label="分享"
         />
       } />}>

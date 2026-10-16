@@ -30,6 +30,9 @@ export function buildQuery(params: Record<string, string | number | boolean | nu
 /** BFF 线上绝对地址（RN/小程序无 dev proxy，必须走公网 https） */
 const BFF_PROD_BASE = 'https://<your-bff-domain>'
 
+/** H5 站点公网地址（分享落地页/分享链接拼接用） */
+const H5_PROD_BASE = 'https://<your-h5-domain>'
+
 /**
  * 运行时媒体源 base 覆盖值：站点配置 /api/mobile/config 下发 Mobile.MediaBaseUrl 后写入。
  * 改动说明：媒体源换域名 / 切对象存储时，只改服务端这一配置即可全端跟随，无需发版；
@@ -56,6 +59,15 @@ export function getBaseUrl(): string {
     return ''
   }
   return process.env.TARO_APP_BFF_BASE_URL || BFF_PROD_BASE
+}
+
+/**
+ * H5 站点 base（分享链接拼接用）。
+ * 分享落地页为服务端渲染（BFF /s/...），须以 H5 公网域名对外呈现；
+ * RN 无 window，故用编译期常量兜底。可用环境变量 TARO_APP_H5_BASE_URL 覆盖。
+ */
+export function getH5BaseUrl(): string {
+  return process.env.TARO_APP_H5_BASE_URL || H5_PROD_BASE
 }
 
 /**
