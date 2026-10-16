@@ -42,7 +42,9 @@ export default function SearchPage() {
   const t = useTheme()
   const fs = useFs()
 
-  const [keyword, setKeyword] = useState(router.params.keyword || '')
+  // 改动说明：小程序/H5 的 router.params 可能保留 URL 百分号编码（未解码），
+  //   读取关键词时做防御性解码；RN 端已解码，对纯中文为无操作；含 % 的异常值回退原串
+  const [keyword, setKeyword] = useState(() => safeDecode(router.params.keyword))
   const [tab, setTab] = useState<TabKey>('bearing')
   const [bearings, setBearings] = useState<Bearing[]>([])
   const [merchants, setMerchants] = useState<Merchant[]>([])
@@ -458,6 +460,12 @@ export default function SearchPage() {
       )}
     </PageLayout>
   )
+}
+
+// URL 参数防御解码：能解码则解码，异常（如关键词含未转义的 %）回退原值
+function safeDecode(v?: string): string {
+  if (!v) return ''
+  try { return decodeURIComponent(v) } catch { return v }
 }
 
 // 尺寸范围参数转 searchBearings 入参
