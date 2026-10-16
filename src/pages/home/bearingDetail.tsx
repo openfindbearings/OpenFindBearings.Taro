@@ -202,7 +202,7 @@ export default function BearingDetailPage() {
         </View>
         <ShareButton
           title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台比价询价`}
-          path={`/pages/home/bearingDetail?id=${id}&view=supply`}
+          path={`/s/bearing/${id}?view=supply`}
           label="分享货源"
         />
       </View>

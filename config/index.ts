@@ -31,7 +31,9 @@ const config = {
   //   缺省空串让业务代码 `|| 常量兜底` 生效；构建时可用同名 shell 环境变量覆盖
   env: {
     TARO_APP_BFF_BASE_URL: JSON.stringify(process.env.TARO_APP_BFF_BASE_URL || ''),
-    TARO_APP_MEDIA_BASE_URL: JSON.stringify(process.env.TARO_APP_MEDIA_BASE_URL || '')
+    TARO_APP_MEDIA_BASE_URL: JSON.stringify(process.env.TARO_APP_MEDIA_BASE_URL || ''),
+    // 分享落地页点：H5 站点公网地址（分享链接拼接用；RN 无 window 故需编译期常量兜底）
+    TARO_APP_H5_BASE_URL: JSON.stringify(process.env.TARO_APP_H5_BASE_URL || '')
   },
   copy: {
     patterns: [
