@@ -5,12 +5,13 @@
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text } from '@tarojs/components'
-import Taro, { useRouter, useDidShow, useShareAppMessage } from '@tarojs/taro'
+import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import ShareButton from '../../components/ShareButton'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
+import { useShareMessage } from '../../hooks/useShareMessage'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
@@ -45,8 +46,8 @@ export default function BearingDetailPage() {
   /** 认证商家数（分享文案/数显用） */
   const verifiedCount = merchants.filter((m) => m.isVerified).length
 
-  // v1.6.0 微信/抖音小程序原生分享内容（H5/RN 为 no-op）
-  useShareAppMessage(() => ({
+  // v1.6.0 微信/抖音小程序原生分享内容（H5 由框架注入；RN 平台不支持，包装内静默跳过）
+  useShareMessage(() => ({
     title: `${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货`,
     path: `/pages/home/bearingDetail?id=${id}&view=supply`,
   }))
