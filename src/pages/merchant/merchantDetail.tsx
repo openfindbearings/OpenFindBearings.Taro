@@ -5,13 +5,14 @@
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useRouter, useDidShow, useShareAppMessage } from '@tarojs/taro'
+import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import MedalImage from '../../components/MedalImage'
 import ShareButton from '../../components/ShareButton'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
+import { useShareMessage } from '../../hooks/useShareMessage'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
@@ -84,8 +85,8 @@ export default function MerchantDetailPage() {
   const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); setCorrectVisible(true) }
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
 
-  // v1.6.0 微信/抖音小程序原生分享内容（H5/RN 为 no-op）：分享商家主页引流
-  useShareAppMessage(() => ({
+  // v1.6.0 微信/抖音小程序原生分享内容（H5 由框架注入；RN 平台不支持，包装内静默跳过）：分享商家主页引流
+  useShareMessage(() => ({
     title: `${detail?.name || ''} · 认证轴承商家`,
     path: `/pages/merchant/merchantDetail?id=${id}`,
   }))

@@ -1,5 +1,5 @@
 // 分享按钮（v1.6.0 搜索寻货联动）：三端统一入口。
-// 小程序（微信/抖音）用 <Button open-type='share'> 走原生分享菜单（标题/路径由页面 useShareAppMessage 提供）；
+// 小程序（微信/抖音）用 <Button open-type='share'> 走原生分享菜单（标题/路径由页面 useShareMessage 设置）；
 // H5/RN 用普通 View + 命令式 shareContent（Web Share / 复制链接 / RN 原生 Share）。
 import { View, Text, Button } from '@tarojs/components'
 import Icon from '../Icon'

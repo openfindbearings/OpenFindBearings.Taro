@@ -182,14 +182,14 @@ export default function PublishSourcingPage() {
           {/* v1.6.0 搜索寻货联动：来自轴承详情的预填提示（定向询价则加注） */}
           {prefilled ? (
             <View style={{ display: 'flex', marginBottom: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
-              <Text style={{ ...fs(11), lineHeight: 17, color: t.primary }}>
+              <Text style={{ ...fs(11), color: t.primary }}>
                 已按轴承货源预填，可修改{meta.targetMerchantId ? '（定向询价：仅推送给该商家）' : ''}
               </Text>
             </View>
           ) : null}
           {/* 改动说明（v1.5.0 证据力体系 引导文案）：讲清"填全的价值"——具体需求才能匹配精准报价 */}
           <View style={{ display: 'flex', marginBottom: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
-            <Text style={{ ...fs(11), lineHeight: 17, color: t.primary }}>
+            <Text style={{ ...fs(11), color: t.primary }}>
               寻货信息越具体，商家报价越贴近：型号必填，品牌/数量/交期/地区尽量填全——商家才知道该报哪个型号的价
             </Text>
           </View>
