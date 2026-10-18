@@ -8,7 +8,6 @@ export default defineAppConfig({
     'pages/discover/respond',
     'pages/my/sourcing',
     'pages/merchant/responses',
-    'pages/merchant/interchanges',
     'pages/merchant/demands',
     'pages/merchant/index',
     'pages/mall/index',

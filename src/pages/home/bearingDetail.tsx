@@ -286,7 +286,7 @@ export default function BearingDetailPage() {
         {interchanges.length > 0 && (
           <View className='bd-card' style={{ backgroundColor: t.bgCard }}>
             <Text className='bd-card-title' style={{ ...fs(15), color: t.textPrimary }}>替代品</Text>
-            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2, marginBottom: 6 }}>替代关系经平台审核；“需评估/仅供参考”档请人工确认工况适配</Text>
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2, marginBottom: 6 }}>替代关系由平台维护；“需评估/仅供参考”档请人工确认工况适配</Text>
             {interchanges.map((it) => {
               const badgeColor = interchangeTone(it.interchangeType, t)
               return (
@@ -305,6 +305,13 @@ export default function BearingDetailPage() {
                 </View>
               )
             })}
+            {/* v2.17.0 替代品字典化：替代关系报告入口——复用纠错表单（字段含"替代关系"），由平台核实后维护 */}
+            <View className='bd-list-row' onClick={handleCorrect}>
+              <View className='bd-list-main'>
+                <Text style={{ ...fs(13), color: t.primary }}>替代关系有误或缺失？点此报告</Text>
+              </View>
+              <Icon name="edit" size={16} color={t.primary} />
+            </View>
           </View>
         )}
 
