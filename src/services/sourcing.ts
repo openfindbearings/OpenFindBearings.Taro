@@ -300,6 +300,20 @@ async function opWrap(fn: () => Promise<unknown>): Promise<SourcingOpResult> {
   }
 }
 
+/** 带响应体的写操作结果（v1.7.0）：发布等需回读结果字段的写操作用 */
+export type SourcingOpDataResult<T> = SourcingOpResult & { data?: T }
+
+/** 写操作统一包装（带响应体）：成功返回 data，失败捕获 ApiError 透传 message */
+async function opWrapData<T>(fn: () => Promise<T>): Promise<SourcingOpDataResult<T>> {
+  try {
+    const data = await fn()
+    return { success: true, data }
+  } catch (e) {
+    if (e instanceof ApiError) return { success: false, message: e.message }
+    return { success: false, message: '网络异常，请稍后重试' }
+  }
+}
+
 /** 发布寻货请求体 */
 export interface PublishDemandBody {
   partNumber: string
@@ -316,9 +330,16 @@ export interface PublishDemandBody {
   targetMerchantId?: string | null
 }
 
-/** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案） */
+/** 发布寻货结果（v1.7.0 两条路径可见化）：id=寻货单 ID；
+ *  matchedMerchantCount=本次已匹配并推送的认证商家家数（广播单按在售匹配口径，定向单=1，无匹配=0） */
+export interface PublishDemandResult {
+  id: string
+  matchedMerchantCount?: number
+}
+
+/** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案；成功回读匹配家数供反馈文案用） */
 export function publishDemand(body: PublishDemandBody) {
-  return opWrap(() => request(API.SOURCING_DEMANDS, { method: 'POST', data: body }))
+  return opWrapData(() => request<PublishDemandResult>(API.SOURCING_DEMANDS, { method: 'POST', data: body }))
 }
 
 /** 应答型号行输入（v1.5.0 多行标书） */

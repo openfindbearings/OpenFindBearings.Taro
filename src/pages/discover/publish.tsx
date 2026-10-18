@@ -112,8 +112,16 @@ export default function PublishSourcingPage() {
     setSubmitting(false)
     if (r.success) {
       void vibrateSuccess()
-      Taro.showToast({ title: '寻货已发布', icon: 'success' })
-      setTimeout(() => Taro.navigateBack(), 800)
+      // 改动说明（v1.7.0 两条路径可见化）：按匹配家数给差异化反馈——定向单只推该商家；
+      //   广播单匹配到在售认证商家=已通知 N 家并进大厅；无匹配=仅进大厅等应答（有匹配商家时会收到通知）
+      const matched = r.data?.matchedMerchantCount ?? 0
+      const title = meta.targetMerchantId
+        ? '已定向推送给该商家'
+        : matched > 0
+          ? `已通知 ${matched} 家认证商家`
+          : '已进入寻货大厅'
+      Taro.showToast({ title, icon: 'none', duration: 1800 })
+      setTimeout(() => Taro.navigateBack(), 1000)
       return
     }
     const needPoints = parseNeedPoints(r.message)

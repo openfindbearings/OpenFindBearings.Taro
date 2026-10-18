@@ -2,6 +2,8 @@
 // 数据来自 BFF public 端点：/bearings/{id}、/bearings/{id}/merchants、/bearings/{id}/interchanges。
 // v1.6.0 搜索寻货联动：查到不等于结束——在售认证商家可「询价」（定向），底部「发起寻货」预填 bearingId；
 //   参数来源为互联网时标「仅供参考」；新增「分享货源」（分享"谁家真实有货"引流回平台）。
+// v1.7.0 两条路径可见化：按钮/说明文案按认证在售数自适应（向 N 家认证商家发起寻货 / 发布寻货进大厅），
+//   未认证在售归"其他在售·仅供参考"段（只读不导流），让"在售"与"可询价"的差别可见。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text } from '@tarojs/components'
@@ -43,8 +45,12 @@ export default function BearingDetailPage() {
   const [isFav, setIsFav] = useState(false)
   const [correctVisible, setCorrectVisible] = useState(false)
 
+  /** 认证商家（可信数据：可询价、计入"真实有货"家数） */
+  const verifiedMerchants = merchants.filter((m) => m.isVerified)
+  /** 其他在售商家（未认证：仅供参考、只读不导流） */
+  const otherMerchants = merchants.filter((m) => !m.isVerified)
   /** 认证商家数（分享文案/数显用） */
-  const verifiedCount = merchants.filter((m) => m.isVerified).length
+  const verifiedCount = verifiedMerchants.length
 
   // v1.6.0 微信/抖音小程序原生分享内容（H5 由框架注入；RN 平台不支持，包装内静默跳过）
   useShareMessage(() => ({
@@ -152,53 +158,78 @@ export default function BearingDetailPage() {
     </View>
   )
 
-  /** 在售商家卡（货源）：认证商家带「已认证」并可「询价」；底部「发起寻货」+「分享货源」 */
+  /**
+   * 商家行：认证商家带「已认证」徽标并可「询价」（定向寻货，行动门）；
+   * 未认证商家只展示、不导流（归"其他在售·仅供参考"后段）
+   */
+  const merchantRow = (m: BearingMerchant) => (
+    <View key={m.merchantId} className='bd-list-row' onClick={() => goMerchant(m.merchantId)}>
+      <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
+        <Icon name="store" size={18} color={t.primary} />
+      </View>
+      <View className='bd-list-main'>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
+          {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
+          {m.isVerified ? (
+            <Text style={{ ...fs(10), color: t.primary, borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
+          ) : null}
+          {/* v2.3.0 商城置顶卡：置顶商家角标 */}
+          {m.isPinned ? (
+            <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
+          ) : null}
+          {m.saleState === 2 ? (
+            <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
+          ) : null}
+        </View>
+        {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{m.price}</Text> : null}
+      </View>
+      {/* 询价（定向寻货）——仅认证商家开放（行动门）；非认证只展示不导流 */}
+      {m.isVerified ? (
+        <View
+          style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
+          onClick={(e) => { e.stopPropagation(); handleInquire(m) }}
+        >
+          <Text style={{ ...fs(12), color: t.primary }}>询价</Text>
+        </View>
+      ) : null}
+      <Icon name="chevron_right" size={18} color={t.textTertiary} />
+    </View>
+  )
+
+  /**
+   * 在售商家卡（货源）：认证商家在前（可信、可询价），未认证归后段"仅供参考"（只读）；
+   * 标题用"N 家认证商家真实有货"取代中性的"在售商家"，让"在售"与"可询价"的差别可见
+   */
   const merchantsCard = (
     <View className='bd-card' style={{ backgroundColor: t.bgCard }}>
-      <Text className='bd-card-title' style={{ ...fs(15), color: t.textPrimary }}>在售商家（{merchants.length}）</Text>
+      <Text className='bd-card-title' style={{ ...fs(15), color: t.textPrimary }}>
+        {verifiedCount > 0 ? `${verifiedCount} 家认证商家真实有货` : `在售商家（${merchants.length}）`}
+      </Text>
       {merchants.length === 0 && <Text className='bd-empty' style={{ ...fs(13), color: t.textTertiary }}>暂无在售商家</Text>}
-      {merchants.map((m) => (
-        <View key={m.merchantId} className='bd-list-row' onClick={() => goMerchant(m.merchantId)}>
-          <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
-            <Icon name="store" size={18} color={t.primary} />
-          </View>
-          <View className='bd-list-main'>
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-              <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
-              {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
-              {m.isVerified ? (
-                <Text style={{ ...fs(10), color: t.primary, borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
-              ) : null}
-              {/* v2.3.0 商城置顶卡：置顶商家角标 */}
-              {m.isPinned ? (
-                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
-              ) : null}
-              {m.saleState === 2 ? (
-                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
-              ) : null}
-            </View>
-            {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{m.price}</Text> : null}
-          </View>
-          {/* 询价（定向寻货）——仅认证商家开放（行动门）；非认证只展示不导流 */}
-          {m.isVerified ? (
-            <View
-              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
-              onClick={(e) => { e.stopPropagation(); handleInquire(m) }}
-            >
-              <Text style={{ ...fs(12), color: t.primary }}>询价</Text>
-            </View>
-          ) : null}
-          <Icon name="chevron_right" size={18} color={t.textTertiary} />
-        </View>
-      ))}
+      {verifiedMerchants.map((m) => merchantRow(m))}
+      {/* v1.7.0 数据可信联动：未认证在售归"仅供参考"分段（标灰口径、不提供询价），与认证商家可信段分开 */}
+      {otherMerchants.length > 0 ? (
+        <>
+          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家，暂不提供询价）</Text>
+          {otherMerchants.map((m) => merchantRow(m))}
+        </>
+      ) : null}
       {/* v1.6.0 搜索寻货联动：查到→进一步联系（发起寻货 / 分享真实货源），而非查完就结束 */}
+      {/* v1.7.0 两条路径可见化：按钮文案按"是否有认证在售"自适应——有=向这些商家发起（并进大厅）；无=仅进大厅等应答 */}
       <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
         <View
-          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, borderRadius: 20, backgroundColor: t.primary }}
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, borderRadius: 20, backgroundColor: t.primary, marginRight: 10 }}
           onClick={handleCreateDemand}
         >
           <Icon name="search" size={16} color={t.textOnPrimary} />
-          <Text style={{ ...fs(14), color: t.textOnPrimary, marginLeft: 6 }}>发起寻货</Text>
+          <Text style={{ ...fs(14), color: t.textOnPrimary, marginLeft: 6 }}>
+            {!isLoggedIn
+              ? '登录后发起寻货'
+              : verifiedCount > 0
+                ? `向 ${verifiedCount} 家认证商家发起寻货`
+                : '发布寻货（进入寻货大厅）'}
+          </Text>
         </View>
         <ShareButton
           title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台比价询价`}
@@ -206,6 +237,14 @@ export default function BearingDetailPage() {
           label="分享货源"
         />
       </View>
+      {/* v1.7.0 路径说明：讲清发布后会发生什么（通知在售商家 / 进大厅等匹配），消解"在售≠可联系"的困惑 */}
+      <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
+        {!isLoggedIn
+          ? '登录后可向认证商家询价、发布寻货'
+          : verifiedCount > 0
+            ? '同时进入寻货大厅，其他有货商家也能应答'
+            : '暂无认证商家在售，发布后如有匹配商家会收到通知'}
+      </Text>
     </View>
   )
 
