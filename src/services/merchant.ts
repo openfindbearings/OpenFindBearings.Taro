@@ -52,7 +52,7 @@ export interface MerchantDetail {
   isVerified: boolean
   status?: string | null
   grade?: string | null
-  /** v2.5.0 商家经济：等级中文展示（入驻/认证/口碑/金牌，v2.13.0 Lv3 改名口碑商家），详情页信任徽章 */
+  /** v2.5.0 商家经济：卡级中文展示（注册商户/铜卡/银卡/金卡，v2.18.0 卡级重构：认证为独立徽章不写进等级名），详情页信任徽章 */
   gradeDisplay?: string | null
   followerCount: number
   productCount: number

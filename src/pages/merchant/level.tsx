@@ -18,14 +18,8 @@ import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 
 definePageConfig({ disableScroll: true })
 
-/** 四档阶梯静态骨架（阈值/升档礼数值来自接口，档位语义与后端 MerchantGrade 定案一致）。
- *  改动说明（v2.13.2 文案统一）：档位名改取自 MERCHANT_GRADE_LABELS，避免与色带工具重复维护 */
-const GRADE_STEPS: { rank: number; name: string; cond: string }[] = [
-  { rank: 1, name: MERCHANT_GRADE_LABELS[1], cond: '审核通过即得' },
-  { rank: 2, name: MERCHANT_GRADE_LABELS[2], cond: '证照审核通过' },
-  { rank: 3, name: MERCHANT_GRADE_LABELS[3], cond: '认证 + 在售达阈值' },
-  { rank: 4, name: MERCHANT_GRADE_LABELS[4], cond: '认证 + 在售达阈值 + 金库累计达阈值' },
-]
+/** 四档阶梯静态骨架（档位名取自 MERCHANT_GRADE_LABELS；条件文案按 v2.18.0 卡级口径动态拼，
+ *  见组件内 steps：认证是入铜卡的门槛，银/金卡看"认证 + 在售 + 近窗口期成功撮合"，金库已退出定级） */
 
 export default function MerchantLevelPage() {
   const t = useTheme()
@@ -71,9 +65,16 @@ export default function MerchantLevelPage() {
   const graceDays = detail.graceUntil
     ? Math.max(0, Math.ceil((new Date(detail.graceUntil).getTime() - Date.now()) / 86400000))
     : 0
-  // 下一档双指标：Lv2→3 看在售（达 lv3OnSaleMin）；Lv3→4 看在售(lv4OnSaleMin)+金库(lv4TreasuryMin)
-  const nextOnSaleMin = detail.rank === 2 ? detail.lv3OnSaleMin : detail.lv4OnSaleMin
+  // 距下一档（v2.18.0 卡级重构：后端只回"下一档缺什么"，前端只渲染，不再自推阈值组合）
+  const next = detail.nextTier ?? null
   const nextBonus = detail.rank === 1 ? detail.bonusLv2 : detail.rank === 2 ? detail.bonusLv3 : detail.bonusLv4
+  // 四档阶梯条件文案（阈值/窗口天数取自接口，避免前后端双份维护）
+  const steps: { rank: number; name: string; cond: string }[] = [
+    { rank: 1, name: MERCHANT_GRADE_LABELS[1], cond: '注册即可（尚未认证）' },
+    { rank: 2, name: MERCHANT_GRADE_LABELS[2], cond: '完成平台证照认证' },
+    { rank: 3, name: MERCHANT_GRADE_LABELS[3], cond: `认证 + 在售 ≥ ${detail.onSaleMin} 件 + 近 ${detail.windowDays} 天成功撮合 ≥ ${detail.silverDealMin} 次` },
+    { rank: 4, name: MERCHANT_GRADE_LABELS[4], cond: `认证 + 在售 ≥ ${detail.onSaleMin} 件 + 近 ${detail.windowDays} 天成功撮合 ≥ ${detail.goldDealMin} 次` },
+  ]
 
   const bar = (label: string, cur: number, min: number, unit: string) => {
     const pct = min > 0 ? Math.min(100, Math.round((cur / min) * 100)) : 100
@@ -103,35 +104,36 @@ export default function MerchantLevelPage() {
         </View>
         {graceDays > 0 ? (
           <View style={{ marginTop: 14, padding: 10, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.18)' }}>
-            <Text style={{ ...fs(12), color: '#FFFFFF' }}>保级缓冲中：剩余 {graceDays} 天，在售回升至阈值即可维持当前等级</Text>
+            <Text style={{ ...fs(12), color: '#FFFFFF' }}>保级缓冲中：剩余 {graceDays} 天，经营指标回升至阈值即可维持当前卡级</Text>
           </View>
         ) : null}
-        {!isMax && (
+        {!isMax && next && (
           <View>
             {detail.rank === 1 && (
-              <Text style={{ ...fs(12), color: 'rgba(255,255,255,0.9)', marginTop: 14 }}>通过平台证照认证即可升 Lv2 认证商家，升档礼 +{nextBonus} 商家金</Text>
-            )}
-            {detail.rank === 2 && bar('在售商品', detail.onSaleCount, nextOnSaleMin, '件')}
-            {detail.rank === 3 && (
-              <>
-                {bar('在售商品', detail.onSaleCount, nextOnSaleMin, '件')}
-                {bar('金库累计入账', detail.treasuryEarned, detail.lv4TreasuryMin, '金')}
-              </>
+              <Text style={{ ...fs(12), color: 'rgba(255,255,255,0.9)', marginTop: 14 }}>完成平台证照认证即入铜卡，升档礼 +{detail.bonusLv2} 商家金</Text>
             )}
             {detail.rank >= 2 && (
-              <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600', marginTop: 10 }}>
-                升下一档礼 +{nextBonus} 商家金（终身一次{detail.claimedRanks.includes(detail.rank + 1) ? '，已领过则复升不再发' : ''}）
-              </Text>
+              <>
+                {bar('在售商品', detail.onSaleCount, next.requiredOnSale, '件')}
+                {bar(`近 ${detail.windowDays} 天成功撮合`, detail.dealCount, next.requiredDeals, '次')}
+                <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600', marginTop: 10 }}>
+                  升 {next.label} 还差：
+                  {next.metOnSale ? '在售已达标' : `在售 ${Math.max(0, next.requiredOnSale - detail.onSaleCount)} 件`}
+                  {' · '}
+                  {next.metDeals ? '撮合已达标' : `成功撮合 ${Math.max(0, next.requiredDeals - detail.dealCount)} 次`}
+                  （升档礼 +{nextBonus} 商家金）
+                </Text>
+              </>
             )}
           </View>
         )}
-        {isMax && <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600', marginTop: 12 }}>已是金牌商家，最高等级</Text>}
+        {isMax && <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600', marginTop: 12 }}>已是金卡，最高卡级（成交记录滑出窗口后会自然降档）</Text>}
       </View>
 
       {/* 四档阶梯 */}
       <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12, padding: 14 }}>
-        <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>等级阶梯</Text>
-        {GRADE_STEPS.map((s) => {
+        <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>卡级阶梯</Text>
+        {steps.map((s) => {
           const reached = detail.rank >= s.rank
           const bonus = s.rank === 2 ? detail.bonusLv2 : s.rank === 3 ? detail.bonusLv3 : s.rank === 4 ? detail.bonusLv4 : 0
           const claimed = detail.claimedRanks.includes(s.rank)
@@ -156,7 +158,7 @@ export default function MerchantLevelPage() {
       <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
         <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>当前等级权益</Text>
         {detail.labels.length === 0 ? (
-          <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>入驻商家暂无成员加成，认证后解锁（登录/纠错/发布加成）</Text>
+          <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>注册商户暂无成员加成，完成认证入铜卡后解锁（签到/登录/纠错/发布加成）</Text>
         ) : (
           detail.labels.map((lb, i) => (
             <View key={i} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>

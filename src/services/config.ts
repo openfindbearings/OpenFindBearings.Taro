@@ -276,6 +276,20 @@ NOTIFICATION_PREFERENCES: `${API_PREFIX}/notifications/preferences`,
   SOURCING_BATCH_DELETE: `${API_PREFIX}/sourcing/demands/batch-delete`,
   /** v1.8.0 公开招标/邀标：邀标单进行中时由发布人放开为公开（进大厅），免去取消重建 */
   SOURCING_PUBLISH_PUBLIC: (id: string) => `${API_PREFIX}/sourcing/demands/${id}/publish-public`,
+  // v2.18.0 撮合成交链与 T1 会话
+  /** 成交回执提交/更新（需求方，仅被选定那条响应） */
+  SOURCING_RESPONSE_FEEDBACK: (id: string) => `${API_PREFIX}/sourcing/responses/${id}/feedback`,
+  /** 会话列表（需求方与商家方两视角合并） */
+  SOURCING_CONVERSATIONS: `${API_PREFIX}/sourcing/conversations`,
+  /** 会话总未读数（首页消息角标） */
+  SOURCING_CONVERSATIONS_UNREAD: `${API_PREFIX}/sourcing/conversations/unread-count`,
+  /** 某会话消息列表（时间正序；before 游标翻历史） */
+  SOURCING_CONVERSATION_MESSAGES: (demandId: string, merchantId: string) =>
+    `${API_PREFIX}/sourcing/conversations/${demandId}/${merchantId}/messages`,
+  /** 标记某会话已读 */
+  SOURCING_CONVERSATION_READ: (demandId: string, merchantId: string) =>
+    `${API_PREFIX}/sourcing/conversations/${demandId}/${merchantId}/read`,
+
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,

@@ -27,10 +27,19 @@ import {
   getNotifications, markNotificationRead, markAllNotificationsRead,
   deleteNotification, clearReadNotifications, batchMarkRead, batchDeleteNotifications, type SiteNotification
 } from '../../services/notification'
+// 改动说明（v2.18.0 消息中心两类）：会话（双向）与系统消息（平台单向）并列两个 tab，
+// Notification 结构不变，会话数据来自独立的 T1 会话端点
+import { getConversations, demandStatusText, type SourcingConversation } from '../../services/sourcing'
 import { formatTime } from '../../utils/format'
 
 /** 每页条数 */
 const PAGE_SIZE = 20
+
+/** 顶部两类 tab（v2.18.0：系统消息 / 会话） */
+const TABS: { key: 'system' | 'chat'; label: string }[] = [
+  { key: 'system', label: '系统消息' },
+  { key: 'chat', label: '会话' },
+]
 
 /** 状态 chips（v2.12.0 同类型数据状态一律 chips） */
 const CHIPS = [
@@ -69,6 +78,9 @@ export default function NotificationsPage() {
   const [openedId, setOpenedId] = useState<string | null>(null)
   // v2.12.0 状态 chips + 长按菜单目标 + 多选模式
   const [chip, setChip] = useState('all')
+  // v2.18.0 消息中心两类：tab=system（站内信）/ chat（T1 会话）
+  const [tab, setTab] = useState<'system' | 'chat'>('system')
+  const [convs, setConvs] = useState<SourcingConversation[]>([])
   const [sheetFor, setSheetFor] = useState<SiteNotification | null>(null)
   // 长按菜单走"松手才弹"安全封装（RN 按住即 setState 会触发 UI 队列竞态崩溃）
   const menuHandlers = useLongPressMenu<SiteNotification>(setSheetFor)
@@ -94,7 +106,14 @@ export default function NotificationsPage() {
   useDidShow(() => {
     void load(1, false)
     void fetchUnread()
+    // 会话 tab 数据（失败降级空列表，不阻断站内信）
+    void getConversations().then((r) => setConvs(r.items))
   })
+
+  /** 进入某会话（T1：绑定寻货单 × 商户） */
+  const goChat = (c: SourcingConversation) => {
+  Taro.navigateTo({ url: `/pages/discover/chat?demandId=${c.demandId}&merchantId=${c.merchantId}` })
+}
 
   /** 点消息行：弹详情面板；未读即标已读（主流"打开即读"，不依赖后续跳转） */
   const onTapItem = async (n: SiteNotification) => {
@@ -225,7 +244,7 @@ export default function NotificationsPage() {
     <PageLayout nav={<NavBar title='消息中心' showBack rightSlot={
       // 改动说明（v1.7.9）："全部已读"从条件渲染改常驻（无未读置灰），加"清空已读"批量出口——
       //   原"有未读才出现"太隐蔽，用户找不到操作入口
-      isLoggedIn ? (
+      isLoggedIn && tab === 'system' ? (
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ ...fs(13), color: hasRead ? t.primaryText : t.textTertiary }} onClick={() => void onClearRead()}>清空已读</Text>
           <Text style={{ ...fs(13), color: hasUnread ? t.primaryText : t.textTertiary, marginLeft: 14 }} onClick={() => void onReadAll()}>全部已读</Text>
@@ -237,6 +256,68 @@ export default function NotificationsPage() {
     overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.title : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}
   >
       <View>
+        {/* 改动说明（v2.18.0 消息中心两类）：系统消息（平台单向）/ 会话（双向 T1）顶部两 tab，
+            总未读=站内信未读 + 会话未读（会话 tab 上带未读汇总角标） */}
+        <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 16, paddingRight: 16, paddingTop: 12 }}>
+          {TABS.map((x) => {
+            const active = tab === x.key
+            const chatUnread = convs.reduce((s, c) => s + (c.unreadCount || 0), 0)
+            return (
+              <View
+                key={x.key}
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, borderRadius: 16, backgroundColor: active ? t.primaryLight : t.bgInput, marginRight: 10 }}
+                onClick={() => setTab(x.key)}
+              >
+                <Text style={{ ...fs(13), color: active ? t.primary : t.textSecondary, fontWeight: active ? '600' : '400' }}>{x.label}</Text>
+                {x.key === 'chat' && chatUnread > 0 ? (
+                  <View style={{ minWidth: 16, height: 16, borderRadius: 8, backgroundColor: t.danger, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>
+                    <Text style={{ ...fs(10), color: '#FFFFFF' }}>{chatUnread}</Text>
+                  </View>
+                ) : null}
+              </View>
+            )
+          })}
+        </View>
+        {tab === 'chat' ? (
+          <View style={{ padding: 16 }}>
+            {convs.length === 0 ? (
+              <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 60 }}>
+                <Icon name='message-circle' size={40} color={t.textTertiary} />
+                <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无会话</Text>
+                <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>在寻货详情/我的寻货/应答记录里点"会话"即可沟通</Text>
+              </View>
+            ) : (
+              convs.map((c) => (
+                <View
+                  key={c.conversationId}
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, padding: 14, marginBottom: 10 }}
+                  onClick={() => goChat(c)}
+                >
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Icon name='message-circle' size={18} color={t.primary} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                      <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>
+                        {c.counterpartyName || (c.role === 'publisher' ? '商户' : '需求方')}
+                      </Text>
+                      {c.demandStatus != null ? <Text style={{ ...fs(11), color: t.textTertiary }}>{demandStatusText(c.demandStatus)}</Text> : null}
+                    </View>
+                    <Text style={{ ...fs(13), color: t.textSecondary, marginTop: 4 }} numberOfLines={1}>
+                      {c.lastMessagePreview || `寻货 ${c.partNumber || ''}`}
+                    </Text>
+                    <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>{c.lastMessageAt ? formatTime(c.lastMessageAt) : '暂无消息'}</Text>
+                  </View>
+                  {c.unreadCount > 0 ? (
+                    <View style={{ minWidth: 18, height: 18, borderRadius: 9, backgroundColor: t.danger, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingLeft: 5, paddingRight: 5 }}>
+                      <Text style={{ ...fs(10), color: '#FFFFFF' }}>{c.unreadCount}</Text>
+                    </View>
+                  ) : <Icon name='chevron-right' size={16} color={t.textTertiary} />}
+                </View>
+              ))
+            )}
+          </View>
+        ) : (
         <View style={{ padding: 16 }}>
           {!isLoggedIn ? (
             <LoginGuide icon='bell' text='登录后可查看消息' />
@@ -319,6 +400,7 @@ export default function NotificationsPage() {
             </View>
           )}
         </View>
+        )}
       </View>
 
       {/* v2.12.0 长按上下文菜单：已移至 PageLayout overlay 根层插槽（RN fixed 非法致崩根治） */}

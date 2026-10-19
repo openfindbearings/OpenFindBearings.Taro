@@ -6,6 +6,8 @@ export default defineAppConfig({
     'pages/discover/detail',
     'pages/discover/publish',
     'pages/discover/respond',
+    // v2.18.0 T1 撮合会话（绑定"寻货单 × 商户"的聚焦式对话）
+    'pages/discover/chat',
     'pages/my/sourcing',
     'pages/merchant/responses',
     'pages/merchant/demands',

@@ -114,8 +114,21 @@ export default function MerchantResponsesPage() {
                   : item.remark}
               </Text>
               {adopted && (
-                <Text style={{ ...fs(12), color: t.primary, marginTop: 4 }}>已被选定，进详情查看需求方联系方式</Text>
+                <Text style={{ ...fs(12), color: t.primary, marginTop: 4 }}>已被选定，可进详情或直接发起会话沟通</Text>
               )}
+              {/* 改动说明（v2.18.0 T1 会话入口）：商家侧列表就地进会话；
+                  电话单向（商家看不到需求方号码），会话是主要沟通通道 */}
+              {adopted && currentMerchant ? (
+                <View
+                  style={{ alignSelf: 'flex-start', marginTop: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 6, paddingBottom: 6, borderRadius: 16, backgroundColor: t.primaryLight }}
+                  onClick={(e) => {
+                    e?.stopPropagation?.()
+                    Taro.navigateTo({ url: `/pages/discover/chat?demandId=${item.demandId}&merchantId=${currentMerchant.merchantId}` })
+                  }}
+                >
+                  <Text style={{ ...fs(12), color: t.primary, fontWeight: '600' }}>发起会话</Text>
+                </View>
+              ) : null}
             </View>
           )
         })}

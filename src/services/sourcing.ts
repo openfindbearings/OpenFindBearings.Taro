@@ -89,9 +89,9 @@ export interface SourcingDetail {
   myResponse?: SourcingMyResponse | null
   /** 选定后解锁：被选商户联系电话（发布人视角） */
   selectedMerchantContact?: string | null
-  /** 选定后解锁：发布方联系电话（被选商户视角；v2.12.0 商户单=商户公开电话，个人单=注册手机） */
-  publisherContact?: string | null
-  /** v2.12.0 商户名义发布：发布方身份 */
+  // 改动说明（v2.18.0 电话单向）：删除 publisherContact——商家任何情况下都拿不到需求方号码，
+  // 需求方仅通过站内会话与商家沟通
+  /** v2.18.0 商户名义发布：发布方身份 */
   publisherMerchantId?: string | null
   publisherMerchantName?: string | null
   publisherType?: 'merchant' | 'individual' | null
@@ -99,6 +99,23 @@ export interface SourcingDetail {
   isPrivate?: boolean
   /** 邀标收件人家数（前端出"邀标(N家)"文案） */
   invitedCount?: number
+  /** v2.18.0 联系方式解锁时刻（被选商户视角提示"买家已获取你的联系方式"） */
+  contactUnlockedAt?: string | null
+  /** v2.18.0 被选定的应答 ID（发布人回填成交回执的落点） */
+  selectedResponseId?: string | null
+  /** v2.18.0 当前用户是否可提交成交回执（仅发布人 + 已选定） */
+  canFeedback?: boolean
+  /** 当前用户已提交的成交回执（回显，可覆盖更新） */
+  myFeedback?: SourcingMyFeedback | null
+}
+
+/** 成交回执（v2.18.0 撮合成交链） */
+export interface SourcingMyFeedback {
+  outcome: number
+  reason?: string | null
+  at?: string | null
+  /** 是否已计入商家卡级（自关联/配对重复/资格不足/异常检测未过则为 false） */
+  counted: boolean
 }
 
 /** 我发布的寻货项 */
@@ -391,9 +408,47 @@ export function cancelMyResponse(demandId: string) {
   return opWrap(() => request(`${API.SOURCING_DEMANDS}/${demandId}/respond`, { method: 'DELETE' }))
 }
 
-/** 选定应答（发布人；双方解锁联系方式） */
+/** 选定应答（发布人；v2.18.0 单向：仅发布人获得商户联系电话，商家看不到需求方号码） */
 export function selectResponse(demandId: string, responseId: string) {
   return opWrap(() => request(`${API.SOURCING_DEMANDS}/${demandId}/select`, { method: 'POST', data: { responseId } }))
+}
+
+/** 成交回执结果枚举（v2.18.0 撮合成交链；与 API SourcingDealOutcome 对齐） */
+export const DEAL_OUTCOME = {
+  confirmed: 0,
+  noStock: 1,
+  priceRaise: 2,
+  delayed: 3,
+  other: 4,
+} as const
+
+/** 成交回执结果中文（一键三选的主标签/负反馈原因） */
+export function dealOutcomeText(outcome: number): string {
+  switch (outcome) {
+    case DEAL_OUTCOME.confirmed: return '谈成了'
+    case DEAL_OUTCOME.noStock: return '对方没货'
+    case DEAL_OUTCOME.priceRaise: return '临时加价'
+    case DEAL_OUTCOME.delayed: return '拖延交期'
+    case DEAL_OUTCOME.other: return '其他情况'
+    default: return ''
+  }
+}
+
+/** 负反馈原因三选（谈成不计原因） */
+export const DEAL_NEGATIVE_OUTCOMES = [DEAL_OUTCOME.noStock, DEAL_OUTCOME.priceRaise, DEAL_OUTCOME.delayed, DEAL_OUTCOME.other]
+
+/** 成交回执提交结果：counted=是否计入商家卡级，message=未计入原因 */
+export interface DealFeedbackResult {
+  counted: boolean
+  message?: string | null
+}
+
+/** 提交/更新成交回执（v2.18.0：需求方对被选定合作一键回填洽谈结果，影响商家卡级；重复提交=覆盖更新） */
+export function submitDealFeedback(responseId: string, outcome: number, reason?: string | null) {
+  return opWrapData(() => request<DealFeedbackResult>(API.SOURCING_RESPONSE_FEEDBACK(responseId), {
+    method: 'POST',
+    data: { outcome, reason: reason ?? null },
+  }))
 }
 
 /** 取消寻货（发布人） */
@@ -476,4 +531,84 @@ export async function getMatchedDemands(): Promise<MatchedDemand[]> {
   } catch {
     return []
   }
+}
+
+// ============ T1 撮合会话（v2.18.0） ============
+
+/** 会话列表项（对齐 BFF /mobile/sourcing/conversations items） */
+export interface SourcingConversation {
+  conversationId: string
+  demandId: string
+  merchantId: string
+  /** 当前用户在本会话中的身份（publisher=需求方 / merchant=商家方） */
+  role: 'publisher' | 'merchant'
+  /** 对方名称（需求方看商户名；商家看"需求方"） */
+  counterpartyName?: string | null
+  partNumber?: string | null
+  demandStatus?: number | null
+  /** 单据已结束（会话只读） */
+  demandReadOnly: boolean
+  lastMessageAt?: string | null
+  lastMessagePreview?: string | null
+  unreadCount: number
+}
+
+/** 会话消息项 */
+export interface SourcingMessage {
+  id: string
+  /** 发送方 0=需求方 / 1=商家方 */
+  senderSide: number
+  /** 是否当前用户所发（右侧气泡） */
+  mine: boolean
+  content: string
+  createdAt: string
+}
+
+/** 会话消息响应 */
+export interface SourcingMessages {
+  conversationId?: string | null
+  demandId: string
+  merchantId: string
+  role: 'publisher' | 'merchant'
+  /** 单据结束：可读不可发 */
+  readOnly: boolean
+  hasMore: boolean
+  messages: SourcingMessage[]
+}
+
+/** 拉取会话列表（失败返回空数组降级空态） */
+export async function getConversations(page = 1, pageSize = 20): Promise<{ items: SourcingConversation[]; total: number }> {
+  try {
+    const r = await request<{ items: SourcingConversation[]; total: number }>(
+      `${API.SOURCING_CONVERSATIONS}?page=${page}&pageSize=${pageSize}`)
+    return r || { items: [], total: 0 }
+  } catch {
+    return { items: [], total: 0 }
+  }
+}
+
+/** 会话总未读数（失败返回 0，角标降级不显示） */
+export async function getConversationUnreadCount(): Promise<number> {
+  try {
+    const r = await request<{ unreadCount: number }>(API.SOURCING_CONVERSATIONS_UNREAD)
+    return r?.unreadCount ?? 0
+  } catch {
+    return 0
+  }
+}
+
+/** 拉取会话消息（failure 抛出：聊天页需区分"会话不存在"与"网络失败"） */
+export function getConversationMessages(demandId: string, merchantId: string, before?: string, limit = 30) {
+  const qs = `?limit=${limit}${before ? `&before=${encodeURIComponent(before)}` : ''}`
+  return request<SourcingMessages>(`${API.SOURCING_CONVERSATION_MESSAGES(demandId, merchantId)}${qs}`)
+}
+
+/** 发送会话消息（会话懒创建；单据结束后服务端拒发） */
+export function sendConversationMessage(demandId: string, merchantId: string, content: string) {
+  return opWrap(() => request(API.SOURCING_CONVERSATION_MESSAGES(demandId, merchantId), { method: 'POST', data: { content } }))
+}
+
+/** 标记会话已读 */
+export function markConversationRead(demandId: string, merchantId: string) {
+  return opWrap(() => request(API.SOURCING_CONVERSATION_READ(demandId, merchantId), { method: 'POST' }))
 }

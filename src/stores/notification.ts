@@ -4,11 +4,12 @@
 //   （utils/sound 三端分策，音效开关可关）；冷启动首拉只立基线不提醒。
 import { create } from 'zustand'
 import { getUnreadCount } from '../services/notification'
+import { getConversationUnreadCount } from '../services/sourcing'
 import { notifyNewMessage } from '../utils/sound'
 import { useAuthStore } from './auth'
 
 interface NotificationState {
-  /** 未读条数（角标显示，>99 展示 99+） */
+  /** 未读条数（角标显示，>99 展示 99+）。改动说明（v2.18.0 消息中心两类）：总未读 = 站内信未读 + 会话未读 */
   unreadCount: number
   /** 拉取当前用户未读数（未登录直接归零；退出登录后页面 useDidShow 再拉即清零） */
   fetchUnread: () => Promise<void>
@@ -31,7 +32,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       set({ unreadCount: 0 })
       return
     }
-    const count = await getUnreadCount()
+    // 改动说明（v2.18.0）：站内信与会话各自拉取后汇总（会话失败降级 0，不拖垮站内信角标）
+    const [sysCount, convCount] = await Promise.all([getUnreadCount(), getConversationUnreadCount()])
+    const count = sysCount + convCount
     const prev = get().unreadCount
     set({ unreadCount: count })
     // 未读数增加才提醒；首拉仅立基线。退出重进/登出清零后重新立基线
