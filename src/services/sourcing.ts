@@ -95,8 +95,10 @@ export interface SourcingDetail {
   publisherMerchantId?: string | null
   publisherMerchantName?: string | null
   publisherType?: 'merchant' | 'individual' | null
-  /** v1.6.0 定向询价：是否定向单（前端出"定向询价"徽章） */
-  isTargeted?: boolean
+  /** v1.8.0 公开招标/邀标：是否邀标单（前端出"邀标"徽章） */
+  isPrivate?: boolean
+  /** 邀标收件人家数（前端出"邀标(N家)"文案） */
+  invitedCount?: number
 }
 
 /** 我发布的寻货项 */
@@ -117,6 +119,10 @@ export interface SourcingMyDemand {
   publisherMerchantId?: string | null
   publisherMerchantName?: string | null
   publisherType?: 'merchant' | 'individual' | null
+  /** v1.8.0 公开招标/邀标：是否邀标单（徽章 + "转为公开招标"按钮态） */
+  isPrivate?: boolean
+  /** 邀标收件人家数 */
+  invitedCount?: number
 }
 
 /** 商户应答记录项 */
@@ -326,20 +332,27 @@ export interface PublishDemandBody {
   usePoints: boolean
   /** v2.12.0 商户名义发布：以该商户名义发布（须为在职成员）；缺省/空=个人名义 */
   merchantId?: string | null
-  /** v1.6.0 定向询价：定向目标商户；缺省/空=广播进大厅 + 匹配推送 */
-  targetMerchantId?: string | null
+  /** v1.8.0 公开招标/邀标：0=公开招标（默认，进大厅 + 通知匹配商家）/ 1=邀标（不进大厅，只推收件人） */
+  visibility?: number
+  /** v1.8.0 邀标收件人勾选（空=全部匹配的认证在售商家；仅给本字段时表示"邀全部"） */
+  invitedMerchantIds?: string[] | null
 }
 
-/** 发布寻货结果（v1.7.0 两条路径可见化）：id=寻货单 ID；
- *  matchedMerchantCount=本次已匹配并推送的认证商家家数（广播单按在售匹配口径，定向单=1，无匹配=0） */
+/** 发布寻货结果（v1.8.0 随收件人集合更名）：id=寻货单 ID；
+ *  notifiedMerchantCount=本次实际收到推送的认证商家家数（公开单=在售匹配家数、邀标单=勾选∩匹配家数、无匹配=0） */
 export interface PublishDemandResult {
   id: string
-  matchedMerchantCount?: number
+  notifiedMerchantCount?: number
 }
 
-/** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案；成功回读匹配家数供反馈文案用） */
+/** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案；成功回读通知家数供反馈文案用） */
 export function publishDemand(body: PublishDemandBody) {
   return opWrapData(() => request<PublishDemandResult>(API.SOURCING_DEMANDS, { method: 'POST', data: body }))
+}
+
+/** 转为公开招标（v1.8.0）：邀标单进行中时由发布人放开为公开（进大厅），免去取消重建 */
+export function publishDemandAsPublic(demandId: string) {
+  return opWrap(() => request(API.SOURCING_PUBLISH_PUBLIC(demandId), { method: 'POST' }))
 }
 
 /** 应答型号行输入（v1.5.0 多行标书） */
@@ -395,6 +408,10 @@ export interface SourcingMerchantDemand {
   publisherName?: string | null
   /** 当前用户是否经办人 */
   isMine?: boolean
+  /** v1.8.0 公开招标/邀标：是否邀标单 */
+  isPrivate?: boolean
+  /** 邀标收件人家数 */
+  invitedCount?: number
 }
 
 /** 商户名义发布的寻货列表（v2.12.0 商户工作台"寻货管理-我发布的"） */
@@ -438,8 +455,8 @@ export interface MatchedDemand {
   responseCount: number
   createdAt: string
   expiryAt: string
-  /** 是否定向给我的询价单（前端出"定向询价"徽章） */
-  isTargeted: boolean
+  /** v1.8.0：是否邀标给我的单（前端出"邀标"徽章） */
+  isPrivate: boolean
 }
 
 /** 拉取为你匹配的寻货（v1.6.0 商户工作台聚合 tab；失败返回空数组降级空态） */

@@ -1,9 +1,9 @@
 // 轴承详情页：基本信息 + 参数 + 在售商家 + 替代品。收藏/纠错为登录门槛（未登录提示）。
 // 数据来自 BFF public 端点：/bearings/{id}、/bearings/{id}/merchants、/bearings/{id}/interchanges。
-// v1.6.0 搜索寻货联动：查到不等于结束——在售认证商家可「询价」（定向），底部「发起寻货」预填 bearingId；
+// v1.6.0 搜索寻货联动：查到不等于结束——在售认证商家可「邀标」（预勾选该家），底部「发布寻货」预填 bearingId；
 //   参数来源为互联网时标「仅供参考」；新增「分享货源」（分享"谁家真实有货"引流回平台）。
-// v1.7.0 两条路径可见化：按钮/说明文案按认证在售数自适应（向 N 家认证商家发起寻货 / 发布寻货进大厅），
-//   未认证在售归"其他在售·仅供参考"段（只读不导流），让"在售"与"可询价"的差别可见。
+// v1.8.0 公开招标/邀标：按钮统一「发布寻货」（公开/邀标在发布页二选一），在售认证家数改由说明行承载，
+//   未认证在售归"其他在售·仅供参考"段（只读不导流），让"在售"与"可邀标"的差别可见。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text } from '@tarojs/components'
@@ -95,7 +95,10 @@ export default function BearingDetailPage() {
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
 
   /**
-   * 发起寻货（广播）：预填型号/品牌/bearingId 后跳发布页。登录门槛——查到→进一步联系（寻货）属注册功能。
+   * 发布寻货（公开招标，默认）：预填型号/品牌/bearingId 后跳发布页（发布页再选公开/邀标）。
+   * 登录门槛——查到→进一步联系（寻货）属注册功能。
+   * 改动说明（v1.8.0 公开招标/邀标）：原预填 targetMerchantId=null 改为 visibility=0（公开侧），
+   *   邀标与否交给发布页选择，详情页只负责"带着轴承上下文进入发布"。
    */
   const handleCreateDemand = () => {
     if (!isLoggedIn) return requireLogin()
@@ -103,21 +106,24 @@ export default function BearingDetailPage() {
       partNumber: detail?.partNumber || '',
       brand: detail?.brandName || '',
       bearingId: id,
-      targetMerchantId: null,
+      visibility: 0,
     })
     Taro.navigateTo({ url: '/pages/discover/publish' })
   }
 
   /**
-   * 向该商家询价（定向）：仅对认证商家开放（行动门），预填 bearingId + 目标商户后跳发布页。
+   * 邀标本商家（原"询价"）：仅对认证商家开放（行动门），预填 bearingId + 邀标 + 只勾选该商家后跳发布页。
+   * 改动说明（v1.8.0 公开招标/邀标）：由"定向询价单商户"改为"邀标 + 预勾选这一家"，
+   *   发布页收件人清单里仅勾该家，用户可再增勾其他在售认证商家。
    */
-  const handleInquire = (m: BearingMerchant) => {
+  const handleInvite = (m: BearingMerchant) => {
     if (!isLoggedIn) return requireLogin()
     void setObject(PREFILL_KEY, {
       partNumber: detail?.partNumber || '',
       brand: detail?.brandName || '',
       bearingId: id,
-      targetMerchantId: m.merchantId,
+      visibility: 1,
+      invitedMerchantIds: [m.merchantId],
     })
     Taro.navigateTo({ url: '/pages/discover/publish' })
   }
@@ -184,13 +190,13 @@ export default function BearingDetailPage() {
         </View>
         {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{m.price}</Text> : null}
       </View>
-      {/* 询价（定向寻货）——仅认证商家开放（行动门）；非认证只展示不导流 */}
+      {/* 邀标（v1.8.0 公开招标/邀标，原"询价"）——仅认证商家开放（行动门）；非认证只展示不导流 */}
       {m.isVerified ? (
         <View
           style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
-          onClick={(e) => { e.stopPropagation(); handleInquire(m) }}
+          onClick={(e) => { e.stopPropagation(); handleInvite(m) }}
         >
-          <Text style={{ ...fs(12), color: t.primary }}>询价</Text>
+          <Text style={{ ...fs(12), color: t.primary }}>邀标</Text>
         </View>
       ) : null}
       <Icon name="chevron_right" size={18} color={t.textTertiary} />
@@ -215,8 +221,8 @@ export default function BearingDetailPage() {
           {otherMerchants.map((m) => merchantRow(m))}
         </>
       ) : null}
-      {/* v1.6.0 搜索寻货联动：查到→进一步联系（发起寻货 / 分享真实货源），而非查完就结束 */}
-      {/* v1.7.0 两条路径可见化：按钮文案按"是否有认证在售"自适应——有=向这些商家发起（并进大厅）；无=仅进大厅等应答 */}
+      {/* v1.6.0 搜索寻货联动：查到→进一步联系（发布寻货 / 分享真实货源），而非查完就结束 */}
+      {/* v1.8.0 公开招标/邀标：按钮统一"发布寻货"（公开/邀标在发布页选），在售认证家数改由下方说明行承载 */}
       <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
         <View
           style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, borderRadius: 20, backgroundColor: t.primary, marginRight: 10 }}
@@ -224,11 +230,7 @@ export default function BearingDetailPage() {
         >
           <Icon name="search" size={16} color={t.textOnPrimary} />
           <Text style={{ ...fs(14), color: t.textOnPrimary, marginLeft: 6 }}>
-            {!isLoggedIn
-              ? '登录后发起寻货'
-              : verifiedCount > 0
-                ? `向 ${verifiedCount} 家认证商家发起寻货`
-                : '发布寻货（进入寻货大厅）'}
+            {isLoggedIn ? '发布寻货' : '登录后发布寻货'}
           </Text>
         </View>
         <ShareButton
@@ -237,13 +239,13 @@ export default function BearingDetailPage() {
           label="分享货源"
         />
       </View>
-      {/* v1.7.0 路径说明：讲清发布后会发生什么（通知在售商家 / 进大厅等匹配），消解"在售≠可联系"的困惑 */}
+      {/* v1.8.0 路径说明：讲清发布后会发生什么（公开发布进大厅 / 只邀请认证商家），消解"在售≠可联系"的困惑 */}
       <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
         {!isLoggedIn
-          ? '登录后可向认证商家询价、发布寻货'
+          ? '登录后可发布寻货、邀请认证商家报价'
           : verifiedCount > 0
-            ? '同时进入寻货大厅，其他有货商家也能应答'
-            : '暂无认证商家在售，发布后如有匹配商家会收到通知'}
+            ? `当前 ${verifiedCount} 家认证商家有货：可公开发布（进大厅），也可只邀请他们报价`
+            : '暂无认证商家在售，公开招标后如有匹配商家会收到通知'}
       </Text>
     </View>
   )

@@ -92,8 +92,8 @@ export default function MerchantDetailPage() {
   }))
 
   /**
-   * 向该商家发起询价（v1.6.0 电话单轨）：商家主页不再直接亮号码，只给此入口；
-   * 预填目标商户后跳发布页（型号留空由用户填），撮合达成后双方互给电话。
+   * 邀请本商家报价（v1.6.0 电话单轨 / v1.8.0 邀标化）：商家主页不再直接亮号码，只给此入口；
+   * 预填"邀标 + 只勾选本商家"后跳发布页（型号留空由用户填），撮合成达后双方互给电话。
    */
   const handleInquire = () => {
     if (!isLoggedIn) return requireLogin()
@@ -101,7 +101,8 @@ export default function MerchantDetailPage() {
       partNumber: '',
       brand: '',
       bearingId: null,
-      targetMerchantId: id,
+      visibility: 1,
+      invitedMerchantIds: [id],
     })
     Taro.navigateTo({ url: '/pages/discover/publish' })
   }
@@ -200,17 +201,18 @@ export default function MerchantDetailPage() {
               <Text className='md-v' style={{ ...fs(13), color: t.textPrimary }}>{detail.contactPerson}</Text>
             </View>
           )}
-          {/* v1.6.0 电话单轨：本页不再直接显示号码，只给"发起询价"入口（号码撮合达成后互给） */}
+          {/* v1.6.0 电话单轨：本页不再直接显示号码，只给"邀请报价"入口（号码撮合达成后互给）
+              改动说明（v1.8.0 公开招标/邀标）：入口语义由"定向询价"改为"邀标"，预勾选本商家 */}
           <View className='md-row' onClick={handleInquire}>
             <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
             <View className='md-v-call'>
               <Text className='md-v' style={{ ...fs(13), color: t.primaryText }}>
-                {isLoggedIn ? '发起询价后互给' : '登录后发起询价'}
+                {isLoggedIn ? '邀请报价后互给' : '登录后邀请报价'}
               </Text>
               <Icon name="search" size={16} color={t.primaryText} />
             </View>
           </View>
-          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在询价撮合达成后由双方互给</Text>
+          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在寻货撮合达成后由双方互给</Text>
           {detail?.address && (
             <View className='md-row'>
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>地址</Text>

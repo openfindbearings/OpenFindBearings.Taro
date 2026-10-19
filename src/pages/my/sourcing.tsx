@@ -20,7 +20,7 @@ import { useListSelection } from '../../components/ListKit/useListSelection'
 import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
-import { getMySourcingDemands, batchDeleteDemands, demandStatusText, DEMAND_STATUS, DEMAND_STATUS_CHIPS, type SourcingMyDemand } from '../../services/sourcing'
+import { getMySourcingDemands, batchDeleteDemands, publishDemandAsPublic, demandStatusText, DEMAND_STATUS, DEMAND_STATUS_CHIPS, type SourcingMyDemand } from '../../services/sourcing'
 import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallItem } from '../../services/mall'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
@@ -116,6 +116,26 @@ export default function MySourcingPage() {
     ]
     : []
 
+  /**
+   * 转为公开招标（v1.8.0 公开招标/邀标）：邀标单无人应答时放开进大厅，
+   * 免去"取消重建"（发布额度与积分不退还）；成功后刷新列表去角标。
+   */
+  const doPublishPublic = async (item: SourcingMyDemand) => {
+    const ok = await showConfirmDialog({
+      title: '转为公开招标',
+      content: '转为公开后需求进入寻货大厅，所有商家可见可应答；原邀标商家仍可应答。确认转为公开？',
+      confirmText: '转为公开',
+    })
+    if (!ok) return
+    const r = await publishDemandAsPublic(item.id)
+    if (r.success) {
+      Taro.showToast({ title: '已转为公开招标', icon: 'none' })
+      reload()
+      return
+    }
+    Taro.showToast({ title: r.message || '操作失败，请稍后重试', icon: 'none' })
+  }
+
   // 左滑动作（仅终态单出删除）
   const swipeActions = (item: SourcingMyDemand): SwipeCellAction[] =>
     isClosed(item)
@@ -169,6 +189,12 @@ export default function MySourcingPage() {
                     <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '700' }}>置顶中</Text>
                   </View>
                 )}
+                {/* 改动说明（v1.8.0 公开招标/邀标）：邀标单角标，让"不进大厅"的发布方式一眼可辨 */}
+                {item.isPrivate && (
+                  <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
+                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>邀标</Text>
+                  </View>
+                )}
                 <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: open ? t.primaryLight : t.bgMain }}>
                   <Text style={{ ...fs(11), color: open ? t.primary : t.textTertiary }}>{demandStatusText(item.status)}</Text>
                 </View>
@@ -177,6 +203,15 @@ export default function MySourcingPage() {
                 <Text style={{ ...fs(13), color: t.textTertiary, flex: 1 }}>
                   {[item.brand, item.quantity].filter(Boolean).join(' · ') || '—'} · {item.responseCount} 条应答
                 </Text>
+                {/* 改动说明（v1.8.0 公开招标/邀标）：邀标单可转公开（免去无人应答时取消重建，额度不退还） */}
+                {open && item.isPrivate && !sel.selectMode && (
+                  <View
+                    onClick={(e) => { e?.stopPropagation?.(); void doPublishPublic(item) }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderWidth: 1, borderColor: t.border, marginRight: 8 }}
+                  >
+                    <Text style={{ ...fs(12), color: t.textSecondary }}>转公开</Text>
+                  </View>
+                )}
                 {/* v2.10.0 寻货置顶：进行中的需求才出置顶按钮（点按不冒泡进详情；多选模式隐藏） */}
                 {open && !sel.selectMode && (
                   <View
