@@ -20,7 +20,7 @@ import PublishIdentitySheet from '../../components/PublishIdentitySheet'
 import { vibrateSuccess } from '../../utils/haptics'
 import { useMerchantStore } from '../../stores/merchant'
 import { publishDemand, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
-import { getBearingMerchants, type BearingMerchant } from '../../services/bearing'
+import { getAllBearingMerchants, type BearingMerchant } from '../../services/bearing'
 import { getObject, removeItem } from '../../utils/storage'
 
 /** 发布寻货跨页预填 storage 键（轴承详情"发布寻货"/"邀标"写入） */
@@ -69,8 +69,10 @@ export default function PublishSourcingPage() {
   const [meta, setMeta] = useState<{ bearingId?: string | null }>({})
   const [mode, setMode] = useState<'public' | 'invited'>('public')
   const [prefilled, setPrefilled] = useState(false)
-  /** 在售认证商家清单（有 bearingId 才拉；null=无清单，邀标按型号匹配全部在售商家） */
+  /** 在售认证商家清单（有 bearingId 才拉；null=无清单：或未携带 bearingId，或拉取失败） */
   const [inviteList, setInviteList] = useState<BearingMerchant[] | null>(null)
+  /** 清单拉取失败（v1.8.1）：与"确实无人在售"区分——失败可重试，不误判为无货、不禁用邀标 */
+  const [inviteError, setInviteError] = useState(false)
   /** 邀标勾选的收件人（默认全选；从商家行进入则只勾该家） */
   const [checked, setChecked] = useState<string[]>([])
   /** 跨页预填的指定收件人（无 bearingId 清单时仍按此精确邀约，如从商家主页进入） */
@@ -103,20 +105,34 @@ export default function PublishSourcingPage() {
 
   /**
    * 拉取该轴承的在售认证商家清单，供邀标勾选（只列可信来源：已认证商家）。
-   * 失败时清单为空数组（邀标不可选，页面提示改公开招标），不阻塞发布。
+   * 改动说明（v1.8.1）：逐页拉全量（原只取第一页，部分勾选会静默丢掉未展示的商家）；
+   *   排除本商户（无需给自己发邀约）；失败与"确实无人在售"分开——失败给重试入口且不禁用邀标
    */
   const loadInviteList = (bearingId: string, preselect: string[] | null) => {
-    getBearingMerchants(bearingId)
-      .then((r) => {
-        const list = (r?.items || []).filter((m) => m.isVerified)
+    setInviteError(false)
+    getAllBearingMerchants(bearingId)
+      .then((all) => {
+        const list = all.filter((m) => m.isVerified && m.merchantId !== currentMerchantId)
         setInviteList(list)
         // preselect 为 null=默认全选；非 null=只勾指定的那些（保持传参顺序，避免下拉顺序漂移）
         setChecked(preselect === null ? list.map((m) => m.merchantId) : list.filter((m) => preselect.includes(m.merchantId)).map((m) => m.merchantId))
       })
-      .catch(() => { setInviteList([]); setChecked([]) })
+      .catch(() => { setInviteList(null); setInviteError(true); setChecked([]) })
   }
 
-  const setField = (key: keyof FormState, value: string) => setForm((prev) => ({ ...prev, [key]: value }))
+  /**
+   * 表单字段写入；改动说明（v1.8.1）：型号被手动改写时清空关联轴承——
+   *   候选清单与匹配都按原 bearingId 算的，型号改了就不再成立（否则会出现"邀的是 A 型号商家、单上写 B 型号"）
+   */
+  const setField = (key: keyof FormState, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    if (key === 'partNumber' && meta.bearingId) {
+      setMeta({ bearingId: null })
+      setInviteList(null)
+      setInviteError(false)
+      setChecked([])
+    }
+  }
 
   /** 切换邀标勾选（点行整行触发） */
   const toggleChecked = (merchantId: string) => {
@@ -191,7 +207,7 @@ export default function PublishSourcingPage() {
       void vibrateSuccess()
       // 改动说明（v1.8.0）：按发布方式与实际通知家数给差异化反馈——
       //   公开=已通知 N 家并进大厅（无匹配则只进大厅等应答）；邀标=只通知勾选的 N 家（不进大厅）
-      const notified = r.data?.notifiedMerchantCount ?? 0
+      const notified = r.data?.recipientMerchantCount ?? 0
       const title = invited
         ? (notified > 0 ? `已邀标 ${notified} 家认证商家` : '已发布邀标')
         : (notified > 0 ? `已通知 ${notified} 家认证商家，并进入大厅` : '已进入寻货大厅')
@@ -323,7 +339,20 @@ export default function PublishSourcingPage() {
 
           {/* 邀标收件人（有 bearingId 时列出在售认证商家供勾选；默认全选） */}
           {mode === 'invited' ? (
-            inviteList === null ? (
+            inviteError ? (
+              // 改动说明（v1.8.1）：加载失败 ≠ 无人在售——给重试入口，且不因此禁用邀标（服务端仍会按匹配校验）
+              <View style={{ marginTop: 8 }}>
+                <Text style={{ ...fs(11), color: t.textTertiary }}>
+                  商家清单加载失败，可重试；也可直接发布，按型号匹配全部在售认证商家
+                </Text>
+                <Text
+                  style={{ ...fs(12), color: t.primary, marginTop: 6 }}
+                  onClick={() => { if (meta.bearingId) loadInviteList(meta.bearingId, null) }}
+                >
+                  点击重试
+                </Text>
+              </View>
+            ) : inviteList === null ? (
               <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
                 {preInvited.length > 0
                   ? '已指定邀请该商家（本型号暂无在售清单，无法逐家勾选）'

@@ -145,9 +145,28 @@ export function getBearingDetail(id: string) {
   return request<BearingDetail>(API.BEARING_DETAIL(id), { auth: false })
 }
 
-/** 轴承在售商家 */
-export function getBearingMerchants(id: string) {
-  return request<Paged<BearingMerchant>>(`${API.BEARING_MERCHANTS(id)}?page=1&pageSize=${DEFAULT_PAGE_SIZE}`, { auth: false })
+/** 轴承在售商家（分页；默认首页 20 条） */
+export function getBearingMerchants(id: string, page = 1, pageSize = DEFAULT_PAGE_SIZE) {
+  return request<Paged<BearingMerchant>>(`${API.BEARING_MERCHANTS(id)}?page=${page}&pageSize=${pageSize}`, { auth: false })
+}
+
+/**
+ * 轴承在售商家全量（v1.8.1 邀标候选清单）：逐页拉齐。
+ * 改动说明：邀标勾选若只取第一页，用户"部分勾选"时会静默丢掉未展示的商家（与"勾选∩匹配"的精确邀标语义不符）；
+ * 上限 10 页（500 家）兜底，防极端数据拖垮页面
+ * @param id 轴承 ID
+ */
+export async function getAllBearingMerchants(id: string): Promise<BearingMerchant[]> {
+  const pageSize = 50
+  const all: BearingMerchant[] = []
+  for (let page = 1; page <= 10; page++) {
+    const r = await getBearingMerchants(id, page, pageSize)
+    const items = r?.items ?? []
+    all.push(...items)
+    // 本页不足一页或已收齐总数即止（Paged 的总数字段是 totalCount，缺失时按"本页为空"收敛）
+    if (items.length < pageSize || all.length >= (r?.totalCount ?? all.length)) break
+  }
+  return all
 }
 
 /** 轴承替代品 */

@@ -334,15 +334,16 @@ export interface PublishDemandBody {
   merchantId?: string | null
   /** v1.8.0 公开招标/邀标：0=公开招标（默认，进大厅 + 通知匹配商家）/ 1=邀标（不进大厅，只推收件人） */
   visibility?: number
-  /** v1.8.0 邀标收件人勾选（空=全部匹配的认证在售商家；仅给本字段时表示"邀全部"） */
+  /** v1.8.0 邀标收件人勾选（空=全部匹配的认证在售商家；仅给本字段时表示"邀全部"；公开招标携带将被服务端 400 拒绝） */
   invitedMerchantIds?: string[] | null
 }
 
-/** 发布寻货结果（v1.8.0 随收件人集合更名）：id=寻货单 ID；
- *  notifiedMerchantCount=本次实际收到推送的认证商家家数（公开单=在售匹配家数、邀标单=勾选∩匹配家数、无匹配=0） */
+/** 发布寻货结果（v1.8.1 随口径更名）：id=寻货单 ID；
+ *  recipientMerchantCount=本次收件人集合大小（公开招标=在售匹配家数、邀标=勾选∩匹配家数、无匹配=0）。
+ *  改动说明：原名 notifiedMerchantCount 暗示"实际收到推送的家数"，实际投递还取决于收件商户是否有在职管理员，名实不符故更名 */
 export interface PublishDemandResult {
   id: string
-  notifiedMerchantCount?: number
+  recipientMerchantCount?: number
 }
 
 /** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案；成功回读通知家数供反馈文案用） */

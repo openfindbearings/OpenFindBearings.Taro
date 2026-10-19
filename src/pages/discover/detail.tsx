@@ -21,7 +21,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
-  getSourcingDetail, selectResponse, cancelDemand, cancelMyResponse,
+  getSourcingDetail, selectResponse, cancelDemand, cancelMyResponse, publishDemandAsPublic,
   demandStatusText, responseStatusText,
   DEMAND_STATUS, RESPONSE_STATUS,
   type SourcingDetail,
@@ -46,13 +46,22 @@ export default function SourcingDetailPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const currentMerchant = useMerchantStore((s) => s.currentMerchant())
   const [detail, setDetail] = useState<SourcingDetail | null>(null)
+  /** 加载失败/无权查看（v1.8.1）：邀标单对非受邀者返回 404，原实现静默失败致页面永远"加载中" */
+  const [loadError, setLoadError] = useState(false)
   const [busy, setBusy] = useState(false)
   // 改动说明（v1.5.0 应答独立页）：应答表单整体迁往 pages/discover/respond.tsx，
   // 本页回归纯阅读/比价 + 应答/修改/撤销入口，不再持有应答编辑状态
 
   const load = async () => {
-    const d = await getSourcingDetail(id)
-    setDetail(d ?? null)
+    try {
+      const d = await getSourcingDetail(id)
+      setDetail(d ?? null)
+      setLoadError(false)
+    } catch {
+      // 改动说明（v1.8.1）：区分终态——无权查看/已删除给出明确提示与返回入口，不再无限"加载中"
+      setDetail(null)
+      setLoadError(true)
+    }
   }
   useDidShow(() => {
     void load()
@@ -62,7 +71,12 @@ export default function SourcingDetailPage() {
     return (
       <PageLayout nav={<NavBar title='寻货详情' onBack={() => Taro.navigateBack()} showBack />}>
         <View style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ ...fs(14), color: t.textTertiary }}>加载中…</Text>
+          <Text style={{ ...fs(14), color: t.textTertiary }}>{loadError ? '寻货不存在或无权查看' : '加载中…'}</Text>
+          {loadError ? (
+            <Text style={{ ...fs(14), color: t.primary, marginTop: 14 }} onClick={() => Taro.navigateBack()}>
+              返回
+            </Text>
+          ) : null}
         </View>
       </PageLayout>
     )
@@ -129,6 +143,29 @@ export default function SourcingDetailPage() {
     }
   }
 
+  /**
+   * 发布人：把进行中的邀标单转为公开招标（v1.8.1）。
+   * 改动说明：免去"邀标无人应答只能取消重建"的额度与积分损耗（与"我的寻货/商户工作台"列表入口同义，
+   *   详情页就地可操作）
+   */
+  const doPublishPublic = async () => {
+    const ok = await showConfirmDialog({
+      title: '转为公开招标',
+      content: '转为公开后，寻货将进入公开大厅、所有商家可见可应答；原邀标收件人名单不再保留。确认转为公开？',
+      confirmText: '确认转公开',
+    })
+    if (!ok || busy) return
+    setBusy(true)
+    const r = await publishDemandAsPublic(detail.id)
+    setBusy(false)
+    if (r.success) {
+      Taro.showToast({ title: '已转为公开招标', icon: 'success' })
+      await load()
+    } else {
+      Taro.showToast({ title: r.message || '转为公开失败', icon: 'none' })
+    }
+  }
+
   /** 进入应答独立页（新建=我要应答 / 已有=修改应答，respond 页自行拉详情回显） */
   const goRespond = (): void => {
     Taro.navigateTo({ url: `/pages/discover/respond?id=${detail.id}` })
@@ -173,6 +210,12 @@ export default function SourcingDetailPage() {
             <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: isOpen ? t.primaryLight : t.bgInput }}>
               <Text style={{ ...fs(12), color: isOpen ? t.primary : t.textTertiary }}>{demandStatusText(detail.status)}</Text>
             </View>
+            {/* 改动说明（v1.8.1）：邀标单徽章——受邀商家从通知点进来需立刻知道"这是点名邀我的单、受众 N 家" */}
+            {detail.isPrivate ? (
+              <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.bgInput, marginLeft: 6 }}>
+                <Text style={{ ...fs(11), color: t.textSecondary }}>邀标 {detail.invitedCount ?? 0} 家</Text>
+              </View>
+            ) : null}
           </View>
           {/* 改动说明（v2.12.0 商户名义发布）：商户单显示"商户发布"行，商户名可点进商家主页看全貌 */}
           {detail.publisherType === 'merchant' && detail.publisherMerchantId ? (
@@ -356,13 +399,23 @@ export default function SourcingDetailPage() {
           </View>
         )}
 
-        {/* 发布人：取消寻货 */}
+        {/* 发布人：取消寻货 + 邀标单可转为公开招标（v1.8.1；与列表入口同义，详情页就地可操作） */}
         {detail.isPublisher && isOpen && (
-          <View
-            style={{ margin: 12, marginTop: 4, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}
-            onClick={() => { void doCancel() }}
-          >
-            <Text style={{ ...fs(15), color: t.textSecondary }}>取消寻货</Text>
+          <View style={{ display: 'flex', flexDirection: 'row', margin: 12, marginTop: 4 }}>
+            {detail.isPrivate ? (
+              <View
+                style={{ flex: 1, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: t.primary, marginRight: 10 }}
+                onClick={() => { void doPublishPublic() }}
+              >
+                <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>转为公开招标</Text>
+              </View>
+            ) : null}
+            <View
+              style={{ flex: 1, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}
+              onClick={() => { void doCancel() }}
+            >
+              <Text style={{ ...fs(15), color: t.textSecondary }}>取消寻货</Text>
+            </View>
           </View>
         )}
 
