@@ -274,6 +274,8 @@ NOTIFICATION_PREFERENCES: `${API_PREFIX}/notifications/preferences`,
   SOURCING_MERCHANT_DEMANDS: `${API_PREFIX}/sourcing/merchant/demands`,
   /** v2.12.0 列表删除：批量软删寻货终态单（左滑单删=ids 传一个）。改动说明：上一批插入脚本因 PS ${} 插值静默失败漏了本行，致 RN 端 URL 拼成 ...undefined 报 Network request failed */
   SOURCING_BATCH_DELETE: `${API_PREFIX}/sourcing/demands/batch-delete`,
+  /** v1.8.0 公开招标/邀标：邀标单进行中时由发布人放开为公开（进大厅），免去取消重建 */
+  SOURCING_PUBLISH_PUBLIC: (id: string) => `${API_PREFIX}/sourcing/demands/${id}/publish-public`,
 
   /** 个人 */
   PROFILE: `${API_PREFIX}/profile`,

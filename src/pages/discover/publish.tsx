@@ -1,7 +1,10 @@
-// 发布寻货页（v1.7.19）：发布求购询价单。
+// 发布寻货页（v1.7.19）：发布求购单。
 // 改动说明（v2.12.0 商户名义发布）：表单保持纯输入；点"发布"时一步弹窗选身份——
 //   归属商户者弹 ActionSheet（商户逐行+个人名义行，取消=中止发布），纯个人用户不打扰；
 //   NEED_POINTS 重提交复用已选身份不再弹（全程最多 1 个身份弹窗）
+// 改动说明（v1.8.0 公开招标/邀标）：原"定向询价单商户"升级为发布方式二选一——
+//   公开招标（进大厅 + 通知匹配的认证在售商家）/ 邀标（不进大厅，只通知勾选的有货认证商家）；
+//   有 bearingId 时拉在售认证商家清单供勾选（默认全选），从商家行/商家主页进入则只预勾该家
 // 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹轴承币确认框 → usePoints=true 重提交
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useState } from 'react'
@@ -11,14 +14,16 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
+import Icon from '../../components/Icon'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PublishIdentitySheet from '../../components/PublishIdentitySheet'
 import { vibrateSuccess } from '../../utils/haptics'
 import { useMerchantStore } from '../../stores/merchant'
 import { publishDemand, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
+import { getBearingMerchants, type BearingMerchant } from '../../services/bearing'
 import { getObject, removeItem } from '../../utils/storage'
 
-/** 发布寻货跨页预填 storage 键（轴承详情"发起寻货"/"询价"写入） */
+/** 发布寻货跨页预填 storage 键（轴承详情"发布寻货"/"邀标"写入） */
 const PREFILL_KEY = 'sourcing_publish_prefill'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
@@ -36,6 +41,15 @@ interface FormState {
 
 const EMPTY: FormState = { partNumber: '', brand: '', quantity: '', expectedDelivery: '', region: '', description: '' }
 
+/** 跨页预填上下文（v1.8.0：曝光范围 + 邀标预勾选收件人） */
+interface PublishPrefill {
+  partNumber?: string
+  brand?: string
+  bearingId?: string | null
+  visibility?: number
+  invitedMerchantIds?: string[] | null
+}
+
 /** 发布寻货页 */
 export default function PublishSourcingPage() {
   const t = useTheme()
@@ -51,24 +65,72 @@ export default function PublishSourcingPage() {
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  // v1.6.0 搜索寻货联动：跨页预填上下文——bearingId 贯通（关联平台轴承）+ 定向目标商户
-  const [meta, setMeta] = useState<{ bearingId?: string | null; targetMerchantId?: string | null }>({})
+  // v1.8.0 公开招标/邀标：bearingId 贯通（关联平台轴承）；发布方式与收件人勾选
+  const [meta, setMeta] = useState<{ bearingId?: string | null }>({})
+  const [mode, setMode] = useState<'public' | 'invited'>('public')
   const [prefilled, setPrefilled] = useState(false)
+  /** 在售认证商家清单（有 bearingId 才拉；null=无清单，邀标按型号匹配全部在售商家） */
+  const [inviteList, setInviteList] = useState<BearingMerchant[] | null>(null)
+  /** 邀标勾选的收件人（默认全选；从商家行进入则只勾该家） */
+  const [checked, setChecked] = useState<string[]>([])
+  /** 跨页预填的指定收件人（无 bearingId 清单时仍按此精确邀约，如从商家主页进入） */
+  const [preInvited, setPreInvited] = useState<string[]>([])
 
   useDidShow(() => {
     getSourcingQuota().then(setQuota).catch(() => { /* 未登录/网络失败：隐藏额度条 */ })
-    // 预填：从轴承详情"发起寻货"/"询价"写入的 storage 读取，读完即清（防后续普通进入被脏预填）
+    // 预填：从轴承详情"发布寻货"/"邀标"写入的 storage 读取，读完即清（防后续普通进入被脏预填）
     void (async () => {
-      const pre = await getObject<{ partNumber?: string; brand?: string; bearingId?: string | null; targetMerchantId?: string | null }>(PREFILL_KEY)
+      const pre = await getObject<PublishPrefill>(PREFILL_KEY)
       if (!pre) return
       setForm((prev) => ({ ...prev, partNumber: pre.partNumber || prev.partNumber, brand: pre.brand || prev.brand }))
-      setMeta({ bearingId: pre.bearingId ?? null, targetMerchantId: pre.targetMerchantId ?? null })
+      const bearingId = pre.bearingId ?? null
+      setMeta({ bearingId })
+      const invited = pre.visibility === 1
+      setMode(invited ? 'invited' : 'public')
+      setPreInvited(pre.invitedMerchantIds ?? [])
+      if (bearingId && !invited) {
+        // 普通进入但带了 bearingId：拉清单并默认全选（用户可自行取消勾选）
+        loadInviteList(bearingId, null)
+      } else if (bearingId && invited) {
+        // 从商家行/商家主页进入：只预勾选指定的收件人（预填为空则视为"全部匹配"，与普通进入一致）
+        const pre2 = pre.invitedMerchantIds && pre.invitedMerchantIds.length > 0 ? pre.invitedMerchantIds : null
+        loadInviteList(bearingId, pre2)
+      }
       setPrefilled(true)
       await removeItem(PREFILL_KEY)
     })()
   })
 
+  /**
+   * 拉取该轴承的在售认证商家清单，供邀标勾选（只列可信来源：已认证商家）。
+   * 失败时清单为空数组（邀标不可选，页面提示改公开招标），不阻塞发布。
+   */
+  const loadInviteList = (bearingId: string, preselect: string[] | null) => {
+    getBearingMerchants(bearingId)
+      .then((r) => {
+        const list = (r?.items || []).filter((m) => m.isVerified)
+        setInviteList(list)
+        // preselect 为 null=默认全选；非 null=只勾指定的那些（保持传参顺序，避免下拉顺序漂移）
+        setChecked(preselect === null ? list.map((m) => m.merchantId) : list.filter((m) => preselect.includes(m.merchantId)).map((m) => m.merchantId))
+      })
+      .catch(() => { setInviteList([]); setChecked([]) })
+  }
+
   const setField = (key: keyof FormState, value: string) => setForm((prev) => ({ ...prev, [key]: value }))
+
+  /** 切换邀标勾选（点行整行触发） */
+  const toggleChecked = (merchantId: string) => {
+    setChecked((prev) => prev.includes(merchantId) ? prev.filter((x) => x !== merchantId) : [...prev, merchantId])
+  }
+
+  /** 邀标全选/全不选（全部勾选等价于"通知全部匹配商家"，提交空数组） */
+  const toggleAll = () => {
+    if (!inviteList) return
+    setChecked((prev) => prev.length === inviteList.length ? [] : inviteList.map((m) => m.merchantId))
+  }
+
+  /** 邀标是否可选：有 bearingId 但清单里无认证在售商家时不可邀（改公开招标） */
+  const invitedAvailable = !(meta.bearingId && inviteList !== null && inviteList.length === 0)
 
   /**
    * 提交入口：身份未定时——纯个人用户直接提交（不打扰）；
@@ -78,6 +140,15 @@ export default function PublishSourcingPage() {
   const submit = async (usePoints: boolean, merchantId?: string | null) => {
     if (!form.partNumber.trim()) {
       Taro.showToast({ title: '请填写寻货型号', icon: 'none' })
+      return
+    }
+    // 改动说明（v1.8.0 邀标校验）：勾选清单存在时至少勾一家（全不勾会被服务端理解为"全部匹配"，与意图不符）
+    if (mode === 'invited' && inviteList !== null && inviteList.length > 0 && checked.length === 0) {
+      Taro.showToast({ title: '请至少勾选一家商家，或改为公开招标', icon: 'none' })
+      return
+    }
+    if (!invitedAvailable && mode === 'invited') {
+      Taro.showToast({ title: '当前无认证商家在售该型号，请选公开招标', icon: 'none' })
       return
     }
     if (merchantId === undefined) {
@@ -94,6 +165,11 @@ export default function PublishSourcingPage() {
   /** 实际提交（身份已定） */
   const doSubmit = async (usePoints: boolean, merchantId: string | null) => {
     setSubmitting(true)
+    const invited = mode === 'invited'
+    // 全部勾选=通知全部匹配商家（提交空数组，服务端按在售匹配口径解析）；部分勾选=精确收件人；
+    // 无 bearingId 清单时按预填指定收件人（从商家主页进入即指定该家；无预填则空数组=全部匹配）
+    const allChecked = inviteList !== null && inviteList.length > 0 && checked.length === inviteList.length
+    const invitedMerchantIds = invited ? (inviteList === null ? preInvited : (allChecked ? [] : checked)) : null
     const body: PublishDemandBody = {
       partNumber: form.partNumber.trim(),
       bearingId: meta.bearingId ?? null,
@@ -105,21 +181,20 @@ export default function PublishSourcingPage() {
       usePoints,
       // v2.12.0 商户名义发布：sheet 选定的商户；个人名义为 null
       merchantId,
-      // v1.6.0 定向询价：来自轴承详情"询价"入口时带目标商户；普通发布为 null（广播）
-      targetMerchantId: meta.targetMerchantId ?? null,
+      // v1.8.0 公开招标/邀标：0=公开（进大厅）/ 1=邀标（只推收件人）
+      visibility: invited ? 1 : 0,
+      invitedMerchantIds,
     }
     const r = await publishDemand(body)
     setSubmitting(false)
     if (r.success) {
       void vibrateSuccess()
-      // 改动说明（v1.7.0 两条路径可见化）：按匹配家数给差异化反馈——定向单只推该商家；
-      //   广播单匹配到在售认证商家=已通知 N 家并进大厅；无匹配=仅进大厅等应答（有匹配商家时会收到通知）
-      const matched = r.data?.matchedMerchantCount ?? 0
-      const title = meta.targetMerchantId
-        ? '已定向推送给该商家'
-        : matched > 0
-          ? `已通知 ${matched} 家认证商家`
-          : '已进入寻货大厅'
+      // 改动说明（v1.8.0）：按发布方式与实际通知家数给差异化反馈——
+      //   公开=已通知 N 家并进大厅（无匹配则只进大厅等应答）；邀标=只通知勾选的 N 家（不进大厅）
+      const notified = r.data?.notifiedMerchantCount ?? 0
+      const title = invited
+        ? (notified > 0 ? `已邀标 ${notified} 家认证商家` : '已发布邀标')
+        : (notified > 0 ? `已通知 ${notified} 家认证商家，并进入大厅` : '已进入寻货大厅')
       Taro.showToast({ title, icon: 'none', duration: 1800 })
       setTimeout(() => Taro.navigateBack(), 1000)
       return
@@ -152,6 +227,26 @@ export default function PublishSourcingPage() {
       />
     </View>
   )
+
+  /** 发布方式选项卡（公开招标 / 邀标） */
+  const modeOption = (value: 'public' | 'invited', title: string, desc: string, disabled = false) => {
+    const active = mode === value
+    const tone = disabled ? t.textTertiary : (active ? t.primary : t.textSecondary)
+    return (
+      <View
+        style={{
+          display: 'flex', flexDirection: 'column', flex: 1, marginRight: value === 'public' ? 8 : 0,
+          paddingLeft: 10, paddingRight: 10, paddingTop: 9, paddingBottom: 9, borderRadius: 10,
+          borderWidth: 1, borderColor: disabled ? t.border : (active ? t.primary : t.border),
+          backgroundColor: disabled ? t.bgInput : (active ? t.primaryLight : t.bgCard),
+        }}
+        onClick={() => { if (!disabled) setMode(value) }}
+      >
+        <Text style={{ ...fs(13), color: tone, fontWeight: '600' }}>{title}</Text>
+        <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 3 }}>{desc}</Text>
+      </View>
+    )
+  }
 
   // 按钮三态推导（v1.7.21）：额度内免费发布 → 超限花轴承币 → 余额不足去赚分
   const pq = quota?.publish
@@ -187,11 +282,11 @@ export default function PublishSourcingPage() {
         <View style={{ margin: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           {/* 改动说明（v2.12.0 交互改向）：发布身份不再占表单行——点"发布"时一步弹窗选择
               （归属商户才弹，纯个人直接提交），表单保持纯输入、逐步引导完成流程 */}
-          {/* v1.6.0 搜索寻货联动：来自轴承详情的预填提示（定向询价则加注） */}
+          {/* v1.8.0 搜索寻货联动：来自轴承详情的预填提示（邀标则加注只通知所选商家） */}
           {prefilled ? (
             <View style={{ display: 'flex', marginBottom: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
               <Text style={{ ...fs(11), color: t.primary }}>
-                已按轴承货源预填，可修改{meta.targetMerchantId ? '（定向询价：仅推送给该商家）' : ''}
+                已按轴承货源预填，可修改{mode === 'invited' ? '（已选邀标：只通知你在下方勾选的认证商家）' : ''}
               </Text>
             </View>
           ) : null}
@@ -218,8 +313,62 @@ export default function PublishSourcingPage() {
           </View>
         </View>
 
-        <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 16, marginRight: 16, marginTop: 4 }}>
-          发布后可从应答中选定一家，双方互见联系方式；以商户名义发布时，被选中的商家看到商户公开电话。寻货 14 天有效，请留意站内信通知。
+        {/* 发布方式（v1.8.0 公开招标/邀标）：公开=进大厅人人可应答；邀标=只通知勾选的有货认证商家 */}
+        <View style={{ marginLeft: 12, marginRight: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, backgroundColor: t.bgCard, borderRadius: 12 }}>
+          <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>发布方式</Text>
+          <View style={{ display: 'flex', flexDirection: 'row', marginTop: 8 }}>
+            {modeOption('public', '公开招标', '进寻货大厅，所有商家都能看到并应答')}
+            {modeOption('invited', '邀标', '只通知你勾选的有货认证商家，不进大厅', !invitedAvailable)}
+          </View>
+
+          {/* 邀标收件人（有 bearingId 时列出在售认证商家供勾选；默认全选） */}
+          {mode === 'invited' ? (
+            inviteList === null ? (
+              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
+                {preInvited.length > 0
+                  ? '已指定邀请该商家（本型号暂无在售清单，无法逐家勾选）'
+                  : '将按型号匹配，邀请所有在售该型号的认证商家（暂无在售清单，无法逐家勾选）'}
+              </Text>
+            ) : inviteList.length === 0 ? (
+              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
+                当前没有认证商家在售该型号，无法邀标，请改为公开招标
+              </Text>
+            ) : (
+              <View style={{ marginTop: 8 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ ...fs(12), color: t.textSecondary }}>
+                    通知这些在售认证商家（已选 {checked.length}/{inviteList.length}）
+                  </Text>
+                  <Text style={{ ...fs(12), color: t.primary }} onClick={toggleAll}>
+                    {checked.length === inviteList.length ? '全不选' : '全选'}
+                  </Text>
+                </View>
+                {inviteList.map((m) => (
+                  <View
+                    key={m.merchantId}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderBottomWidth: 1, borderBottomColor: t.border }}
+                    onClick={() => toggleChecked(m.merchantId)}
+                  >
+                    <View
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: 8,
+                        borderWidth: 1, borderColor: checked.includes(m.merchantId) ? t.primary : t.border,
+                        backgroundColor: checked.includes(m.merchantId) ? t.primary : t.bgCard,
+                      }}
+                    >
+                      {checked.includes(m.merchantId) ? <Icon name='check' size={11} color='#FFFFFF' /> : null}
+                    </View>
+                    <Text style={{ ...fs(13), color: t.textPrimary, marginLeft: 8, flex: 1 }}>{m.merchantName}</Text>
+                    <Text style={{ ...fs(10), color: t.primary }}>认证</Text>
+                  </View>
+                ))}
+              </View>
+            )
+          ) : null}
+        </View>
+
+        <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 16, marginRight: 16, marginTop: 8 }}>
+          公开招标会进入寻货大厅（人人可应答），并通知有货的认证商家；邀标只通知你勾选的认证商家。发布后可从应答中选定一家，双方互见联系方式；寻货 14 天有效，请留意站内信通知。
         </Text>
 
         {/* 发布按钮三态（v1.7.21）：免费发布 → 花轴承币发布（额度已用完）→ 轴承币不足去赚（跳任务中心）。
@@ -239,7 +388,7 @@ export default function PublishSourcingPage() {
           }}
         >
           <Text style={{ ...fs(16), color: '#FFFFFF', fontWeight: '600' }}>
-            {submitting ? '发布中…' : insufficient ? '轴承币不足，去赚轴承币' : overFree && pq ? `花 ${pq.pointsPrice} 轴承币发布` : '免费发布'}
+            {submitting ? '发布中…' : insufficient ? '轴承币不足，去赚轴承币' : overFree && pq ? `花 ${pq.pointsPrice} 轴承币发布` : (mode === 'invited' ? '发布邀标' : '公开发布')}
           </Text>
         </View>
       </View>
