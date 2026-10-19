@@ -202,16 +202,24 @@ export default function MerchantDetailPage() {
             </View>
           )}
           {/* v1.6.0 电话单轨：本页不再直接显示号码，只给"邀请报价"入口（号码撮合达成后互给）
-              改动说明（v1.8.0 公开招标/邀标）：入口语义由"定向询价"改为"邀标"，预勾选本商家 */}
-          <View className='md-row' onClick={handleInquire}>
-            <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
-            <View className='md-v-call'>
-              <Text className='md-v' style={{ ...fs(13), color: t.primaryText }}>
-                {isLoggedIn ? '邀请报价后互给' : '登录后邀请报价'}
-              </Text>
-              <Icon name="search" size={16} color={t.primaryText} />
+              改动说明（v1.8.0 公开招标/邀标）：入口语义由"定向询价"改为"邀标"，预勾选本商家
+              改动说明（v1.8.1）：自家商户不显示该入口——无需给自己发邀约（候选清单同样排除本商户） */}
+          {detail?.isMerchantMember ? (
+            <View className='md-row'>
+              <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
+              <Text className='md-v' style={{ ...fs(13), color: t.textTertiary }}>你经营的商家</Text>
             </View>
-          </View>
+          ) : (
+            <View className='md-row' onClick={handleInquire}>
+              <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
+              <View className='md-v-call'>
+                <Text className='md-v' style={{ ...fs(13), color: t.primaryText }}>
+                  {isLoggedIn ? '邀请报价后互给' : '登录后邀请报价'}
+                </Text>
+                <Icon name="search" size={16} color={t.primaryText} />
+              </View>
+            </View>
+          )}
           <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在寻货撮合达成后由双方互给</Text>
           {detail?.address && (
             <View className='md-row'>

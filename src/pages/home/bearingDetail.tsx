@@ -217,7 +217,7 @@ export default function BearingDetailPage() {
       {/* v1.7.0 数据可信联动：未认证在售归"仅供参考"分段（标灰口径、不提供询价），与认证商家可信段分开 */}
       {otherMerchants.length > 0 ? (
         <>
-          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家，暂不提供询价）</Text>
+          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家，暂不提供邀请报价）</Text>
           {otherMerchants.map((m) => merchantRow(m))}
         </>
       ) : null}
@@ -234,7 +234,7 @@ export default function BearingDetailPage() {
           </Text>
         </View>
         <ShareButton
-          title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台比价询价`}
+          title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台邀请报价`}
           path={`/s/bearing/${id}?view=supply`}
           label="分享货源"
         />
