@@ -134,7 +134,8 @@ export default function MerchantDetailPage() {
               {detail?.isVerified && (
                 // 改动说明（v1.7.11）：文案"入驻商家"是认证等级上线前的旧词已失真（入驻=已生效是另一回事），
                 //   统一为与商户页同款金色"已认证"徽标（主流：徽标在所有露出点一致）
-                // 改动说明（v2.5.0 商家经济）：徽章直接展示商家等级中文名（认证商家/口碑商家/金牌商家，v2.13.0 Lv3 改名口碑）
+                // 改动说明（v2.5.0 商家经济 / v2.18.0 卡级重构）：徽章展示商家卡级中文名（注册商户/铜卡/银卡/金卡），
+                // 认证与否由独立徽章标识，不再混进等级名
                 // 改动说明（v2.13.2 配色统一）：原按枚举名内联三元（Gold/Premium/else）与全局色带分叉
                 //   （认证应紫却琥珀、口碑应蓝却紫、入驻应石板却琥珀），改用唯一权威 getMerchantGradeBand 按单调序数取色
                 <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: getMerchantGradeBand(merchantGradeNameToRank(detail.grade)).bg, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>

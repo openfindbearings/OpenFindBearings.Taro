@@ -24,55 +24,50 @@ export function getLevelBand(level?: number): LevelBand {
 }
 
 /**
- * 商家等级枚举值 → 单调序数（与后端 MerchantBuffs.Rank 同表：1入驻/3认证→2/2活跃→3/4金牌→4；
- * 枚举数值非单调是历史映射，前端任何等级比较必须先经此换算）
+ * 商家卡级枚举值 → 单调序数（v2.18.0 卡级重构：枚举已改为单调，1 注册商户/2 铜卡/3 银卡/4 金卡，
+ * 序数即枚举值本身；保留此函数名以免各页大改，语义=卡级台阶）
  */
 export function merchantGradeToRank(grade?: number): number {
-  switch (grade ?? 0) {
-    case 1: return 1
-    case 3: return 2
-    case 2: return 3
-    case 4: return 4
-    default: return 0
-  }
+  const g = grade ?? 0
+  return g >= 1 && g <= 4 ? g : 0
 }
 
 /**
- * 商家等级枚举名 → 单调序数（API DTO 的 Grade 走 enum.ToString() 回名称：Standard/Verified/Premium/Gold；
- * 与 merchantGradeToRank 同表）。详情等按名称返回等级的接口用此换算，避免各页再硬编码一套配色
+ * 商家卡级枚举名 → 单调序数（API DTO 的 Grade 走 enum.ToString() 回名称：
+ * Registered/Bronze/Silver/Gold；与 merchantGradeToRank 同表）
  */
 export function merchantGradeNameToRank(gradeName?: string | null): number {
   switch (gradeName) {
-    case 'Standard': return 1
-    case 'Verified': return 2
-    case 'Premium': return 3
+    case 'Registered': return 1
+    case 'Bronze': return 2
+    case 'Silver': return 3
     case 'Gold': return 4
     default: return 0
   }
 }
 
 /**
- * 商家等级序数 → 展示名（与后端 Merchant.GetGradeDisplayName 同表；
- * v2.13.0 商家头部彩牌用——buff 接口只回 grade/rank 不回名称，前端映射避免多打一次接口）
+ * 商家卡级序数 → 展示名（与后端 Merchant.GetGradeDisplayName 同表；
+ * v2.18.0 卡级重构：认证是独立徽章（IsVerified），不再写进等级名）
  */
 export const MERCHANT_GRADE_LABELS: Record<number, string> = {
-  1: '入驻商家',
-  2: '认证商家',
-  3: '口碑商家',
-  4: '金牌商家',
+  1: '注册商户',
+  2: '铜卡',
+  3: '银卡',
+  4: '金卡',
 }
 
 /**
- * 商家等级彩牌色带（v2.13.0 商家等级页/头部铭牌）：按等级序数 rank 取色——
- * Lv1 入驻石板灰 / Lv2 认证紫 / Lv3 口碑蓝 / Lv4 金牌琥珀（v2.13.0 Lv3 改名口碑）。
- * 注意入参是 rank（1~4 单调序数）而非 grade 枚举值（数值非单调，须经 MerchantBuffs.Rank 换算）
+ * 商家卡级彩牌色带（v2.13.0 商家等级页/头部铭牌，v2.18.0 改卡级配色）：
+ * Lv1 注册石板灰 / Lv2 铜 / Lv3 银 / Lv4 金。
+ * 注意入参是 rank（1~4 单调序数，现与 grade 枚举值同值）
  */
 export function getMerchantGradeBand(rank?: number): LevelBand {
   switch (rank ?? 0) {
-    case 1: return { band: '入驻', bg: '#64748B' }
-    case 2: return { band: '认证', bg: '#8B5CF6' }
-    case 3: return { band: '口碑', bg: '#2563EB' }
-    case 4: return { band: '金牌', bg: '#D97706' }
+    case 1: return { band: '注册', bg: '#64748B' }
+    case 2: return { band: '铜卡', bg: '#B87333' }
+    case 3: return { band: '银卡', bg: '#8E9AA8' }
+    case 4: return { band: '金卡', bg: '#D97706' }
     default: return { band: '未定级', bg: '#94A3B8' }
   }
 }

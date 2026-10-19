@@ -1,6 +1,8 @@
 // 寻货详情页（v1.7.19）：需求全文 + 分级应答视图 + 选定/取消/应答/撤销操作 + 联系方式解锁展示。
 // 可见性分级（防报价泄露）：发布人见全部应答明细可比价；商户只见自己的应答；
-// 匿名/他人只见应答数。联系方式在"选定"后对双方解锁（发布人见商户电话/被选商户见需求人手机）。
+// 匿名/他人只见应答数。
+// 改动说明（v2.18.0 电话单向 + 成交回执）：选定后仅需求方获得商家联系电话（商家看不到需求方号码，
+// 双方沟通走站内会话 pages/discover/chat）；需求方可对被选定合作回填"是否谈成"（影响商家卡级）。
 // v1.5.0 应答独立页：应答表单迁往 respond.tsx，本页只剩"我要应答/修改应答"跳入口与"取消应答"撤销。
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useState } from 'react'
@@ -22,8 +24,8 @@ import { useMerchantStore } from '../../stores/merchant'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
   getSourcingDetail, selectResponse, cancelDemand, cancelMyResponse, publishDemandAsPublic,
-  demandStatusText, responseStatusText,
-  DEMAND_STATUS, RESPONSE_STATUS,
+  submitDealFeedback, demandStatusText, responseStatusText, dealOutcomeText,
+  DEMAND_STATUS, RESPONSE_STATUS, DEAL_OUTCOME, DEAL_NEGATIVE_OUTCOMES,
   type SourcingDetail,
 } from '../../services/sourcing'
 
@@ -90,25 +92,50 @@ export default function SourcingDetailPage() {
     Taro.makePhoneCall({ phoneNumber: phone })
   }
 
-  /** 被选商户联系需求方前弹窗：建议统一用公司公开电话联系（免暴露本机号码），坚持本机拨打需确认 */
-  const confirmCallPublisher = async (): Promise<void> => {
-    const companyPhone = currentMerchant?.mobile || currentMerchant?.phone
-    const content = companyPhone
-      ? `建议统一用公司公开电话联系：${companyPhone}\n若坚持用本机号码拨打 ${detail.publisherContact}，请点"仍要拨打"（对方来电显示本机号码）；否则请取消。`
-      : `未配置公司公开电话。若坚持用本机号码拨打 ${detail.publisherContact}，请点"仍要拨打"（对方来电显示本机号码）；否则请取消。`
-    const ok = await showConfirmDialog({
-      title: '联系需求方',
-      content,
-      confirmText: '仍要拨打',
-    })
-    if (ok) callContact(detail.publisherContact || '')
+  // 改动说明（v2.18.0 电话单向）：原"被选商户联系需求方"弹窗已删——
+  //   商家在任何情况下都拿不到需求方号码，双方沟通改走站内会话
+
+  /** 进入撮合会话（v2.18.0 T1：绑定"寻货单 × 商户"，双方均可进入） */
+  const goChat = (merchantId?: string | null) => {
+    if (!merchantId) return
+    Taro.navigateTo({ url: `/pages/discover/chat?demandId=${detail.id}&merchantId=${merchantId}` })
+  }
+
+  /**
+   * 发布人：提交成交回执（v2.18.0 撮合成交链）。
+   * 谈成=计一次成功撮合（推商家升卡）；没谈成按原因记负信号；均只由需求方单方填写
+   */
+  const doFeedback = async (outcome: number) => {
+    if (busy || !detail.selectedResponseId) return
+    if (outcome !== DEAL_OUTCOME.confirmed) {
+      const name = dealOutcomeText(outcome)
+      const ok = await showConfirmDialog({
+        title: '记录未谈成',
+        content: `记下"${name}"后，该商户本次不计成功撮合。若已谈成请改选"谈成了"。确认提交？`,
+        confirmText: '确认',
+      })
+      if (!ok) return
+    }
+    setBusy(true)
+    const r = await submitDealFeedback(detail.selectedResponseId, outcome)
+    setBusy(false)
+    if (r.success) {
+      const counted = r.data?.counted
+      Taro.showToast({
+        title: outcome === DEAL_OUTCOME.confirmed ? (counted ? '已记录，成交 +1' : '已记录（本次未计分）') : '已记录',
+        icon: 'none',
+      })
+      await load()
+    } else {
+      Taro.showToast({ title: r.message || '提交失败', icon: 'none' })
+    }
   }
 
   /** 发布人：选定应答（确认弹窗→调用→刷新） */
   const doSelect = async (responseId: string, merchantName?: string | null) => {
     const ok = await showConfirmDialog({
       title: '选定这家应答',
-      content: `选定「${merchantName || '该商户'}」后本次寻货结束，双方互见联系方式，其余应答标记为未选中。确认选定？`,
+      content: `选定「${merchantName || '该商户'}」后本次寻货结束，你将获得该商户联系电话（对方看不到你的号码），其余应答标记为未选中。确认选定？`,
       confirmText: '确认选定',
     })
     if (!ok || busy) return
@@ -117,7 +144,7 @@ export default function SourcingDetailPage() {
     setBusy(false)
     if (r.success) {
       void vibrateSuccess()
-      Taro.showToast({ title: '已选定，联系方式已解锁', icon: 'success' })
+      Taro.showToast({ title: '已选定，可查看对方联系方式', icon: 'success' })
       await load()
     } else {
       Taro.showToast({ title: r.message || '选定失败', icon: 'none' })
@@ -248,14 +275,23 @@ export default function SourcingDetailPage() {
           </Text>
         </View>
 
-        {/* 发布人视角：解锁的被选商户联系方式 */}
+        {/* 发布人视角：被选商户联系方式 + 进入会话（v2.18.0 电话单向：只有需求方拿到商家号码） */}
         {detail.isPublisher && detail.selectedMerchantContact ? (
           <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ ...fs(13), color: t.textPrimary }}>已选定商户联系电话</Text>
               <Text style={{ ...fs(16), color: t.primary, fontWeight: '600', marginTop: 2 }}>{detail.selectedMerchantContact}</Text>
             </View>
-            {/* 改动说明：标题图标与拨打图标重复，删左侧标题图标；右侧改绿色圆形拨打按钮（动作感更明确） */}
+            {/* 改动说明（v2.18.0 会话入口）：电话之外补站内会话，便于留痕沟通 */}
+            <View
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, borderRadius: 18, backgroundColor: t.bgCard, marginLeft: 10 }}
+              onClick={() => {
+                const adopted = detail.responses?.find((x) => x.id === detail.selectedResponseId)
+                goChat(adopted?.merchantId)
+              }}
+            >
+              <Text style={{ ...fs(12), color: t.primary, fontWeight: '600' }}>会话</Text>
+            </View>
             <View
               style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.success, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 10 }}
               onClick={() => callContact(detail.selectedMerchantContact || '')}
@@ -265,19 +301,49 @@ export default function SourcingDetailPage() {
           </View>
         ) : null}
 
-        {/* 被选商户视角：解锁的发布人手机号 */}
-        {detail.myResponse?.status === RESPONSE_STATUS.adopted && detail.publisherContact ? (
+        {/* 发布人视角：成交回执（v2.18.0 撮合成交链：一键三选，谈成推商家卡级） */}
+        {detail.isPublisher && detail.canFeedback && detail.selectedResponseId ? (
+          <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
+            <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>这次合作谈成了吗？</Text>
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>
+              {detail.myFeedback
+                ? `已记录：${dealOutcomeText(detail.myFeedback.outcome)}${detail.myFeedback.counted ? '（已计成功撮合）' : ''}，可重新选择覆盖`
+                : '谈成会计一次该商户的成功撮合（帮靠谱商家升级）；没谈成按原因记下，不惩罚你'}
+            </Text>
+            <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+              <View
+                style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, borderRadius: 18, backgroundColor: detail.myFeedback?.outcome === DEAL_OUTCOME.confirmed ? t.primary : t.bgInput, marginRight: 10, marginBottom: 8 }}
+                onClick={() => { void doFeedback(DEAL_OUTCOME.confirmed) }}
+              >
+                <Text style={{ ...fs(13), color: detail.myFeedback?.outcome === DEAL_OUTCOME.confirmed ? '#FFFFFF' : t.textPrimary, fontWeight: '600' }}>谈成了</Text>
+              </View>
+              {DEAL_NEGATIVE_OUTCOMES.map((o) => (
+                <View
+                  key={o}
+                  style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, borderRadius: 18, backgroundColor: detail.myFeedback?.outcome === o ? t.textSecondary : t.bgInput, marginRight: 10, marginBottom: 8 }}
+                  onClick={() => { void doFeedback(o) }}
+                >
+                  <Text style={{ ...fs(13), color: detail.myFeedback?.outcome === o ? '#FFFFFF' : t.textSecondary }}>{dealOutcomeText(o)}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {/* 被选商户视角：v2.18.0 电话单向——看不到需求方号码，只提示"买家已获取你的联系方式"并给会话入口 */}
+        {detail.myResponse?.status === RESPONSE_STATUS.adopted ? (
           <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.primaryLight, borderRadius: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ ...fs(13), color: t.textPrimary }}>需求方联系电话</Text>
-              <Text style={{ ...fs(16), color: t.primary, fontWeight: '600', marginTop: 2 }}>{detail.publisherContact}</Text>
+              <Text style={{ ...fs(13), color: t.textPrimary }}>已选定你的应答</Text>
+              <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 2 }}>
+                {detail.contactUnlockedAt ? '买家已获取你的联系方式' : '买家可查看你的联系方式'}；出于保护买家，你无法看到对方号码，请用站内会话沟通
+              </Text>
             </View>
-            {/* 改动说明：与发布人视角卡同款——删左侧标题图标，右侧绿色圆形拨打按钮 */}
             <View
-              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.success, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 10 }}
-              onClick={() => { void confirmCallPublisher() }}
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, borderRadius: 18, backgroundColor: t.bgCard, marginLeft: 10 }}
+              onClick={() => goChat(currentMerchant?.merchantId)}
             >
-              <Icon name='phone' size={18} color='#FFFFFF' />
+              <Text style={{ ...fs(12), color: t.primary, fontWeight: '600' }}>会话</Text>
             </View>
           </View>
         ) : null}

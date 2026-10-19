@@ -117,7 +117,7 @@ export default function RulesPage() {
               { label: '成员上供', value: `赚币 ×${r.tricklePercent}%`, note: `成员获得审核/交易类轴承币时自动滴给在职店铺；签到登录等被动收益不参与；店铺每日限 ${r.trickleDailyCap}、每月限 ${r.trickleMonthlyCap}` },
               { label: '挂礼成交', value: '全额入账', note: '买家兑换礼品确认收货（或发货 7 天自动确认）后，货款全额结算进金库' },
               { label: '集体任务', value: `+${r.merchantTaskWeeklyTreasury}/周`, note: `如"本周新上架 5 款"达成奖励金库 ${r.merchantTaskWeeklyTreasury}（任务清单见商家主页）` },
-              { label: '商家升档礼', value: `+${r.merchantGradeBonusLv2}~+${r.merchantGradeBonusLv4}`, note: `商家等级升到 Lv2 认证 +${r.merchantGradeBonusLv2}、Lv3 口碑商家 +${r.merchantGradeBonusLv3}、Lv4 金牌 +${r.merchantGradeBonusLv4}，一次性入金库；每店每档终身一次，掉级后复升不重发` },
+              { label: '商家升档礼', value: `+${r.merchantGradeBonusLv2}~+${r.merchantGradeBonusLv4}`, note: `商家卡级升到铜卡 +${r.merchantGradeBonusLv2}、银卡 +${r.merchantGradeBonusLv3}、金卡 +${r.merchantGradeBonusLv4}，一次性入金库；每店每档终身一次，掉级后复升不重发` },
             ]} />
             <RuleSection t={t} fs={fs} title='怎么花' rows={[
               { label: '商品置顶卡', value: '原价支付', note: '在售商品在型号商家列表置顶 24/72 小时，管理员默认走金库' },

@@ -175,14 +175,29 @@ export interface MerchantGradeDetail {
   gradeDisplay: string
   isVerified: boolean
   onSaleCount: number
-  treasuryEarned: number
-  lv3OnSaleMin: number
-  lv4OnSaleMin: number
-  lv4TreasuryMin: number
+  /** v2.18.0 卡级重构：近窗口期内的计分成功撮合次数（金库已退出定级，仅保留展示于金库页） */
+  dealCount: number
+  /** 撮合计数窗口天数（默认 180） */
+  windowDays: number
+  /** 银/金卡共用前置：公域可见在售最低件数 */
+  onSaleMin: number
+  /** 银卡所需的窗口期成功撮合次数 */
+  silverDealMin: number
+  /** 金卡所需的窗口期成功撮合次数 */
+  goldDealMin: number
   bonusLv2: number
   bonusLv3: number
   bonusLv4: number
   claimedRanks: number[]
+  /** 距下一档还差什么（金卡为 null；未认证档 requiredOnSale/requiredDeals 为 0） */
+  nextTier?: {
+    grade: number
+    label: string
+    requiredOnSale: number
+    requiredDeals: number
+    metOnSale: boolean
+    metDeals: boolean
+  } | null
   graceUntil?: string | null
   labels: string[]
 }
