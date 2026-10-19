@@ -346,9 +346,17 @@ export interface PublishDemandResult {
   recipientMerchantCount?: number
 }
 
-/** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案；成功回读通知家数供反馈文案用） */
-export function publishDemand(body: PublishDemandBody) {
-  return opWrapData(() => request<PublishDemandResult>(API.SOURCING_DEMANDS, { method: 'POST', data: body }))
+/** 发布寻货（免费额度内直接成功；超限返回 NEED_POINTS 协议文案；成功回读通知家数供反馈文案用）。
+ *  改动说明（v1.7.40 发布幂等）：可传 idempotencyKey 走 Idempotency-Key 请求头——
+ *  同一 key 的重复提交（网络重试/连续点击/NEED_POINTS 二次确认）由服务端去重，不重复建单、不重复扣分 */
+export function publishDemand(body: PublishDemandBody, idempotencyKey?: string) {
+  const header = idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined
+  return opWrapData(() => request<PublishDemandResult>(API.SOURCING_DEMANDS, { method: 'POST', data: body, header }))
+}
+
+/** 生成发布幂等键（v1.7.40）：时间戳 + 两段随机，页面内稳定复用、发布成功后轮换，无需依赖 uuid 库 */
+export function genPublishIdempotencyKey(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 /** 转为公开招标（v1.8.0）：邀标单进行中时由发布人放开为公开（进大厅），免去取消重建 */

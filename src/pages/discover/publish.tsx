@@ -7,7 +7,7 @@
 //   有 bearingId 时拉在售认证商家清单供勾选（默认全选），从商家行/商家主页进入则只预勾该家
 // 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹轴承币确认框 → usePoints=true 重提交
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
@@ -19,7 +19,7 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PublishIdentitySheet from '../../components/PublishIdentitySheet'
 import { vibrateSuccess } from '../../utils/haptics'
 import { useMerchantStore } from '../../stores/merchant'
-import { publishDemand, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
+import { publishDemand, genPublishIdempotencyKey, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
 import { getAllBearingMerchants, type BearingMerchant } from '../../services/bearing'
 import { getObject, removeItem } from '../../utils/storage'
 
@@ -56,6 +56,9 @@ export default function PublishSourcingPage() {
   const fs = useFs()
   const [form, setForm] = useState<FormState>(EMPTY)
   const [submitting, setSubmitting] = useState(false)
+  // 发布幂等键（v1.7.40）：本次页面会话内稳定复用——连续点击与 NEED_POINTS 二次确认共用同一 key，
+  // 服务端据此去重（重放返回原单，不重复建单/扣分）；发布成功后轮换，避免把"再次发布"吞成幂等命中
+  const idemKeyRef = useRef<string>(genPublishIdempotencyKey())
   // 改动说明（v1.7.21 额度可见化）：额度聚合前置展示（额度条+按钮三态），
   // 拉取失败静默为 null——NEED_POINTS 撞墙协议仍是最终兜底，展示层不承重
   const [quota, setQuota] = useState<SourcingQuota | null>(null)
@@ -201,10 +204,12 @@ export default function PublishSourcingPage() {
       visibility: invited ? 1 : 0,
       invitedMerchantIds,
     }
-    const r = await publishDemand(body)
+    const r = await publishDemand(body, idemKeyRef.current)
     setSubmitting(false)
     if (r.success) {
       void vibrateSuccess()
+      // 发布成功即轮换幂等键（下次若仍在同一页面重新发布，应是新单而非幂等命中）
+      idemKeyRef.current = genPublishIdempotencyKey()
       // 改动说明（v1.8.0）：按发布方式与实际通知家数给差异化反馈——
       //   公开=已通知 N 家并进大厅（无匹配则只进大厅等应答）；邀标=只通知勾选的 N 家（不进大厅）
       const notified = r.data?.recipientMerchantCount ?? 0
