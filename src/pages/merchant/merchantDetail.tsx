@@ -23,7 +23,7 @@ import MediaImage from '../../components/MediaImage'
 // v2.1.0 成就子系统：商家勋章园（B2B 信任信号）
 import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
 // 改动说明（v2.13.2 配色统一）：等级徽章色统一走全局色带 getMerchantGradeBand
-import { getMerchantGradeBand, merchantGradeNameToRank } from '../../utils/level'
+import { getMerchantGradeBand, merchantGradeNameToRank, MERCHANT_GRADE_LABELS } from '../../utils/level'
 import './merchantDetail.scss'
 
 export default function MerchantDetailPage() {
@@ -33,6 +33,8 @@ export default function MerchantDetailPage() {
   const fs = useFs()
 
   const [detail, setDetail] = useState<MerchantDetail | null>(null)
+  // 改动说明（v1.7.42 双徽章并列）：卡级序数（认证是类型、卡级是等级，两者并列展示互不覆盖）
+  const merchantRank = detail ? merchantGradeNameToRank(detail.grade) : 0
   const [bearings, setBearings] = useState<MerchantBearing[]>([])
   // v2.1.0 成就子系统：商家勋章园数据（信任信号）
   const [mAch, setMAch] = useState<AchievementWall | null>(null)
@@ -131,18 +133,26 @@ export default function MerchantDetailPage() {
           <View className='md-hero-info'>
             <View className='md-name-row'>
               <Text className='md-name' style={{ ...fs(18), color: t.textPrimary }} numberOfLines={1}>{detail?.name || '—'}</Text>
-              {detail?.isVerified && (
-                // 改动说明（v1.7.11）：文案"入驻商家"是认证等级上线前的旧词已失真（入驻=已生效是另一回事），
-                //   统一为与商户页同款金色"已认证"徽标（主流：徽标在所有露出点一致）
-                // 改动说明（v2.5.0 商家经济 / v2.18.0 卡级重构）：徽章展示商家卡级中文名（注册商户/铜卡/银卡/金卡），
-                // 认证与否由独立徽章标识，不再混进等级名
-                // 改动说明（v2.13.2 配色统一）：原按枚举名内联三元（Gold/Premium/else）与全局色带分叉
-                //   （认证应紫却琥珀、口碑应蓝却紫、入驻应石板却琥珀），改用唯一权威 getMerchantGradeBand 按单调序数取色
-                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: getMerchantGradeBand(merchantGradeNameToRank(detail.grade)).bg, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              {/* 改动说明（v1.7.42 双徽章并列）：卡级徽章不再以"已认证"为展示门槛——
+                  认证是商家类型（独立徽章），卡级是经营等级（彩牌），两枚并列、互不覆盖。
+                  未认证商户只显示"未认证"徽章并引导认证（未认证不参与卡级阶梯） */}
+              {merchantRank >= 1 ? (
+                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: getMerchantGradeBand(merchantRank).bg, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Icon name="badge-check" size={11} color="#FFFFFF" />
-                  <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>{detail.gradeDisplay || '已认证'}</Text>
+                  <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>{detail?.gradeDisplay || MERCHANT_GRADE_LABELS[merchantRank]}</Text>
                 </View>
-              )}
+              ) : null}
+              {detail ? (
+                detail.isVerified ? (
+                  <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: t.primaryLight }}>
+                    <Text style={{ ...fs(10), color: t.primary, fontWeight: 'bold' }}>已认证</Text>
+                  </View>
+                ) : (
+                  <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: t.bgInput }}>
+                    <Text style={{ ...fs(10), color: t.textTertiary }}>未认证</Text>
+                  </View>
+                )
+              ) : null}
             </View>
             {detail?.companyName ? <Text className='md-sub' style={{ ...fs(13), color: t.textTertiary }} numberOfLines={1}>{detail.companyName}</Text> : null}
             {/* 改动说明：type 脏数据可能是 "0"/空，过滤掉避免眉部显示无意义的 "0" */}

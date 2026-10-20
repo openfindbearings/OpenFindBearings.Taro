@@ -6,7 +6,7 @@
 // v1.5.0 应答独立页：应答表单迁往 respond.tsx，本页只剩"我要应答/修改应答"跳入口与"取消应答"撤销。
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useState } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Input } from '@tarojs/components'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -18,7 +18,7 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 //   Android 微信 JSCore 无 Intl 会回落英文串，统一改走 utils/format
 import { formatDate } from '../../utils/format'
 // v2.12.0 等级玩法铭牌曝光：应答经办人段位彩牌色带
-import { getLevelBand } from '../../utils/level'
+import { getLevelBand, getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { vibrateSuccess } from '../../utils/haptics'
@@ -51,6 +51,9 @@ export default function SourcingDetailPage() {
   /** 加载失败/无权查看（v1.8.1）：邀标单对非受邀者返回 404，原实现静默失败致页面永远"加载中" */
   const [loadError, setLoadError] = useState(false)
   const [busy, setBusy] = useState(false)
+  // 改动说明（v1.7.42 回执补原因）：选中的负回执原因（点选后展开说明框，提交前可改）
+  const [fbDraft, setFbDraft] = useState<number | null>(null)
+  const [fbReason, setFbReason] = useState('')
   // 改动说明（v1.5.0 应答独立页）：应答表单整体迁往 pages/discover/respond.tsx，
   // 本页回归纯阅读/比价 + 应答/修改/撤销入口，不再持有应答编辑状态
 
@@ -104,9 +107,15 @@ export default function SourcingDetailPage() {
   /**
    * 发布人：提交成交回执（v2.18.0 撮合成交链）。
    * 谈成=计一次成功撮合（推商家升卡）；没谈成按原因记负信号；均只由需求方单方填写
+   * 改动说明（v1.7.42）：补"原因"入参——负回执可选说明，"其他情况"必填（否则该回执零信息）
    */
-  const doFeedback = async (outcome: number) => {
+  const doFeedback = async (outcome: number, reason?: string) => {
     if (busy || !detail.selectedResponseId) return
+    const text = (reason ?? '').trim()
+    if (outcome === DEAL_OUTCOME.other && !text) {
+      Taro.showToast({ title: '选“其他情况”请补充说明', icon: 'none' })
+      return
+    }
     if (outcome !== DEAL_OUTCOME.confirmed) {
       const name = dealOutcomeText(outcome)
       const ok = await showConfirmDialog({
@@ -117,14 +126,20 @@ export default function SourcingDetailPage() {
       if (!ok) return
     }
     setBusy(true)
-    const r = await submitDealFeedback(detail.selectedResponseId, outcome)
+    const r = await submitDealFeedback(detail.selectedResponseId, outcome, text || null)
     setBusy(false)
     if (r.success) {
       const counted = r.data?.counted
+      // 改动说明（v1.7.42 修 bug）：未计分原因取 note（原误用 message 恒空），如实告知为何没算
+      const note = r.data?.note
       Taro.showToast({
-        title: outcome === DEAL_OUTCOME.confirmed ? (counted ? '已记录，成交 +1' : '已记录（本次未计分）') : '已记录',
+        title: outcome === DEAL_OUTCOME.confirmed
+          ? (counted ? '已记录，成交 +1' : (note ? `已记录：${note}` : '已记录（本次未计分）'))
+          : '已记录',
         icon: 'none',
       })
+      setFbDraft(null)
+      setFbReason('')
       await load()
     } else {
       Taro.showToast({ title: r.message || '提交失败', icon: 'none' })
@@ -307,7 +322,7 @@ export default function SourcingDetailPage() {
             <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>这次合作谈成了吗？</Text>
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>
               {detail.myFeedback
-                ? `已记录：${dealOutcomeText(detail.myFeedback.outcome)}${detail.myFeedback.counted ? '（已计成功撮合）' : ''}，可重新选择覆盖`
+                ? `已记录：${dealOutcomeText(detail.myFeedback.outcome)}${detail.myFeedback.counted ? '（已计成功撮合）' : (detail.myFeedback.note ? `（未计分：${detail.myFeedback.note}）` : '（本次未计分）')}，可重新选择覆盖`
                 : '谈成会计一次该商户的成功撮合（帮靠谱商家升级）；没谈成按原因记下，不惩罚你'}
             </Text>
             <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
@@ -320,13 +335,42 @@ export default function SourcingDetailPage() {
               {DEAL_NEGATIVE_OUTCOMES.map((o) => (
                 <View
                   key={o}
-                  style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, borderRadius: 18, backgroundColor: detail.myFeedback?.outcome === o ? t.textSecondary : t.bgInput, marginRight: 10, marginBottom: 8 }}
-                  onClick={() => { void doFeedback(o) }}
+                  style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, borderRadius: 18, backgroundColor: (fbDraft ?? detail.myFeedback?.outcome) === o ? t.textSecondary : t.bgInput, marginRight: 10, marginBottom: 8 }}
+                  // 改动说明（v1.7.42）：负回执先展开原因框再提交，不再点一下立刻落库（避免误触且可填说明）
+                  onClick={() => { setFbDraft(o); setFbReason(o === detail.myFeedback?.outcome ? (detail.myFeedback?.reason ?? '') : '') }}
                 >
-                  <Text style={{ ...fs(13), color: detail.myFeedback?.outcome === o ? '#FFFFFF' : t.textSecondary }}>{dealOutcomeText(o)}</Text>
+                  <Text style={{ ...fs(13), color: (fbDraft ?? detail.myFeedback?.outcome) === o ? '#FFFFFF' : t.textSecondary }}>{dealOutcomeText(o)}</Text>
                 </View>
               ))}
             </View>
+            {/* 负回执说明（可选；选"其他情况"时必填）——提交按钮只在展开原因框时出现 */}
+            {fbDraft != null ? (
+              <View style={{ marginTop: 2 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 44, paddingLeft: 10, paddingRight: 10, backgroundColor: t.bgInput, borderRadius: 10 }}>
+                  <Input
+                    style={{ ...fs(13), flex: 1, color: t.textPrimary }}
+                    placeholder={fbDraft === DEAL_OUTCOME.other ? '请说明情况（必填）' : '补充说明（可空）'}
+                    placeholderTextColor={t.textTertiary}
+                    value={fbReason}
+                    onInput={(e) => setFbReason(e.detail.value)}
+                  />
+                </View>
+                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                  <View
+                    style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, borderRadius: 16, backgroundColor: t.bgInput, marginRight: 8 }}
+                    onClick={() => { setFbDraft(null); setFbReason('') }}
+                  >
+                    <Text style={{ ...fs(12), color: t.textSecondary }}>取消</Text>
+                  </View>
+                  <View
+                    style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 7, paddingBottom: 7, borderRadius: 16, backgroundColor: t.textSecondary }}
+                    onClick={() => { void doFeedback(fbDraft, fbReason) }}
+                  >
+                    <Text style={{ ...fs(12), color: '#FFFFFF', fontWeight: '600' }}>提交</Text>
+                  </View>
+                </View>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -372,6 +416,12 @@ export default function SourcingDetailPage() {
                   {r.isVerified && (
                     <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
                       <Text style={{ ...fs(10), color: t.primary }}>已认证</Text>
+                    </View>
+                  )}
+                  {/* 改动说明（v1.7.42 双徽章并列）：商家卡级彩牌与"已认证"并列（认证=类型、卡级=等级） */}
+                  {(r.merchantGrade ?? 0) >= 1 && (
+                    <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 6, backgroundColor: getMerchantGradeBand(r.merchantGrade).bg, marginRight: 6 }}>
+                      <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '600' }}>{r.merchantGradeDisplay || MERCHANT_GRADE_LABELS[r.merchantGrade ?? 0]}</Text>
                     </View>
                   )}
                   <Text style={{ ...fs(12), color: responseColor(r.status, t as unknown as Record<string, string>) }}>{responseStatusText(r.status)}</Text>
