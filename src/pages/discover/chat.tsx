@@ -29,6 +29,9 @@ export default function SourcingChatPage() {
   const [data, setData] = useState<SourcingMessages | null>(null)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
+  // 改动说明（v1.7.42 会话分页）：服务层早有 before 游标，页面此前只拉首批 30 条导致早期对话不可见
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   /** 滚动锚点（最后一条消息 id；RN/H5 均可就地滚到底部） */
   const [anchor, setAnchor] = useState('')
   const [scrollTop, setScrollTop] = useState(0)
@@ -45,6 +48,7 @@ export default function SourcingChatPage() {
     try {
       const d = await getConversationMessages(demandId, merchantId)
       setData(d)
+      setHasMore(d.hasMore)
       if (d.messages.length > 0) {
         setAnchor(`msg-${d.messages[d.messages.length - 1].id}`)
       }
@@ -52,6 +56,25 @@ export default function SourcingChatPage() {
       if ((d.conversationId ?? '') !== '') void markConversationRead(demandId, merchantId)
     } catch {
       setData(null)
+    }
+  }
+
+  /**
+   * 上翻历史：以当前最早一条的 createdAt 为 before 游标拉上一页并前插。
+   * 改动说明（v1.7.42）：拉取期间置 loadingMore 防重复点击；失败保留已有消息并提示重试
+   */
+  const loadEarlier = async () => {
+    if (!data || data.messages.length === 0 || loadingMore || !hasMore) return
+    setLoadingMore(true)
+    try {
+      const before = data.messages[0].createdAt
+      const r = await getConversationMessages(demandId, merchantId, before)
+      setHasMore(r.hasMore)
+      setData({ ...data, messages: [...r.messages, ...data.messages] })
+    } catch {
+      Taro.showToast({ title: '更早消息加载失败', icon: 'none' })
+    } finally {
+      setLoadingMore(false)
     }
   }
 
@@ -97,6 +120,12 @@ export default function SourcingChatPage() {
         ) : null}
 
         <ScrollView scrollY scrollIntoView={anchor} scrollTop={scrollTop} style={{ flex: 1, height: winH - 200, paddingLeft: 12, paddingRight: 12 }}>
+          {/* 上翻历史入口（v1.7.42）：仅还有更早消息时出现 */}
+          {hasMore ? (
+            <View style={{ paddingTop: 10, display: 'flex', alignItems: 'center' }} onClick={() => { void loadEarlier() }}>
+              <Text style={{ ...fs(12), color: t.primary }}>{loadingMore ? '加载中…' : '查看更早消息'}</Text>
+            </View>
+          ) : null}
           {data && data.messages.length === 0 ? (
             <View style={{ padding: 24, display: 'flex', alignItems: 'center' }}>
               <Text style={{ ...fs(13), color: t.textTertiary }}>还没有消息，先打个招呼说明你能供的型号与交期</Text>

@@ -24,6 +24,8 @@ import {
   type BearingDetail, type BearingMerchant, type Interchange
 } from '../../services/bearing'
 import MediaImage from '../../components/MediaImage'
+// 改动说明（v1.7.42 双徽章并列）：卡级彩牌配色/中文名唯一权威来源
+import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 import './bearingDetail.scss'
 
 /** 发布寻货预填 storage 键（轴承详情 → 发布页跨页传参，RN 兼容的异步存取对象） */
@@ -169,37 +171,52 @@ export default function BearingDetailPage() {
    * 未认证商家只展示、不导流（归"其他在售·仅供参考"后段）
    */
   const merchantRow = (m: BearingMerchant) => (
-    <View key={m.merchantId} className='bd-list-row' onClick={() => goMerchant(m.merchantId)}>
-      <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
-        <Icon name="store" size={18} color={t.primary} />
-      </View>
-      <View className='bd-list-main'>
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
-          {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
-          {m.isVerified ? (
-            <Text style={{ ...fs(10), color: t.primary, borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
-          ) : null}
-          {/* v2.3.0 商城置顶卡：置顶商家角标 */}
-          {m.isPinned ? (
-            <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
-          ) : null}
-          {m.saleState === 2 ? (
-            <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
-          ) : null}
+    <View key={m.merchantId} className='bd-list-row'>
+      {/*
+        修 bug（v1.7.42）：原结构是"整行可点 + 内部邀标按钮 e.stopPropagation()"，
+        RN 端 Taro 的点击事件由 PanResponder 派发、事件对象没有 stopPropagation，
+        点邀标即抛 "undefined is not a function" 崩溃。改为结构与事件都不嵌套：
+        左侧可点区域（头像 + 主体 + 箭头）与右侧邀标按钮为兄弟节点，无需阻止冒泡
+      */}
+      <View
+        style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}
+        onClick={() => goMerchant(m.merchantId)}
+      >
+        <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
+          <Icon name="store" size={18} color={t.primary} />
         </View>
-        {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{m.price}</Text> : null}
+        <View className='bd-list-main'>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
+            {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
+            {m.isVerified ? (
+              <Text style={{ ...fs(10), color: t.primary, borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
+            ) : null}
+            {/* 改动说明（v1.7.42 双徽章并列）：卡级彩牌与"已认证"并列（认证=类型、卡级=等级），互不覆盖 */}
+            {(m.grade ?? 0) >= 1 ? (
+              <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: getMerchantGradeBand(m.grade).bg, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.gradeDisplay || MERCHANT_GRADE_LABELS[m.grade ?? 0]}</Text>
+            ) : null}
+            {/* v2.3.0 商城置顶卡：置顶商家角标 */}
+            {m.isPinned ? (
+              <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
+            ) : null}
+            {m.saleState === 2 ? (
+              <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
+            ) : null}
+          </View>
+          {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{m.price}</Text> : null}
+        </View>
+        <Icon name="chevron_right" size={18} color={t.textTertiary} />
       </View>
       {/* 邀标（v1.8.0 公开招标/邀标，原"询价"）——仅认证商家开放（行动门）；非认证只展示不导流 */}
       {m.isVerified ? (
         <View
           style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
-          onClick={(e) => { e.stopPropagation(); handleInvite(m) }}
+          onClick={() => handleInvite(m)}
         >
           <Text style={{ ...fs(12), color: t.primary }}>邀标</Text>
         </View>
       ) : null}
-      <Icon name="chevron_right" size={18} color={t.textTertiary} />
     </View>
   )
 

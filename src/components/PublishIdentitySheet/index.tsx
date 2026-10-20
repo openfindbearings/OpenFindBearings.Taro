@@ -51,7 +51,9 @@ export default function PublishIdentitySheet({ visible, items, currentId, onPick
     >
       <View
         style={{ backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingLeft: 16, paddingRight: 16, paddingTop: 16, paddingBottom: 24, maxHeight: '70%', overflow: 'scroll' }}
-        onClick={(e) => e.stopPropagation()}
+        // 改动说明（v1.7.42 RN 崩溃修复）：RN 的合成事件没有 stopPropagation，
+        //   原 e.stopPropagation() 在 RN 端一碰弹层内部就抛 "undefined is not a function"；改可选调用
+        onClick={(e) => e?.stopPropagation?.()}
       >
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.textPrimary, textAlign: 'center', marginBottom: 8 }}>选择发布身份</Text>
         {rows.map((m) => {

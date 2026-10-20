@@ -109,13 +109,17 @@ export default function PublishSourcingPage() {
   /**
    * 拉取该轴承的在售认证商家清单，供邀标勾选（只列可信来源：已认证商家）。
    * 改动说明（v1.8.1）：逐页拉全量（原只取第一页，部分勾选会静默丢掉未展示的商家）；
-   *   排除本商户（无需给自己发邀约）；失败与"确实无人在售"分开——失败给重试入口且不禁用邀标
+   *   失败与"确实无人在售"分开——失败给重试入口且不禁用邀标
+   * 改动说明（v1.7.42 修 bug）：不再在客户端排除"当前商户"——发布身份是点发布时才在
+   *   身份弹层里选定的，此处无从得知最终以谁名义发布；先排除会导致"该型号只有自己在售"
+   *   时清单被清空、邀标被误禁用（提示还写成"没有认证商家在售"，与事实相反）。
+   *   自身排除交由服务端按实际发布商户身份处理（SourcingMatcher 的 excludeMerchantId）
    */
   const loadInviteList = (bearingId: string, preselect: string[] | null) => {
     setInviteError(false)
     getAllBearingMerchants(bearingId)
       .then((all) => {
-        const list = all.filter((m) => m.isVerified && m.merchantId !== currentMerchantId)
+        const list = all.filter((m) => m.isVerified)
         setInviteList(list)
         // preselect 为 null=默认全选；非 null=只勾指定的那些（保持传参顺序，避免下拉顺序漂移）
         setChecked(preselect === null ? list.map((m) => m.merchantId) : list.filter((m) => preselect.includes(m.merchantId)).map((m) => m.merchantId))
@@ -213,8 +217,10 @@ export default function PublishSourcingPage() {
       // 改动说明（v1.8.0）：按发布方式与实际通知家数给差异化反馈——
       //   公开=已通知 N 家并进大厅（无匹配则只进大厅等应答）；邀标=只通知勾选的 N 家（不进大厅）
       const notified = r.data?.recipientMerchantCount ?? 0
+      // 改动说明（v1.7.42）：邀标 0 家不再笼统报"已发布邀标"——否则用户以为邀到了实际没人收到
+      //   （典型成因：清单里只勾了"自己名下商户"，服务端按发布身份排除自身后收件人为空）
       const title = invited
-        ? (notified > 0 ? `已邀标 ${notified} 家认证商家` : '已发布邀标')
+        ? (notified > 0 ? `已邀标 ${notified} 家认证商家` : '已发布，但无商家可通知（请检查勾选）')
         : (notified > 0 ? `已通知 ${notified} 家认证商家，并进入大厅` : '已进入寻货大厅')
       Taro.showToast({ title, icon: 'none', duration: 1800 })
       setTimeout(() => Taro.navigateBack(), 1000)
