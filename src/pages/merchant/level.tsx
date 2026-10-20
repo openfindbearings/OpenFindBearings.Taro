@@ -240,7 +240,7 @@ export default function MerchantLevelPage() {
             </View>
           ))
         )}
-        <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>以上加成对本店全体在职成员自动生效；掉级先进保级期，只停权益不罚币</Text>
+        <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>以上加成发给成员本人（个人轴承币与每日免费额度），不进入商家金；掉级先进保级期，只停权益不罚币</Text>
       </View>
 
       {/* 商家金：等级权益的主要载体，把"加"（升档礼/任务）与"减"（置顶兑换）放在同一张卡 */}
