@@ -138,7 +138,7 @@ export default function MerchantHomePage() {
     { label: '在售商品', value: `${stats.onSale}`, unit: '件' },
     { label: '在职成员', value: `${stats.staff}`, unit: '人' },
     { label: '商家金库', value: isAdmin ? `${treasury?.balance ?? 0}` : '—', unit: isAdmin ? '商家金' : '' },
-    { label: '商家卡级', value: buff && buff.rank > 0 ? (MERCHANT_GRADE_LABELS[buff.rank] ?? `Lv${buff.rank}`) : '未定级', unit: '' },
+    { label: '商家牌级', value: buff && buff.rank > 0 ? (MERCHANT_GRADE_LABELS[buff.rank] ?? `Lv${buff.rank}`) : '未定级', unit: '' },
   ]
 
   // 待办事项（有则前置，点击直达处理入口）

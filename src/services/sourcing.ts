@@ -57,7 +57,7 @@ export interface SourcingResponseDetail {
   /** v2.12.0 等级玩法铭牌曝光：经办人段位（号+名，发布人比价信任信号） */
   responderLevel?: number
   responderLevelName?: string | null
-  /** v1.7.42 双徽章并列：商家卡级（1注册商户/2铜卡/3银卡/4金卡）与展示名，与"已认证"并列 */
+  /** v1.7.42 双徽章并列：商家牌级（1普通/2铜牌/3银牌/4金牌）与展示名，与"已认证"并列 */
   merchantGrade?: number
   merchantGradeDisplay?: string | null
 }
@@ -117,7 +117,7 @@ export interface SourcingMyFeedback {
   outcome: number
   reason?: string | null
   at?: string | null
-  /** 是否已计入商家卡级（自关联/重复回执/资格不足/异常检测未通过为 false） */
+  /** 是否已计入商家牌级（自关联/重复回执/资格不足/异常检测未通过为 false） */
   counted: boolean
   /** 改动说明（v1.7.42）：未计分原因（后端留痕），展示给需求方解释"为什么没算" */
   note?: string | null
@@ -442,14 +442,14 @@ export function dealOutcomeText(outcome: number): string {
 /** 负反馈原因三选（谈成不计原因） */
 export const DEAL_NEGATIVE_OUTCOMES = [DEAL_OUTCOME.noStock, DEAL_OUTCOME.priceRaise, DEAL_OUTCOME.delayed, DEAL_OUTCOME.other]
 
-/** 成交回执提交结果：counted=是否计入商家卡级，note=未计入原因（反刷留痕，如"疑似关联方"） */
+/** 成交回执提交结果：counted=是否计入商家牌级，note=未计入原因（反刷留痕，如"疑似关联方"） */
 export interface DealFeedbackResult {
   counted: boolean
   // 改动说明（v1.7.42 修 bug）：字段名对齐后端（原写 message，BFF 实际下发 note，导致原因恒空）
   note?: string | null
 }
 
-/** 提交/更新成交回执（v2.18.0：需求方对被选定合作一键回填洽谈结果，影响商家卡级；重复提交=覆盖更新） */
+/** 提交/更新成交回执（v2.18.0：需求方对被选定合作一键回填洽谈结果，影响商家牌级；重复提交=覆盖更新） */
 export function submitDealFeedback(responseId: string, outcome: number, reason?: string | null) {
   return opWrapData(() => request<DealFeedbackResult>(API.SOURCING_RESPONSE_FEEDBACK(responseId), {
     method: 'POST',

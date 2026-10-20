@@ -3,6 +3,8 @@
 // 代码与接口仍用 points 内部口径，仅展示层改名。
 // 改动说明（v2.17.0 规则数据源）：页面数值原全部硬编码、与后端配置易漂移，改为挂载时拉取
 // /mobile/points/rules 后渲染；接口失败保持内置默认值（与后端默认一致），页面照常可用。
+// 改动说明（v2.19.0 等级规则）：新增 ?kind=grade，数据取公开端点 /mobile/points/merchant-grade/rules，
+// 阈值随 Admin 调整实时变化；接口失败回退内置默认值。
 // RN 约束：仅 flex、无 fixed、Text 包裹、数值 lineHeight。
 import { useEffect, useState } from 'react'
 import { View, Text} from '@tarojs/components'
@@ -12,6 +14,7 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { getPointRules, type PointRules } from '../../services/pointRules'
+import { getMerchantGradeRules, type MerchantGradeRules } from '../../services/points'
 
 definePageConfig({ disableScroll: true })
 
@@ -57,6 +60,21 @@ const DEFAULT_RULES: PointRules = {
   merchantTaskMemberMax: 50,
 }
 
+/** 等级规则默认值（与 API SystemConfig 默认一致；接口失败/缺字段时回退，保证页面不变形） */
+const DEFAULT_GRADE_RULES: MerchantGradeRules = {
+  periodDays: 180,
+  graceDays: 15,
+  onSaleMin: 5,
+  silverDealMin: 1,
+  goldDealMin: 3,
+  tiers: [
+    { rank: 1, name: '普通', requiredOnSale: 0, requiredDeals: 0, upBonus: 0, note: '未认证或在售不足；无等级权益' },
+    { rank: 2, name: '铜牌', requiredOnSale: 5, requiredDeals: 0, upBonus: 50, note: '完成平台认证且在售达标' },
+    { rank: 3, name: '银牌', requiredOnSale: 5, requiredDeals: 1, upBonus: 150, note: '在铜牌基础上，本期成功撮合达标' },
+    { rank: 4, name: '金牌', requiredOnSale: 5, requiredDeals: 3, upBonus: 300, note: '在铜牌基础上，本期成功撮合更高次数' },
+  ],
+}
+
 /** 规则小节：标题 + 行列表（行=左文案右数值，value 可空） */
 function RuleSection({ title, rows, t, fs }: {
   title: string
@@ -79,13 +97,15 @@ function RuleSection({ title, rows, t, fs }: {
   )
 }
 
-/** 规则页（轴承币 / 商家金双内容，数值来自后端规则数据源） */
+/** 规则页（轴承币 / 商家金 / 商家牌级三内容，数值来自后端规则数据源） */
 export default function RulesPage() {
   const t = useTheme()
   const fs = useFs()
   const router = useRouter()
+  const isGrade = router.params.kind === 'grade'
   const isGold = router.params.kind === 'gold'
   const [rules, setRules] = useState<PointRules>(DEFAULT_RULES)
+  const [gradeRules, setGradeRules] = useState<MerchantGradeRules>(DEFAULT_GRADE_RULES)
 
   // 挂载拉取规则数据源：成功后合并到默认值（缺字段回退默认），失败静默保持默认
   useEffect(() => {
@@ -96,6 +116,18 @@ export default function RulesPage() {
     return () => { alive = false }
   }, [])
 
+  // 等级规则单独取公开端点（阈值来自 SystemConfig，Admin 调整后页面自动跟随）
+  useEffect(() => {
+    if (!isGrade) return
+    let alive = true
+    getMerchantGradeRules()
+      .then((data) => {
+        if (alive && data) setGradeRules({ ...DEFAULT_GRADE_RULES, ...data, tiers: data.tiers?.length ? data.tiers : DEFAULT_GRADE_RULES.tiers })
+      })
+      .catch(() => { /* 接口失败保持默认 */ })
+    return () => { alive = false }
+  }, [isGrade])
+
   const r = rules
   // 签到阶梯：接口可能返回空数组，稳妥回退默认阶梯后再取区间与文案
   const ladder = r.checkinLadder && r.checkinLadder.length > 0 ? r.checkinLadder : DEFAULT_RULES.checkinLadder
@@ -104,9 +136,42 @@ export default function RulesPage() {
   const ladderMax = Math.max(...ladder)
 
   return (
-    <PageLayout nav={<NavBar title={isGold ? '商家金规则' : '轴承币规则'} showBack />}>
+    <PageLayout nav={<NavBar title={isGrade ? '等级规则' : isGold ? '商家金规则' : '轴承币规则'} showBack />}>
       <View>
-        {isGold ? (
+        {isGrade ? (
+          <>
+            <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
+              <Text style={{ ...fs(13), color: t.textTertiary }}>
+                商家牌级看两件事：公域在售的货，和买家选定的真实成交。带"未认证"的店铺统一显示为普通；牌级一期 {gradeRules.periodDays} 天，到期按本期成交续期或降档。
+              </Text>
+            </View>
+            <RuleSection t={t} fs={fs} title='四档要求' rows={gradeRules.tiers.map((tier) => ({
+              label: tier.name,
+              value: tier.rank === 1 ? '无门槛' : `在售 ≥ ${tier.requiredOnSale} 件${tier.requiredDeals > 0 ? ` · 成交 ≥ ${tier.requiredDeals} 次` : ' · 无成交要求'}`,
+              note: tier.rank === 2
+                ? `需完成平台证照认证；首次达到送升档礼 +${tier.upBonus} 商家金`
+                : tier.rank > 2
+                  ? `认证 + 在售 + 本期成功撮合同时达标；升档礼 +${tier.upBonus} 商家金`
+                  : tier.note,
+            }))} />
+            <RuleSection t={t} fs={fs} title='有效期与降级' rows={[
+              { label: '一期时长', value: `${gradeRules.periodDays} 天`, note: '升级或续期即重发一整期，从原到期日往后顺延，不因巡检延迟漂移' },
+              { label: '期内升级', value: '立即生效', note: `本期成交达到下一档要求（银 ≥${gradeRules.silverDealMin}、金 ≥${gradeRules.goldDealMin} 次）且认证、在售达标，立即升级并重发一期` },
+              { label: '到期续期', value: '按本期成交', note: '期末按本期成功撮合数保留能支撑的牌级；零成交降至铜牌并续一期' },
+              { label: '在售不足', value: `${gradeRules.graceDays} 天保级`, note: '在售跌破门槛先进保级期，期间牌级与权益不变；连续不足超过保级期直接降普通，不等期末' },
+              { label: '不参与定级', note: '商家金余额、累计成交、登录活跃度都不参与；只看本期成交与当前在售，指标可衰减' },
+            ]} />
+            <RuleSection t={t} fs={fs} title='升档礼' rows={[
+              { label: '发放方式', value: '每档终身一次', note: '首次升到铜/银/金牌时发放商家金，直接入店铺金库；掉级后复升不重发' },
+              { label: '与等级关系', value: '单向发放', note: '商家金只作奖励与消费，不再回流定级，避免"钱买等级"' },
+            ]} />
+            <RuleSection t={t} fs={fs} title='边界' rows={[
+              { label: '不能买等级', note: '平台不售卖牌级、不提供保级卡；等级只能靠认证、在售与真实成交获得' },
+              { label: '成交口径', value: '买家确认', note: '只有寻货发布方回执确认谈成才计一次；商家自导自演会被风控排除' },
+              { label: '认证是类型', note: '认证是独立徽章，不等于牌级；未认证不论在售多少都显示普通' },
+            ]} />
+          </>
+        ) : isGold ? (
           <>
             <View style={{ marginLeft: 12, marginRight: 12, marginTop: 14 }}>
               <Text style={{ ...fs(13), color: t.textTertiary }}>
@@ -117,7 +182,7 @@ export default function RulesPage() {
               { label: '成员上供', value: `赚币 ×${r.tricklePercent}%`, note: `成员获得审核/交易类轴承币时自动滴给在职店铺；签到登录等被动收益不参与；店铺每日限 ${r.trickleDailyCap}、每月限 ${r.trickleMonthlyCap}` },
               { label: '挂礼成交', value: '全额入账', note: '买家兑换礼品确认收货（或发货 7 天自动确认）后，货款全额结算进金库' },
               { label: '集体任务', value: `+${r.merchantTaskWeeklyTreasury}/周`, note: `如"本周新上架 5 款"达成奖励金库 ${r.merchantTaskWeeklyTreasury}（任务清单见商家主页）` },
-              { label: '商家升档礼', value: `+${r.merchantGradeBonusLv2}~+${r.merchantGradeBonusLv4}`, note: `商家卡级升到铜卡 +${r.merchantGradeBonusLv2}、银卡 +${r.merchantGradeBonusLv3}、金卡 +${r.merchantGradeBonusLv4}，一次性入金库；每店每档终身一次，掉级后复升不重发` },
+              { label: '商家升档礼', value: `+${r.merchantGradeBonusLv2}~+${r.merchantGradeBonusLv4}`, note: `商家牌级升到铜牌 +${r.merchantGradeBonusLv2}、银牌 +${r.merchantGradeBonusLv3}、金牌 +${r.merchantGradeBonusLv4}，一次性入金库；每店每档终身一次，掉级后复升不重发` },
             ]} />
             <RuleSection t={t} fs={fs} title='怎么花' rows={[
               { label: '商品置顶卡', value: '原价支付', note: '在售商品在型号商家列表置顶 24/72 小时，管理员默认走金库' },
@@ -130,7 +195,7 @@ export default function RulesPage() {
             <RuleSection t={t} fs={fs} title='红线' rows={[
               { label: '不可提现 / 折现 / 转让', note: '平台无现金结算，商家金只能在平台内使用' },
               { label: '成员不能支取金库', value: '仅管理员', note: '防止店铺资金被个人掏空；多管理员共管' },
-              { label: '掉级有缓冲', value: `${r.merchantGradeGraceDays} 天`, note: '在售跌破阈值先进保级期（维持原等级与成员 buff），期内补回即保住；到期仍不达标才降档，已发升档礼不追缴' },
+              { label: '掉级有缓冲', value: `${r.merchantGradeGraceDays} 天`, note: '在售跌破阈值先进保级期（维持原牌级与成员 buff），期内补回即保住；到期仍不达标才降档，已发升档礼不追缴' },
               { label: '闭店清空', note: '店铺退出经营时金库余额作废燃烧，不折算给任何个人' },
             ]} />
           </>

@@ -24,7 +24,7 @@ import {
   type BearingDetail, type BearingMerchant, type Interchange
 } from '../../services/bearing'
 import MediaImage from '../../components/MediaImage'
-// 改动说明（v1.7.42 双徽章并列）：卡级彩牌配色/中文名唯一权威来源
+// 改动说明（v1.7.42 双徽章并列）：牌级彩牌配色/中文名唯一权威来源
 import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 import './bearingDetail.scss'
 
@@ -192,7 +192,7 @@ export default function BearingDetailPage() {
             {m.isVerified ? (
               <Text style={{ ...fs(10), color: t.primary, borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
             ) : null}
-            {/* 改动说明（v1.7.42 双徽章并列）：卡级彩牌与"已认证"并列（认证=类型、卡级=等级），互不覆盖 */}
+            {/* 改动说明（v1.7.42 双徽章并列）：牌级彩牌与"已认证"并列（认证=类型、牌级=等级），互不覆盖 */}
             {(m.grade ?? 0) >= 1 ? (
               <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: getMerchantGradeBand(m.grade).bg, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.gradeDisplay || MERCHANT_GRADE_LABELS[m.grade ?? 0]}</Text>
             ) : null}

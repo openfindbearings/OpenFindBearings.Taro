@@ -53,7 +53,7 @@ export default function MerchantTreasuryPage() {
           <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(12), color: t.textTertiary }}>商家金库</Text>
-              {/* 卡级徽章（注册/铜卡/银卡/金卡——buff 与经营水平的可视化；v2.18.0 改卡级口径；金库不再参与定级，仅本页展示） */}
+              {/* 牌级徽章（注册/铜牌/银牌/金牌——buff 与经营水平的可视化；v2.18.0 改牌级口径；金库不再参与定级，仅本页展示） */}
               {treasury?.gradeDisplay ? (
                 <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: getMerchantGradeBand(merchantGradeToRank(treasury.grade)).bg, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, marginLeft: 8 }}>{treasury.gradeDisplay}</Text>
               ) : null}
