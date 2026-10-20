@@ -58,9 +58,9 @@ export interface BearingMerchant {
   pinnedUntil?: string | null
   /** v1.6.0 数据可信联动：商家是否已认证（询价行动门只对认证商家开放） */
   isVerified?: boolean
-  /** v1.7.42 双徽章并列：商家卡级枚举值（1注册商户/2铜卡/3银卡/4金卡），与认证独立 */
+  /** v1.7.42 双徽章并列：商家牌级枚举值（1普通/2铜牌/3银牌/4金牌），与认证独立 */
   grade?: number
-  /** v1.7.42：商家卡级展示名（注册商户/铜卡/银卡/金卡） */
+  /** v1.7.42：商家牌级展示名（普通/铜牌/银牌/金牌） */
   gradeDisplay?: string | null
 }
 

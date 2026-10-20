@@ -2,7 +2,7 @@
 // 可见性分级（防报价泄露）：发布人见全部应答明细可比价；商户只见自己的应答；
 // 匿名/他人只见应答数。
 // 改动说明（v2.18.0 电话单向 + 成交回执）：选定后仅需求方获得商家联系电话（商家看不到需求方号码，
-// 双方沟通走站内会话 pages/discover/chat）；需求方可对被选定合作回填"是否谈成"（影响商家卡级）。
+// 双方沟通走站内会话 pages/discover/chat）；需求方可对被选定合作回填"是否谈成"（影响商家牌级）。
 // v1.5.0 应答独立页：应答表单迁往 respond.tsx，本页只剩"我要应答/修改应答"跳入口与"取消应答"撤销。
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useState } from 'react'
@@ -316,7 +316,7 @@ export default function SourcingDetailPage() {
           </View>
         ) : null}
 
-        {/* 发布人视角：成交回执（v2.18.0 撮合成交链：一键三选，谈成推商家卡级） */}
+        {/* 发布人视角：成交回执（v2.18.0 撮合成交链：一键三选，谈成推商家牌级） */}
         {detail.isPublisher && detail.canFeedback && detail.selectedResponseId ? (
           <View style={{ marginLeft: 12, marginRight: 12, marginBottom: 8, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
             <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>这次合作谈成了吗？</Text>
@@ -418,7 +418,7 @@ export default function SourcingDetailPage() {
                       <Text style={{ ...fs(10), color: t.primary }}>已认证</Text>
                     </View>
                   )}
-                  {/* 改动说明（v1.7.42 双徽章并列）：商家卡级彩牌与"已认证"并列（认证=类型、卡级=等级） */}
+                  {/* 改动说明（v1.7.42 双徽章并列）：商家牌级彩牌与"已认证"并列（认证=类型、牌级=等级） */}
                   {(r.merchantGrade ?? 0) >= 1 && (
                     <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 6, backgroundColor: getMerchantGradeBand(r.merchantGrade).bg, marginRight: 6 }}>
                       <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '600' }}>{r.merchantGradeDisplay || MERCHANT_GRADE_LABELS[r.merchantGrade ?? 0]}</Text>

@@ -33,7 +33,7 @@ export default function MerchantDetailPage() {
   const fs = useFs()
 
   const [detail, setDetail] = useState<MerchantDetail | null>(null)
-  // 改动说明（v1.7.42 双徽章并列）：卡级序数（认证是类型、卡级是等级，两者并列展示互不覆盖）
+  // 改动说明（v1.7.42 双徽章并列）：牌级序数（认证是类型、牌级是等级，两者并列展示互不覆盖）
   const merchantRank = detail ? merchantGradeNameToRank(detail.grade) : 0
   const [bearings, setBearings] = useState<MerchantBearing[]>([])
   // v2.1.0 成就子系统：商家勋章园数据（信任信号）
@@ -133,9 +133,9 @@ export default function MerchantDetailPage() {
           <View className='md-hero-info'>
             <View className='md-name-row'>
               <Text className='md-name' style={{ ...fs(18), color: t.textPrimary }} numberOfLines={1}>{detail?.name || '—'}</Text>
-              {/* 改动说明（v1.7.42 双徽章并列）：卡级徽章不再以"已认证"为展示门槛——
-                  认证是商家类型（独立徽章），卡级是经营等级（彩牌），两枚并列、互不覆盖。
-                  未认证商户只显示"未认证"徽章并引导认证（未认证不参与卡级阶梯） */}
+              {/* 改动说明（v1.7.42 双徽章并列）：牌级徽章不再以"已认证"为展示门槛——
+                  认证是商家类型（独立徽章），牌级是经营等级（彩牌），两枚并列、互不覆盖。
+                  未认证商户只显示"未认证"徽章并引导认证（未认证不参与牌级阶梯） */}
               {merchantRank >= 1 ? (
                 <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: getMerchantGradeBand(merchantRank).bg, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Icon name="badge-check" size={11} color="#FFFFFF" />

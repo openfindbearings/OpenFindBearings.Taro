@@ -29,7 +29,7 @@ export interface TreasuryAccount {
   balance: number
   totalEarned: number
   totalSpent: number
-  /** v2.5.0 商家卡级（1注册商户/2铜卡/3银卡/4金卡，单调；认证由 isVerified 独立表达） */
+  /** v2.5.0 商家牌级（1普通/2铜牌/3银牌/4金牌，单调；认证由 isVerified 独立表达） */
   grade?: number
   gradeDisplay?: string | null
 }

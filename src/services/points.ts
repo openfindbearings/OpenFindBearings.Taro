@@ -166,7 +166,9 @@ export async function getPointLadder(): Promise<PointLadder | null> {
   }
 }
 
-/** 商家等级详情（v2.13.0 商家等级页；对齐 BFF MerchantGradeResponse，在职成员可见） */
+/** 商家等级详情（v2.13.0 商家等级页；对齐 BFF MerchantGradeResponse，在职成员可见）
+ *  改动说明（v2.19.0 有效期制）：windowDays 改为 periodDays（一期天数），
+ *  新增本期成交要求/有效期起止/到期降档预告，替代原"滚动窗口"口径 */
 export interface MerchantGradeDetail {
   merchantId: string
   merchantName?: string | null
@@ -175,21 +177,28 @@ export interface MerchantGradeDetail {
   gradeDisplay: string
   isVerified: boolean
   onSaleCount: number
-  /** v2.18.0 卡级重构：近窗口期内的计分成功撮合次数（金库已退出定级，仅保留展示于金库页） */
+  /** v2.18.0 牌级重构：本有效期内的计分成功撮合次数（金库已退出定级，仅保留展示于金库页） */
   dealCount: number
-  /** 撮合计数窗口天数（默认 180） */
-  windowDays: number
-  /** 银/金卡共用前置：公域可见在售最低件数 */
+  /** 保住当前牌级所需的本期成交次数（普通/铜牌为 0） */
+  requiredDeals: number
+  /** 一期天数（默认 180） */
+  periodDays: number
+  /** 在售不足保级天数（默认 15，后台可调） */
+  graceDays: number
+  /** 本期起止（UTC ISO；普通档为空） */
+  periodStartAt?: string | null
+  periodEndAt?: string | null
+  /** 银/铜牌共用前置：公域可见在售最低件数 */
   onSaleMin: number
-  /** 银卡所需的窗口期成功撮合次数 */
+  /** 银牌所需的本期成功撮合次数 */
   silverDealMin: number
-  /** 金卡所需的窗口期成功撮合次数 */
+  /** 金牌所需的本期成功撮合次数 */
   goldDealMin: number
   bonusLv2: number
   bonusLv3: number
   bonusLv4: number
   claimedRanks: number[]
-  /** 距下一档还差什么（金卡为 null；未认证档 requiredOnSale/requiredDeals 为 0） */
+  /** 距下一档还差什么（金牌为 null；普通档 requiredOnSale/requiredDeals 为 0） */
   nextTier?: {
     grade: number
     label: string
@@ -198,14 +207,42 @@ export interface MerchantGradeDetail {
     metOnSale: boolean
     metDeals: boolean
   } | null
+  /** 到期未达标本期成交时降到哪一档（1 普通 / 2 铜牌 / 3 银牌） */
+  downgradeTo?: number | null
   graceUntil?: string | null
   labels: string[]
+}
+
+/** 商家牌级规则（v2.19.0 有效期制；对齐 BFF MerchantGradeRulesResponse，匿名可读） */
+export interface MerchantGradeRules {
+  periodDays: number
+  graceDays: number
+  onSaleMin: number
+  silverDealMin: number
+  goldDealMin: number
+  tiers: Array<{
+    rank: number
+    name: string
+    requiredOnSale: number
+    requiredDeals: number
+    upBonus: number
+    note: string
+  }>
 }
 
 /** 商家等级详情（失败返回 null，调用方兜底） */
 export async function getMerchantGrade(merchantId: string): Promise<MerchantGradeDetail | null> {
   try {
     return await request<MerchantGradeDetail>(`${API.POINTS_MERCHANT_GRADE}?merchantId=${merchantId}`)
+  } catch {
+    return null
+  }
+}
+
+/** 商家牌级规则（失败返回 null，规则页回退内置默认值） */
+export async function getMerchantGradeRules(): Promise<MerchantGradeRules | null> {
+  try {
+    return await request<MerchantGradeRules>(`${API.POINTS_MERCHANT_GRADE}/rules`)
   } catch {
     return null
   }
