@@ -113,13 +113,16 @@ export default function PublishSourcingPage() {
    * 改动说明（v1.7.42 修 bug）：不再在客户端排除"当前商户"——发布身份是点发布时才在
    *   身份弹层里选定的，此处无从得知最终以谁名义发布；先排除会导致"该型号只有自己在售"
    *   时清单被清空、邀请被误禁用（提示还写成"没有认证商家在售"，与事实相反）。
-   *   自身排除交由服务端按实际发布商户身份处理（SourcingMatcher 的 excludeMerchantId）
+   * 改动说明（v1.7.44 自交易封堵）：改为排除"我在职的全部商户"（一人可开多家），
+   *   自家店铺不出现在邀请候选里；服务端另有同口径排除与应答守卫兜底，前端过滤只为少一次无效勾选。
    */
   const loadInviteList = (bearingId: string, preselect: string[] | null) => {
     setInviteError(false)
     getAllBearingMerchants(bearingId)
       .then((all) => {
-        const list = all.filter((m) => m.isVerified)
+        // 改动说明（v1.7.44）：以商户状态中的数据为准（点发布时身份弹层也是从这里取），避免两处口径不一
+        const myIds = new Set(useMerchantStore.getState().merchants.map((m) => m.merchantId))
+        const list = all.filter((m) => m.isVerified && !myIds.has(m.merchantId))
         setInviteList(list)
         // preselect 为 null=默认全选；非 null=只勾指定的那些（保持传参顺序，避免下拉顺序漂移）
         setChecked(preselect === null ? list.map((m) => m.merchantId) : list.filter((m) => preselect.includes(m.merchantId)).map((m) => m.merchantId))
@@ -371,7 +374,7 @@ export default function PublishSourcingPage() {
               </Text>
             ) : inviteList.length === 0 ? (
               <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
-                当前没有认证商家在售该型号，无法邀请，请改为公开
+                当前没有可邀请的在售认证商家（自己的店铺不能邀请），请改为公开
               </Text>
             ) : (
               <View style={{ marginTop: 8 }}>
