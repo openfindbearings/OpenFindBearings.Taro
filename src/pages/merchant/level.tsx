@@ -84,7 +84,7 @@ export default function MerchantLevelPage() {
   const gradeIcon = MERCHANT_GRADE_ICONS[detail.rank] || 'user'
   const isMax = detail.rank >= 4
   // 保级剩余天数（graceUntil 为 UTC ISO；仅"在售不足"会挂这个钟）
-  const graceDays = detail.graceUntil
+  const graceLeft = detail.graceUntil
     ? Math.max(0, Math.ceil((new Date(detail.graceUntil).getTime() - Date.now()) / 86400000))
     : 0
   // 距下一档（后端只回"下一档缺什么"，前端只渲染，不自推阈值组合）
@@ -135,30 +135,36 @@ export default function MerchantLevelPage() {
               }}>{detail.isVerified ? '已认证' : '未认证'}</Text>
             </View>
             <Text style={{ ...fs(12), color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>{detail.merchantName}</Text>
-            {/* 改动说明（v2.19.0）：到期日直接印在卡面；普通档无有效期时提示认证后开启 */}
+            {/* 改动说明（v2.19.0）：到期日直接印在卡面；无有效期时说明起期条件（认证 + 在售达标） */}
             <Text style={{ ...fs(12), color: 'rgba(255,255,255,0.9)', marginTop: 8 }}>
-              {periodEnd ? `有效期至 ${periodEnd}` : '认证通过后开启 180 天有效期'}
+              {periodEnd ? `有效期至 ${periodEnd}` : `认证且在售 ≥ ${detail.onSaleMin} 件后开启 ${detail.periodDays} 天有效期`}
             </Text>
           </View>
           <Icon name={gradeIcon} size={44} color='rgba(255,255,255,0.92)' />
         </View>
 
-        {graceDays > 0 ? (
+        {graceLeft > 0 ? (
           <View style={{ marginTop: 14, padding: 10, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.18)' }}>
             <Text style={{ ...fs(12), color: '#FFFFFF' }}>
-              在售不足，保级至 {dateDot(detail.graceUntil)}（剩 {graceDays} 天）；补回在售即恢复，逾期降为普通
+              在售不足，保级至 {dateDot(detail.graceUntil)}（剩 {graceLeft} 天）；补回在售即恢复，逾期降为普通
             </Text>
           </View>
         ) : null}
 
         {!detail.isVerified ? (
           <Text style={{ ...fs(12), color: 'rgba(255,255,255,0.9)', marginTop: 14 }}>
-            完成平台证照认证即进入铜牌，升档礼 +{detail.bonusLv2} 商家金
+            完成平台证照认证且在售达 {detail.onSaleMin} 件即进入铜牌，首次升档礼 +{detail.bonusLv2} 商家金
           </Text>
         ) : (
           <View>
             {/* 双指标：本期成交按有效期统计，在售按实时统计，两条都必达 */}
-            {bar('本期成功撮合', detail.dealCount, Math.max(1, detail.requiredDeals), '次')}
+            {detail.requiredDeals > 0
+              ? bar('本期成功撮合', detail.dealCount, detail.requiredDeals, '次')
+              : (
+                <Text style={{ ...fs(12), color: 'rgba(255,255,255,0.9)', marginTop: 10 }}>
+                  本期成功撮合 {detail.dealCount} 次（当前牌级无成交要求）
+                </Text>
+              )}
             {bar('在售商品', detail.onSaleCount, Math.max(1, detail.onSaleMin), '件')}
             {!isMax && next ? (
               <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600', marginTop: 10 }}>
@@ -182,10 +188,10 @@ export default function MerchantLevelPage() {
       <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12, padding: 14 }}>
         <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>保级与降级</Text>
         <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 8 }}>
-          一期 {detail.periodDays} 天，{periodEnd ? `本期到 ${periodEnd}` : '认证后开始计时'}。期内成功撮合达到下一档要求，立即升级并重发 {detail.periodDays} 天；到期时按本期成交保留能支撑的牌级。
+          一期 {detail.periodDays} 天，{periodEnd ? `本期到 ${periodEnd}` : '认证且在售达标后开始计时'}。期内成功撮合达到下一档要求，立即升级并重发 {detail.periodDays} 天；到期时按本期成交保留能支撑的牌级。
         </Text>
         <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>
-          在售与成交同时达标才算保级：在售连续不足超过 15 天直接降普通，不等期末。
+          在售与成交同时达标才算保级：在售连续不足超过 {detail.graceDays} 天直接降普通，不等期末。
         </Text>
         {detail.downgradeTo && detail.downgradeTo < detail.rank ? (
           <Text style={{ ...fs(12), color: t.warning, marginTop: 6 }}>

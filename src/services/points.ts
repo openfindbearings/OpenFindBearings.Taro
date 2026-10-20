@@ -183,6 +183,8 @@ export interface MerchantGradeDetail {
   requiredDeals: number
   /** 一期天数（默认 180） */
   periodDays: number
+  /** 在售不足保级天数（默认 15，后台可调） */
+  graceDays: number
   /** 本期起止（UTC ISO；普通档为空） */
   periodStartAt?: string | null
   periodEndAt?: string | null
