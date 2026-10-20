@@ -48,7 +48,7 @@ export default function SourcingDetailPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const currentMerchant = useMerchantStore((s) => s.currentMerchant())
   const [detail, setDetail] = useState<SourcingDetail | null>(null)
-  /** 加载失败/无权查看（v1.8.1）：邀标单对非受邀者返回 404，原实现静默失败致页面永远"加载中" */
+  /** 加载失败/无权查看（v1.8.1）：邀请单对非受邀者返回 404，原实现静默失败致页面永远"加载中" */
   const [loadError, setLoadError] = useState(false)
   const [busy, setBusy] = useState(false)
   // 改动说明（v1.7.42 回执补原因）：选中的负回执原因（点选后展开说明框，提交前可改）
@@ -186,14 +186,14 @@ export default function SourcingDetailPage() {
   }
 
   /**
-   * 发布人：把进行中的邀标单转为公开招标（v1.8.1）。
-   * 改动说明：免去"邀标无人应答只能取消重建"的额度与积分损耗（与"我的寻货/商户工作台"列表入口同义，
+   * 发布人：把进行中的邀请单转为公开（v1.8.1）。
+   * 改动说明：免去"邀请无人应答只能取消重建"的额度与积分损耗（与"我的寻货/商户工作台"列表入口同义，
    *   详情页就地可操作）
    */
   const doPublishPublic = async () => {
     const ok = await showConfirmDialog({
-      title: '转为公开招标',
-      content: '转为公开后，寻货将进入公开大厅、所有商家可见可应答；原邀标收件人名单不再保留。确认转为公开？',
+      title: '转为公开',
+      content: '转为公开后，寻货将进入公开大厅、所有商家可见可应答；原邀请收件人名单不再保留。确认转为公开？',
       confirmText: '确认转公开',
     })
     if (!ok || busy) return
@@ -201,7 +201,7 @@ export default function SourcingDetailPage() {
     const r = await publishDemandAsPublic(detail.id)
     setBusy(false)
     if (r.success) {
-      Taro.showToast({ title: '已转为公开招标', icon: 'success' })
+      Taro.showToast({ title: '已转为公开', icon: 'success' })
       await load()
     } else {
       Taro.showToast({ title: r.message || '转为公开失败', icon: 'none' })
@@ -213,7 +213,7 @@ export default function SourcingDetailPage() {
     Taro.navigateTo({ url: `/pages/discover/respond?id=${detail.id}` })
   }
 
-  /** 商户：撤销自己的待处理应答（确认→DELETE→刷新；招投标"开标前撤标"） */
+  /** 商户：撤销自己的待处理应答（确认→DELETE→刷新；额度不回退） */
   const doCancelResponse = async (): Promise<void> => {
     const ok = await showConfirmDialog({
       title: '撤销应答',
@@ -252,10 +252,10 @@ export default function SourcingDetailPage() {
             <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: isOpen ? t.primaryLight : t.bgInput }}>
               <Text style={{ ...fs(12), color: isOpen ? t.primary : t.textTertiary }}>{demandStatusText(detail.status)}</Text>
             </View>
-            {/* 改动说明（v1.8.1）：邀标单徽章——受邀商家从通知点进来需立刻知道"这是点名邀我的单、受众 N 家" */}
+            {/* 改动说明（v1.8.1）：邀请单徽章——受邀商家从通知点进来需立刻知道"这是点名邀我的单、受众 N 家" */}
             {detail.isPrivate ? (
               <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.bgInput, marginLeft: 6 }}>
-                <Text style={{ ...fs(11), color: t.textSecondary }}>邀标 {detail.invitedCount ?? 0} 家</Text>
+                <Text style={{ ...fs(11), color: t.textSecondary }}>邀请 {detail.invitedCount ?? 0} 家</Text>
               </View>
             ) : null}
           </View>
@@ -515,7 +515,7 @@ export default function SourcingDetailPage() {
           </View>
         )}
 
-        {/* 发布人：取消寻货 + 邀标单可转为公开招标（v1.8.1；与列表入口同义，详情页就地可操作） */}
+        {/* 发布人：取消寻货 + 邀请单可转为公开（v1.8.1；与列表入口同义，详情页就地可操作） */}
         {detail.isPublisher && isOpen && (
           <View style={{ display: 'flex', flexDirection: 'row', margin: 12, marginTop: 4 }}>
             {detail.isPrivate ? (
@@ -523,7 +523,7 @@ export default function SourcingDetailPage() {
                 style={{ flex: 1, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: t.primary, marginRight: 10 }}
                 onClick={() => { void doPublishPublic() }}
               >
-                <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>转为公开招标</Text>
+                <Text style={{ ...fs(15), color: '#FFFFFF', fontWeight: '600' }}>转为公开</Text>
               </View>
             ) : null}
             <View

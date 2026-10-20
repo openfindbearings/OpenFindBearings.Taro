@@ -1,9 +1,9 @@
 // 轴承详情页：基本信息 + 参数 + 在售商家 + 替代品。收藏/纠错为登录门槛（未登录提示）。
 // 数据来自 BFF public 端点：/bearings/{id}、/bearings/{id}/merchants、/bearings/{id}/interchanges。
-// v1.6.0 搜索寻货联动：查到不等于结束——在售认证商家可「邀标」（预勾选该家），底部「发布寻货」预填 bearingId；
+// v1.6.0 搜索寻货联动：查到不等于结束——在售认证商家可「邀请」（预勾选该家），底部「发布寻货」预填 bearingId；
 //   参数来源为互联网时标「仅供参考」；新增「分享货源」（分享"谁家真实有货"引流回平台）。
-// v1.8.0 公开招标/邀标：按钮统一「发布寻货」（公开/邀标在发布页二选一），在售认证家数改由说明行承载，
-//   未认证在售归"其他在售·仅供参考"段（只读不导流），让"在售"与"可邀标"的差别可见。
+// v1.8.0 公开/邀请：按钮统一「发布寻货」（公开/邀请在发布页二选一），在售认证家数改由说明行承载，
+//   未认证在售归"其他在售·仅供参考"段（只读不导流），让"在售"与"可邀请"的差别可见。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text } from '@tarojs/components'
@@ -97,10 +97,10 @@ export default function BearingDetailPage() {
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
 
   /**
-   * 发布寻货（公开招标，默认）：预填型号/品牌/bearingId 后跳发布页（发布页再选公开/邀标）。
+   * 发布寻货（公开，默认）：预填型号/品牌/bearingId 后跳发布页（发布页再选公开/邀请）。
    * 登录门槛——查到→进一步联系（寻货）属注册功能。
-   * 改动说明（v1.8.0 公开招标/邀标）：原预填 targetMerchantId=null 改为 visibility=0（公开侧），
-   *   邀标与否交给发布页选择，详情页只负责"带着轴承上下文进入发布"。
+   * 改动说明（v1.8.0 公开/邀请）：原预填 targetMerchantId=null 改为 visibility=0（公开侧），
+   *   邀请与否交给发布页选择，详情页只负责"带着轴承上下文进入发布"。
    */
   const handleCreateDemand = () => {
     if (!isLoggedIn) return requireLogin()
@@ -114,8 +114,8 @@ export default function BearingDetailPage() {
   }
 
   /**
-   * 邀标本商家（原"询价"）：仅对认证商家开放（行动门），预填 bearingId + 邀标 + 只勾选该商家后跳发布页。
-   * 改动说明（v1.8.0 公开招标/邀标）：由"定向询价单商户"改为"邀标 + 预勾选这一家"，
+   * 邀请本商家（原"询价"）：仅对认证商家开放（行动门），预填 bearingId + 邀请 + 只勾选该商家后跳发布页。
+   * 改动说明（v1.8.0 公开/邀请）：由"定向询价单商户"改为"邀请 + 预勾选这一家"，
    *   发布页收件人清单里仅勾该家，用户可再增勾其他在售认证商家。
    */
   const handleInvite = (m: BearingMerchant) => {
@@ -173,10 +173,10 @@ export default function BearingDetailPage() {
   const merchantRow = (m: BearingMerchant) => (
     <View key={m.merchantId} className='bd-list-row'>
       {/*
-        修 bug（v1.7.42）：原结构是"整行可点 + 内部邀标按钮 e.stopPropagation()"，
+        修 bug（v1.7.42）：原结构是"整行可点 + 内部邀请按钮 e.stopPropagation()"，
         RN 端 Taro 的点击事件由 PanResponder 派发、事件对象没有 stopPropagation，
-        点邀标即抛 "undefined is not a function" 崩溃。改为结构与事件都不嵌套：
-        左侧可点区域（头像 + 主体 + 箭头）与右侧邀标按钮为兄弟节点，无需阻止冒泡
+        点邀请即抛 "undefined is not a function" 崩溃。改为结构与事件都不嵌套：
+        左侧可点区域（头像 + 主体 + 箭头）与右侧邀请按钮为兄弟节点，无需阻止冒泡
       */}
       <View
         style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}
@@ -208,13 +208,13 @@ export default function BearingDetailPage() {
         </View>
         <Icon name="chevron_right" size={18} color={t.textTertiary} />
       </View>
-      {/* 邀标（v1.8.0 公开招标/邀标，原"询价"）——仅认证商家开放（行动门）；非认证只展示不导流 */}
+      {/* 邀请（v1.8.0 公开/邀请，原"询价"）——仅认证商家开放（行动门）；非认证只展示不导流 */}
       {m.isVerified ? (
         <View
           style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
           onClick={() => handleInvite(m)}
         >
-          <Text style={{ ...fs(12), color: t.primary }}>邀标</Text>
+          <Text style={{ ...fs(12), color: t.primary }}>邀请</Text>
         </View>
       ) : null}
     </View>
@@ -239,7 +239,7 @@ export default function BearingDetailPage() {
         </>
       ) : null}
       {/* v1.6.0 搜索寻货联动：查到→进一步联系（发布寻货 / 分享真实货源），而非查完就结束 */}
-      {/* v1.8.0 公开招标/邀标：按钮统一"发布寻货"（公开/邀标在发布页选），在售认证家数改由下方说明行承载 */}
+      {/* v1.8.0 公开/邀请：按钮统一"发布寻货"（公开/邀请在发布页选），在售认证家数改由下方说明行承载 */}
       <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
         <View
           style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, borderRadius: 20, backgroundColor: t.primary, marginRight: 10 }}
@@ -262,7 +262,7 @@ export default function BearingDetailPage() {
           ? '登录后可发布寻货、邀请认证商家报价'
           : verifiedCount > 0
             ? `当前 ${verifiedCount} 家认证商家有货：可公开发布（进大厅），也可只邀请他们报价`
-            : '暂无认证商家在售，公开招标后如有匹配商家会收到通知'}
+            : '暂无认证商家在售，公开后如有匹配商家会收到通知'}
       </Text>
     </View>
   )

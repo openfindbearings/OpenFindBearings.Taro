@@ -117,19 +117,19 @@ export default function MySourcingPage() {
     : []
 
   /**
-   * 转为公开招标（v1.8.0 公开招标/邀标）：邀标单无人应答时放开进大厅，
+   * 转为公开（v1.8.0 公开/邀请）：邀请单无人应答时放开进大厅，
    * 免去"取消重建"（发布额度与积分不退还）；成功后刷新列表去角标。
    */
   const doPublishPublic = async (item: SourcingMyDemand) => {
     const ok = await showConfirmDialog({
-      title: '转为公开招标',
-      content: '转为公开后需求进入寻货大厅，所有商家可见可应答；原邀标商家仍可应答。确认转为公开？',
+      title: '转为公开',
+      content: '转为公开后需求进入寻货大厅，所有商家可见可应答；原邀请商家仍可应答。确认转为公开？',
       confirmText: '转为公开',
     })
     if (!ok) return
     const r = await publishDemandAsPublic(item.id)
     if (r.success) {
-      Taro.showToast({ title: '已转为公开招标', icon: 'none' })
+      Taro.showToast({ title: '已转为公开', icon: 'none' })
       reload()
       return
     }
@@ -189,10 +189,10 @@ export default function MySourcingPage() {
                     <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '700' }}>置顶中</Text>
                   </View>
                 )}
-                {/* 改动说明（v1.8.0 公开招标/邀标）：邀标单角标，让"不进大厅"的发布方式一眼可辨 */}
+                {/* 改动说明（v1.8.0 公开/邀请）：邀请单角标，让"不进大厅"的发布方式一眼可辨 */}
                 {item.isPrivate && (
                   <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
-                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>邀标</Text>
+                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>邀请</Text>
                   </View>
                 )}
                 <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: open ? t.primaryLight : t.bgMain }}>
@@ -203,7 +203,7 @@ export default function MySourcingPage() {
                 <Text style={{ ...fs(13), color: t.textTertiary, flex: 1 }}>
                   {[item.brand, item.quantity].filter(Boolean).join(' · ') || '—'} · {item.responseCount} 条应答
                 </Text>
-                {/* 改动说明（v1.8.0 公开招标/邀标）：邀标单可转公开（免去无人应答时取消重建，额度不退还） */}
+                {/* 改动说明（v1.8.0 公开/邀请）：邀请单可转公开（免去无人应答时取消重建，额度不退还） */}
                 {open && item.isPrivate && !sel.selectMode && (
                   <View
                     onClick={(e) => { e?.stopPropagation?.(); void doPublishPublic(item) }}

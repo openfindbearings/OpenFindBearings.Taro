@@ -2,8 +2,8 @@
 // 改动说明（v2.12.0 商户名义发布）：表单保持纯输入；点"发布"时一步弹窗选身份——
 //   归属商户者弹 ActionSheet（商户逐行+个人名义行，取消=中止发布），纯个人用户不打扰；
 //   NEED_POINTS 重提交复用已选身份不再弹（全程最多 1 个身份弹窗）
-// 改动说明（v1.8.0 公开招标/邀标）：原"定向询价单商户"升级为发布方式二选一——
-//   公开招标（进大厅 + 通知匹配的认证在售商家）/ 邀标（不进大厅，只通知勾选的有货认证商家）；
+// 改动说明（v1.8.0 公开/邀请）：原"定向询价单商户"升级为发布方式二选一——
+//   公开（进大厅 + 通知匹配的认证在售商家）/ 邀请（不进大厅，只通知勾选的有货认证商家）；
 //   有 bearingId 时拉在售认证商家清单供勾选（默认全选），从商家行/商家主页进入则只预勾该家
 // 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹轴承币确认框 → usePoints=true 重提交
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
@@ -23,7 +23,7 @@ import { publishDemand, genPublishIdempotencyKey, parseNeedPoints, getSourcingQu
 import { getAllBearingMerchants, type BearingMerchant } from '../../services/bearing'
 import { getObject, removeItem } from '../../utils/storage'
 
-/** 发布寻货跨页预填 storage 键（轴承详情"发布寻货"/"邀标"写入） */
+/** 发布寻货跨页预填 storage 键（轴承详情"发布寻货"/"邀请"写入） */
 const PREFILL_KEY = 'sourcing_publish_prefill'
 
 // 编译期配置：禁用外层 ScrollView，滚动由页内统一提供
@@ -41,7 +41,7 @@ interface FormState {
 
 const EMPTY: FormState = { partNumber: '', brand: '', quantity: '', expectedDelivery: '', region: '', description: '' }
 
-/** 跨页预填上下文（v1.8.0：曝光范围 + 邀标预勾选收件人） */
+/** 跨页预填上下文（v1.8.0：曝光范围 + 邀请预勾选收件人） */
 interface PublishPrefill {
   partNumber?: string
   brand?: string
@@ -68,22 +68,22 @@ export default function PublishSourcingPage() {
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  // v1.8.0 公开招标/邀标：bearingId 贯通（关联平台轴承）；发布方式与收件人勾选
+  // v1.8.0 公开/邀请：bearingId 贯通（关联平台轴承）；发布方式与收件人勾选
   const [meta, setMeta] = useState<{ bearingId?: string | null }>({})
   const [mode, setMode] = useState<'public' | 'invited'>('public')
   const [prefilled, setPrefilled] = useState(false)
   /** 在售认证商家清单（有 bearingId 才拉；null=无清单：或未携带 bearingId，或拉取失败） */
   const [inviteList, setInviteList] = useState<BearingMerchant[] | null>(null)
-  /** 清单拉取失败（v1.8.1）：与"确实无人在售"区分——失败可重试，不误判为无货、不禁用邀标 */
+  /** 清单拉取失败（v1.8.1）：与"确实无人在售"区分——失败可重试，不误判为无货、不禁用邀请 */
   const [inviteError, setInviteError] = useState(false)
-  /** 邀标勾选的收件人（默认全选；从商家行进入则只勾该家） */
+  /** 邀请勾选的收件人（默认全选；从商家行进入则只勾该家） */
   const [checked, setChecked] = useState<string[]>([])
   /** 跨页预填的指定收件人（无 bearingId 清单时仍按此精确邀约，如从商家主页进入） */
   const [preInvited, setPreInvited] = useState<string[]>([])
 
   useDidShow(() => {
     getSourcingQuota().then(setQuota).catch(() => { /* 未登录/网络失败：隐藏额度条 */ })
-    // 预填：从轴承详情"发布寻货"/"邀标"写入的 storage 读取，读完即清（防后续普通进入被脏预填）
+    // 预填：从轴承详情"发布寻货"/"邀请"写入的 storage 读取，读完即清（防后续普通进入被脏预填）
     void (async () => {
       const pre = await getObject<PublishPrefill>(PREFILL_KEY)
       if (!pre) return
@@ -107,12 +107,12 @@ export default function PublishSourcingPage() {
   })
 
   /**
-   * 拉取该轴承的在售认证商家清单，供邀标勾选（只列可信来源：已认证商家）。
+   * 拉取该轴承的在售认证商家清单，供邀请勾选（只列可信来源：已认证商家）。
    * 改动说明（v1.8.1）：逐页拉全量（原只取第一页，部分勾选会静默丢掉未展示的商家）；
-   *   失败与"确实无人在售"分开——失败给重试入口且不禁用邀标
+   *   失败与"确实无人在售"分开——失败给重试入口且不禁用邀请
    * 改动说明（v1.7.42 修 bug）：不再在客户端排除"当前商户"——发布身份是点发布时才在
    *   身份弹层里选定的，此处无从得知最终以谁名义发布；先排除会导致"该型号只有自己在售"
-   *   时清单被清空、邀标被误禁用（提示还写成"没有认证商家在售"，与事实相反）。
+   *   时清单被清空、邀请被误禁用（提示还写成"没有认证商家在售"，与事实相反）。
    *   自身排除交由服务端按实际发布商户身份处理（SourcingMatcher 的 excludeMerchantId）
    */
   const loadInviteList = (bearingId: string, preselect: string[] | null) => {
@@ -141,18 +141,18 @@ export default function PublishSourcingPage() {
     }
   }
 
-  /** 切换邀标勾选（点行整行触发） */
+  /** 切换邀请勾选（点行整行触发） */
   const toggleChecked = (merchantId: string) => {
     setChecked((prev) => prev.includes(merchantId) ? prev.filter((x) => x !== merchantId) : [...prev, merchantId])
   }
 
-  /** 邀标全选/全不选（全部勾选等价于"通知全部匹配商家"，提交空数组） */
+  /** 邀请全选/全不选（全部勾选等价于"通知全部匹配商家"，提交空数组） */
   const toggleAll = () => {
     if (!inviteList) return
     setChecked((prev) => prev.length === inviteList.length ? [] : inviteList.map((m) => m.merchantId))
   }
 
-  /** 邀标是否可选：有 bearingId 但清单里无认证在售商家时不可邀（改公开招标） */
+  /** 邀请是否可选：有 bearingId 但清单里无认证在售商家时不可邀（改公开） */
   const invitedAvailable = !(meta.bearingId && inviteList !== null && inviteList.length === 0)
 
   /**
@@ -165,13 +165,13 @@ export default function PublishSourcingPage() {
       Taro.showToast({ title: '请填写寻货型号', icon: 'none' })
       return
     }
-    // 改动说明（v1.8.0 邀标校验）：勾选清单存在时至少勾一家（全不勾会被服务端理解为"全部匹配"，与意图不符）
+    // 改动说明（v1.8.0 邀请校验）：勾选清单存在时至少勾一家（全不勾会被服务端理解为"全部匹配"，与意图不符）
     if (mode === 'invited' && inviteList !== null && inviteList.length > 0 && checked.length === 0) {
-      Taro.showToast({ title: '请至少勾选一家商家，或改为公开招标', icon: 'none' })
+      Taro.showToast({ title: '请至少勾选一家商家，或改为公开', icon: 'none' })
       return
     }
     if (!invitedAvailable && mode === 'invited') {
-      Taro.showToast({ title: '当前无认证商家在售该型号，请选公开招标', icon: 'none' })
+      Taro.showToast({ title: '当前无认证商家在售该型号，请选公开', icon: 'none' })
       return
     }
     if (merchantId === undefined) {
@@ -204,7 +204,7 @@ export default function PublishSourcingPage() {
       usePoints,
       // v2.12.0 商户名义发布：sheet 选定的商户；个人名义为 null
       merchantId,
-      // v1.8.0 公开招标/邀标：0=公开（进大厅）/ 1=邀标（只推收件人）
+      // v1.8.0 公开/邀请：0=公开（进大厅）/ 1=邀请（只推收件人）
       visibility: invited ? 1 : 0,
       invitedMerchantIds,
     }
@@ -215,12 +215,12 @@ export default function PublishSourcingPage() {
       // 发布成功即轮换幂等键（下次若仍在同一页面重新发布，应是新单而非幂等命中）
       idemKeyRef.current = genPublishIdempotencyKey()
       // 改动说明（v1.8.0）：按发布方式与实际通知家数给差异化反馈——
-      //   公开=已通知 N 家并进大厅（无匹配则只进大厅等应答）；邀标=只通知勾选的 N 家（不进大厅）
+      //   公开=已通知 N 家并进大厅（无匹配则只进大厅等应答）；邀请=只通知勾选的 N 家（不进大厅）
       const notified = r.data?.recipientMerchantCount ?? 0
-      // 改动说明（v1.7.42）：邀标 0 家不再笼统报"已发布邀标"——否则用户以为邀到了实际没人收到
+      // 改动说明（v1.7.42）：邀请 0 家不再笼统报"已发布邀请"——否则用户以为邀到了实际没人收到
       //   （典型成因：清单里只勾了"自己名下商户"，服务端按发布身份排除自身后收件人为空）
       const title = invited
-        ? (notified > 0 ? `已邀标 ${notified} 家认证商家` : '已发布，但无商家可通知（请检查勾选）')
+        ? (notified > 0 ? `已邀请 ${notified} 家认证商家` : '已发布，但无商家可通知（请检查勾选）')
         : (notified > 0 ? `已通知 ${notified} 家认证商家，并进入大厅` : '已进入寻货大厅')
       Taro.showToast({ title, icon: 'none', duration: 1800 })
       setTimeout(() => Taro.navigateBack(), 1000)
@@ -255,7 +255,7 @@ export default function PublishSourcingPage() {
     </View>
   )
 
-  /** 发布方式选项卡（公开招标 / 邀标） */
+  /** 发布方式选项卡（公开 / 邀请） */
   const modeOption = (value: 'public' | 'invited', title: string, desc: string, disabled = false) => {
     const active = mode === value
     const tone = disabled ? t.textTertiary : (active ? t.primary : t.textSecondary)
@@ -309,11 +309,11 @@ export default function PublishSourcingPage() {
         <View style={{ margin: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 14, paddingBottom: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           {/* 改动说明（v2.12.0 交互改向）：发布身份不再占表单行——点"发布"时一步弹窗选择
               （归属商户才弹，纯个人直接提交），表单保持纯输入、逐步引导完成流程 */}
-          {/* v1.8.0 搜索寻货联动：来自轴承详情的预填提示（邀标则加注只通知所选商家） */}
+          {/* v1.8.0 搜索寻货联动：来自轴承详情的预填提示（邀请则加注只通知所选商家） */}
           {prefilled ? (
             <View style={{ display: 'flex', marginBottom: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
               <Text style={{ ...fs(11), color: t.primary }}>
-                已按轴承货源预填，可修改{mode === 'invited' ? '（已选邀标：只通知你在下方勾选的认证商家）' : ''}
+                已按轴承货源预填，可修改{mode === 'invited' ? '（已选邀请：只通知你在下方勾选的认证商家）' : ''}
               </Text>
             </View>
           ) : null}
@@ -340,18 +340,18 @@ export default function PublishSourcingPage() {
           </View>
         </View>
 
-        {/* 发布方式（v1.8.0 公开招标/邀标）：公开=进大厅人人可应答；邀标=只通知勾选的有货认证商家 */}
+        {/* 发布方式（v1.8.0 公开/邀请）：公开=进大厅人人可应答；邀请=只通知勾选的有货认证商家 */}
         <View style={{ marginLeft: 12, marginRight: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>发布方式</Text>
           <View style={{ display: 'flex', flexDirection: 'row', marginTop: 8 }}>
-            {modeOption('public', '公开招标', '进寻货大厅，所有商家都能看到并应答')}
-            {modeOption('invited', '邀标', '只通知你勾选的有货认证商家，不进大厅', !invitedAvailable)}
+            {modeOption('public', '公开', '进寻货大厅，所有商家都能看到并应答')}
+            {modeOption('invited', '邀请', '只通知你勾选的有货认证商家，不进大厅', !invitedAvailable)}
           </View>
 
-          {/* 邀标收件人（有 bearingId 时列出在售认证商家供勾选；默认全选） */}
+          {/* 邀请收件人（有 bearingId 时列出在售认证商家供勾选；默认全选） */}
           {mode === 'invited' ? (
             inviteError ? (
-              // 改动说明（v1.8.1）：加载失败 ≠ 无人在售——给重试入口，且不因此禁用邀标（服务端仍会按匹配校验）
+              // 改动说明（v1.8.1）：加载失败 ≠ 无人在售——给重试入口，且不因此禁用邀请（服务端仍会按匹配校验）
               <View style={{ marginTop: 8 }}>
                 <Text style={{ ...fs(11), color: t.textTertiary }}>
                   商家清单加载失败，可重试；也可直接发布，按型号匹配全部在售认证商家
@@ -371,7 +371,7 @@ export default function PublishSourcingPage() {
               </Text>
             ) : inviteList.length === 0 ? (
               <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
-                当前没有认证商家在售该型号，无法邀标，请改为公开招标
+                当前没有认证商家在售该型号，无法邀请，请改为公开
               </Text>
             ) : (
               <View style={{ marginTop: 8 }}>
@@ -408,7 +408,7 @@ export default function PublishSourcingPage() {
         </View>
 
         <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 16, marginRight: 16, marginTop: 8 }}>
-          公开招标会进入寻货大厅（人人可应答），并通知有货的认证商家；邀标只通知你勾选的认证商家。发布后可从应答中选定一家，双方互见联系方式；寻货 14 天有效，请留意站内信通知。
+          选择公开会进入寻货大厅（人人可应答），并通知有货的认证商家；邀请只通知你勾选的认证商家。发布后可从应答中选定一家，双方互见联系方式；寻货 14 天有效，请留意站内信通知。
         </Text>
 
         {/* 发布按钮三态（v1.7.21）：免费发布 → 花轴承币发布（额度已用完）→ 轴承币不足去赚（跳任务中心）。
@@ -428,7 +428,7 @@ export default function PublishSourcingPage() {
           }}
         >
           <Text style={{ ...fs(16), color: '#FFFFFF', fontWeight: '600' }}>
-            {submitting ? '发布中…' : insufficient ? '轴承币不足，去赚轴承币' : overFree && pq ? `花 ${pq.pointsPrice} 轴承币发布` : (mode === 'invited' ? '发布邀标' : '公开发布')}
+            {submitting ? '发布中…' : insufficient ? '轴承币不足，去赚轴承币' : overFree && pq ? `花 ${pq.pointsPrice} 轴承币发布` : (mode === 'invited' ? '发布邀请' : '公开发布')}
           </Text>
         </View>
       </View>
