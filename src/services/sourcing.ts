@@ -98,9 +98,9 @@ export interface SourcingDetail {
   publisherMerchantId?: string | null
   publisherMerchantName?: string | null
   publisherType?: 'merchant' | 'individual' | null
-  /** v1.8.0 公开招标/邀标：是否邀标单（前端出"邀标"徽章） */
+  /** v1.8.0 公开/邀请：是否邀请单（前端出"邀请"徽章） */
   isPrivate?: boolean
-  /** 邀标收件人家数（前端出"邀标(N家)"文案） */
+  /** 邀请收件人家数（前端出"邀请(N家)"文案） */
   invitedCount?: number
   /** v2.18.0 联系方式解锁时刻（被选商户视角提示"买家已获取你的联系方式"） */
   contactUnlockedAt?: string | null
@@ -141,9 +141,9 @@ export interface SourcingMyDemand {
   publisherMerchantId?: string | null
   publisherMerchantName?: string | null
   publisherType?: 'merchant' | 'individual' | null
-  /** v1.8.0 公开招标/邀标：是否邀标单（徽章 + "转为公开招标"按钮态） */
+  /** v1.8.0 公开/邀请：是否邀请单（徽章 + "转为公开"按钮态） */
   isPrivate?: boolean
-  /** 邀标收件人家数 */
+  /** 邀请收件人家数 */
   invitedCount?: number
 }
 
@@ -354,14 +354,14 @@ export interface PublishDemandBody {
   usePoints: boolean
   /** v2.12.0 商户名义发布：以该商户名义发布（须为在职成员）；缺省/空=个人名义 */
   merchantId?: string | null
-  /** v1.8.0 公开招标/邀标：0=公开招标（默认，进大厅 + 通知匹配商家）/ 1=邀标（不进大厅，只推收件人） */
+  /** v1.8.0 公开/邀请：0=公开（默认，进大厅 + 通知匹配商家）/ 1=邀请（不进大厅，只推收件人） */
   visibility?: number
-  /** v1.8.0 邀标收件人勾选（空=全部匹配的认证在售商家；仅给本字段时表示"邀全部"；公开招标携带将被服务端 400 拒绝） */
+  /** v1.8.0 邀请收件人勾选（空=全部匹配的认证在售商家；仅给本字段时表示"邀请全部"；公开单携带将被服务端 400 拒绝） */
   invitedMerchantIds?: string[] | null
 }
 
 /** 发布寻货结果（v1.8.1 随口径更名）：id=寻货单 ID；
- *  recipientMerchantCount=本次收件人集合大小（公开招标=在售匹配家数、邀标=勾选∩匹配家数、无匹配=0）。
+ *  recipientMerchantCount=本次收件人集合大小（公开=在售匹配家数、邀请=勾选∩匹配家数、无匹配=0）。
  *  改动说明：原名 notifiedMerchantCount 暗示"实际收到推送的家数"，实际投递还取决于收件商户是否有在职管理员，名实不符故更名 */
 export interface PublishDemandResult {
   id: string
@@ -381,7 +381,7 @@ export function genPublishIdempotencyKey(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-/** 转为公开招标（v1.8.0）：邀标单进行中时由发布人放开为公开（进大厅），免去取消重建 */
+/** 转为公开（v1.8.0）：邀请单进行中时由发布人放开为公开（进大厅），免去取消重建 */
 export function publishDemandAsPublic(demandId: string) {
   return opWrap(() => request(API.SOURCING_PUBLISH_PUBLIC(demandId), { method: 'POST' }))
 }
@@ -478,9 +478,9 @@ export interface SourcingMerchantDemand {
   publisherName?: string | null
   /** 当前用户是否经办人 */
   isMine?: boolean
-  /** v1.8.0 公开招标/邀标：是否邀标单 */
+  /** v1.8.0 公开/邀请：是否邀请单 */
   isPrivate?: boolean
-  /** 邀标收件人家数 */
+  /** 邀请收件人家数 */
   invitedCount?: number
 }
 
@@ -525,7 +525,7 @@ export interface MatchedDemand {
   responseCount: number
   createdAt: string
   expiryAt: string
-  /** v1.8.0：是否邀标给我的单（前端出"邀标"徽章） */
+  /** v1.8.0：是否点名邀请我的单（前端出"邀请"徽章） */
   isPrivate: boolean
 }
 

@@ -84,19 +84,19 @@ export default function MerchantDemandsPage() {
   }
 
   /**
-   * 转为公开招标（v1.8.0 公开招标/邀标）：本店名义的邀标单无人应答时放开进大厅，
+   * 转为公开（v1.8.0 公开/邀请）：本店名义的邀请单无人应答时放开进大厅，
    * 免去"取消重建"（发布额度与积分不退还）；仅经办人本人可操作。
    */
   const doPublishPublic = async (item: SourcingMerchantDemand) => {
     const ok = await showConfirmDialog({
-      title: '转为公开招标',
-      content: '转为公开后需求进入寻货大厅，所有商家可见可应答；原邀标商家仍可应答。确认转为公开？',
+      title: '转为公开',
+      content: '转为公开后需求进入寻货大厅，所有商家可见可应答；原邀请商家仍可应答。确认转为公开？',
       confirmText: '转为公开',
     })
     if (!ok) return
     const r = await publishDemandAsPublic(item.id)
     if (r.success) {
-      Taro.showToast({ title: '已转为公开招标', icon: 'none' })
+      Taro.showToast({ title: '已转为公开', icon: 'none' })
       reload()
       return
     }
@@ -129,7 +129,7 @@ export default function MerchantDemandsPage() {
         {currentMerchant && (
           <ListChips items={MODE_CHIPS} active={mode} onChange={(k) => setMode(k as 'matched' | 'mine')} />
         )}
-        {/* 为你匹配（v1.6.0 / v1.8.0 邀标化）：邀标给我的 + 匹配我在售型号的进行中公开招标单 */}
+        {/* 为你匹配（v1.6.0 / v1.8.0 邀请化）：点名邀请我的 + 匹配我在售型号的进行中公开单 */}
         {currentMerchant && mode === 'matched' && (matched.length === 0 ? (
           <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
             <Icon name='search' size={40} color={t.textTertiary} />
@@ -147,7 +147,7 @@ export default function MerchantDemandsPage() {
                 <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>寻 {d.partNumber}</Text>
                 {d.isPrivate && (
                   <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
-                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>邀标</Text>
+                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>邀请</Text>
                   </View>
                 )}
               </View>
@@ -198,10 +198,10 @@ export default function MerchantDemandsPage() {
                     <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: '700' }}>置顶中</Text>
                   </View>
                 )}
-                {/* 改动说明（v1.8.0 公开招标/邀标）：邀标单角标 */}
+                {/* 改动说明（v1.8.0 公开/邀请）：邀请单角标 */}
                 {item.isPrivate && (
                   <View style={{ paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 6, backgroundColor: t.primaryLight, marginRight: 6 }}>
-                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>邀标</Text>
+                    <Text style={{ ...fs(10), color: t.primary, fontWeight: '700' }}>邀请</Text>
                   </View>
                 )}
                 <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: open ? t.primaryLight : t.bgMain }}>
@@ -216,7 +216,7 @@ export default function MerchantDemandsPage() {
                 <Text style={{ ...fs(12), color: t.textTertiary, flex: 1 }}>
                   {item.isMine ? '由我发布' : `由 ${item.publisherName || '成员'} 发布`}
                 </Text>
-                {/* 改动说明（v1.8.0）：本人进行中的邀标单可转公开（他人单不可管） */}
+                {/* 改动说明（v1.8.0）：本人进行中的邀请单可转公开（他人单不可管） */}
                 {open && item.isPrivate && item.isMine && !sel.selectMode && (
                   <View
                     onClick={(e) => { e?.stopPropagation?.(); void doPublishPublic(item) }}
