@@ -134,10 +134,11 @@ export default function HomePage() {
     )
   }
 
-  // 简洁模式：无 NavBar，搜索框 + 三钮垂直居中（内容区高度显式计算保证居中）
+  // 简洁模式：无 NavBar，搜索框 + 三钮垂直居中（v1.7.48：关滚动走 PageLayout 的 flex 填充容器，
+  // 让 .home-simple 的 flex:1 真正拿到内容区高度；原 ScrollView 内层无高度导致居中失效、内容贴顶压状态栏）
   if (effectiveMode === 'simple') {
     return (
-      <PageLayout nav={null} tabbar={<CustomTabBar />}>
+      <PageLayout nav={null} tabbar={<CustomTabBar />} scrollY={false}>
         <View className='home-simple'>
           {searchBox}
           {quickActions}

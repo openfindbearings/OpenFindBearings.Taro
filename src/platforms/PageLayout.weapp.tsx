@@ -78,10 +78,17 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
       {nav ? <View className='pl-wx-nav' style={{ backgroundColor: t.bgPage }}>{nav}</View> : null}
       {/* 吸顶子区在滚动区外：不随内容滚动（与 RN 版一致） */}
       {subHeader ? <View className='pl-wx-nav'>{subHeader}</View> : null}
-      <ScrollView className='pl-wx-scroll' {...({ scrollY, onScrollToLower: onEndReached } as any)}>
-        {/* 有底栏时内容底部留白（tabbar 高 56 + 余量），fixed 底栏会盖住最后内容 */}
-        <View style={{ paddingBottom: tabbar ? 64 : 0 }}>{children}</View>
-      </ScrollView>
+      {/* 改动说明（v1.7.48）：不可滚动页（智能模式/简洁模式）改走 flex 填充容器，
+          子内容才能拿到 nav 与 tabbar 之间的确定高度；原先统一用 ScrollView 时，
+          调用方只能按 100vh 估算高度，在 weapp 溢出并压住底栏上凸图标 */}
+      {scrollY ? (
+        <ScrollView className='pl-wx-scroll' {...({ scrollY, onScrollToLower: onEndReached } as any)}>
+          {/* 有底栏时内容底部留白（tabbar 高 56 + 余量），fixed 底栏会盖住最后内容 */}
+          <View style={{ paddingBottom: tabbar ? 64 : 0 }}>{children}</View>
+        </ScrollView>
+      ) : (
+        <View className='pl-wx-fill'>{children}</View>
+      )}
       {tabbar ? <View className='pl-wx-tabbar'>{tabbar}</View> : null}
       {overlay}
     </View>

@@ -29,8 +29,21 @@
 }
 
 // 底栏容器：flex 列末子项，禁止被压缩
+// 改动说明（v1.7.48）：加 relative + z-index，让商家大圆上凸的 14dp 压在页面内容层之上；
+//   弹层组件级为 9998+，不会与之冲突
 .pl-wx-tabbar {
   flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+// 不可滚动页面容器（scrollY=false，v1.7.48）：占满 nav 与 tabbar 之间剩余高度，
+// 子内容可用 flex:1 精确填充，替代调用方按 100vh 估算（weapp 下会溢出错位）
+.pl-wx-fill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 // 沉浸式：内容铺满整屏的绝对容器（flex column 让 ScrollView 撑高）
