@@ -83,12 +83,14 @@ export default function LevelPage() {
           44 + overflow hidden 裁剪，横向 ScrollView 撑出部分被裁，不再出现大片空白 */}
       <View style={{ height: 44, backgroundColor: t.bgCard, overflow: 'hidden' }}>
         <ScrollView scrollX showsHorizontalScrollIndicator={false}>
+          {/* 改动说明（v1.7.49）：小程序 scroll-view 会约束内容宽度，档位名较长时各项被压成一字宽
+              而竖排；各项禁止收缩 + 名称单行，超出部分交给横向滚动 */}
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 12, paddingRight: 12 }}>
             {levels.map((l) => {
               const active = l.level === selected
               return (
-                <View key={l.level} style={{ paddingLeft: 10, paddingRight: 10, height: 44, justifyContent: 'center' }} onClick={() => setSelected(l.level)}>
-                  <Text style={{ ...fs(13), color: active ? t.textPrimary : t.textTertiary, fontWeight: active ? '700' : '400' }}>{l.name}</Text>
+                <View key={l.level} style={{ flexShrink: 0, paddingLeft: 10, paddingRight: 10, height: 44, justifyContent: 'center' }} onClick={() => setSelected(l.level)}>
+                  <Text numberOfLines={1} style={{ ...fs(13), color: active ? t.textPrimary : t.textTertiary, fontWeight: active ? '700' : '400' }}>{l.name}</Text>
                   {active && <View style={{ height: 2, backgroundColor: t.primary, marginTop: 3, borderRadius: 1 }} />}
                 </View>
               )
