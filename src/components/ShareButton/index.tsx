@@ -7,6 +7,12 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { shareContent } from '../../utils/share'
 
+// 改动说明（v1.7.47）：微信/抖音小程序原生 button 自带 ::after 伪元素边框，
+// 与组件内联圆角描边叠加会露出错位直线；按平台条件引入覆盖样式，
+// H5/RN 走 View 分支，不进伪元素规则（避免 RN 样式转换不支持 ::after）
+if (process.env.TARO_ENV === 'weapp') require('./index.weapp.scss')
+if (process.env.TARO_ENV === 'tt') require('./index.tt.scss')
+
 /** 分享按钮属性 */
 export interface ShareButtonProps {
   /** 分享标题 */
@@ -38,10 +44,11 @@ export default function ShareButton({ title, path, imageUrl, label = '分享' }:
     borderRadius: 20, borderWidth: 1, borderColor: t.border, backgroundColor: 'transparent',
   }
 
-  // 小程序：原生分享菜单（open-type=share），点按由平台接管
+  // 小程序：原生分享菜单（open-type=share），点按由平台接管；
+  // 改动说明（v1.7.47）：加 className，供平台后缀样式清除微信/抖音原生 button 默认 ::after 边框
   if (nativeShare) {
     return (
-      <Button openType="share" style={{ ...style, margin: 0, height: 'auto', lineHeight: 'normal' }}>
+      <Button openType="share" className="share-btn" style={{ ...style, margin: 0, height: 'auto', lineHeight: 'normal' }}>
         {inner}
       </Button>
     )
