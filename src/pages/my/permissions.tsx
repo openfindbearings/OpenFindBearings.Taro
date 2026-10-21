@@ -44,7 +44,7 @@ export default function PermissionsPage() {
               key={p.name}
               style={{
                 display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 14,
-                borderStyle: 'solid', borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border,
+                borderStyle: 'solid', borderWidth: 0, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border,
               }}
             >
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

@@ -168,7 +168,7 @@ export default function HistoryPage() {
     const actions: SwipeCellAction[] = sel.selectMode ? [] : [{ key: 'delete', label: '删除', color: '#FFFFFF', bg: t.danger, onPress: () => void onDeleteOneFromSheet({ id: opts.id, label: opts.title, targetId: opts.targetId }) }]
     const card = (
       <View
-        style={{ backgroundColor: t.bgCard, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+        style={{ backgroundColor: t.bgCard, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
         {...menuHandlers({ id: opts.id, title: opts.title, targetId: opts.targetId }, !sel.selectMode)}
         onClick={() => {
           if (sel.selectMode) { sel.toggle(opts.id); return }
@@ -199,14 +199,14 @@ export default function HistoryPage() {
   return (
     <PageLayout nav={<NavBar title="浏览历史" showBack rightIcons={rightIcons} />} overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? sheetFor.label : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}>
       {/* 主 tab：轴承|商家（不同实体保留 tab，符合列表规范分层原则） */}
-      <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: t.bgCard, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <View style={{ display: 'flex', flexDirection: 'row', backgroundColor: t.bgCard, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}>
         {([
           { key: 'bearing', label: '轴承' },
           { key: 'merchant', label: '商家' }
         ] as const).map((tb) => (
           <View
             key={tb.key}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 2, borderBottomColor: tab === tb.key ? t.primary : 'transparent' }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 2, borderBottomColor: tab === tb.key ? t.primary : 'transparent' }}
             onClick={() => switchTab(tb.key)}
           >
             <Text style={{ ...fs(15), color: tab === tb.key ? t.primaryText : t.textSecondary }}>{tb.label}</Text>

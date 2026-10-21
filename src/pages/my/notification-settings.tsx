@@ -50,7 +50,7 @@ export default function NotificationSettingsPage() {
 
   /** 单行（图标 + 标题说明 + 开关） */
   const row = (icon: string, label: string, desc: string, checked: boolean, disabled: boolean, onChange?: (v: boolean) => void) => (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <Icon name={icon} size={18} color={t.primary} />
       </View>
