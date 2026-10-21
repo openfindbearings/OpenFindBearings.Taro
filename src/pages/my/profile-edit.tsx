@@ -118,7 +118,7 @@ export default function ProfileEditPage() {
 
   /** 单行字段：左标题 + 右输入（RN 安全样式，无 position/伪元素） */
   const fieldRow = (label: string, node: any) => (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(15), color: t.textPrimary, width: 88 }}>{label}</Text>
       <View style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>{node}</View>
     </View>

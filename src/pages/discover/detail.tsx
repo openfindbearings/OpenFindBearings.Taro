@@ -400,7 +400,7 @@ export default function SourcingDetailPage() {
               点商户名可看商家主页；应答内容越全、在售凭证越硬，越值得考虑
             </Text>
             {detail.responses.map((r, i) => (
-              <View key={r.id} style={{ marginTop: i === 0 ? 0 : 0, paddingTop: i === 0 ? 0 : 12, borderStyle: 'solid', borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border }}>
+              <View key={r.id} style={{ marginTop: i === 0 ? 0 : 0, paddingTop: i === 0 ? 0 : 12, borderStyle: 'solid', borderWidth: 0, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border }}>
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text
                     style={{ ...fs(14), color: t.primary, fontWeight: '500', flex: 1 }}

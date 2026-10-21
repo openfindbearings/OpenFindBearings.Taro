@@ -388,7 +388,7 @@ export default function MerchantManagePage() {
 
   const filterTab = (key: Filter, label: string) => (
     <View
-      style={{ marginRight: 16, paddingBottom: 6, borderStyle: 'solid', borderBottomWidth: 2, borderBottomColor: filter === key ? t.primary : 'transparent' }}
+      style={{ marginRight: 16, paddingBottom: 6, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 2, borderBottomColor: filter === key ? t.primary : 'transparent' }}
       onClick={() => switchFilter(key)}
     >
       <Text style={{ ...fs(14), color: filter === key ? t.primary : t.textSecondary, fontWeight: filter === key ? '600' : '400' }}>{label}</Text>
@@ -434,7 +434,7 @@ export default function MerchantManagePage() {
               {searchList.slice(0, 5).map((b) => (
                 <View
                   key={b.id}
-                  style={{ borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, paddingTop: 8, paddingBottom: 8 }}
+                  style={{ borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border, paddingTop: 8, paddingBottom: 8 }}
                   onClick={() => { setPicked(b); setSearchList([]); setSearchKw(b.partNumber) }}
                 >
                   <Text style={{ ...fs(14), color: t.textPrimary }}>{b.partNumber}</Text>
@@ -481,7 +481,7 @@ export default function MerchantManagePage() {
             {items.map((item) => (
               <View
                 key={item.id}
-                style={{ backgroundColor: t.bgCard, padding: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === item.id ? 0.5 : 1 }}
+                style={{ backgroundColor: t.bgCard, padding: 12, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === item.id ? 0.5 : 1 }}
               >
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(15), color: t.textPrimary, flex: 1 }} numberOfLines={1}>{item.bearingPartNumber}</Text>

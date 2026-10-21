@@ -1,4 +1,4 @@
-# Taro UI 组件规范 v1.2.0
+# Taro UI 组件规范 v1.2.1
 
 ## 概述
 
@@ -8,6 +8,11 @@
 > 对应设计规范：界面设计规范 v1.3.0；架构设计：Taro架构设计 v1.0.0。
 
 ## 变更日志
+
+### v1.2.1 (2026-10-21)
+
+- 修正 v1.2.0 的描边做法：`borderStyle: 'solid'` 作用于四边，只写单边宽度时其余三边会回落到初始 `medium`（3px）加默认 `currentColor`，表现为元素被黑色粗框包住（微信小程序实测 29 处）。单边描边必须补 `borderWidth: 0` 作基准，再覆盖那一边的宽度与颜色。
+- 明确边界：本批只处理此前完全不显示的描边；单边分隔线在 H5/微信小程序同样需要「`borderStyle` + `borderWidth: 0` + 单边宽度」三件套，否则只会得到黑框。
 
 ### v1.2.0 (2026-10-21)
 
@@ -160,15 +165,21 @@ RN 端 `config.rn.postcss` 设 `scalable:false` + `deviceRatio:{750:2}`，SCSS `
 ### 描边：内联必须带 borderStyle
 
 ```tsx
-// 正确：三端都能画出描边
+// 正确：四边描边
 <Text style={{ borderStyle: 'solid', borderWidth: 1, borderColor: t.primary }}>已认证</Text>
 
 // 错误：只给宽度与颜色，H5/微信小程序按 CSS 规则视为 border-style: none，边框不显示
 <Text style={{ borderWidth: 1, borderColor: t.primary }}>已认证</Text>
+
+// 正确：单边分隔线——先 borderWidth: 0 压掉另外三边，再覆盖单边
+<View style={{ borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }} />
+
+// 错误：只写 borderStyle + 单边宽度，另外三边按初始 medium(3px) + currentColor 画出黑框
+<View style={{ borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }} />
 ```
 
 - H5 与微信小程序走 CSS：`border-width` 非 0 但 `border-style` 缺省为 `none`，不会绘制；RN 同样要求显式 `borderStyle`。
-- 单边分隔线（`borderTopWidth`/`borderBottomWidth`）写一次 `borderStyle: 'solid'` 即可，宽度为 0 的边不绘制。
+- `borderStyle` 一旦声明就作用于四边，未显式给宽度的边使用初始值 `medium`（3px）、未给颜色的边使用 `currentColor`，这是「黑框」的唯一成因。
 - 需绘制原生组件边框时同样适用（如小程序原生 `Button` 补 `borderStyle` 后才有圆角描边）。
 
 ### 小程序原生 Button 的 ::after 边框

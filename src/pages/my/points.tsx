@@ -125,7 +125,7 @@ export default function PointsPage() {
           {items.map((it) => (
             <View
               key={it.id}
-              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}
             >
               <View style={{ flex: 1 }}>
                 <Text style={{ ...fs(14), color: t.textPrimary }}>{GRANT_TYPE_LABELS[it.grantType] || it.grantType}</Text>

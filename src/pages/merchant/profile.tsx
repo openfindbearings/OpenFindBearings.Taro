@@ -205,7 +205,7 @@ export default function MerchantProfilePage() {
 
   /** 单行字段：左标题 + 右输入 */
   const fieldRow = (label: string, node: any) => (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(15), color: t.textPrimary, width: 88 }}>{label}</Text>
       <View style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>{node}</View>
     </View>
@@ -264,7 +264,7 @@ export default function MerchantProfilePage() {
           const st = latest ? DOC_STATUS_MAP[latest.status] : undefined
           const thumb = latest && latest.status !== 'Rejected' ? usableImage(latest.fileUrl) : ''
           return (
-            <View key={slot.type} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', borderStyle: 'solid', borderTopWidth: 1, borderTopColor: t.border, paddingTop: 10, paddingBottom: 10 }}>
+            <View key={slot.type} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.border, paddingTop: 10, paddingBottom: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={{ ...fs(14), color: t.textPrimary }}>{slot.label}</Text>
                 <Text style={{ ...fs(12), color: st ? (t as any)[st.color] : t.textTertiary, marginTop: 2 }}>

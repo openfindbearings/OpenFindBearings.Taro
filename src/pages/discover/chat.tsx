@@ -143,7 +143,7 @@ export default function SourcingChatPage() {
 
         {/* 输入区（只读态隐藏） */}
         {data && !data.readOnly ? (
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 12, borderStyle: 'solid', borderTopWidth: 1, borderTopColor: t.border }}>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 12, borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.border }}>
             <Input
               style={{ flex: 1, ...fs(14), color: t.textPrimary, minHeight: 40, backgroundColor: t.bgInput, borderRadius: 20, paddingLeft: 14, paddingRight: 14 }}
               value={text}

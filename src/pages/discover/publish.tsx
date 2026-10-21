@@ -244,7 +244,7 @@ export default function PublishSourcingPage() {
 
   /** 单行输入字段（label + input 行式布局） */
   const field = (key: keyof FormState, label: string, placeholder: string, required = false) => (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 48, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 48, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(14), color: required ? t.textPrimary : t.textSecondary, width: 76 }}>
         {label}{required ? ' *' : ''}
       </Text>
@@ -389,7 +389,7 @@ export default function PublishSourcingPage() {
                 {inviteList.map((m) => (
                   <View
                     key={m.merchantId}
-                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}
                     onClick={() => toggleChecked(m.merchantId)}
                   >
                     <View

@@ -119,7 +119,7 @@ export default function FollowedPage() {
         const actions: SwipeCellAction[] = sel.selectMode ? [] : [{ key: 'unfollow', label: '取消关注', color: '#FFFFFF', bg: t.danger, onPress: () => onUnfollow(item) }]
         const card = (
           <View
-            style={{ backgroundColor: t.bgCard, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+            style={{ backgroundColor: t.bgCard, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, display: 'flex', flexDirection: 'row', alignItems: 'center' }}
             {...menuHandlers(item, !sel.selectMode)}
             onClick={() => {
               if (sel.selectMode) { sel.toggle(item.id); return }
