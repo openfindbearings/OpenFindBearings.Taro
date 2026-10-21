@@ -1,6 +1,8 @@
 // 商家中心（v2.16.0 dashboard 改版）：自家管理员/员工的"经营驾驶舱"，
-// 对标抖音创作者中心——自上而下：店铺概况 → 数据概览(KPI) → 待办中心 → 金库 → 福利等级 →
-// 功能宫格 → 勋章 → 集体任务 → 实力榜。
+// 对标抖音创作者中心——自上而下：店铺概况 → 数据概览(KPI) → 待办中心 → 功能宫格 → 金库 →
+// 商家福利 → 集体任务 → 勋章 → 实力榜。
+// 改动说明（v1.7.49）：按用户定案调整卡片顺序（商家功能前移、勋章后移），
+//   数据概览四项均可点击进入对应详情页（商品/成员/金库/牌级）。
 // 改动说明（v2.16.0）：原"三卡镜像个人我的页"信息罗列式布局，升级为 dashboard——
 //   新增数据概览（在售商品/成员/金库/等级）与待办中心（待审商品/待发货订单/待确认邀请），
 //   把"要商家动手的事"前置；数据全部复用既有 BFF 端点，无后端改动。
@@ -133,12 +135,12 @@ export default function MerchantHomePage() {
     )
   }
 
-  // 概览指标（KPI 四宫格）
+  // 概览指标（KPI 四宫格，v1.7.49）：每项带详情页地址，点击直达对应页
   const kpis = [
-    { label: '在售商品', value: `${stats.onSale}`, unit: '件' },
-    { label: '在职成员', value: `${stats.staff}`, unit: '人' },
-    { label: '商家金库', value: isAdmin ? `${treasury?.balance ?? 0}` : '—', unit: isAdmin ? '商家金' : '' },
-    { label: '商家牌级', value: buff && buff.rank > 0 ? (MERCHANT_GRADE_LABELS[buff.rank] ?? `Lv${buff.rank}`) : '未定级', unit: '' },
+    { label: '在售商品', value: `${stats.onSale}`, unit: '件', url: '/pages/merchant/manage' },
+    { label: '在职成员', value: `${stats.staff}`, unit: '人', url: '/pages/merchant/members' },
+    { label: '商家金库', value: isAdmin ? `${treasury?.balance ?? 0}` : '—', unit: isAdmin ? '商家金' : '', url: isAdmin ? '/pages/merchant/treasury' : '' },
+    { label: '商家牌级', value: buff && buff.rank > 0 ? (MERCHANT_GRADE_LABELS[buff.rank] ?? `Lv${buff.rank}`) : '未定级', unit: '', url: '/pages/merchant/level' },
   ]
 
   // 待办事项（有则前置，点击直达处理入口）
@@ -189,12 +191,20 @@ export default function MerchantHomePage() {
           <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>数据概览</Text>
           <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
             {kpis.map((k) => (
-              <View key={k.label} style={{ width: '25%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4, paddingBottom: 4 }}>
+              <View
+                key={k.label}
+                style={{ width: '25%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4, paddingBottom: 4 }}
+                onClick={k.url ? () => Taro.navigateTo({ url: k.url }) : undefined}
+              >
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}>
                   <Text style={{ ...fs(18), color: t.primary, fontWeight: 'bold' }} numberOfLines={1}>{k.value}</Text>
                   {k.unit ? <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 2 }}>{k.unit}</Text> : null}
                 </View>
-                <Text style={{ ...fs(11), color: t.textSecondary, marginTop: 3 }}>{k.label}</Text>
+                {/* 改动说明（v1.7.49）：可点项在标签后挂小箭头，给"能进详情"以视觉提示 */}
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 3 }}>
+                  <Text style={{ ...fs(11), color: t.textSecondary }}>{k.label}</Text>
+                  {k.url ? <Icon name='chevron-right' size={10} color={t.textTertiary} /> : null}
+                </View>
               </View>
             ))}
           </View>
@@ -224,7 +234,22 @@ export default function MerchantHomePage() {
           </View>
         )}
 
-        {/* 3. 商家金库卡（仅管理员，镜像个人积分卡；员工不经手钱货不渲染） */}
+        {/* 3. 功能宫格卡（镜像我的页功能四宫格） */}
+        <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
+          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>商家功能</Text>
+          <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 }}>
+            {actions.map((a) => (
+              <View key={a.url} style={{ width: '33.33%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: 10 }} onClick={() => Taro.navigateTo({ url: a.url })}>
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <Icon name={a.icon} size={22} color={t.primary} />
+                </View>
+                <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 5 }}>{a.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* 4. 商家金库卡（仅管理员，镜像个人积分卡；员工不经手钱货不渲染） */}
         {isAdmin && (
           <View
             style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', margin: 16, marginTop: 12, padding: 16, backgroundColor: t.bgCard, borderRadius: 12 }}
@@ -243,54 +268,7 @@ export default function MerchantHomePage() {
           </View>
         )}
 
-        {/* 4. 功能宫格卡（镜像我的页功能四宫格） */}
-        <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
-          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600' }}>商家功能</Text>
-          <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 }}>
-            {actions.map((a) => (
-              <View key={a.url} style={{ width: '33.33%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', padding: 10 }} onClick={() => Taro.navigateTo({ url: a.url })}>
-                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <Icon name={a.icon} size={22} color={t.primary} />
-                </View>
-                <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 5 }}>{a.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* 5. 商家勋章卡（镜像我的勋章卡）
-            改动说明（用户定案）：点击进商家勋章展示页（medals，镜像个人勋章页），
-            不进 public 详情页——自家荣誉看自家展厅 */}
-        <View
-          style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
-          onClick={() => Taro.navigateTo({ url: '/pages/merchant/medals' })}
-        >
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家勋章</Text>
-            <Text style={{ ...fs(13), color: t.textTertiary }}>共 {ach?.unlockedCount ?? 0} 枚 ›</Text>
-          </View>
-          {medalItems.length === 0 ? (
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>上架供给、认证资料、集体任务都能点亮勋章</Text>
-          ) : (
-            <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
-              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-                {medalItems.map((b) => {
-                  return (
-                    <View key={b.key} style={{ width: 64, display: 'flex', alignItems: 'center', marginRight: 6 }}>
-                      <MedalImage imageKey={b.imageKey} icon={b.icon || 'award'} rare={b.rare} variant='card' primary={t.primary} primaryLight={t.primaryLight} />
-                      <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }} numberOfLines={1}>{b.name}</Text>
-                    </View>
-                  )
-                })}
-              </View>
-            </ScrollView>
-          )}
-          {(mtasks?.completedTotal ?? 0) > 0 && (
-            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>集体任务累计达成 {mtasks?.completedTotal} 次</Text>
-          )}
-        </View>
-
-        {/* 6. 商家福利卡（v2.6.0 拆分自个人任务中心）：本店给全体在职成员的被动加成 */}
+        {/* 5. 商家福利卡（v2.6.0 拆分自个人任务中心）：本店给全体在职成员的被动加成 */}
         <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家福利</Text>
@@ -333,7 +311,7 @@ export default function MerchantHomePage() {
           ) : null}
         </View>
 
-        {/* 7. 集体任务进度板（帮派 raid 板，数据按本商家查询） */}
+        {/* 6. 集体任务进度板（帮派 raid 板，数据按本商家查询） */}
         {mtasks && mtasks.tasks.length > 0 && (
           <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
@@ -362,6 +340,38 @@ export default function MerchantHomePage() {
             })}
           </View>
         )}
+
+        {/* 7. 商家勋章卡（镜像我的勋章卡）
+            改动说明（用户定案）：点击进商家勋章展示页（medals，镜像个人勋章页），
+            不进 public 详情页——自家荣誉看自家展厅 */}
+        <View
+          style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}
+          onClick={() => Taro.navigateTo({ url: '/pages/merchant/medals' })}
+        >
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家勋章</Text>
+            <Text style={{ ...fs(13), color: t.textTertiary }}>共 {ach?.unlockedCount ?? 0} 枚 ›</Text>
+          </View>
+          {medalItems.length === 0 ? (
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>上架供给、认证资料、集体任务都能点亮勋章</Text>
+          ) : (
+            <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
+              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+                {medalItems.map((b) => {
+                  return (
+                    <View key={b.key} style={{ width: 64, display: 'flex', alignItems: 'center', marginRight: 6 }}>
+                      <MedalImage imageKey={b.imageKey} icon={b.icon || 'award'} rare={b.rare} variant='card' primary={t.primary} primaryLight={t.primaryLight} />
+                      <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }} numberOfLines={1}>{b.name}</Text>
+                    </View>
+                  )
+                })}
+              </View>
+            </ScrollView>
+          )}
+          {(mtasks?.completedTotal ?? 0) > 0 && (
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>集体任务累计达成 {mtasks?.completedTotal} 次</Text>
+          )}
+        </View>
 
         {/* 8. 商家实力月榜（v2.6.0 拆分自个人任务中心）：本月金库入账 Top5 + 本店名次回显 */}
         <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>

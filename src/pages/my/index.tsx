@@ -203,7 +203,9 @@ export default function MyPage() {
                   </View>
                   {/* v2.13.0 等级玩法：段位彩牌挪至用户信息卡（对标主流账号卡版式，替代手机号行），
                       点击进段位详情页；手机号在资料编辑页仍可见 */}
-                  <View onClick={() => { if (isLoggedIn) void Taro.navigateTo({ url: '/pages/my/level' }) }}>
+                  {/* 改动说明（v1.7.49）：徽章嵌在整块可点的 user-info 内，小程序 tap 会冒泡到父级
+                      再跳资料页（叠两层）；先停冒泡再跳段位页，RN 无 stopPropagation 时降级为 no-op */}
+                  <View onClick={(e) => { e?.stopPropagation?.(); if (isLoggedIn) void Taro.navigateTo({ url: '/pages/my/level' }) }}>
                     <View style={{ alignSelf: 'flex-start', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: getLevelBand(points.level).bg, borderRadius: 10, paddingLeft: 8, paddingRight: 5, paddingTop: 2, paddingBottom: 2, marginTop: 4 }}>
                       <Text style={{ ...fs(11), color: '#FFFFFF', fontWeight: '600' }}>Lv.{points.level ?? 1} {points.levelName ?? ''}</Text>
                       <Icon name='chevron-right' size={12} color='#FFFFFF' />
