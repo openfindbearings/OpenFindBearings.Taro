@@ -352,7 +352,7 @@ export default function NotificationsPage() {
                   >
                     {/* 多选模式勾选框 */}
                     {sel.selectMode && (
-                      <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: checked ? t.primary : t.textTertiary, backgroundColor: checked ? t.primary : 'transparent', alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 8, marginTop: 8 }}>
+                      <View style={{ width: 20, height: 20, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: checked ? t.primary : t.textTertiary, backgroundColor: checked ? t.primary : 'transparent', alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginRight: 8, marginTop: 8 }}>
                         {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
                       </View>
                     )}

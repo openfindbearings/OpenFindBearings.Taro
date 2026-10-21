@@ -597,7 +597,7 @@ export default function MerchantApplyPage() {
 
   /** 左标题右控件的单行字段行（自营表单用） */
   const fieldRow = (label: string, node: any) => (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(15), color: t.textPrimary, width: 92 }}>{label}</Text>
       <View style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>{node}</View>
     </View>
@@ -622,7 +622,7 @@ export default function MerchantApplyPage() {
   /** 操作方式选择卡片（图标 + 标题 + 描述 + 右箭头） */
   const optionCard = (icon: string, title: string, desc: string, onClick: () => void) => (
     <View
-      style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, borderWidth: 1, borderColor: t.border, padding: 14, marginBottom: 12 }}
+      style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, borderRadius: 12, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, padding: 14, marginBottom: 12 }}
       onClick={onClick}
     >
       <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -716,7 +716,7 @@ export default function MerchantApplyPage() {
         })
       )}
       <View
-        style={{ backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center', borderWidth: 1, borderColor: t.primary }}
+        style={{ backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, display: 'flex', alignItems: 'center', borderStyle: 'solid', borderWidth: 1, borderColor: t.primary }}
         onClick={() => setPhase('search')}
       >
         <Text style={{ ...fs(15), color: t.primary }}>不是我的商户？我自己申请入驻</Text>
@@ -731,7 +731,7 @@ export default function MerchantApplyPage() {
         输入商家名称关键字，查询商家全称
       </Text>
       {/* 描边胶囊 + 放大镜：让搜索框在浅灰卡片背景上足够醒目（修复：原无边框浅灰底不明显） */}
-      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 10, borderWidth: 1, borderColor: t.border, paddingLeft: 12, paddingRight: 12 }}>
+      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, paddingLeft: 12, paddingRight: 12 }}>
         <Icon name="search" size={18} color={t.textTertiary} />
         <Input
           style={{ flex: 1, ...fs(15), color: t.textPrimary, marginLeft: 8, paddingTop: 11, paddingBottom: 11, minHeight: 42 }}
@@ -765,7 +765,7 @@ export default function MerchantApplyPage() {
               </View>
               <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 6 }}>{item.type}</Text>
-                <View style={{ borderRadius: 4, borderWidth: 1, borderColor: badgeColor, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1 }}>
+                <View style={{ borderRadius: 4, borderStyle: 'solid', borderWidth: 1, borderColor: badgeColor, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1 }}>
                   <Text style={{ ...fs(11), color: badgeColor }}>{item.statusText || '可认领'}</Text>
                 </View>
               </View>
@@ -776,7 +776,7 @@ export default function MerchantApplyPage() {
       {/* 新建入口：改为带"+"的描边按钮，去掉原 borderTopWidth 横线（修复：横线易被误认为输入位置） */}
       <View style={{ marginTop: 18 }}>
         <View
-          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, borderWidth: 1, borderColor: t.primary }}
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: t.bgCard, borderRadius: 24, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary }}
           onClick={onCreateNew}
         >
           <Text style={{ ...fs(16), color: t.primary, marginRight: 6 }}>+</Text>

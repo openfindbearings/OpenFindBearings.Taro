@@ -265,7 +265,7 @@ export default function DiscoverPage() {
               </ScrollView>
               <View style={{ display: 'flex', flexDirection: 'row', marginTop: 8 }}>
                 <View
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 10, paddingBottom: 10, borderRadius: 10, borderWidth: 1, borderColor: t.border }}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 10, paddingBottom: 10, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
                   onClick={resetFilter}
                 >
                   <Text style={{ ...fs(14), color: t.textSecondary }}>重置</Text>

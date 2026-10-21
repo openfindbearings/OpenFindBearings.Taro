@@ -41,7 +41,7 @@ export default function ShareButton({ title, path, imageUrl, label = '分享' }:
   const style = {
     display: 'flex', flexDirection: 'row' as const, alignItems: 'center', justifyContent: 'center',
     paddingLeft: 14, paddingRight: 14, paddingTop: 8, paddingBottom: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: t.border, backgroundColor: 'transparent',
+    borderRadius: 20, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, backgroundColor: 'transparent',
   }
 
   // 小程序：原生分享菜单（open-type=share），点按由平台接管；

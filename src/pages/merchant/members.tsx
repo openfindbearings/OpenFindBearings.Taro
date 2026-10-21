@@ -211,7 +211,7 @@ export default function MerchantMembersPage() {
               return (
                 <View
                   key={rowKey}
-                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === rowKey ? 0.5 : 1 }}
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, padding: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === rowKey ? 0.5 : 1 }}
                   onClick={() => setTarget(m)}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.bgInput, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden', marginRight: 12 }}>

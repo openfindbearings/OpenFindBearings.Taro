@@ -285,7 +285,7 @@ export default function RespondPage() {
               onInput={(e) => setRow(idx, { partNumber: e.detail.value })}
             />
             <View
-              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6, borderRadius: 14, borderWidth: 1, borderColor: t.border, marginLeft: 8 }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6, borderRadius: 14, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, marginLeft: 8 }}
               onClick={() => { void togglePick(idx) }}
             >
               <Text style={{ ...fs(12), color: pickRow === idx ? t.primary : t.textSecondary }}>{pickRow === idx ? '收起在售' : '从在售选'}</Text>
@@ -296,7 +296,7 @@ export default function RespondPage() {
           ) : null}
           {/* 卡内在售选择区（前 5 条完整渲染 + 更多提示，不嵌裁切滚动） */}
           {pickRow === idx && (
-            <View style={{ marginTop: 8, borderTopWidth: 1, borderTopColor: t.border }}>
+            <View style={{ marginTop: 8, borderStyle: 'solid', borderTopWidth: 1, borderTopColor: t.border }}>
               {pickLoading ? (
                 <Text style={{ ...fs(12), color: t.textTertiary, paddingTop: 8, paddingBottom: 8 }}>加载在售商品中…</Text>
               ) : filteredList(idx).length === 0 ? (
@@ -306,7 +306,7 @@ export default function RespondPage() {
                   {filteredList(idx).slice(0, 5).map((b) => (
                     <View
                       key={b.id}
-                      style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingTop: 9, paddingBottom: 9, borderBottomWidth: 1, borderBottomColor: t.border }}
+                      style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingTop: 9, paddingBottom: 9, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}
                       onClick={() => pickOnSale(idx, b)}
                     >
                       <Text style={{ ...fs(13), color: t.textPrimary, flexShrink: 1 }} numberOfLines={1}>{b.bearingPartNumber}</Text>

@@ -16,6 +16,7 @@ import NavBar from '../../components/NavBar'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useMerchantStore } from '../../stores/merchant'
+import { formatPriceText } from '../../utils/format'
 import {
   getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing, deleteMyBearing,
   type MerchantBearingItem
@@ -387,7 +388,7 @@ export default function MerchantManagePage() {
 
   const filterTab = (key: Filter, label: string) => (
     <View
-      style={{ marginRight: 16, paddingBottom: 6, borderBottomWidth: 2, borderBottomColor: filter === key ? t.primary : 'transparent' }}
+      style={{ marginRight: 16, paddingBottom: 6, borderStyle: 'solid', borderBottomWidth: 2, borderBottomColor: filter === key ? t.primary : 'transparent' }}
       onClick={() => switchFilter(key)}
     >
       <Text style={{ ...fs(14), color: filter === key ? t.primary : t.textSecondary, fontWeight: filter === key ? '600' : '400' }}>{label}</Text>
@@ -433,7 +434,7 @@ export default function MerchantManagePage() {
               {searchList.slice(0, 5).map((b) => (
                 <View
                   key={b.id}
-                  style={{ borderBottomWidth: 1, borderBottomColor: t.border, paddingTop: 8, paddingBottom: 8 }}
+                  style={{ borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, paddingTop: 8, paddingBottom: 8 }}
                   onClick={() => { setPicked(b); setSearchList([]); setSearchKw(b.partNumber) }}
                 >
                   <Text style={{ ...fs(14), color: t.textPrimary }}>{b.partNumber}</Text>
@@ -480,7 +481,7 @@ export default function MerchantManagePage() {
             {items.map((item) => (
               <View
                 key={item.id}
-                style={{ backgroundColor: t.bgCard, padding: 12, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === item.id ? 0.5 : 1 }}
+                style={{ backgroundColor: t.bgCard, padding: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === item.id ? 0.5 : 1 }}
               >
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...fs(15), color: t.textPrimary, flex: 1 }} numberOfLines={1}>{item.bearingPartNumber}</Text>
@@ -490,7 +491,8 @@ export default function MerchantManagePage() {
                   </View>
                 </View>
                 <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
-                  {[item.brandName, item.bearingTypeName, item.priceDescription].filter(Boolean).join(' · ') || '暂无规格'}
+                  {/* 改动说明（v1.7.50）：报价是自由文本，纯数字时补 ¥，避免与库存/起订量混淆 */}
+                {[item.brandName, item.bearingTypeName, formatPriceText(item.priceDescription)].filter(Boolean).join(' · ') || '暂无规格'}
                 </Text>
                 {/* v2.15.0 状态统一：已驳回显示理由（可改重提） */}
                 {item.reviewStatus === 3 && item.approvalComment ? (

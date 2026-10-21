@@ -61,7 +61,7 @@ export default function PublishIdentitySheet({ visible, items, currentId, onPick
           return (
             <View
               key={m.key}
-              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border, backgroundColor: checked ? t.primaryLight : 'transparent', borderRadius: 8, paddingLeft: 8, paddingRight: 8 }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border, backgroundColor: checked ? t.primaryLight : 'transparent', borderRadius: 8, paddingLeft: 8, paddingRight: 8 }}
               onClick={() => setSelected(m.key)}
             >
               <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: m.key === PERSONAL ? t.bgInput : t.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 12 }}>

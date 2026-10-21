@@ -202,7 +202,7 @@ export default function TasksPage() {
                   style={{
                     width: 30, height: 30, borderRadius: 15, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center',
                     backgroundColor: c.state === 'done' ? t.primary : 'transparent',
-                    borderWidth: 1.5,
+                    borderStyle: 'solid', borderWidth: 1.5,
                     borderColor: c.state === 'done' ? t.primary : c.state === 'today' ? t.primary : t.border,
                   }}
                 >
@@ -239,7 +239,7 @@ export default function TasksPage() {
               key={task.grantType}
               style={{
                 display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: i === 0 ? 12 : 0, paddingTop: i === 0 ? 0 : 12,
-                borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border,
+                borderStyle: 'solid', borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border,
               }}
             >
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.primaryLight, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

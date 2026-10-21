@@ -102,7 +102,7 @@ export default function CorrectionSheet({ visible, targetType, targetId, onClose
                     style={{
                       paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, marginRight: 8, marginBottom: 8,
                       backgroundColor: active ? t.primaryLight : t.bgInput,
-                      borderWidth: 1, borderColor: active ? t.primary : 'transparent'
+                      borderStyle: 'solid', borderWidth: 1, borderColor: active ? t.primary : 'transparent'
                     }}
                     onClick={() => setFieldKey(f.key)}
                   >

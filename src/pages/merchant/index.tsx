@@ -212,7 +212,7 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
           改动说明（v2.6.0 用户定案）：整卡点击已直进商家管理页（onCardTap），"商家管理"按钮删除；
           仅剩申请认证业务动作（非跳转保留原位），stopPropagation 防冒泡触发卡片进管理页 */}
       {isActive && isCurrent && m.role === 'MerchantAdmin' && !m.isVerified && (
-        <View className='mch-actions' style={{ borderTopWidth: 1, borderTopColor: t.borderLight }}>
+        <View className='mch-actions' style={{ borderStyle: 'solid', borderTopWidth: 1, borderTopColor: t.borderLight }}>
           <View
             className='mch-action'
             style={{ backgroundColor: t.bgInput }}
