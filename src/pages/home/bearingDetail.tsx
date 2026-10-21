@@ -26,6 +26,7 @@ import {
 import MediaImage from '../../components/MediaImage'
 // 改动说明（v1.7.42 双徽章并列）：牌级彩牌配色/中文名唯一权威来源
 import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
+import { formatPriceText } from '../../utils/format'
 import './bearingDetail.scss'
 
 /** 发布寻货预填 storage 键（轴承详情 → 发布页跨页传参，RN 兼容的异步存取对象） */
@@ -190,7 +191,7 @@ export default function BearingDetailPage() {
             <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
             {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
             {m.isVerified ? (
-              <Text style={{ ...fs(10), color: t.primary, borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
+              <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
             ) : null}
             {/* 改动说明（v1.7.42 双徽章并列）：牌级彩牌与"已认证"并列（认证=类型、牌级=等级），互不覆盖 */}
             {(m.grade ?? 0) >= 1 ? (
@@ -204,7 +205,8 @@ export default function BearingDetailPage() {
               <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
             ) : null}
           </View>
-          {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{m.price}</Text> : null}
+          {/* 改动说明（v1.7.50）：报价原本只显示商家填的自由文本，纯数字时是裸数字，补 ¥ 说明这是价格 */}
+          {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{formatPriceText(m.price)}</Text> : null}
         </View>
         <Icon name="chevron_right" size={18} color={t.textTertiary} />
       </View>

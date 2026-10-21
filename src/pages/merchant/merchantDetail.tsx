@@ -17,6 +17,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { setObject } from '../../utils/storage'
+import { formatPriceText } from '../../utils/format'
 import { checkFollow, toggleFollow, recordMerchantView } from '../../services/user'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
 import MediaImage from '../../components/MediaImage'
@@ -194,7 +195,7 @@ export default function MerchantDetailPage() {
             进入管理页的导航（建议1 落地：两界面互留导航） */}
         {detail?.isMerchantMember && (
           <View
-            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 12, marginTop: 0, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, borderRadius: 10, backgroundColor: 'rgba(139,92,246,0.10)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.35)' }}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 12, marginTop: 0, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, borderRadius: 10, backgroundColor: 'rgba(139,92,246,0.10)', borderStyle: 'solid', borderWidth: 1, borderColor: 'rgba(139,92,246,0.35)' }}
             onClick={() => Taro.navigateTo({ url: '/pages/merchant/home' })}
           >
             <Icon name='shield' size={16} color='#8B5CF6' />
@@ -256,7 +257,8 @@ export default function MerchantDetailPage() {
                   {b.bearingTypeName}{b.brandName ? ` · ${b.brandName}` : ''}
                 </Text>
               </View>
-              {b.priceDescription ? <Text className='md-list-price' style={{ ...fs(14), color: t.primaryText }}>{b.priceDescription}</Text> : null}
+              {/* 改动说明（v1.7.50）：纯数字报价补人民币符号，避免裸数字被误读为库存/数量 */}
+              {b.priceDescription ? <Text className='md-list-price' style={{ ...fs(14), color: t.primaryText }}>{formatPriceText(b.priceDescription)}</Text> : null}
               <Icon name="chevron_right" size={18} color={t.textTertiary} />
             </View>
           ))}

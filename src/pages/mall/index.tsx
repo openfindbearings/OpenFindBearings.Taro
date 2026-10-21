@@ -264,7 +264,7 @@ export default function MallPage() {
             <FilterRange label='外径' t={t} fs={fs} min={sizeInput.minOut} max={sizeInput.maxOut} onMin={(v: string) => setSizeInput((s) => ({ ...s, minOut: v }))} onMax={(v: string) => setSizeInput((s) => ({ ...s, maxOut: v }))} />
             <FilterRange label='宽度' t={t} fs={fs} min={sizeInput.minW} max={sizeInput.maxW} onMin={(v: string) => setSizeInput((s) => ({ ...s, minW: v }))} onMax={(v: string) => setSizeInput((s) => ({ ...s, maxW: v }))} />
             <View style={{ display: 'flex', flexDirection: 'row', marginTop: 14 }}>
-              <View style={{ flex: 1, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.border }} onClick={clearSize}>
+              <View style={{ flex: 1, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', borderStyle: 'solid', borderWidth: 1, borderColor: t.border }} onClick={clearSize}>
                 <Text style={{ ...fs(14), color: t.textSecondary }}>重置</Text>
               </View>
               <View style={{ flex: 1, marginLeft: 10, borderRadius: 18, paddingTop: 9, paddingBottom: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t.primary }} onClick={applySize}>

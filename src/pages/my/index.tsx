@@ -184,7 +184,7 @@ export default function MyPage() {
           <View className='user-section'>
             {isLoggedIn ? (
               <View className='user-info' onClick={handleProfileClick}>
-                <View className='avatar' style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' }}>
+                <View className='avatar' style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderStyle: 'solid', borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' }}>
                   {avatar ? (
                     <Image className='avatar-img' src={avatar} mode='aspectFill' />
                   ) : (
@@ -196,7 +196,7 @@ export default function MyPage() {
                     <Text className='nickname' style={{ ...fs(19), color: '#FFFFFF' }}>{authUser?.nickname || authUser?.userName || '已登录用户'}</Text>
                     {/* v2.8.0 称号系统：佩戴称号金色徽章（昵称旁） */}
                     {equippedTitle && (
-                      <View style={{ marginLeft: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#F59E0B' }}>
+                      <View style={{ marginLeft: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, borderStyle: 'solid', borderWidth: 1, borderColor: '#F59E0B' }}>
                         <Text style={{ ...fs(11), color: '#FDE68A', fontWeight: '600' }}>{equippedTitle}</Text>
                       </View>
                     )}
@@ -216,7 +216,7 @@ export default function MyPage() {
               </View>
             ) : (
               <View className='user-info' onClick={() => Taro.navigateTo({ url: '/pages/auth/login' })}>
-                <View className='avatar' style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' }}>
+                <View className='avatar' style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderStyle: 'solid', borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' }}>
                   <Icon name="log_in" size={26} color="#FFFFFF" />
                 </View>
                 <View className='user-detail'>

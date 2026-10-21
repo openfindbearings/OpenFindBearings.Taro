@@ -177,7 +177,7 @@ export default function MySourcingPage() {
               <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 {/* 多选模式勾选框（终态单可勾，进行中灰态不可选） */}
                 {sel.selectMode && (
-                  <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: checked ? t.primary : (isClosed(item) ? t.textTertiary : t.border), backgroundColor: checked ? t.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                  <View style={{ width: 20, height: 20, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: checked ? t.primary : (isClosed(item) ? t.textTertiary : t.border), backgroundColor: checked ? t.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                     {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
                   </View>
                 )}
@@ -207,7 +207,7 @@ export default function MySourcingPage() {
                 {open && item.isPrivate && !sel.selectMode && (
                   <View
                     onClick={(e) => { e?.stopPropagation?.(); void doPublishPublic(item) }}
-                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderWidth: 1, borderColor: t.border, marginRight: 8 }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, marginRight: 8 }}
                   >
                     <Text style={{ ...fs(12), color: t.textSecondary }}>转公开</Text>
                   </View>
@@ -216,7 +216,7 @@ export default function MySourcingPage() {
                 {open && !sel.selectMode && (
                   <View
                     onClick={(e) => { e?.stopPropagation?.(); void openPinPicker(item) }}
-                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderWidth: 1, borderColor: t.primary }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary }}
                   >
                     <Icon name='arrow-up-circle' size={13} color={t.primary} />
                     <Text style={{ ...fs(12), color: t.primary, marginLeft: 3 }}>{item.isPinned ? '续置顶' : '置顶'}</Text>
@@ -262,7 +262,7 @@ export default function MySourcingPage() {
               <View
                 key={card.id}
                 onClick={() => void doPin(card)}
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 12, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: t.borderColor, backgroundColor: t.bgMain }}
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 12, padding: 12, borderRadius: 12, borderStyle: 'solid', borderWidth: 1, borderColor: t.borderColor, backgroundColor: t.bgMain }}
               >
                 <Icon name={card.icon || 'arrow-up-circle'} size={20} color={t.primary} />
                 <View style={{ flex: 1, marginLeft: 10 }}>

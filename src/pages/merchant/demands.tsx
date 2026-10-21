@@ -186,7 +186,7 @@ export default function MerchantDemandsPage() {
             >
               <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 {sel.selectMode && (
-                  <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 1, borderColor: checked ? t.primary : (canDelete(item) ? t.textTertiary : t.border), backgroundColor: checked ? t.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                  <View style={{ width: 20, height: 20, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: checked ? t.primary : (canDelete(item) ? t.textTertiary : t.border), backgroundColor: checked ? t.primary : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                     {checked ? <Icon name='check' size={13} color='#FFFFFF' /> : null}
                   </View>
                 )}
@@ -220,7 +220,7 @@ export default function MerchantDemandsPage() {
                 {open && item.isPrivate && item.isMine && !sel.selectMode && (
                   <View
                     onClick={(e) => { e?.stopPropagation?.(); void doPublishPublic(item) }}
-                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderWidth: 1, borderColor: t.border }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 14, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
                   >
                     <Text style={{ ...fs(12), color: t.textSecondary }}>转公开</Text>
                   </View>

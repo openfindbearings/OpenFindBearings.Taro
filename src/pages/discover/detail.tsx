@@ -400,7 +400,7 @@ export default function SourcingDetailPage() {
               点商户名可看商家主页；应答内容越全、在售凭证越硬，越值得考虑
             </Text>
             {detail.responses.map((r, i) => (
-              <View key={r.id} style={{ marginTop: i === 0 ? 0 : 0, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border }}>
+              <View key={r.id} style={{ marginTop: i === 0 ? 0 : 0, paddingTop: i === 0 ? 0 : 12, borderStyle: 'solid', borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.border }}>
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                   <Text
                     style={{ ...fs(14), color: t.primary, fontWeight: '500', flex: 1 }}
@@ -495,7 +495,7 @@ export default function SourcingDetailPage() {
                   <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>修改应答</Text>
                 </View>
                 <View
-                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, borderRadius: 16, borderWidth: 1, borderColor: t.border }}
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, borderRadius: 16, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
                   onClick={() => { void doCancelResponse() }}
                 >
                   <Text style={{ ...fs(13), color: t.textSecondary }}>取消应答</Text>
@@ -527,7 +527,7 @@ export default function SourcingDetailPage() {
               </View>
             ) : null}
             <View
-              style={{ flex: 1, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderWidth: 1, borderColor: t.border }}
+              style={{ flex: 1, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
               onClick={() => { void doCancel() }}
             >
               <Text style={{ ...fs(15), color: t.textSecondary }}>取消寻货</Text>

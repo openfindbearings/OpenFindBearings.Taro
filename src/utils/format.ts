@@ -33,6 +33,16 @@ export function formatPrice(price?: number | null, negotiable?: boolean): string
   return `¥${price.toFixed(2)}${negotiable ? ' (议价)' : ''}`
 }
 
+/**
+ * 格式化自由文本报价（v1.7.50）：商家填的 priceDescription 是纯数字时补人民币符号（"10" → "¥10"），
+ * 其余描述（"面议""含税""10 元/套"）原样返回，避免页面上只剩一个裸数字看不出是价格
+ */
+export function formatPriceText(desc?: string | null): string {
+  if (!desc) return ''
+  const s = desc.trim()
+  return /^\d+(\.\d+)?$/.test(s) ? `¥${s}` : s
+}
+
 /** 截断文本 */
 export function truncate(text: string, maxLen: number): string {
   if (!text || text.length <= maxLen) return text || ''

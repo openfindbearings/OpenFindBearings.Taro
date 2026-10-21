@@ -156,7 +156,7 @@ export default function LevelPage() {
         {entries.map((e, i) => (
           <View
             key={e.url}
-            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: i === entries.length - 1 ? 0 : 1, borderBottomColor: t.border }}
+            style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 14, borderStyle: 'solid', borderBottomWidth: i === entries.length - 1 ? 0 : 1, borderBottomColor: t.border }}
             onClick={() => Taro.navigateTo({ url: e.url })}
           >
             <Icon name={e.icon} size={18} color={t.primary} />

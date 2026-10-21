@@ -49,7 +49,7 @@ function AchievementCard({ item, t, fs }: { item: AchievementItem; t: any; fs: (
     <View style={{
       backgroundColor: item.unlocked ? t.bgCard : t.bgMain,
       borderRadius: 12, padding: 12, marginBottom: 10,
-      borderWidth: 1, borderColor: item.unlocked ? t.primary : t.borderColor,
+      borderStyle: 'solid', borderWidth: 1, borderColor: item.unlocked ? t.primary : t.borderColor,
       opacity: item.unlocked || item.hidden ? 1 : 0.75,
       display: 'flex', flexDirection: 'row', alignItems: 'center'
     }}>

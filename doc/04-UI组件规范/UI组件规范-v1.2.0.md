@@ -1,4 +1,4 @@
-# Taro UI 组件规范 v1.1.0
+# Taro UI 组件规范 v1.2.0
 
 ## 概述
 
@@ -8,6 +8,12 @@
 > 对应设计规范：界面设计规范 v1.3.0；架构设计：Taro架构设计 v1.0.0。
 
 ## 变更日志
+
+### v1.2.0 (2026-10-21)
+
+- 新增内联描边红线：`style` 里写 `borderWidth` 必须同时写 `borderStyle: 'solid'`（H5/微信小程序只给宽度与颜色画不出边框，RN 也要求显式声明），修正全仓 34 个文件 67 处描边/分隔线此前不显示的问题。
+- 新增小程序原生 `Button` 规范：微信/抖音原生按钮自带 `::after` 方角边框，需按平台后缀样式（`index.weapp.scss` / `index.tt.scss`）清除，内联 style 无法覆盖。
+- 新增报价文案规范：自由文本报价为纯数字时统一补人民币符号（`utils/format.ts` 的 `formatPriceText`），避免裸数字被误读为库存或数量。
 
 ### v1.1.0 (2026-09-07)
 
@@ -150,6 +156,31 @@ RN 端 `config.rn.postcss` 设 `scalable:false` + `deviceRatio:{750:2}`，SCSS `
 - 只用 Flex 布局，禁 `position: fixed/sticky`（RN 不支持）。
 - 滚动区用 `ScrollView` + `flex:1`，配合页面 `.config.ts` 的 `disableScroll:true`（外层不滚、内容区滚）。
 - 顶栏/底栏固定靠 PageLayout flex 列结构，非 fixed。
+
+### 描边：内联必须带 borderStyle
+
+```tsx
+// 正确：三端都能画出描边
+<Text style={{ borderStyle: 'solid', borderWidth: 1, borderColor: t.primary }}>已认证</Text>
+
+// 错误：只给宽度与颜色，H5/微信小程序按 CSS 规则视为 border-style: none，边框不显示
+<Text style={{ borderWidth: 1, borderColor: t.primary }}>已认证</Text>
+```
+
+- H5 与微信小程序走 CSS：`border-width` 非 0 但 `border-style` 缺省为 `none`，不会绘制；RN 同样要求显式 `borderStyle`。
+- 单边分隔线（`borderTopWidth`/`borderBottomWidth`）写一次 `borderStyle: 'solid'` 即可，宽度为 0 的边不绘制。
+- 需绘制原生组件边框时同样适用（如小程序原生 `Button` 补 `borderStyle` 后才有圆角描边）。
+
+### 小程序原生 Button 的 ::after 边框
+
+微信/抖音小程序给原生 `Button` 默认挂 `::after` 伪元素画方角边框，内联 style 无法覆盖，必须放平台后缀样式文件：
+
+```scss
+// components/ShareButton/index.weapp.scss / index.tt.scss
+.share-btn::after { border: none; }
+```
+
+清除伪元素后，组件自身描边要靠 `borderStyle: 'solid'`，两者缺一不可。
 
 ## 页面交互规范
 

@@ -244,7 +244,7 @@ export default function PublishSourcingPage() {
 
   /** 单行输入字段（label + input 行式布局） */
   const field = (key: keyof FormState, label: string, placeholder: string, required = false) => (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 48, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 48, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(14), color: required ? t.textPrimary : t.textSecondary, width: 76 }}>
         {label}{required ? ' *' : ''}
       </Text>
@@ -267,7 +267,7 @@ export default function PublishSourcingPage() {
         style={{
           display: 'flex', flexDirection: 'column', flex: 1, marginRight: value === 'public' ? 8 : 0,
           paddingLeft: 10, paddingRight: 10, paddingTop: 9, paddingBottom: 9, borderRadius: 10,
-          borderWidth: 1, borderColor: disabled ? t.border : (active ? t.primary : t.border),
+          borderStyle: 'solid', borderWidth: 1, borderColor: disabled ? t.border : (active ? t.primary : t.border),
           backgroundColor: disabled ? t.bgInput : (active ? t.primaryLight : t.bgCard),
         }}
         onClick={() => { if (!disabled) setMode(value) }}
@@ -389,13 +389,13 @@ export default function PublishSourcingPage() {
                 {inviteList.map((m) => (
                   <View
                     key={m.merchantId}
-                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderBottomWidth: 1, borderBottomColor: t.border }}
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}
                     onClick={() => toggleChecked(m.merchantId)}
                   >
                     <View
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: 8,
-                        borderWidth: 1, borderColor: checked.includes(m.merchantId) ? t.primary : t.border,
+                        borderStyle: 'solid', borderWidth: 1, borderColor: checked.includes(m.merchantId) ? t.primary : t.border,
                         backgroundColor: checked.includes(m.merchantId) ? t.primary : t.bgCard,
                       }}
                     >

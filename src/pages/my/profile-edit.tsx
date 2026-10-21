@@ -118,7 +118,7 @@ export default function ProfileEditPage() {
 
   /** 单行字段：左标题 + 右输入（RN 安全样式，无 position/伪元素） */
   const fieldRow = (label: string, node: any) => (
-    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, paddingLeft: 16, paddingRight: 16, paddingTop: 12, paddingBottom: 12, borderStyle: 'solid', borderBottomWidth: 1, borderBottomColor: t.border }}>
       <Text style={{ ...fs(15), color: t.textPrimary, width: 88 }}>{label}</Text>
       <View style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>{node}</View>
     </View>
@@ -150,7 +150,7 @@ export default function ProfileEditPage() {
                 return (
                   <View
                     key={key}
-                    style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 10, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderWidth: selected ? 3 : 0, borderColor: t.primary, overflow: 'hidden' }}
+                    style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 10, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderStyle: 'solid', borderWidth: selected ? 3 : 0, borderColor: t.primary, overflow: 'hidden' }}
                     onClick={() => { setField('avatar', key); setPickerOpen(false) }}
                   >
                     <Image style={{ width: 56, height: 56, borderRadius: 28 }} src={usableImage(key)} mode="aspectFill" />

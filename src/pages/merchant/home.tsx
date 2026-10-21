@@ -220,7 +220,7 @@ export default function MerchantHomePage() {
             {todos.map((td, i) => (
               <View
                 key={td.key}
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.borderLight }}
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderStyle: 'solid', borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.borderLight }}
                 onClick={() => Taro.navigateTo({ url: td.url })}
               >
                 <View style={{ flex: 1 }}>
@@ -321,7 +321,7 @@ export default function MerchantHomePage() {
             {mtasks.tasks.map((mt, i) => {
               const pct = mt.target > 0 ? Math.min(1, mt.current / mt.target) : 0
               return (
-                <View key={mt.taskKey} style={{ marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.borderLight }}>
+                <View key={mt.taskKey} style={{ marginTop: i === 0 ? 10 : 0, paddingTop: i === 0 ? 0 : 12, borderStyle: 'solid', borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.borderLight }}>
                   <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ ...fs(13), color: t.textPrimary, flex: 1 }}>{mt.period === 2 ? '月' : '周'}·{mt.name}</Text>
                     {mt.done
@@ -399,7 +399,7 @@ export default function MerchantHomePage() {
             ))
           )}
           {ranking?.mine ? (
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: t.borderLight }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingTop: 10, borderStyle: 'solid', borderTopWidth: 1, borderTopColor: t.borderLight }}>
               <Text style={{ ...fs(13), fontWeight: '700', width: 28, color: t.textTertiary }}>{ranking.mine.rank > 0 ? ranking.mine.rank : '—'}</Text>
               <View style={{ flex: 1, marginLeft: 4 }}>
                 <Text style={{ ...fs(13), color: t.textPrimary }} numberOfLines={1}>本店 · {ranking.mine.merchantName}</Text>

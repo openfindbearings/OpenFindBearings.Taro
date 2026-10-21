@@ -283,7 +283,7 @@ export default function MerchantLevelPage() {
                 <Text style={{ ...fs(13), color: '#FFFFFF', fontWeight: '600' }}>去兑换置顶</Text>
               </View>
               <View
-                style={{ flex: 1, marginLeft: 10, paddingTop: 9, paddingBottom: 9, borderRadius: 8, borderWidth: 1, borderColor: t.primary, display: 'flex', alignItems: 'center' }}
+                style={{ flex: 1, marginLeft: 10, paddingTop: 9, paddingBottom: 9, borderRadius: 8, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, display: 'flex', alignItems: 'center' }}
                 onClick={() => Taro.navigateTo({ url: '/pages/merchant/treasury' })}
               >
                 <Text style={{ ...fs(13), color: t.primary, fontWeight: '600' }}>全部明细</Text>

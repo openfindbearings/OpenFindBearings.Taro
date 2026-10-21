@@ -47,7 +47,7 @@ function AchievementCard({ item, t, fs }: { item: AchievementItem; t: any; fs: (
     <View style={{
       backgroundColor: item.unlocked ? t.bgCard : t.bgMain,
       borderRadius: 12, padding: 12, marginBottom: 10,
-      borderWidth: 1, borderColor: item.unlocked ? t.primary : t.borderColor,
+      borderStyle: 'solid', borderWidth: 1, borderColor: item.unlocked ? t.primary : t.borderColor,
       opacity: item.unlocked || item.hidden ? 1 : 0.75,
       display: 'flex', flexDirection: 'row', alignItems: 'center'
     }}>
@@ -193,7 +193,7 @@ export default function AchievementsPage() {
                         onClick={() => void onEquip(active ? null : tt)}
                         style={{
                           marginRight: 8, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
-                          backgroundColor: active ? t.primary : t.bgMain, borderWidth: 1,
+                          backgroundColor: active ? t.primary : t.bgMain, borderStyle: 'solid', borderWidth: 1,
                           borderColor: active ? t.primary : t.borderColor
                         }}
                       >
