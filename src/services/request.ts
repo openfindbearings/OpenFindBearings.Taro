@@ -180,6 +180,12 @@ export async function request<T = any>(  url: string,
     }
   }
 
+  // 改动说明（v1.7.51）：access token 只存内存，冷启动/热重载后内存为空而持久化 refresh token 仍在，
+  //   此时若直接发送，首批请求必因缺 Authorization 被 BFF 判为未登录返回 401（控制台留红字），
+  //   再由下方 401 分支刷新后重放。改为发送前先确保令牌可用（ensureAccessToken 内部单飞，
+  //   并发请求只触发一次刷新），让首发即带令牌，消除无谓的 401 往返。
+  if (auth && !accessToken) await ensureAccessToken()
+
   let res = await send()
 
   // 认证端点：成功直接返回，失败透出 BFF 的 code/message（不触发刷新）
