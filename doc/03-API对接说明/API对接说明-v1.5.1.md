@@ -1,10 +1,16 @@
-# Taro API 对接说明 v1.5.0
+# Taro API 对接说明 v1.5.1
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.1 (2026-10-22)
+
+- 请求统一入口 `services/request.ts` 在发送前补「确保令牌可用」：`auth=true` 且内存中无 access token 时先 `await ensureAccessToken()`（内部单飞，并发请求只触发一次刷新），再发请求。
+- 起因：access token 仅存内存，冷启动/热重载后为空而持久化 refresh token 仍在，首批并发请求（profile、会话未读数、站内信未读数）不带 `Authorization` 被 BFF 判未登录返回 401，控制台留红字后再由 401 分支刷新重放。改动后首发即带令牌，401 往返与其红字记录消失。
+- 失败路径不变：refresh 不可用仍清空令牌并抛「登录已过期」；`auth=false`（登录/发码等）不进入该分支。
 
 ### v1.5.0 (2026-09-16)
 
