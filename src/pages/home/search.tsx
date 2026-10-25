@@ -270,7 +270,7 @@ export default function SearchPage() {
    * 改动说明（v1.7.52）：省去"先进详情再点发布"一跳，预填型号/品牌/bearingId 后进发布页；
    *   行内按钮必须 stopPropagation——小程序 tap 会冒泡到整行，否则先跳详情页（与"我的"页徽章叠跳同源）
    */
-  const publishFromRow = (b: Bearing) => (e?: any) => {
+  const publishFromRow = (b: Bearing) => async (e?: any) => {
     e?.stopPropagation?.()
     if (!isLoggedIn) {
       showConfirmDialog({ title: '提示', content: '该功能需登录后使用', confirmText: '去登录' }).then((ok) => {
@@ -278,7 +278,9 @@ export default function SearchPage() {
       })
       return
     }
-    void setObject(PREFILL_KEY, {
+    // 改动说明（v1.7.54）：预填必须 await——发布页 useDidShow 读取 storage 与导航并发，
+    //   不等写完就跳会让发布页读到空预填，型号/bearingId 丢失
+    await setObject(PREFILL_KEY, {
       partNumber: b.partNumber,
       brand: b.brandName || '',
       bearingId: b.id,

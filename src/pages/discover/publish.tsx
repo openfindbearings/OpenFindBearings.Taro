@@ -101,6 +101,8 @@ export default function PublishSourcingPage() {
   const [linkedLabel, setLinkedLabel] = useState('')
   const suggestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suggestSeqRef = useRef(0)
+  /** 有货清单请求序号（v1.7.54）：改型号/取消关联后丢弃迟到响应，避免回填旧清单并全选 */
+  const inviteSeqRef = useRef(0)
 
   // 其他认证商家（未在售该型号，可帮找货；v1.7.52）
   const [showOthers, setShowOthers] = useState(false)
@@ -123,7 +125,10 @@ export default function PublishSourcingPage() {
       }
       const invited = pre.visibility === 1
       setMode(invited ? 'invited' : 'public')
-      setPreInvited(pre.invitedMerchantIds ?? [])
+      // 改动说明（v1.7.54 预填收件人）：带 bearingId 时预填收件人并入勾选集合（由 loadInviteList 的 preselect 承载），
+      //   此处不再保留在 preInvited——否则用户取消勾选后提交仍按旧预填发出，界面与实际收件人不一致；
+      //   只有"无 bearingId 的商家主页邀请"才需要 preInvited 作为唯一收件人载体
+      setPreInvited(bearingId ? [] : (pre.invitedMerchantIds ?? []))
       if (bearingId && !invited) {
         // 普通进入但带了 bearingId：拉清单并默认全选（用户可自行取消勾选）
         loadInviteList(bearingId, null)
@@ -149,11 +154,16 @@ export default function PublishSourcingPage() {
    */
   const loadInviteList = (bearingId: string, preselect: string[] | null) => {
     setInviteError(false)
+    const seq = ++inviteSeqRef.current
     getAllBearingMerchants(bearingId)
       .then((all) => {
+        // 改动说明（v1.7.54）：迟到响应直接丢弃（改型号/取消关联已作废本次请求）
+        if (seq !== inviteSeqRef.current) return
         // 改动说明（v1.7.44）：以商户状态中的数据为准（点发布时身份弹层也是从这里取），避免两处口径不一
+        // 改动说明（v1.7.54 邀请候选口径）：改用服务端 Invitable（认证 + 生效 + 未软删）——停用商户收不到站内信、
+        //   应答会被拒，软删商户则让整单被拒，默认全选必须把它们排除；自家店铺同样排除
         const myIds = new Set(useMerchantStore.getState().merchants.map((m) => m.merchantId))
-        const list = all.filter((m) => m.isVerified && !myIds.has(m.merchantId))
+        const list = all.filter((m) => m.isVerified && m.invitable !== false && !myIds.has(m.merchantId))
         setInviteList(list)
         // preselect 为 null=默认全选；非 null=只勾指定的那些（保持传参顺序，避免下拉顺序漂移）
         const picked = preselect === null ? list.map((m) => m.merchantId) : list.filter((m) => preselect.includes(m.merchantId)).map((m) => m.merchantId)
@@ -164,15 +174,18 @@ export default function PublishSourcingPage() {
           if (picked.includes(m.merchantId)) metaMap[m.merchantId] = { name: m.merchantName, hasStock: true }
         })
         setCheckedMeta(metaMap)
-        // 改动说明（v1.7.52）：预填指定的收件人已并入勾选集合，清空 preInvited，
-        //   否则用户取消勾选后提交仍会按旧预填发出，界面与实际收件人不一致
-        if (preInvited.length > 0 && preInvited.every((id) => list.some((m) => m.merchantId === id))) {
-          setPreInvited([])
+        // 改动说明（v1.7.54）：预填指定的商家若已不可邀（未认证/已停用/自家店铺），无法在页面里摘除，
+        //   必须提示用户重新选择，否则会以为已按原意图发出
+        if (preselect && preselect.length > picked.length) {
+          Taro.showToast({ title: '部分指定商家不可邀请，请重新选择', icon: 'none' })
         }
         // 改动说明（v1.7.52）：有货清单变化后，"其他认证商家"需重算（要排除已有货的），置空待重载
         setOthers(null)
       })
-      .catch(() => { setInviteList(null); setInviteError(true); setChecked([]); setCheckedMeta({}) })
+      .catch(() => {
+        if (seq !== inviteSeqRef.current) return
+        setInviteList(null); setInviteError(true); setChecked([]); setCheckedMeta({})
+      })
   }
 
   /**
@@ -221,11 +234,16 @@ export default function PublishSourcingPage() {
     setChecked([])
     setCheckedMeta({})
     setOthers(null)
+    // 改动说明（v1.7.54）：保留 preInvited——商家主页进入的"指定邀请"意图不应因用户顺手关联型号而丢失，
+    //   提交时仍按 checked ∪ preInvited 合并（带 bearingId 进入的场景 preInvited 本就为空）
     loadInviteList(bearing.id, null)
   }
 
   /** 取消关联：清空 bearingId 与有货清单，邀请改为手动选择认证商家 */
   const unlinkBearing = () => {
+    // 改动说明（v1.7.54）：作废进行中的清单请求，避免迟到响应回填旧清单并全选；
+    //   preInvited 保留（商家主页的指定邀请与是否关联型号无关）
+    inviteSeqRef.current += 1
     setMeta({ bearingId: null })
     setLinkedLabel('')
     setInviteList(null)
@@ -242,6 +260,9 @@ export default function PublishSourcingPage() {
   const setField = (key: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }))
     if (key === 'partNumber' && meta.bearingId) {
+      // 改动说明（v1.7.54）：作废进行中的清单请求——型号变了，原候选不再成立；
+      //   preInvited 保留（商家主页指定邀请与型号无关）
+      inviteSeqRef.current += 1
       setMeta({ bearingId: null })
       setInviteList(null)
       setInviteError(false)
@@ -591,7 +612,7 @@ export default function PublishSourcingPage() {
                   </Text>
                   <Text
                     style={{ ...fs(12), color: t.primary, marginTop: 6 }}
-                    onClick={() => { if (meta.bearingId) loadInviteList(meta.bearingId, null) }}
+                    onClick={() => { if (meta.bearingId) loadInviteList(meta.bearingId, checked.length > 0 ? checked : null) }}
                   >
                     点击重试
                   </Text>

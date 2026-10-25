@@ -221,7 +221,7 @@ export default function MerchantDetailPage() {
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
               <Text className='md-v' style={{ ...fs(13), color: t.textTertiary }}>你经营的商家</Text>
             </View>
-          ) : (
+          ) : detail?.isVerified && (detail?.status ?? 'Active') === 'Active' ? (
             <View className='md-row' onClick={handleInquire}>
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
               <View className='md-v-call'>
@@ -230,6 +230,12 @@ export default function MerchantDetailPage() {
                 </Text>
                 <Icon name="search" size={16} color={t.primaryText} />
               </View>
+            </View>
+          ) : (
+            // 改动说明（v1.7.54 邀请候选口径）：未认证或非生效商家的邀请必被服务端拒绝，改为只读提示
+            <View className='md-row'>
+              <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
+              <Text className='md-v' style={{ ...fs(13), color: t.textTertiary }}>该商家暂不接收邀约</Text>
             </View>
           )}
           <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在寻货撮合达成后由双方互给</Text>

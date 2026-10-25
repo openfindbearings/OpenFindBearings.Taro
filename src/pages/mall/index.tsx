@@ -60,6 +60,8 @@ export default function MallPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  /** 加载失败态（v1.7.54）：与"暂无货源"区分，空态文案与重试入口据此分支 */
+  const [loadError, setLoadError] = useState(false)
 
   /** 组装货源流查询参数（关键词 + 品牌/类型/尺寸 + 排序 + 分页），over 覆盖变更字段 */
   const buildParams = (p: number, over?: Partial<MallFeedParams>): MallFeedParams => ({
@@ -90,8 +92,11 @@ export default function MallPage() {
       setItems((prev) => (reset ? list : [...prev, ...list]))
       setTotal(r?.totalCount ?? 0)
       setPage(p)
+      setLoadError(false)
     } catch {
-      if (reset) { setItems([]); setTotal(0) }
+      // 改动说明（v1.7.54）：加载失败要显式提示——原实现置空列表后会渲染"暂无认证商家货源"，
+      //   把"接口出错"伪装成"平台没货"，用户会误判供给状态
+      if (reset) { setItems([]); setTotal(0); setLoadError(true) }
     }
     setLoading(false)
     setLoadingMore(false)
@@ -294,14 +299,20 @@ export default function MallPage() {
           )}
           {!loading && items.length === 0 && (
             <View style={{ paddingTop: 48, paddingBottom: 48, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Icon name='package' size={48} color={t.border} />
+              <Icon name={loadError ? 'alert-circle' : 'package'} size={48} color={t.border} />
               {/* 改动说明（v1.7.53）：区分"条件没筛到"与"还没有认证商家上架"，避免用户误判平台无货 */}
+              {/* 改动说明（v1.7.54）：再分出"接口失败"，失败给重试入口，不与"没货"共用文案 */}
               <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>
-                {keyword || hasFilter ? '没有匹配的认证商家货源' : '暂无认证商家货源'}
+                {loadError ? '货源加载失败' : keyword || hasFilter ? '没有匹配的认证商家货源' : '暂无认证商家货源'}
               </Text>
               <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 6 }}>
-                {keyword || hasFilter ? '换个型号、品牌或放宽尺寸条件试试' : '认证商家正在入驻，可先搜索型号查看市场在售参考'}
+                {loadError ? '请检查网络后重试' : keyword || hasFilter ? '换个型号、品牌或放宽尺寸条件试试' : '认证商家正在入驻，可先搜索型号查看市场在售参考'}
               </Text>
+              {loadError && (
+                <View style={{ marginTop: 12, paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8, borderRadius: 16, backgroundColor: t.primaryLight }} onClick={() => load(true)}>
+                  <Text style={{ ...fs(13), color: t.primary }}>重新加载</Text>
+                </View>
+              )}
             </View>
           )}
           {!loading && items.length > 0 && items.length < total && (
