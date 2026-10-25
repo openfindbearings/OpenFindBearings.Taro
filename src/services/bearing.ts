@@ -62,6 +62,8 @@ export interface BearingMerchant {
   grade?: number
   /** v1.7.42：商家牌级展示名（普通/铜牌/银牌/金牌） */
   gradeDisplay?: string | null
+  /** v1.7.54 邀请候选口径：是否可被邀请（认证 + 生效 + 未软删），缺省按不可邀请保守处理 */
+  invitable?: boolean
 }
 
 /** 轴承替代品项（对齐 BFF InterchangeItem，v2.16.0 三级治理：含类型标签与责任提示字段） */

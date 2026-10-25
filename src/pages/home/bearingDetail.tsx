@@ -211,7 +211,9 @@ export default function BearingDetailPage() {
         <Icon name="chevron_right" size={18} color={t.textTertiary} />
       </View>
       {/* 邀请（v1.8.0 公开/邀请，原"询价"）——仅认证商家开放（行动门）；非认证只展示不导流 */}
-      {m.isVerified ? (
+      {/* 改动说明（v1.7.54 邀请候选口径）：改用服务端 invitable（认证 + 生效 + 未软删），
+          停用/软删商家的邀请必然被服务端拒绝，入口不再展示以免用户走到死路 */}
+      {m.isVerified && m.invitable !== false ? (
         <View
           style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
           onClick={() => handleInvite(m)}
