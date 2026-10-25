@@ -13,8 +13,14 @@ import NavBar from '../../components/NavBar'
 import { searchBearings, type Bearing, type BearingSearchParams } from '../../services/bearing'
 import { searchMerchants, type Merchant } from '../../services/merchant'
 import { getHome, type HomeRef } from '../../services/home'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
+import { useAuthStore } from '../../stores/auth'
+import { setObject } from '../../utils/storage'
 import MediaImage from '../../components/MediaImage'
 import './search.scss'
+
+/** 发布寻货跨页预填 storage 键（与轴承详情页、发布页共用同一口径） */
+const PREFILL_KEY = 'sourcing_publish_prefill'
 
 definePageConfig({ disableScroll: true })
 
@@ -41,6 +47,8 @@ export default function SearchPage() {
   const router = useRouter()
   const t = useTheme()
   const fs = useFs()
+  // 改动说明（v1.7.52）：结果行直接发布寻货属登录门槛动作，与详情页口径一致
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
 
   // 改动说明：小程序/H5 的 router.params 可能保留 URL 百分号编码（未解码），
   //   读取关键词时做防御性解码；RN 端已解码，对纯中文为无操作；含 % 的异常值回退原串
@@ -257,6 +265,28 @@ export default function SearchPage() {
   const goBearing = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })
   const goMerchant = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
 
+  /**
+   * 搜索结果行直接发布寻货
+   * 改动说明（v1.7.52）：省去"先进详情再点发布"一跳，预填型号/品牌/bearingId 后进发布页；
+   *   行内按钮必须 stopPropagation——小程序 tap 会冒泡到整行，否则先跳详情页（与"我的"页徽章叠跳同源）
+   */
+  const publishFromRow = (b: Bearing) => (e?: any) => {
+    e?.stopPropagation?.()
+    if (!isLoggedIn) {
+      showConfirmDialog({ title: '提示', content: '该功能需登录后使用', confirmText: '去登录' }).then((ok) => {
+        if (ok) Taro.navigateTo({ url: '/pages/auth/login' })
+      })
+      return
+    }
+    void setObject(PREFILL_KEY, {
+      partNumber: b.partNumber,
+      brand: b.brandName || '',
+      bearingId: b.id,
+      visibility: 0,
+    })
+    Taro.navigateTo({ url: '/pages/discover/publish' })
+  }
+
   const tabCounts: Record<TabKey, number> = { bearing: bearings.length, merchant: merchants.length, brand: brands.length, type: types.length }
   const resultCount = tabCounts[tab]
   const hasAnyBearingFilter = !!(brandFilter || typeFilter || sizeFilter.minIn != null || sizeFilter.maxIn != null || sizeFilter.minOut != null || sizeFilter.maxOut != null || sizeFilter.minW != null || sizeFilter.maxW != null)
@@ -367,6 +397,17 @@ export default function SearchPage() {
                     <Text className='result-brand' style={{ ...fs(13), color: t.textSecondary }}>{b.bearingType} · {b.brandName}</Text>
                     <Text className='result-specs-inline' style={{ ...fs(12), color: t.textTertiary }}>d {b.innerDiameter} · D {b.outerDiameter} · B {b.width}</Text>
                   </View>
+                  {/* 改动说明（v1.7.52）：行内直接发布寻货，免去先进详情再点发布一跳 */}
+                  <Text
+                    style={{
+                      ...fs(11), color: t.primary, marginRight: 6,
+                      borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 10,
+                      paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3,
+                    }}
+                    onClick={publishFromRow(b)}
+                  >
+                    发布寻货
+                  </Text>
                   <Icon name="chevron_right" size={18} color={t.textTertiary} />
                 </View>
               ))}

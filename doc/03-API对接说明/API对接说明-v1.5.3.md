@@ -1,10 +1,21 @@
-# Taro API 对接说明 v1.5.1
+# Taro API 对接说明 v1.5.3
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.3 (2026-10-25)
+
+- **商城货源流口径变更**：`GET /mobile/mall/feed` 只返回**认证商家**的**出售中**商品（API 侧默认 `verifiedOnly=true`，并补商家有效性过滤）。未认证商家与互联网来源数据不再进商城，只在型号详情的"参考在售"段出现。
+- 前端影响：商城页（`pages/mall/index.tsx`）空态文案区分两种情形——有搜索词/筛选条件时提示"没有匹配的认证商家货源"，无条件时提示"暂无认证商家货源"并引导去搜索型号看市场在售参考。请求参数与响应结构不变。
+
+### v1.5.2 (2026-10-25)
+
+- `searchMerchants` 参数补齐并新增 `excludeInternet`（对齐 BFF v1.8.13）：发布页「其他认证商家」候选必须排除互联网来源商家——这类商家没有账号、收不到站内信，混进候选会出现"已通知 N 家"实际无人收到。
+- 搜索结果页（`pages/home/search.tsx`）轴承结果行新增「发布寻货」入口：预填型号/品牌/`bearingId` 后进发布页，与轴承详情入口共用 `sourcing_publish_prefill`；行内按钮需 `stopPropagation`，避免小程序 tap 冒泡先跳详情。
+- 发布页（`pages/discover/publish.tsx`）型号输入改为联想（≥2 字、300ms 防抖、候选 8 条），选中即绑定 `bearingId` 并拉有货商家；邀请候选拆「有货认证商家（默认全选）」与「其他认证商家（折叠 + 搜索，默认不勾）」，收件人一律显式提交勾选集合。
 
 ### v1.5.1 (2026-10-22)
 
@@ -188,7 +199,7 @@ interface BearingDetail extends 上 + englishName?; weight?; brandCountry?; view
 
 ### 商家 `merchant.ts`
 
-- `searchMerchants({keyword?,verifiedOnly?,page?,pageSize?})` → `GET /mobile/merchants/search`，返回 `Paged<Merchant>`。
+- `searchMerchants({keyword?,verifiedOnly?,excludeInternet?,sortBy?,sortOrder?,page?,pageSize?})` → `GET /mobile/merchants/search`，返回 `Paged<Merchant>`。`excludeInternet=true` 排除互联网来源商家（无账号、收不到站内信），寻货邀请候选必用。
 - `getMerchantDetail(id)` → `GET /mobile/merchants/{id}`，返回 `MerchantDetail`。
 - `getMerchantBearings(id)` → `GET /mobile/merchants/{id}/bearings`，返回 `Paged<MerchantBearing>`。
 
@@ -206,6 +217,7 @@ interface MerchantBearing { bearingId; bearingPartNumber; oldNumber?; bearingTyp
 - 每个 Tab 标签显示命中数量（搜索完成后）；完成后自动切到命中数最多的 Tab（并列优先 轴承>商家>品牌>类型）。
 - 并发取数用 `Promise.all` + `fetchWithRetry`（仅网络错误重试 2 次，4xx/429 不重试）；`reqId` 丢弃过期响应防连点覆盖；真失败显示"加载失败，请重试"。
 - 结果点击：轴承→轴承详情；商家→商家详情；品牌/类型→以该名称为关键字再搜轴承。
+- 轴承结果行另有「发布寻货」按钮（v1.5.2）：登录后预填型号/品牌/`bearingId` 进 `pages/discover/publish`，未登录先引导登录；按钮内 `stopPropagation`，避免冒泡到整行跳详情。
 
 ### 详情页
 

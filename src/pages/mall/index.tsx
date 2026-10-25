@@ -1,4 +1,6 @@
-// 商城页（v2.14.0 商城导购）：从"积分权益橱窗"升级为"货源导购"——全站在售货源商品瀑布流。
+// 商城页（v2.14.0 商城导购）：从"积分权益橱窗"升级为"货源导购"——认证商家的出售中货源瀑布流。
+// 改动说明（v1.7.53）：货源口径收敛为"可成交货源"——接口默认只出认证商家的出售中商品，
+//   未认证与互联网来源数据只在型号详情的"参考在售"段出现，故空态需说明口径而非笼统"暂无货源"。
 // 信息架构：商城 Tab = 供给侧货源导购（对比 首页=工具查询、发现=需求侧寻货）。
 // 数据源：BFF /mobile/mall/feed（匿名可访问）；卡片进货源详情（轴承详情），商家行进店铺页。
 // 权益兑换主体迁至"我的-积分"线（pages/my/redeem），本页顶部留小入口。
@@ -293,8 +295,13 @@ export default function MallPage() {
           {!loading && items.length === 0 && (
             <View style={{ paddingTop: 48, paddingBottom: 48, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <Icon name='package' size={48} color={t.border} />
-              <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>暂无货源</Text>
-              <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 6 }}>试试其他关键词或筛选条件</Text>
+              {/* 改动说明（v1.7.53）：区分"条件没筛到"与"还没有认证商家上架"，避免用户误判平台无货 */}
+              <Text style={{ ...fs(15), color: t.textSecondary, marginTop: 12 }}>
+                {keyword || hasFilter ? '没有匹配的认证商家货源' : '暂无认证商家货源'}
+              </Text>
+              <Text style={{ ...fs(13), color: t.textTertiary, marginTop: 6 }}>
+                {keyword || hasFilter ? '换个型号、品牌或放宽尺寸条件试试' : '认证商家正在入驻，可先搜索型号查看市场在售参考'}
+              </Text>
             </View>
           )}
           {!loading && items.length > 0 && items.length < total && (
