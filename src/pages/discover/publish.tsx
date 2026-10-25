@@ -3,8 +3,12 @@
 //   归属商户者弹 ActionSheet（商户逐行+个人名义行，取消=中止发布），纯个人用户不打扰；
 //   NEED_POINTS 重提交复用已选身份不再弹（全程最多 1 个身份弹窗）
 // 改动说明（v1.8.0 公开/邀请）：原"定向询价单商户"升级为发布方式二选一——
-//   公开（进大厅 + 通知匹配的认证在售商家）/ 邀请（不进大厅，只通知勾选的有货认证商家）；
-//   有 bearingId 时拉在售认证商家清单供勾选（默认全选），从商家行/商家主页进入则只预勾该家
+//   公开（进大厅 + 通知匹配的认证在售商家）/ 邀请（不进大厅，只通知勾选的认证商家）
+// 改动说明（v1.7.52 型号联想 + 邀请放宽）：
+//   型号输入支持平台型号联想（选中即带 bearingId，解锁精确匹配与有货清单）；
+//   未关联型号仍可发布，但明确提示"只进大厅、不定向通知"；
+//   邀请候选分两组——有货认证商家（默认全选）+ 其他认证商家（未在售，可找货，默认不勾），
+//   邀请口径由"必须在该型号在售"放宽为"认证商家即可"，服务端仍逐家校验认证/启用/非自家
 // 额度模型：免费 N 条/天 → 超限返回 NEED_POINTS 协议 → 弹轴承币确认框 → usePoints=true 重提交
 // RN 约束：仅 flex、无 fixed/vh、Text 包裹、样式数值
 import { useRef, useState } from 'react'
@@ -20,7 +24,8 @@ import PublishIdentitySheet from '../../components/PublishIdentitySheet'
 import { vibrateSuccess } from '../../utils/haptics'
 import { useMerchantStore } from '../../stores/merchant'
 import { publishDemand, genPublishIdempotencyKey, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
-import { getAllBearingMerchants, type BearingMerchant } from '../../services/bearing'
+import { getAllBearingMerchants, searchBearings, type Bearing, type BearingMerchant } from '../../services/bearing'
+import { searchMerchants, type Merchant } from '../../services/merchant'
 import { getObject, removeItem } from '../../utils/storage'
 
 /** 发布寻货跨页预填 storage 键（轴承详情"发布寻货"/"邀请"写入） */
@@ -50,6 +55,12 @@ interface PublishPrefill {
   invitedMerchantIds?: string[] | null
 }
 
+/** 已勾选商家的展示信息（v1.7.52：两组候选与搜索切换后仍能显示名称与是否有货） */
+interface CheckedMeta {
+  name: string
+  hasStock: boolean
+}
+
 /** 发布寻货页 */
 export default function PublishSourcingPage() {
   const t = useTheme()
@@ -76,10 +87,26 @@ export default function PublishSourcingPage() {
   const [inviteList, setInviteList] = useState<BearingMerchant[] | null>(null)
   /** 清单拉取失败（v1.8.1）：与"确实无人在售"区分——失败可重试，不误判为无货、不禁用邀请 */
   const [inviteError, setInviteError] = useState(false)
-  /** 邀请勾选的收件人（默认全选；从商家行进入则只勾该家） */
+  /** 邀请勾选的收件人（默认全选有货组；从商家行进入则只勾该家） */
   const [checked, setChecked] = useState<string[]>([])
+  /** 勾选商家的名称与是否有货（v1.7.52：两组候选合并勾选后仍能展示已选区） */
+  const [checkedMeta, setCheckedMeta] = useState<Record<string, CheckedMeta>>({})
   /** 跨页预填的指定收件人（无 bearingId 清单时仍按此精确邀约，如从商家主页进入） */
   const [preInvited, setPreInvited] = useState<string[]>([])
+
+  // 型号联想（v1.7.52）：≥2 字触发，300ms 防抖，丢弃过期响应
+  const [suggestions, setSuggestions] = useState<Bearing[]>([])
+  const [suggestLoading, setSuggestLoading] = useState(false)
+  /** 已关联型号的展示文案（型号 · 品牌 · 类型） */
+  const [linkedLabel, setLinkedLabel] = useState('')
+  const suggestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suggestSeqRef = useRef(0)
+
+  // 其他认证商家（未在售该型号，可帮找货；v1.7.52）
+  const [showOthers, setShowOthers] = useState(false)
+  const [others, setOthers] = useState<Merchant[] | null>(null)
+  const [othersLoading, setOthersLoading] = useState(false)
+  const [othersKeyword, setOthersKeyword] = useState('')
 
   useDidShow(() => {
     getSourcingQuota().then(setQuota).catch(() => { /* 未登录/网络失败：隐藏额度条 */ })
@@ -90,6 +117,10 @@ export default function PublishSourcingPage() {
       setForm((prev) => ({ ...prev, partNumber: pre.partNumber || prev.partNumber, brand: pre.brand || prev.brand }))
       const bearingId = pre.bearingId ?? null
       setMeta({ bearingId })
+      // 改动说明（v1.7.52 型号联想）：预填自带 bearingId 时展示"已关联"态，与联想选中后的界面一致
+      if (bearingId && pre.partNumber) {
+        setLinkedLabel(`${pre.partNumber}${pre.brand ? ' · ' + pre.brand : ''}`)
+      }
       const invited = pre.visibility === 1
       setMode(invited ? 'invited' : 'public')
       setPreInvited(pre.invitedMerchantIds ?? [])
@@ -125,9 +156,83 @@ export default function PublishSourcingPage() {
         const list = all.filter((m) => m.isVerified && !myIds.has(m.merchantId))
         setInviteList(list)
         // preselect 为 null=默认全选；非 null=只勾指定的那些（保持传参顺序，避免下拉顺序漂移）
-        setChecked(preselect === null ? list.map((m) => m.merchantId) : list.filter((m) => preselect.includes(m.merchantId)).map((m) => m.merchantId))
+        const picked = preselect === null ? list.map((m) => m.merchantId) : list.filter((m) => preselect.includes(m.merchantId)).map((m) => m.merchantId)
+        setChecked(picked)
+        // 改动说明（v1.7.52）：同步勾选展示信息，已选区在切换搜索/分组后仍能显示名称
+        const metaMap: Record<string, CheckedMeta> = {}
+        list.forEach((m) => {
+          if (picked.includes(m.merchantId)) metaMap[m.merchantId] = { name: m.merchantName, hasStock: true }
+        })
+        setCheckedMeta(metaMap)
+        // 改动说明（v1.7.52）：预填指定的收件人已并入勾选集合，清空 preInvited，
+        //   否则用户取消勾选后提交仍会按旧预填发出，界面与实际收件人不一致
+        if (preInvited.length > 0 && preInvited.every((id) => list.some((m) => m.merchantId === id))) {
+          setPreInvited([])
+        }
+        // 改动说明（v1.7.52）：有货清单变化后，"其他认证商家"需重算（要排除已有货的），置空待重载
+        setOthers(null)
       })
-      .catch(() => { setInviteList(null); setInviteError(true); setChecked([]) })
+      .catch(() => { setInviteList(null); setInviteError(true); setChecked([]); setCheckedMeta({}) })
+  }
+
+  /**
+   * 型号输入：改动说明（v1.7.52 型号联想）——输入即触发联想（≥2 字、300ms 防抖、序号丢弃过期响应）；
+   *   手动改写型号会清空关联轴承（候选与匹配都按原 bearingId 算的，型号改了就不再成立）
+   */
+  const onPartNumberInput = (value: string) => {
+    setField('partNumber', value)
+    if (linkedLabel) setLinkedLabel('')
+
+    const keyword = value.trim()
+    if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current)
+    if (keyword.length < 2) {
+      suggestSeqRef.current += 1
+      setSuggestions([])
+      setSuggestLoading(false)
+      return
+    }
+
+    setSuggestLoading(true)
+    const seq = ++suggestSeqRef.current
+    suggestTimerRef.current = setTimeout(() => {
+      searchBearings({ keyword, pageSize: 8 })
+        .then((r) => {
+          if (seq !== suggestSeqRef.current) return
+          setSuggestions(r.items ?? [])
+        })
+        .catch(() => { if (seq === suggestSeqRef.current) setSuggestions([]) })
+        .finally(() => { if (seq === suggestSeqRef.current) setSuggestLoading(false) })
+    }, 300)
+  }
+
+  /**
+   * 选中联想型号：写入型号与品牌、绑定 bearingId、拉有货认证商家清单
+   * 改动说明（v1.7.52）：选中即"已关联"，可直接邀请有货商家；清空旧的勾选避免跨型号残留
+   */
+  const pickSuggestion = (bearing: Bearing) => {
+    if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current)
+    suggestSeqRef.current += 1
+    setSuggestions([])
+    setSuggestLoading(false)
+
+    setForm((prev) => ({ ...prev, partNumber: bearing.partNumber, brand: prev.brand || bearing.brandName || '' }))
+    setMeta({ bearingId: bearing.id })
+    setLinkedLabel([bearing.partNumber, bearing.brandName, bearing.bearingType].filter(Boolean).join(' · '))
+    setChecked([])
+    setCheckedMeta({})
+    setOthers(null)
+    loadInviteList(bearing.id, null)
+  }
+
+  /** 取消关联：清空 bearingId 与有货清单，邀请改为手动选择认证商家 */
+  const unlinkBearing = () => {
+    setMeta({ bearingId: null })
+    setLinkedLabel('')
+    setInviteList(null)
+    setInviteError(false)
+    setChecked([])
+    setCheckedMeta({})
+    setOthers(null)
   }
 
   /**
@@ -141,22 +246,79 @@ export default function PublishSourcingPage() {
       setInviteList(null)
       setInviteError(false)
       setChecked([])
+      setCheckedMeta({})
+      setOthers(null)
     }
   }
 
-  /** 切换邀请勾选（点行整行触发） */
-  const toggleChecked = (merchantId: string) => {
-    setChecked((prev) => prev.includes(merchantId) ? prev.filter((x) => x !== merchantId) : [...prev, merchantId])
+  /**
+   * 加载"其他认证商家"（未在售该型号，可帮找货）
+   * 改动说明（v1.7.52 邀请放宽）：排除互联网来源商家（无账号、收不到站内信）、我在职商户与已有货商家
+   */
+  const loadOthers = (keyword: string) => {
+    setOthersLoading(true)
+    const myIds = new Set(useMerchantStore.getState().merchants.map((m) => m.merchantId))
+    const stockIds = new Set((inviteList ?? []).map((m) => m.merchantId))
+    searchMerchants({
+      keyword: keyword.trim() || undefined,
+      verifiedOnly: true,
+      excludeInternet: true,
+      sortBy: 'productcount',
+      sortOrder: 'desc',
+      pageSize: 20
+    })
+      .then((r) => {
+        // 改动说明（v1.7.52）：只保留在职认证商家——已停用/草稿商户收不到站内信，服务端也会拒绝
+        const list = (r.items ?? []).filter((m) => m.isVerified && m.status === 'Active' && !myIds.has(m.id) && !stockIds.has(m.id))
+        setOthers(list)
+      })
+      .catch(() => setOthers([]))
+      .finally(() => setOthersLoading(false))
   }
 
-  /** 邀请全选/全不选（全部勾选等价于"通知全部匹配商家"，提交空数组） */
-  const toggleAll = () => {
+  /** 展开/收起"其他认证商家"，首次展开时加载 */
+  const toggleOthers = () => {
+    const next = !showOthers
+    setShowOthers(next)
+    if (next && others === null) loadOthers(othersKeyword)
+  }
+
+  /**
+   * 切换邀请勾选（点行整行触发）
+   * 改动说明（v1.7.52）：同时记录名称与是否有货，供已选区展示
+   */
+  const toggleChecked = (merchantId: string, name: string, hasStock: boolean) => {
+    const isChecked = checked.includes(merchantId)
+    setChecked((prev) => isChecked ? prev.filter((x) => x !== merchantId) : [...prev, merchantId])
+    setCheckedMeta((prev) => {
+      const next = { ...prev }
+      if (isChecked) delete next[merchantId]
+      else next[merchantId] = { name, hasStock }
+      return next
+    })
+  }
+
+  /** 有货组全选/全不选（v1.7.52：只作用于有货组，其他认证商家需逐个勾选） */
+  const toggleAllStock = () => {
     if (!inviteList) return
-    setChecked((prev) => prev.length === inviteList.length ? [] : inviteList.map((m) => m.merchantId))
+    const stockIds = inviteList.map((m) => m.merchantId)
+    const allStockChecked = stockIds.length > 0 && stockIds.every((id) => checked.includes(id))
+    if (allStockChecked) {
+      setChecked((prev) => prev.filter((id) => !stockIds.includes(id)))
+      setCheckedMeta((prev) => {
+        const next = { ...prev }
+        stockIds.forEach((id) => delete next[id])
+        return next
+      })
+      return
+    }
+    setChecked((prev) => Array.from(new Set([...prev, ...stockIds])))
+    setCheckedMeta((prev) => {
+      const next = { ...prev }
+      inviteList.forEach((m) => { next[m.merchantId] = { name: m.merchantName, hasStock: true } })
+      return next
+    })
   }
-
-  /** 邀请是否可选：有 bearingId 但清单里无认证在售商家时不可邀（改公开） */
-  const invitedAvailable = !(meta.bearingId && inviteList !== null && inviteList.length === 0)
 
   /**
    * 提交入口：身份未定时——纯个人用户直接提交（不打扰）；
@@ -168,13 +330,10 @@ export default function PublishSourcingPage() {
       Taro.showToast({ title: '请填写寻货型号', icon: 'none' })
       return
     }
-    // 改动说明（v1.8.0 邀请校验）：勾选清单存在时至少勾一家（全不勾会被服务端理解为"全部匹配"，与意图不符）
-    if (mode === 'invited' && inviteList !== null && inviteList.length > 0 && checked.length === 0) {
+    // 改动说明（v1.7.52 邀请放宽）：勾选为空不再等同"全部匹配"——必须明确勾选至少一家，
+    //   避免用户以为邀到了实际没人收到；跨页预填指定的收件人不受此限
+    if (mode === 'invited' && checked.length === 0 && preInvited.length === 0) {
       Taro.showToast({ title: '请至少勾选一家商家，或改为公开', icon: 'none' })
-      return
-    }
-    if (!invitedAvailable && mode === 'invited') {
-      Taro.showToast({ title: '当前无认证商家在售该型号，请选公开', icon: 'none' })
       return
     }
     if (merchantId === undefined) {
@@ -192,10 +351,9 @@ export default function PublishSourcingPage() {
   const doSubmit = async (usePoints: boolean, merchantId: string | null) => {
     setSubmitting(true)
     const invited = mode === 'invited'
-    // 全部勾选=通知全部匹配商家（提交空数组，服务端按在售匹配口径解析）；部分勾选=精确收件人；
-    // 无 bearingId 清单时按预填指定收件人（从商家主页进入即指定该家；无预填则空数组=全部匹配）
-    const allChecked = inviteList !== null && inviteList.length > 0 && checked.length === inviteList.length
-    const invitedMerchantIds = invited ? (inviteList === null ? preInvited : (allChecked ? [] : checked)) : null
+    // 改动说明（v1.7.52）：收件人一律显式提交勾选集合（不再折叠成空数组"全部匹配"，
+    //   否则勾了"其他认证商家"也会被服务端按在售匹配口径丢掉）；从商家主页进入的指定收件人（无清单可勾选）一并并入
+    const invitedMerchantIds = invited ? Array.from(new Set([...checked, ...preInvited])) : null
     const body: PublishDemandBody = {
       partNumber: form.partNumber.trim(),
       bearingId: meta.bearingId ?? null,
@@ -259,21 +417,45 @@ export default function PublishSourcingPage() {
   )
 
   /** 发布方式选项卡（公开 / 邀请） */
-  const modeOption = (value: 'public' | 'invited', title: string, desc: string, disabled = false) => {
+  const modeOption = (value: 'public' | 'invited', title: string, desc: string) => {
     const active = mode === value
-    const tone = disabled ? t.textTertiary : (active ? t.primary : t.textSecondary)
+    const tone = active ? t.primary : t.textSecondary
     return (
       <View
         style={{
           display: 'flex', flexDirection: 'column', flex: 1, marginRight: value === 'public' ? 8 : 0,
           paddingLeft: 10, paddingRight: 10, paddingTop: 9, paddingBottom: 9, borderRadius: 10,
-          borderStyle: 'solid', borderWidth: 1, borderColor: disabled ? t.border : (active ? t.primary : t.border),
-          backgroundColor: disabled ? t.bgInput : (active ? t.primaryLight : t.bgCard),
+          borderStyle: 'solid', borderWidth: 1, borderColor: active ? t.primary : t.border,
+          backgroundColor: active ? t.primaryLight : t.bgCard,
         }}
-        onClick={() => { if (!disabled) setMode(value) }}
+        onClick={() => setMode(value)}
       >
         <Text style={{ ...fs(13), color: tone, fontWeight: '600' }}>{title}</Text>
         <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 3 }}>{desc}</Text>
+      </View>
+    )
+  }
+
+  /** 邀请候选行（勾选圈 + 名称 + 标记；有货组与其他认证商家共用） */
+  const candidateRow = (id: string, name: string, hasStock: boolean, tag: string, tagColor: string) => {
+    const isChecked = checked.includes(id)
+    return (
+      <View
+        key={id}
+        style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}
+        onClick={() => toggleChecked(id, name, hasStock)}
+      >
+        <View
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: 8,
+            borderStyle: 'solid', borderWidth: 1, borderColor: isChecked ? t.primary : t.border,
+            backgroundColor: isChecked ? t.primary : t.bgCard,
+          }}
+        >
+          {isChecked ? <Icon name='check' size={11} color='#FFFFFF' /> : null}
+        </View>
+        <Text style={{ ...fs(13), color: t.textPrimary, marginLeft: 8, flex: 1 }} numberOfLines={1}>{name}</Text>
+        <Text style={{ ...fs(10), color: tagColor }}>{tag}</Text>
       </View>
     )
   }
@@ -282,7 +464,8 @@ export default function PublishSourcingPage() {
   const pq = quota?.publish
   const freeLeft = pq ? Math.max(pq.freeLimit - pq.todayUsed, 0) : null
   const overFree = !!pq && pq.todayUsed >= pq.freeLimit
-  const insufficient = overFree && !!pq && !!quota && quota.balance < pq.pointsPrice
+  const insufficient = overFree && !!quota && quota.balance < pq.pointsPrice
+  const checkedList = checked.filter((id) => checkedMeta[id])
 
   return (
     <PageLayout nav={<NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />} overlay={
@@ -326,7 +509,53 @@ export default function PublishSourcingPage() {
               寻货信息越具体，商家报价越贴近：型号必填，品牌/数量/交期/地区尽量填全——商家才知道该报哪个型号的价
             </Text>
           </View>
-          {field('partNumber', '型号', '必填，如 6205-2RS / 深沟球轴承', true)}
+
+          {/* 型号行（v1.7.52 型号联想）：输入即搜平台型号，选中自动关联并拉有货商家清单 */}
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 48, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}>
+            <Text style={{ ...fs(14), color: t.textPrimary, width: 76 }}>型号 *</Text>
+            <Input
+              style={{ ...fs(15), flex: 1, color: t.textPrimary }}
+              placeholder='必填，如 6205-2RS / 深沟球轴承'
+              placeholderTextColor={t.textTertiary}
+              value={form.partNumber}
+              onInput={(e) => onPartNumberInput(e.detail.value)}
+            />
+          </View>
+
+          {/* 已关联态 / 未关联提示（v1.7.52）：未关联不会定向通知商家，必须让用户看见 */}
+          {meta.bearingId ? (
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+              <Text style={{ ...fs(11), color: t.primary, flex: 1 }} numberOfLines={1}>已关联：{linkedLabel || form.partNumber}</Text>
+              <Text style={{ ...fs(11), color: t.textTertiary }} onClick={unlinkBearing}>取消关联</Text>
+            </View>
+          ) : form.partNumber.trim() ? (
+            <View style={{ display: 'flex', marginTop: 6, paddingLeft: 10, paddingRight: 10, paddingTop: 7, paddingBottom: 7, backgroundColor: t.bgInput, borderRadius: 8 }}>
+              <Text style={{ ...fs(11), color: t.textSecondary }}>
+                未关联平台型号：只进大厅，不会定向通知商家；可从上方候选选择平台型号，或在下方手动邀请认证商家
+              </Text>
+            </View>
+          ) : null}
+
+          {/* 联想候选（v1.7.52）：普通 View 内联展开，不用绝对定位浮层（小程序层级与 RN 兼容） */}
+          {suggestLoading ? (
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>正在搜索平台型号…</Text>
+          ) : suggestions.length > 0 ? (
+            <View style={{ marginTop: 6, paddingLeft: 10, paddingRight: 10, backgroundColor: t.bgInput, borderRadius: 8 }}>
+              {suggestions.map((b) => (
+                <View
+                  key={b.id}
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}
+                  onClick={() => pickSuggestion(b)}
+                >
+                  <Text style={{ ...fs(13), color: t.textPrimary, flex: 1 }} numberOfLines={1}>{b.partNumber}</Text>
+                  <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 8 }} numberOfLines={1}>
+                    {[b.brandName, b.bearingType].filter(Boolean).join(' · ')}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
           {field('brand', '期望品牌', '如 NSK / SKF / HRB（可空）')}
           {field('quantity', '数量', '如 500 套（可空）')}
           {field('expectedDelivery', '期望交期', '如 一周内（可空）')}
@@ -343,75 +572,110 @@ export default function PublishSourcingPage() {
           </View>
         </View>
 
-        {/* 发布方式（v1.8.0 公开/邀请）：公开=进大厅人人可应答；邀请=只通知勾选的有货认证商家 */}
+        {/* 发布方式（v1.8.0 公开/邀请）：公开=进大厅人人可应答；邀请=只通知勾选的认证商家 */}
         <View style={{ marginLeft: 12, marginRight: 12, paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, backgroundColor: t.bgCard, borderRadius: 12 }}>
           <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>发布方式</Text>
           <View style={{ display: 'flex', flexDirection: 'row', marginTop: 8 }}>
             {modeOption('public', '公开', '进寻货大厅，所有商家都能看到并应答')}
-            {modeOption('invited', '邀请', '只通知你勾选的有货认证商家，不进大厅', !invitedAvailable)}
+            {modeOption('invited', '邀请', '只通知你勾选的认证商家（含未在售该型号、可帮找货的）')}
           </View>
 
-          {/* 邀请收件人（有 bearingId 时列出在售认证商家供勾选；默认全选） */}
+          {/* 邀请收件人（v1.7.52）：有货组（默认全选）+ 其他认证商家（未在售，可帮找货） */}
           {mode === 'invited' ? (
-            inviteError ? (
-              // 改动说明（v1.8.1）：加载失败 ≠ 无人在售——给重试入口，且不因此禁用邀请（服务端仍会按匹配校验）
-              <View style={{ marginTop: 8 }}>
-                <Text style={{ ...fs(11), color: t.textTertiary }}>
-                  商家清单加载失败，可重试；也可直接发布，按型号匹配全部在售认证商家
-                </Text>
-                <Text
-                  style={{ ...fs(12), color: t.primary, marginTop: 6 }}
-                  onClick={() => { if (meta.bearingId) loadInviteList(meta.bearingId, null) }}
-                >
-                  点击重试
-                </Text>
-              </View>
-            ) : inviteList === null ? (
-              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
-                {preInvited.length > 0
-                  ? '已指定邀请该商家（本型号暂无在售清单，无法逐家勾选）'
-                  : '将按型号匹配，邀请所有在售该型号的认证商家（暂无在售清单，无法逐家勾选）'}
-              </Text>
-            ) : inviteList.length === 0 ? (
-              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
-                当前没有可邀请的在售认证商家（自己的店铺不能邀请），请改为公开
-              </Text>
-            ) : (
-              <View style={{ marginTop: 8 }}>
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ ...fs(12), color: t.textSecondary }}>
-                    通知这些在售认证商家（已选 {checked.length}/{inviteList.length}）
+            <View style={{ marginTop: 8 }}>
+              {inviteError ? (
+                // 改动说明（v1.8.1）：加载失败 ≠ 无人在售——给重试入口
+                <View>
+                  <Text style={{ ...fs(11), color: t.textTertiary }}>
+                    在售商家清单加载失败，可重试；也可直接手动选择认证商家
                   </Text>
-                  <Text style={{ ...fs(12), color: t.primary }} onClick={toggleAll}>
-                    {checked.length === inviteList.length ? '全不选' : '全选'}
+                  <Text
+                    style={{ ...fs(12), color: t.primary, marginTop: 6 }}
+                    onClick={() => { if (meta.bearingId) loadInviteList(meta.bearingId, null) }}
+                  >
+                    点击重试
                   </Text>
                 </View>
-                {inviteList.map((m) => (
-                  <View
-                    key={m.merchantId}
-                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}
-                    onClick={() => toggleChecked(m.merchantId)}
-                  >
-                    <View
-                      style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: 8,
-                        borderStyle: 'solid', borderWidth: 1, borderColor: checked.includes(m.merchantId) ? t.primary : t.border,
-                        backgroundColor: checked.includes(m.merchantId) ? t.primary : t.bgCard,
-                      }}
-                    >
-                      {checked.includes(m.merchantId) ? <Icon name='check' size={11} color='#FFFFFF' /> : null}
-                    </View>
-                    <Text style={{ ...fs(13), color: t.textPrimary, marginLeft: 8, flex: 1 }}>{m.merchantName}</Text>
-                    <Text style={{ ...fs(10), color: t.primary }}>认证</Text>
+              ) : inviteList === null ? (
+                <Text style={{ ...fs(11), color: t.textTertiary }}>
+                  {meta.bearingId
+                    ? '正在加载在售商家…'
+                    : preInvited.length > 0
+                      ? `已指定邀请 ${preInvited.length} 家商家（从商家主页进入），也可在下方增选其他认证商家`
+                      : '未关联平台型号：请在下方手动选择认证商家'}
+                </Text>
+              ) : inviteList.length === 0 ? (
+                <Text style={{ ...fs(11), color: t.textTertiary }}>
+                  该型号暂无在售的认证商家（自己的店铺不能邀请），可在下方选择其他认证商家帮找货
+                </Text>
+              ) : (
+                <View>
+                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ ...fs(12), color: t.textSecondary }}>
+                      有货认证商家（已选 {inviteList.filter((m) => checked.includes(m.merchantId)).length}/{inviteList.length}）
+                    </Text>
+                    <Text style={{ ...fs(12), color: t.primary }} onClick={toggleAllStock}>
+                      {inviteList.every((m) => checked.includes(m.merchantId)) ? '全不选' : '全选'}
+                    </Text>
                   </View>
-                ))}
+                  {inviteList.map((m) => candidateRow(m.merchantId, m.merchantName, true, '有货', t.primary))}
+                </View>
+              )}
+
+              {/* 其他认证商家（v1.7.52 邀请放宽）：未在售该型号也可邀，支持关键词搜索 */}
+              <View style={{ marginTop: 10, borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.border, paddingTop: 10 }}>
+                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }} onClick={toggleOthers}>
+                  <Text style={{ ...fs(12), color: t.textSecondary, flex: 1 }}>
+                    其他认证商家（未在售，可帮找货）
+                  </Text>
+                  <Text style={{ ...fs(12), color: t.primary }}>{showOthers ? '收起' : '展开选择'}</Text>
+                </View>
+                {showOthers ? (
+                  <View style={{ marginTop: 8 }}>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border }}>
+                      <Input
+                        style={{ ...fs(13), flex: 1, color: t.textPrimary }}
+                        placeholder='搜索商家名称'
+                        placeholderTextColor={t.textTertiary}
+                        value={othersKeyword}
+                        onInput={(e) => setOthersKeyword(e.detail.value)}
+                        onBlur={() => loadOthers(othersKeyword)}
+                      />
+                      <Text style={{ ...fs(12), color: t.primary }} onClick={() => loadOthers(othersKeyword)}>搜索</Text>
+                    </View>
+                    {othersLoading ? (
+                      <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>正在加载商家…</Text>
+                    ) : others && others.length > 0 ? (
+                      others.map((m) => candidateRow(m.id, m.name, false, '找货', t.textSecondary))
+                    ) : (
+                      <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 6 }}>
+                        {others === null ? '' : '没有更多可邀请的认证商家'}
+                      </Text>
+                    )}
+                  </View>
+                ) : null}
               </View>
-            )
+
+              {/* 已选区（v1.7.52）：两组候选合并勾选后的最终收件人，逐个可移除 */}
+              {checkedList.length > 0 ? (
+                <View style={{ marginTop: 10, paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8, backgroundColor: t.primaryLight, borderRadius: 8 }}>
+                  <Text style={{ ...fs(11), color: t.primary }}>已选 {checkedList.length} 家</Text>
+                  {checkedList.map((id) => (
+                    <View key={id} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <Text style={{ ...fs(12), color: t.textPrimary, flex: 1 }} numberOfLines={1}>
+                        {checkedMeta[id].name}（{checkedMeta[id].hasStock ? '有货' : '找货'}）
+                      </Text>
+                      <Text style={{ ...fs(11), color: t.textTertiary }} onClick={() => toggleChecked(id, checkedMeta[id].name, checkedMeta[id].hasStock)}>移除</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
           ) : null}
         </View>
 
         <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 16, marginRight: 16, marginTop: 8 }}>
-          选择公开会进入寻货大厅（人人可应答），并通知有货的认证商家；邀请只通知你勾选的认证商家。发布后可从应答中选定一家，双方互见联系方式；寻货 14 天有效，请留意站内信通知。
+          选择公开会进入寻货大厅（人人可应答），并通知有货的认证商家；邀请只通知你勾选的认证商家，未在售该型号的商家也可受邀帮你找货。发布后可从应答中选定一家，双方互见联系方式；寻货 14 天有效，请留意站内信通知。
         </Text>
 
         {/* 发布按钮三态（v1.7.21）：免费发布 → 花轴承币发布（额度已用完）→ 轴承币不足去赚（跳任务中心）。

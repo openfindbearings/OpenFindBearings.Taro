@@ -224,10 +224,12 @@ export interface MerchantStaff {
 }
 
 /** 搜索商家 */
-export function searchMerchants(params: { keyword?: string; verifiedOnly?: boolean; sortBy?: 'name' | 'productcount'; sortOrder?: 'asc' | 'desc'; page?: number; pageSize?: number }) {
+export function searchMerchants(params: { keyword?: string; verifiedOnly?: boolean; excludeInternet?: boolean; sortBy?: 'name' | 'productcount'; sortOrder?: 'asc' | 'desc'; page?: number; pageSize?: number }) {
   const qs = buildQuery({
     keyword: params.keyword,
     verifiedOnly: params.verifiedOnly == null ? undefined : String(params.verifiedOnly),
+    // 改动说明（v1.7.52 邀请候选）：排除互联网来源商家——这类商家无账号、收不到站内信
+    excludeInternet: params.excludeInternet == null ? undefined : String(params.excludeInternet),
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
     page: params.page ?? 1,
