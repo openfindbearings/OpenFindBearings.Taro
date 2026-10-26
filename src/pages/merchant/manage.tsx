@@ -31,6 +31,20 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 
 const PAGE_SIZE = 20
 
+/**
+ * 商品状态说明条目（v1.7.55）
+ * 改动说明：商家此前只能看到状态角标，不知道各状态含义与上架流程，容易误以为"添加完就在卖"。
+ * 文案与 stateBadgeText 的判定顺序保持一致（审核位优先、其次销售态）。
+ */
+const GUIDE_STATES: { name: string; desc: string }[] = [
+  { name: '仓库中', desc: '刚添加，只有你自己可见。点"状态"选上架才会提交平台审核。' },
+  { name: '审核中', desc: '平台审核中，通过后自动上架；未通过会显示驳回原因。' },
+  { name: '已驳回', desc: '按驳回原因修改后重新提交审核即可。' },
+  { name: '出售中', desc: '已上架公开：出现在商城与型号详情的在售商家，可被搜索、被邀请；并计入牌级的在售件数。' },
+  { name: '补货中', desc: '暂不接单，但仍参与寻货匹配；补货后切回出售中。' },
+  { name: '已下架', desc: '不对外展示；重新上架不需要再次审核。' },
+]
+
 /** 添加/编辑表单值 */
 interface FormState {
   priceDescription: string
@@ -86,6 +100,8 @@ export default function MerchantManagePage() {
   const [loading, setLoading] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
+  // 改动说明（v1.7.55 商品状态说明）：说明卡默认收起，只占一行，不打断列表浏览
+  const [guideOpen, setGuideOpen] = useState(false)
 
   // 添加表单：null=收起；searchKw/搜索结果/已选型号
   const [adding, setAdding] = useState(false)
@@ -408,6 +424,35 @@ export default function MerchantManagePage() {
         </View>
       </View>
 
+      {/* 改动说明（v1.7.55 商品状态说明）：商家不知道各状态区别与上架需审核，新增可折叠说明卡；
+          放在添加按钮下方、筛选页签上方——进页第一眼可见，收起后只占一行 */}
+      <View style={{ marginLeft: 14, marginRight: 14, marginTop: 8, backgroundColor: t.bgCard, borderRadius: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 10, paddingBottom: 10 }}>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={() => setGuideOpen(!guideOpen)}>
+          <Icon name="info" size={14} color={t.primary} />
+          <Text style={{ ...fs(13), color: t.textPrimary, flex: 1, marginLeft: 6 }}>商品状态与上架说明</Text>
+          <Icon name={guideOpen ? 'chevron-up' : 'chevron-down'} size={16} color={t.textTertiary} />
+        </View>
+        {guideOpen && (
+          <View style={{ marginTop: 8 }}>
+            <Text style={{ ...fs(12), color: t.textSecondary, lineHeight: 18 }}>
+              在售 = 通过平台审核 + 你点了上架（出售中）。只有出售中的商品会出现在商城和型号详情的“在售商家”里，
+              买家能搜到你、给你发寻货邀请；商城只展示已认证商家的出售中商品。
+            </Text>
+            <View style={{ marginTop: 8 }}>
+              {GUIDE_STATES.map((g) => (
+                <View key={g.name} style={{ display: 'flex', flexDirection: 'row', marginTop: 6 }}>
+                  <Text style={{ ...fs(12), color: t.textPrimary, width: 52 }}>{g.name}</Text>
+                  <Text style={{ ...fs(12), color: t.textTertiary, flex: 1, lineHeight: 17 }}>{g.desc}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8, lineHeight: 16 }}>
+              注意：修改价格、库存、起订量或备注会重新提交审核，通过前商品会暂时从商城与详情页隐藏。
+            </Text>
+          </View>
+        )}
+      </View>
+
       {/* 添加表单（内联展开）：搜索选型号 + 四项描述 */}
       {adding && (
         <View style={{ marginLeft: 14, marginRight: 14, marginTop: 8, marginBottom: 4, backgroundColor: t.bgCard, borderRadius: 12, padding: 12 }}>
@@ -475,6 +520,8 @@ export default function MerchantManagePage() {
           <View style={{ display: 'flex', alignItems: 'center', paddingTop: 50 }}>
             <Icon name="box" size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无商品，点左上"添加商品"上架</Text>
+            {/* 改动说明（v1.7.55）：空态补一句闭环说明——添加后还要上架并通过审核，买家才能在商城搜到 */}
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 6 }}>添加后点"状态"选上架，审核通过后买家才能在商城搜到你</Text>
           </View>
         ) : (
           <View style={{ borderRadius: 12, overflow: 'hidden' }}>
