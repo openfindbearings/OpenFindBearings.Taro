@@ -76,6 +76,8 @@ export interface MerchantBearing {
   priceDescription?: string | null
   /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中（替代 isOnSale） */
   saleState: number
+  /** v1.7.56 商家实拍首图：店铺页商品列表优先用它，缺失则回退型号主图 */
+  coverImageUrl?: string | null
 }
 
 /** 商户入驻状态项（对齐 BFF MerchantApplicationItem） */
@@ -405,6 +407,10 @@ export interface MerchantBearingItem {
   reviewStatus: number
   /** 审核驳回理由（已驳回时下发） */
   approvalComment?: string | null
+  /** v1.7.56 商家实拍图列表（最多 3 张，首个为首图），为空时展示层回退型号主图 */
+  imageUrls?: string[] | null
+  /** v1.7.56 展示封面：商家首图优先，无商家图时为型号主图 */
+  coverImageUrl?: string | null
 }
 
 /** v2.15.0 状态统一：销售态取值（与 API SaleState 对齐） */
@@ -458,6 +464,49 @@ export function restockBearing(id: string, eta?: string) {
 /** 删除商品（v2.15.0 商家删除）：出售中/补货中需先下架，其余物理删除；失败抛后端 message */
 export function deleteMyBearing(id: string) {
   return request<OpResult>(API.MERCHANT_BEARING_DELETE(id), { method: 'DELETE' })
+}
+
+/** 商品实拍图操作结果（v1.7.56，对齐 BFF 图片端点返回） */
+export interface BearingImageResult {
+  success: boolean
+  /** 操作后的完整图片列表，首个为首图 */
+  imageUrls?: string[]
+  message?: string
+}
+
+/**
+ * 上传一张商品实拍图（v1.7.56）
+ * 改动说明：图片属于商家的这件商品，不写型号主图；已上架商品改图后自动重新送审，
+ * 审核通过前商城暂不展示。filePath 为空时先让用户选图。
+ */
+export async function uploadBearingImage(id: string, filePath?: string): Promise<BearingImageResult> {
+  try {
+    const path = filePath || await pickImagePath()
+    if (!path) return { success: false, message: '已取消' }
+    const r = await uploadFileNormalized({
+      url: `${getBaseUrl()}${API.MERCHANT_BEARING_IMAGES(id)}`,
+      filePath: path,
+      header: uploadHeaders(getToken())
+    })
+    let body: any = null
+    try { body = JSON.parse(r.data) } catch { body = null }
+    if (r.statusCode >= 200 && r.statusCode < 300) {
+      return { success: true, imageUrls: body?.imageUrls ?? [] }
+    }
+    return { success: false, message: body?.message || body?.detail || `上传失败（${r.statusCode || '网络异常'}）` }
+  } catch (e) {
+    return { success: false, message: uploadFailMessage(e) }
+  }
+}
+
+/** 删除一张商品实拍图（v1.7.56）：按图片地址删除，已上架商品删图后重新送审 */
+export function deleteBearingImage(id: string, url: string) {
+  return request<BearingImageResult>(`${API.MERCHANT_BEARING_IMAGES(id)}?url=${encodeURIComponent(url)}`, { method: 'DELETE' })
+}
+
+/** 调整商品实拍图顺序（v1.7.56）：首项即首图 */
+export function reorderBearingImages(id: string, urls: string[]) {
+  return request<BearingImageResult>(API.MERCHANT_BEARING_IMAGE_ORDER(id), { method: 'PUT', data: { urls } })
 }
 
 /** 带当前商户上下文头的上传请求头 */

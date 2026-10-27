@@ -183,9 +183,23 @@ export default function BearingDetailPage() {
         style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}
         onClick={() => goMerchant(m.merchantId)}
       >
-        <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
-          <Icon name="store" size={18} color={t.primary} />
-        </View>
+        {/* v1.7.56 商家实拍图：有图显示该商家自己的货（认货），无图保留店铺图标（型号主图已在页顶） */}
+        {m.coverImageUrl ? (
+          <MediaImage
+            url={m.coverImageUrl}
+            className='bd-list-avatar'
+            mode='aspectFill'
+            fallback={
+              <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="store" size={18} color={t.primary} />
+              </View>
+            }
+          />
+        ) : (
+          <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
+            <Icon name="store" size={18} color={t.primary} />
+          </View>
+        )}
         <View className='bd-list-main'>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
             <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>

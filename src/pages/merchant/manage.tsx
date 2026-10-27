@@ -1,4 +1,4 @@
-// 商户商品管理页（v1.7.3 重构）
+﻿// 商户商品管理页（v1.7.3 重构）
 // 列表 + 行内添加/编辑表单 + 上下架。
 // 改动说明：
 //   2. 添加商品改为"搜索选平台已有型号 + 填市场描述"（1688 上架同款交互）——
@@ -7,10 +7,10 @@
 //   4. 商品状态（v2.15.0 状态统一）：仓库中 / 审核中 / 出售中 / 已驳回 / 补充中 / 已下架；
 //      列表右侧状态徽标由 reviewStatus + saleState 派生，支持对应页签筛选。
 import { useState } from 'react'
-import { View, Text, Input } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import { View, Text, Input, Image } from '@tarojs/components'
 import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
+import MediaImage from '../../components/MediaImage'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useTheme } from '../../hooks/useTheme'
@@ -19,8 +19,11 @@ import { useMerchantStore } from '../../stores/merchant'
 import { formatPriceText } from '../../utils/format'
 import {
   getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing, deleteMyBearing,
+  uploadBearingImage, deleteBearingImage, reorderBearingImages,
   type MerchantBearingItem
 } from '../../services/merchant'
+// v1.7.56 商品实拍图：选图复用跨端 pickImagePath（RN 走 expo-image-picker）
+import { pickImagePath } from '../../services/pickImage'
 import { searchBearings, type Bearing } from '../../services/bearing'
 // v2.3.0 商城置顶卡：目录/兑换（花轴承币买曝光，履约=该型号商家列表置顶 N 小时）
 import { getMallItems, redeemMallItem, MALL_CATEGORY, type MallCatalog } from '../../services/mall'
@@ -112,6 +115,9 @@ export default function MerchantManagePage() {
   // 编辑中的关联行 id（null=不在编辑）
   const [editingId, setEditingId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  // v1.7.56 商品实拍图：新建时先存本地路径，创建成功后再逐张上传；imgBusy 防止连点重复上传
+  const [pendingImages, setPendingImages] = useState<string[]>([])
+  const [imgBusy, setImgBusy] = useState(false)
   // 搜索防抖句柄
   let searchTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -316,33 +322,104 @@ export default function MerchantManagePage() {
   const toggleAdd = () => {
     setAdding((v) => !v)
     setEditingId(null)
-    if (adding) { setSearchKw(''); setSearchList([]); setPicked(null); setForm(EMPTY_FORM) }
+    if (adding) { setSearchKw(''); setSearchList([]); setPicked(null); setForm(EMPTY_FORM); setPendingImages([]) }
   }
 
-  /** 提交添加：需先选中平台型号 */
-  const onCreate = () => {
+  /** 新建商品时先选本地图（v1.7.56）：创建成功后才真正上传，最多 3 张 */
+  const pickPendingImage = async () => {
+    if (pendingImages.length >= 3) { Taro.showToast({ title: '最多 3 张图片', icon: 'none' }); return }
+    const path = await pickImagePath()
+    if (!path) return
+    setPendingImages((prev) => (prev.length >= 3 ? prev : [...prev, path]))
+  }
+
+  /** 提交添加：需先选中平台型号；创建成功后按返回 id 依次上传已选实拍图 */
+  const onCreate = async () => {
     if (!picked) { Taro.showToast({ title: '请先搜索并选择轴承型号', icon: 'none' }); return }
     if (submitting) return
     setSubmitting(true)
-    createMyBearing({
-      bearingId: picked.id,
-      priceDescription: form.priceDescription.trim() || undefined,
-      stockDescription: form.stockDescription.trim() || undefined,
-      minOrderDescription: form.minOrderDescription.trim() || undefined,
-      remarks: form.remarks.trim() || undefined
-    })
-      .then((r) => {
-        Taro.showToast({ title: r?.message || '添加成功，已放入仓库中', icon: 'none' })
-        setAdding(false); setSearchKw(''); setSearchList([]); setPicked(null); setForm(EMPTY_FORM)
-        load(1, false)
+    try {
+      const r = await createMyBearing({
+        bearingId: picked.id,
+        priceDescription: form.priceDescription.trim() || undefined,
+        stockDescription: form.stockDescription.trim() || undefined,
+        minOrderDescription: form.minOrderDescription.trim() || undefined,
+        remarks: form.remarks.trim() || undefined
       })
-      .catch((e: any) => Taro.showToast({ title: e?.message || '添加失败', icon: 'none' }))
-      .finally(() => setSubmitting(false))
+      // v1.7.56 图片依赖新建返回的关联 id，不能再只回 message
+      let failed = 0
+      if (r?.id && pendingImages.length > 0) {
+        for (const path of pendingImages) {
+          const up = await uploadBearingImage(r.id, path)
+          if (!up.success) failed++
+        }
+      }
+      Taro.showToast({
+        title: failed > 0 ? `商品已添加，${failed} 张图片上传失败` : (r?.message || '添加成功，已放入仓库中'),
+        icon: 'none'
+      })
+      setAdding(false); setSearchKw(''); setSearchList([]); setPicked(null); setForm(EMPTY_FORM); setPendingImages([])
+      load(1, false)
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '添加失败', icon: 'none' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  /** 给已存在商品添加一张实拍图（v1.7.56）：已上架商品改图后重新送审 */
+  const onAddImage = async (item: MerchantBearingItem) => {
+    if (imgBusy) return
+    setImgBusy(true)
+    try {
+      const r = await uploadBearingImage(item.id)
+      if (r.success) {
+        Taro.showToast({ title: '图片已上传，等待审核', icon: 'none' })
+        load(1, false)
+      } else {
+        Taro.showToast({ title: r.message || '上传失败', icon: 'none' })
+      }
+    } finally {
+      setImgBusy(false)
+    }
+  }
+
+  /** 删除一张实拍图（v1.7.56） */
+  const onRemoveImage = async (item: MerchantBearingItem, url: string) => {
+    if (imgBusy) return
+    setImgBusy(true)
+    try {
+      await deleteBearingImage(item.id, url)
+      Taro.showToast({ title: '图片已删除', icon: 'none' })
+      load(1, false)
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '删除失败', icon: 'none' })
+    } finally {
+      setImgBusy(false)
+    }
+  }
+
+  /** 把某张图设为首图（v1.7.56）：首图决定商城与商品卡片展示 */
+  const onMakeCover = async (item: MerchantBearingItem, url: string) => {
+    if (imgBusy) return
+    const current = item.imageUrls ?? []
+    if (current[0] === url) return
+    setImgBusy(true)
+    try {
+      await reorderBearingImages(item.id, [url, ...current.filter((u) => u !== url)])
+      Taro.showToast({ title: '已设为首图，等待审核', icon: 'none' })
+      load(1, false)
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '调整失败', icon: 'none' })
+    } finally {
+      setImgBusy(false)
+    }
   }
 
   /** 进入编辑：回填四项描述 */
   const startEdit = (item: MerchantBearingItem) => {
     setAdding(false)
+    setPendingImages([])
     setEditingId(item.id)
     setForm({
       priceDescription: item.priceDescription ?? '',
@@ -502,6 +579,35 @@ export default function MerchantManagePage() {
             {descRow('起订量', 'minOrderDescription', '如：10 个起订')}
             {descRow('备注', 'remarks', '选填')}
           </View>
+          {/* v1.7.56 新建时先选实拍图，创建成功后自动上传；不选也能提交，商城回退型号主图 */}
+          <View style={{ marginTop: 8 }}>
+            <Text style={{ ...fs(13), color: t.textSecondary }}>商品实拍图（{pendingImages.length}/3，选填）</Text>
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2, lineHeight: 16 }}>
+              拍你手上这批货，买家在商城看到的就是第一张；不传则显示平台型号图
+            </Text>
+            <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
+              {pendingImages.map((p, idx) => (
+                <View key={`${p}-${idx}`} style={{ width: 68, marginRight: 8, marginBottom: 8 }}>
+                  <Image src={p} mode='aspectFill' style={{ width: 68, height: 68, borderRadius: 8 }} />
+                  <Text
+                    style={{ ...fs(11), color: '#EF4444', marginTop: 2 }}
+                    onClick={() => setPendingImages((prev) => prev.filter((_, i) => i !== idx))}
+                  >
+                    移除
+                  </Text>
+                </View>
+              ))}
+              {pendingImages.length < 3 && (
+                <View
+                  style={{ width: 68, height: 68, borderRadius: 8, borderStyle: 'dashed', borderWidth: 1, borderColor: t.border, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                  onClick={pickPendingImage}
+                >
+                  <Icon name="plus" size={16} color={t.textTertiary} />
+                  <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>添加图片</Text>
+                </View>
+              )}
+            </View>
+          </View>
           {formActions(onCreate, '提交添加')}
         </View>
       )}
@@ -582,6 +688,38 @@ export default function MerchantManagePage() {
                     {descRow('库存', 'stockDescription', '如：现货 500 个')}
                     {descRow('起订量', 'minOrderDescription', '如：10 个起订')}
                     {descRow('备注', 'remarks', '选填')}
+                    {/* v1.7.56 商品实拍图管理：首图决定商城展示；改图/删图/换首图后已上架商品重新送审 */}
+                    <View style={{ marginTop: 10, borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.border, paddingTop: 10 }}>
+                      <Text style={{ ...fs(13), color: t.textSecondary }}>商品实拍图（{(item.imageUrls ?? []).length}/3）</Text>
+                      <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2, lineHeight: 16 }}>
+                        买家在商城看到的是第一张；改图、删图或换首图后需重新审核，通过前商城暂不展示
+                      </Text>
+                      <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
+                        {(item.imageUrls ?? []).map((url, idx) => (
+                          <View key={url} style={{ width: 76, marginRight: 8, marginBottom: 8 }}>
+                            <MediaImage url={url} mode='aspectFill' style={{ width: 76, height: 76, borderRadius: 8 }} />
+                            <Text style={{ ...fs(10), color: idx === 0 ? t.primary : t.textTertiary, marginTop: 2 }}>
+                              {idx === 0 ? '首图' : '商品图'}
+                            </Text>
+                            <View style={{ display: 'flex', flexDirection: 'row' }}>
+                              {idx !== 0 && (
+                                <Text style={{ ...fs(11), color: t.primary, marginRight: 8 }} onClick={() => onMakeCover(item, url)}>设为首图</Text>
+                              )}
+                              <Text style={{ ...fs(11), color: '#EF4444' }} onClick={() => onRemoveImage(item, url)}>删除</Text>
+                            </View>
+                          </View>
+                        ))}
+                        {(item.imageUrls ?? []).length < 3 && (
+                          <View
+                            style={{ width: 76, height: 76, borderRadius: 8, borderStyle: 'dashed', borderWidth: 1, borderColor: t.border, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: imgBusy ? 0.5 : 1 }}
+                            onClick={() => onAddImage(item)}
+                          >
+                            <Icon name="plus" size={16} color={t.textTertiary} />
+                            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>添加图片</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
                     {formActions(onUpdate, '保存修改')}
                   </View>
                 )}

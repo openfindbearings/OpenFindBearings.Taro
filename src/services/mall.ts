@@ -1,4 +1,4 @@
-// 商城服务（v2.3.0 商城虚拟权益）：目录 / 积分兑换 / 我的订单，走 BFF /mobile/mall/*
+﻿// 商城服务（v2.3.0 商城虚拟权益）：目录 / 积分兑换 / 我的订单，走 BFF /mobile/mall/*
 // 一期实装置顶卡：兑换须带 targetRef=MerchantBearingId（商品管理页"置顶"入口）
 // 改动说明（v2.14.0 商城导购）：新增货源流 getMallFeed——商城 Tab 商品瀑布流数据源
 import { request } from './request'
@@ -133,6 +133,10 @@ export interface MallFeedItem {
   dimensions?: string | null
   image3DUrl?: string | null
   image2DUrl?: string | null
+  /** v1.7.56 商家实拍图（属于该商家的这件商品，最多 3 张，首个为首图） */
+  merchantImageUrls?: string[] | null
+  /** v1.7.56 展示封面：商家首图优先，无商家图时回退型号主图 */
+  coverImageUrl?: string | null
   priceDescription?: string | null
   isPriceVisible: boolean
   numericPrice?: number | null
