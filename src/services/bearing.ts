@@ -1,4 +1,4 @@
-// 轴承服务：搜索、详情、在售商家、替代品（均调 BFF public 端点，auth:false）
+﻿// 轴承服务：搜索、详情、在售商家、替代品（均调 BFF public 端点，auth:false）
 import { request } from './request'
 import { API, buildQuery } from './config'
 import { DEFAULT_PAGE_SIZE } from '../utils/paging'
@@ -64,6 +64,8 @@ export interface BearingMerchant {
   gradeDisplay?: string | null
   /** v1.7.54 邀请候选口径：是否可被邀请（认证 + 生效 + 未软删），缺省按不可邀请保守处理 */
   invitable?: boolean
+  /** v1.7.56 该商家此型号的实拍首图（平台主图已在页面顶部，此处只显示商家自己的图） */
+  coverImageUrl?: string | null
 }
 
 /** 轴承替代品项（对齐 BFF InterchangeItem，v2.16.0 三级治理：含类型标签与责任提示字段） */

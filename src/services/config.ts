@@ -190,6 +190,9 @@ export const API = {
   /** 商户商品管理（需登录且为商户成员） */
   MERCHANT_BEARINGS_MINE: `${API_PREFIX}/merchant/bearings`,
   MERCHANT_BEARING_UPDATE: (id: string) => `${API_PREFIX}/merchant/bearings/${id}`,
+  // v1.7.56 商家商品实拍图：上传/删除/排序（属于本商家商品，不改型号主图）
+  MERCHANT_BEARING_IMAGES: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/images`,
+  MERCHANT_BEARING_IMAGE_ORDER: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/images/order`,
   MERCHANT_BEARING_ON_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/onshelf`,
   MERCHANT_BEARING_OFF_SHELF: (id: string) => `${API_PREFIX}/merchant/bearings/${id}/offshelf`,
   // 改动说明（v2.17.0 替代品字典化）：删除 MERCHANT_INTERCHANGES（商家替代候选端点已取消）

@@ -33,10 +33,11 @@ export default function ProductCard({ item, onPress, onMerchant }: ProductCardPr
   return (
     <View style={{ width: '100%', backgroundColor: t.bgCard, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
       {/* 主图（点击进货源详情） */}
+      {/* 主图：v1.7.56 优先商家实拍图（认货），无商家图回退型号主图（认型号） */}
       <View onClick={onPress} style={{ display: 'flex' }}>
         <MediaImage
-          url={item.image3DUrl || item.image2DUrl}
-          fallbacks={[item.image2DUrl]}
+          url={item.coverImageUrl || item.image3DUrl || item.image2DUrl}
+          fallbacks={[item.image2DUrl, item.image3DUrl]}
           style={{ width: '100%', height: 150, backgroundColor: t.bgInput }}
           mode='aspectFit'
           fallbackIcon='package'

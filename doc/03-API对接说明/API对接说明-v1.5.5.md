@@ -1,10 +1,17 @@
-# Taro API 对接说明 v1.5.4
+# Taro API 对接说明 v1.5.5
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.5 (2026-10-27)
+
+- **商品实拍图**：`pages/merchant/manage.tsx` 新增商品图管理——新建时先选本地图（最多 3 张），创建成功后按返回 `id` 自动上传；编辑区内可添加、删除、设为首图，首图决定商城/商品卡展示。
+- **接口**：`POST /mobile/merchant/bearings/{id}/images`（multipart）、`DELETE .../images?url=`、`PUT .../images/order`；`createMyBearing` 返回值新增 `id`。
+- **展示**：商城卡片、店铺页商品行、型号详情「在售商家」优先显示商家实拍图（`coverImageUrl`），无图时商城回退型号主图、在售商家行只剩文字/店铺图标；首页搜索与型号详情顶部仍用平台主图。
+- **口径提示**：已上架商品改图/删图/换首图后自动重新送审，审核通过前商城暂不展示。
 
 ### v1.5.4 (2026-10-25)
 

@@ -257,6 +257,14 @@ export default function MerchantDetailPage() {
           {bearings.length === 0 && <Text className='md-empty' style={{ ...fs(13), color: t.textTertiary }}>暂无在售轴承</Text>}
           {bearings.map((b) => (
             <View key={b.bearingId} className='md-list-row' onClick={() => goBearing(b.bearingId)}>
+              {/* v1.7.56 店铺商品优先展示商家实拍图（认货），无商家图时留出行文字布局 */}
+              {b.coverImageUrl ? (
+                <MediaImage
+                  url={b.coverImageUrl}
+                  mode='aspectFill'
+                  style={{ width: 44, height: 44, borderRadius: 8, marginRight: 10 }}
+                />
+              ) : null}
               <View className='md-list-main'>
                 <Text className='md-list-name' style={{ ...fs(15), color: t.textPrimary }}>{b.bearingPartNumber}</Text>
                 <Text className='md-list-sub' style={{ ...fs(12), color: t.textTertiary }}>
