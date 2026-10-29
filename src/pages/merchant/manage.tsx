@@ -374,7 +374,9 @@ export default function MerchantManagePage() {
     try {
       const r = await uploadBearingImage(item.id)
       if (r.success) {
-        Taro.showToast({ title: '图片已上传，等待审核', icon: 'none' })
+        // 改动说明（v1.7.57）：只有已通过审核的商品改图才会重新送审，
+        //   仓库中/已驳回的商品直接生效，原文案一律说"等待审核"会让商家以为卡住了
+        Taro.showToast({ title: item.reviewStatus === 2 ? '图片已上传，等待审核' : '图片已上传', icon: 'none' })
         load(1, false)
       } else {
         Taro.showToast({ title: r.message || '上传失败', icon: 'none' })
@@ -384,9 +386,16 @@ export default function MerchantManagePage() {
     }
   }
 
-  /** 删除一张实拍图（v1.7.56） */
+  /** 删除一张实拍图（v1.7.56）：已上架商品删图会重新送审，故删除前二次确认（v1.7.57） */
   const onRemoveImage = async (item: MerchantBearingItem, url: string) => {
     if (imgBusy) return
+    const ok = await showConfirmDialog({
+      title: '删除商品图',
+      content: item.reviewStatus === 2
+        ? '删除后商品会重新提交平台审核，审核通过前商城暂不展示。确定删除？'
+        : '确定删除这张商品图？'
+    })
+    if (!ok) return
     setImgBusy(true)
     try {
       await deleteBearingImage(item.id, url)
@@ -407,7 +416,7 @@ export default function MerchantManagePage() {
     setImgBusy(true)
     try {
       await reorderBearingImages(item.id, [url, ...current.filter((u) => u !== url)])
-      Taro.showToast({ title: '已设为首图，等待审核', icon: 'none' })
+      Taro.showToast({ title: item.reviewStatus === 2 ? '已设为首图，等待审核' : '已设为首图', icon: 'none' })
       load(1, false)
     } catch (e: any) {
       Taro.showToast({ title: e?.message || '调整失败', icon: 'none' })
