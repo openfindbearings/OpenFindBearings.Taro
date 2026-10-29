@@ -1,10 +1,16 @@
-# Taro API 对接说明 v1.5.5
+# Taro API 对接说明 v1.5.6
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.6 (2026-10-29)
+
+- **意见反馈**：新增 `pages/my/feedback`（设置页「帮助」组入口），页内两个分段——提交反馈（分类 chips 4 项、内容 5–1000 字计数、附件最多 3 张、联系方式选填）/ 我的反馈（状态徽标 + 内容 + 图片 + 平台回复 + 时间）。
+- **接口**：`POST /mobile/me/feedback/images`（multipart，`uploadFeedbackImage`）、`POST /mobile/me/feedback`（`submitFeedback`）、`GET /mobile/me/feedback`（`getMyFeedbacks`）。
+- **口径提示**：提交需登录；每日上限由 API `Business.FeedbackDailyLimit` 控制（默认 5 条），超限与内容校验失败原因经 `message` 透传；附件在提交前先上传，未提交不产生服务端记录。
 
 ### v1.5.5 (2026-10-27)
 
@@ -339,6 +345,21 @@ interface MerchantHistoryItem {
   companyName?: string; viewedAt: string; viewCount: number;
 }
 ```
+
+#### 意见反馈（v1.5.6）
+
+- `uploadFeedbackImage(filePath)` → `POST /mobile/me/feedback/images`（multipart `file`），返回 `{ success, url?, message? }`；走 `uploadFileNormalized` 旁路上传，上传前后的 token 由 `ensureAccessToken` 保证。
+- `submitFeedback({ category, content, imageUrls?, contact? })` → `POST /mobile/me/feedback`，返回 `{ success, message }`；`category` 取 `FEEDBACK_CATEGORIES`（0 功能建议 / 1 问题反馈 / 2 内容举报 / 3 其他）。
+- `getMyFeedbacks(page?, pageSize?)` → `GET /mobile/me/feedback?page=1&pageSize=20`，返回 `Paged<FeedbackItem>`。
+
+```typescript
+interface FeedbackItem {
+  id: string; category: string; categoryText: string; content: string; imageUrls: string[];
+  status: string; statusText: string; adminReply: string | null; repliedAt: string | null; createdAt: string;
+}
+```
+
+- 页面 `pages/my/feedback.tsx`：两个分段（提交 / 我的反馈）；图片逐张选择并立即上传（最多 3 张），提交成功后清空表单并切到「我的反馈」；状态徽标：待处理/处理中（`warning`）、已回复（`success`）、已关闭（`tertiary`）。
 
 ## 版本更新（`services/update.ts`）
 

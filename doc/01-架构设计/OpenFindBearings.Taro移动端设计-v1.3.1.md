@@ -1,4 +1,4 @@
-# OpenFindBearings.Taro 移动端设计 v1.3.0
+﻿# OpenFindBearings.Taro 移动端设计 v1.3.1
 
 ## 概述
 
@@ -7,6 +7,10 @@ OpenFindBearings.Taro 是统一的移动端前端，基于 Taro 3.6.40 + React 1
 Taro 负责前端界面，通过 Mobile BFF（OpenFindBearings.Mobile）访问后端 API 与 Identity 认证服务。Taro 与 BFF 独立部署、独立扩缩容。
 
 ## 变更日志
+
+### v1.3.1 (2026-10-29)
+
+- 新增意见反馈页 `pages/my/feedback`：设置页「帮助」组入口；页内两个分段——提交反馈（分类 4 项、内容 5–1000 字、附件最多 3 张、联系方式选填）与我的反馈（状态徽标 + 平台回复）。提交需登录，每日上限取 API `Business.FeedbackDailyLimit`（默认 5 条）。
 
 ### v1.3.0 (2026-09-21)
 
@@ -126,6 +130,7 @@ Taro 负责前端界面，通过 Mobile BFF（OpenFindBearings.Mobile）访问�
 | 入口 | 如果已是商家，显示"我的店铺"快捷入口 | 需登录+已入驻 |
 | 消息中心 | 右上铃铛（未读红点，与 TabBar"我的"角标同源），站内信收件箱/已读/跳转 | 需登录 |
 | 设置 | 关于、版本、检查更新（含启动自动检查开关）、清除缓存 | 无 |
+| 意见反馈 | 分类提交（功能建议/问题反馈/内容举报/其他）+ 图片最多 3 张 + 联系方式选填；「我的反馈」查看处理状态与平台回复 | 需登录 |
 
 ## 目录结构
 

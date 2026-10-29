@@ -451,6 +451,16 @@ export default function SettingsPage() {
               onChange={(v) => { setAutoUpdate(v); void setAutoUpdateEnabled(v) }}
             />
           </View>
+          {/* 意见反馈（v1.7.58）：提交建议/问题/举报并查看回复，置"帮助"组首项 */}
+          <View className='list-item' style={{ borderBottomColor: t.border }} onClick={() => Taro.navigateTo({ url: '/pages/my/feedback' })}>
+            <View className='list-left'>
+              <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>
+                <Icon name="message-circle" size={20} color={t.primary} />
+              </View>
+              <Text className='list-label' style={{ ...fs(15), color: t.textPrimary }}>意见反馈</Text>
+            </View>
+            <Icon name="chevron_right" size={18} color={t.textTertiary} />
+          </View>
           <View className='list-item' style={{ borderBottomColor: t.border }} onClick={callHotline}>
             <View className='list-left'>
               <View className='list-icon' style={{ backgroundColor: t.primaryLight }}>

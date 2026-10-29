@@ -37,6 +37,8 @@ export default defineAppConfig({
     'pages/my/followed',
     'pages/my/history',
     'pages/my/corrections',
+    // 意见反馈（v1.7.58）：提交建议/问题/举报 + 查看本人反馈与平台回复
+    'pages/my/feedback',
  'pages/my/points',
     // v2.14.0 商城导购：权益兑换主体迁至"我的"线（商城 Tab 顶部留入口）
     'pages/my/redeem',
