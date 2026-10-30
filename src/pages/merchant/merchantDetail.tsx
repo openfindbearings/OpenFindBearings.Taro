@@ -144,7 +144,13 @@ export default function MerchantDetailPage() {
                 </View>
               ) : null}
               {detail ? (
-                detail.isVerified ? (
+                // 改动说明（v1.7.60 互联网数据展示）：互联网来源商家直接标「互联网数据」，
+                //   比「未认证」更能说明数据性质（无账号、未与平台建立联系）
+                detail.isInternetSource ? (
+                  <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: t.bgInput }}>
+                    <Text style={{ ...fs(10), color: t.textTertiary, fontWeight: 'bold' }}>互联网数据</Text>
+                  </View>
+                ) : detail.isVerified ? (
                   <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: t.primaryLight }}>
                     <Text style={{ ...fs(10), color: t.primary, fontWeight: 'bold' }}>已认证</Text>
                   </View>
@@ -161,6 +167,19 @@ export default function MerchantDetailPage() {
                   {detail?.typeDisplay ? <Text className='md-sub' style={{ ...fs(12), color: t.textTertiary }}>{detail.typeDisplay}</Text> : null}
           </View>
         </View>
+
+        {/* 改动说明（v1.7.60 互联网数据展示）：互联网来源商家（无账号、未认证）属公开抓取数据，
+            明确标注"未经平台核实"，避免被误认为平台认证商家 */}
+        {detail?.isInternetSource && (
+          <View
+            style={{ margin: 12, marginTop: 0, paddingTop: 10, paddingBottom: 10, paddingLeft: 14, paddingRight: 14, borderRadius: 10, backgroundColor: t.bgInput, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+          >
+            <Text style={{ ...fs(12), color: t.textSecondary, fontWeight: '600' }}>互联网数据 · 未经平台核实</Text>
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 4 }}>
+              该商家信息来自互联网公开信息，平台暂未与其建立联系，号码可能已变更，联系时请自行核实
+            </Text>
+          </View>
+        )}
 
         {/* v2.6.0 商家勋章园（承 v2.1.0 徽章排升级）：常驻卡——头部"商家勋章园 + 共 N 枚"，
             勋章双环占位排（rare 金环/主题色环，与个人勋章卡同款），
@@ -221,6 +240,15 @@ export default function MerchantDetailPage() {
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
               <Text className='md-v' style={{ ...fs(13), color: t.textTertiary }}>你经营的商家</Text>
             </View>
+          ) : detail?.isInternetSource ? (
+            // 改动说明（v1.7.60 互联网数据展示）：互联网来源商家按公开数据口径展示联系方式
+            //   （手机号已由服务端脱敏、固话原样），不再提示"暂不接收邀约"
+            <View className='md-row'>
+              <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
+              <Text className='md-v' style={{ ...fs(13), color: t.textPrimary }}>
+                {detail?.contact?.mobile || detail?.contact?.phone || detail?.contact?.email || '未公开'}
+              </Text>
+            </View>
           ) : detail?.isVerified && (detail?.status ?? 'Active') === 'Active' ? (
             <View className='md-row' onClick={handleInquire}>
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
@@ -238,7 +266,10 @@ export default function MerchantDetailPage() {
               <Text className='md-v' style={{ ...fs(13), color: t.textTertiary }}>该商家暂不接收邀约</Text>
             </View>
           )}
-          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在寻货撮合达成后由双方互给</Text>
+          {/* 改动说明（v1.7.60）：防骚扰提示只对平台认证商家成立；互联网数据已按脱敏口径公开 */}
+          {!detail?.isInternetSource && (
+            <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在寻货撮合达成后由双方互给</Text>
+          )}
           {detail?.address && (
             <View className='md-row'>
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>地址</Text>

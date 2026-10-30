@@ -1,10 +1,16 @@
-# Taro API 对接说明 v1.5.6
+﻿# Taro API 对接说明 v1.5.7
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.7 (2026-10-30)
+
+- **互联网数据展示**：商家详情页 `MerchantDetail` 新增 `isInternetSource`/`contact`——互联网来源商家顶部显示「互联网数据 · 未经平台核实」，联系方式按公开数据口径展示（手机已由服务端脱敏、固话原样）；认证商家仍为「邀请报价后互给」，其他未认证商家为「暂不接收邀约」。
+- **型号详情在售商家**：`BearingMerchant` 新增 `isInternetSource`/`contactPhone`，未认证段行内加「互联网数据」小标并在报价后展示脱敏电话。
+- **搜索结果分流**：`Bearing` 新增 `verifiedMerchantCount`——大于 0 显示「N 家认证商家有货」并给「寻货」按钮（带型号 + `bearingId` 预填跳发布页，发布页自动勾选有货认证商家）；为 0 显示「暂无认证商家货源 · 仅供参考」，不提供寻货入口。
 
 ### v1.5.6 (2026-10-29)
 

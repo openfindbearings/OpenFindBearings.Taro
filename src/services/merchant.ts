@@ -36,6 +36,8 @@ export interface Merchant {
   status?: string | null
   productCount?: number | null
   logoUrl?: string | null
+  /** v1.7.60 互联网数据展示：无账号的抓取商家（与平台认证商家区分） */
+  isInternetSource?: boolean
 }
 
 /** 商家详情（对齐 BFF MerchantDetail） */
@@ -61,6 +63,19 @@ export interface MerchantDetail {
   isMerchantMember?: boolean
   /** v2.6.0 商家主页：集体任务累计达成次数（勋章园卡"通关史"） */
   completedTaskCount?: number
+  /** v1.7.60 互联网数据展示：互联网来源商家（无账号、未认证，联系方式按公开数据口径展示） */
+  isInternetSource?: boolean
+  /** v1.7.60 互联网来源商家的公开联系方式（手机已由服务端脱敏、固话原样）；认证商家恒为空 */
+  contact?: MerchantContact | null
+}
+
+/** 商家公开联系方式（v1.7.60，仅互联网来源商家下发） */
+export interface MerchantContact {
+  contactPerson?: string | null
+  phone?: string | null
+  mobile?: string | null
+  email?: string | null
+  address?: string | null
 }
 
 /** 商家在售轴承项（对齐 BFF MerchantBearingItem）。
