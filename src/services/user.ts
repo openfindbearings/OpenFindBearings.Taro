@@ -301,3 +301,57 @@ export async function submitCorrection(targetType: 'Bearing' | 'Merchant', targe
 export async function getMyCorrections(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
   return request<Paged<CorrectionItem>>(`${API.MY_CORRECTIONS}?page=${page}&pageSize=${pageSize}`)
 }
+
+// ============ 意见反馈（v1.7.58） ============
+
+/** 反馈分类选项（值与 API FeedbackCategory 枚举一致） */
+export const FEEDBACK_CATEGORIES = [
+  { value: 0, label: '功能建议' },
+  { value: 1, label: '问题反馈' },
+  { value: 2, label: '内容举报' },
+  { value: 3, label: '其他' }
+]
+
+/** 我的反馈条目（对齐 BFF /mobile/me/feedback 返回字段） */
+export interface FeedbackItem {
+  id: string
+  category: string
+  categoryText: string
+  content: string
+  imageUrls: string[]
+  status: string
+  statusText: string
+  adminReply: string | null
+  repliedAt: string | null
+  createdAt: string
+}
+
+/**
+ * 上传一张反馈附件图片（最多 3 张、单张 ≤5MB，服务端校验）
+ * 走 multipart 旁路（不经 request 拦截器），上传成功后把相对媒体键随反馈一起提交
+ */
+export async function uploadFeedbackImage(filePath: string): Promise<OpResult & { url?: string }> {
+  const token = await ensureAccessToken()
+  const res = await uploadFileNormalized({
+    url: `${getBaseUrl()}${API.FEEDBACK_IMAGE_UPLOAD}`,
+    filePath,
+    timeout: 60000,
+    header: token ? { Authorization: `Bearer ${token}` } : {}
+  })
+  try {
+    const data = JSON.parse(res.data)
+    return { success: data.success === true, message: data.message, url: data.url }
+  } catch {
+    return { success: false, message: '上传响应解析失败' }
+  }
+}
+
+/** 提交意见反馈（内容 5 到 1000 字，每人每日有限额，失败原因经 message 透传） */
+export async function submitFeedback(body: { category: number; content: string; imageUrls?: string[]; contact?: string }) {
+  return request<OpResult>(API.FEEDBACK, { method: 'POST', data: body })
+}
+
+/** 我的意见反馈列表（分页，含处理状态与管理员回复） */
+export async function getMyFeedbacks(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
+  return request<Paged<FeedbackItem>>(`${API.FEEDBACK}?page=${page}&pageSize=${pageSize}`)
+}

@@ -331,6 +331,10 @@ NOTIFICATION_PREFERENCES: `${API_PREFIX}/notifications/preferences`,
   /** 头像上传（multipart，BFF 代理到 API 落盘并返回绝对 URL） */
   AVATAR_UPLOAD: `${API_PREFIX}/me/avatar`,
 
+  // 意见反馈（v1.7.58）：附件上传 + 提交 + 我的列表（BFF /mobile/me/feedback* 代理 API /api/me/feedback*）
+  FEEDBACK: `${API_PREFIX}/me/feedback`,
+  FEEDBACK_IMAGE_UPLOAD: `${API_PREFIX}/me/feedback/images`,
+
   /** 配置 */
   CONFIG: `${API_PREFIX}/config`,
   /** 版本更新检查（BFF /mobile/version/check 匿名代理到 API） */
