@@ -1,4 +1,4 @@
-// 搜索结果页：单关键字查 轴承/商家/品牌/类型 四类（顶部 Tab）。
+﻿// 搜索结果页：单关键字查 轴承/商家/品牌/类型 四类（顶部 Tab）。
 // 轴承 Tab 采用主流结果页范式：排序栏（综合/型号/内径/外径/宽度/热度，点击切换升降序）+ 尺寸筛选面板 + 已选筛选 chips。
 // 品牌/类型 Tab 点击 → 切到轴承 Tab 并挂上该品牌/类型筛选（chip 可清除），不另开页。
 // 数据：轴承/商家走 BFF 搜索；品牌/类型用 /home 全量列表前端过滤。
@@ -398,18 +398,28 @@ export default function SearchPage() {
                     <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }}>{b.partNumber}</Text>
                     <Text className='result-brand' style={{ ...fs(13), color: t.textSecondary }}>{b.bearingType} · {b.brandName}</Text>
                     <Text className='result-specs-inline' style={{ ...fs(12), color: t.textTertiary }}>d {b.innerDiameter} · D {b.outerDiameter} · B {b.width}</Text>
+                    {/* 改动说明（v1.7.60 搜索结果分流）：有认证商家在售 → 可定向寻货；
+                        没有认证商家 → 只作互联网数据公布，不给寻货入口（避免发出去无人可邀） */}
+                    {(b.verifiedMerchantCount ?? 0) > 0 ? (
+                      <Text style={{ ...fs(11), color: t.primaryText, marginTop: 2 }}>{b.verifiedMerchantCount} 家认证商家有货</Text>
+                    ) : (
+                      <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>暂无认证商家货源 · 仅供参考</Text>
+                    )}
                   </View>
-                  {/* 改动说明（v1.7.52）：行内直接发布寻货，免去先进详情再点发布一跳 */}
-                  <Text
-                    style={{
-                      ...fs(11), color: t.primary, marginRight: 6,
-                      borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 10,
-                      paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3,
-                    }}
-                    onClick={publishFromRow(b)}
-                  >
-                    发布寻货
-                  </Text>
+                  {/* 改动说明（v1.7.60）：仅当该型号有认证商家在售时才提供「寻货」，
+                      点击仍带型号 + bearingId 预填跳发布页（发布页自动勾选有货认证商家） */}
+                  {(b.verifiedMerchantCount ?? 0) > 0 ? (
+                    <Text
+                      style={{
+                        ...fs(11), color: t.primary, marginRight: 6,
+                        borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 10,
+                        paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3,
+                      }}
+                      onClick={publishFromRow(b)}
+                    >
+                      寻货
+                    </Text>
+                  ) : null}
                   <Icon name="chevron_right" size={18} color={t.textTertiary} />
                 </View>
               ))}

@@ -15,6 +15,8 @@ export interface Bearing {
   brandName: string
   image3DUrl?: string | null
   image2DUrl?: string | null
+  /** v1.7.60 搜索结果分流：该型号认证商家有货家数（>0 显示「寻货」入口，=0 仅标互联网数据） */
+  verifiedMerchantCount?: number
 }
 
 /** 轴承详情（对齐 BFF BearingDetail） */
@@ -66,6 +68,10 @@ export interface BearingMerchant {
   invitable?: boolean
   /** v1.7.56 该商家此型号的实拍首图（平台主图已在页面顶部，此处只显示商家自己的图） */
   coverImageUrl?: string | null
+  /** v1.7.60 互联网数据展示：无账号的抓取商家（前端标「互联网数据」、不提供邀请） */
+  isInternetSource?: boolean
+  /** v1.7.60 互联网来源商家的可公开电话（手机已由服务端脱敏、固话原样） */
+  contactPhone?: string | null
 }
 
 /** 轴承替代品项（对齐 BFF InterchangeItem，v2.16.0 三级治理：含类型标签与责任提示字段） */

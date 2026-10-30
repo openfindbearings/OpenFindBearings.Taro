@@ -215,12 +215,22 @@ export default function BearingDetailPage() {
             {m.isPinned ? (
               <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
             ) : null}
+            {/* 改动说明（v1.7.60 互联网数据展示）：无账号的抓取商家标「互联网数据」，
+                与平台认证商家区分；其联系方式按公开数据口径展示（手机已脱敏） */}
+            {m.isInternetSource ? (
+              <Text style={{ ...fs(10), color: t.textTertiary, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>互联网数据</Text>
+            ) : null}
             {m.saleState === 2 ? (
               <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
             ) : null}
           </View>
           {/* 改动说明（v1.7.50）：报价原本只显示商家填的自由文本，纯数字时是裸数字，补 ¥ 说明这是价格 */}
-          {m.price ? <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>{formatPriceText(m.price)}</Text> : null}
+          {/* 改动说明（v1.7.60）：互联网来源商家在报价后补公开电话，让"如实公布"真正可用 */}
+          {(m.price || m.contactPhone) ? (
+            <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>
+              {[m.price ? formatPriceText(m.price) : '', m.contactPhone ? `电话 ${m.contactPhone}` : ''].filter(Boolean).join(' · ')}
+            </Text>
+          ) : null}
         </View>
         <Icon name="chevron_right" size={18} color={t.textTertiary} />
       </View>
@@ -249,10 +259,11 @@ export default function BearingDetailPage() {
       </Text>
       {merchants.length === 0 && <Text className='bd-empty' style={{ ...fs(13), color: t.textTertiary }}>暂无在售商家</Text>}
       {verifiedMerchants.map((m) => merchantRow(m))}
-      {/* v1.7.0 数据可信联动：未认证在售归"仅供参考"分段（标灰口径、不提供询价），与认证商家可信段分开 */}
-      {otherMerchants.length > 0 ? (
-        <>
-          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家，暂不提供邀请报价）</Text>
+          {/* v1.7.0 数据可信联动：未认证在售归"仅供参考"分段（标灰口径、不提供询价），与认证商家可信段分开 */}
+          {/* 改动说明（v1.7.60 互联网数据展示）：段标题点明"互联网数据"，行内再给来源标记与脱敏电话 */}
+          {otherMerchants.length > 0 ? (
+            <>
+              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家；标「互联网数据」的为公开抓取信息，暂不提供邀请报价）</Text>
           {otherMerchants.map((m) => merchantRow(m))}
         </>
       ) : null}
