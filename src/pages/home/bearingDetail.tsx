@@ -24,8 +24,9 @@ import {
   type BearingDetail, type BearingMerchant, type Interchange
 } from '../../services/bearing'
 import MediaImage from '../../components/MediaImage'
-// 改动说明（v1.7.42 双徽章并列）：牌级彩牌配色/中文名唯一权威来源
-import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
+// 改动说明（v1.7.62 徽章统一）：等级徽章改由 MerchantBadge 组件统一渲染（含互联网来源口径），
+//   本页不再直接引用牌级色带与中文名映射
+import MerchantBadge from '../../components/MerchantBadge'
 import { formatPriceText } from '../../utils/format'
 import './bearingDetail.scss'
 
@@ -207,18 +208,13 @@ export default function BearingDetailPage() {
             {m.isVerified ? (
               <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
             ) : null}
-            {/* 改动说明（v1.7.42 双徽章并列）：牌级彩牌与"已认证"并列（认证=类型、牌级=等级），互不覆盖 */}
-            {(m.grade ?? 0) >= 1 ? (
-              <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: getMerchantGradeBand(m.grade).bg, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.gradeDisplay || MERCHANT_GRADE_LABELS[m.grade ?? 0]}</Text>
-            ) : null}
+            {/* 改动说明（v1.7.62 徽章统一）：等级徽章统一走 MerchantBadge——
+                互联网来源出「互联网」一枚描边标签，其余按牌级出实心彩牌，
+                不再与「普通」并列（原「普通彩牌 + 互联网数据描边」两枚造成拥挤） */}
+            <MerchantBadge rank={m.grade ?? 0} isInternetSource={m.isInternetSource} />
             {/* v2.3.0 商城置顶卡：置顶商家角标 */}
             {m.isPinned ? (
               <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
-            ) : null}
-            {/* 改动说明（v1.7.60 互联网数据展示）：无账号的抓取商家标「互联网数据」，
-                与平台认证商家区分；其联系方式按公开数据口径展示（手机已脱敏） */}
-            {m.isInternetSource ? (
-              <Text style={{ ...fs(10), color: t.textTertiary, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>互联网数据</Text>
             ) : null}
             {m.saleState === 2 ? (
               <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>

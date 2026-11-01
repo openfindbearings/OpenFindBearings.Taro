@@ -1,10 +1,16 @@
-﻿# Taro API 对接说明 v1.5.7
+﻿# Taro API 对接说明 v1.5.8
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.8 (2026-11-01)
+
+- **商家等级徽章统一**：搜索商家列表的 `Merchant` 新增 `grade`/`gradeDisplay`（与 `MerchantDetail`、`BearingMerchant` 对齐，BFF v1.8.19 透传）。三处列表——搜索"商家"Tab、型号详情在售商家行、商家详情头部——统一渲染"身份徽章（已认证/未认证）+ 等级徽章"，搜索行不再只写一句"· 已认证"。
+- **等级阶梯口径**：互联网 → 普通 → 铜牌 → 银牌 → 金牌。`isInternetSource=true` 的商家在库里同为 `Ordinary`，但无账号、尚未入驻，前端显示「互联网」描边灰标签，不再与「普通」并列；「普通」为实心石板灰（`#64748B`），铜/银/金沿用彩牌配色。
+- **实现位置**：文案与配色由 `utils/level.ts` 的 `getMerchantGradeBadge(rank, isInternetSource)` 计算，渲染统一走新增组件 `components/MerchantBadge`（`rank` 取 `MerchantDetail` 的枚举名换算、`BearingMerchant.grade`、`Merchant.grade` 换算后的序数）。
 
 ### v1.5.7 (2026-10-30)
 
@@ -231,7 +237,7 @@ interface BearingDetail extends 上 + englishName?; weight?; brandCountry?; view
 - `getMerchantBearings(id)` → `GET /mobile/merchants/{id}/bearings`，返回 `Paged<MerchantBearing>`。
 
 ```typescript
-interface Merchant { id; name; companyName?; type?; isVerified; status?; productCount?; logoUrl? }
+interface Merchant { id; name; companyName?; type?; isVerified; status?; productCount?; logoUrl?; isInternetSource?; grade?; gradeDisplay? }
 interface MerchantDetail { id; name; companyName?; type?; contactPerson?; phone?; mobile?; email?; address?; isVerified; status?; grade?; followerCount; productCount; logoUrl? }
 interface MerchantBearing { bearingId; bearingPartNumber; oldNumber?; bearingTypeName?; brandName?; innerDiameter?; outerDiameter?; width?; price?; isOnSale }
 ```

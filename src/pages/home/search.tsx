@@ -17,6 +17,9 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
 import { setObject } from '../../utils/storage'
 import MediaImage from '../../components/MediaImage'
+// 改动说明（v1.7.62 徽章统一）：商家 Tab 列表行复用统一等级徽章（含互联网来源口径）
+import MerchantBadge from '../../components/MerchantBadge'
+import { merchantGradeNameToRank } from '../../utils/level'
 import './search.scss'
 
 /** 发布寻货跨页预填 storage 键（与轴承详情页、发布页共用同一口径） */
@@ -462,8 +465,16 @@ export default function SearchPage() {
                   <MediaImage url={m.logoUrl} className='result-thumb' mode='aspectFit' fallbackIcon="store" fallbackColor={t.primary} fallbackSize={22} />
                 </View>
                 <View className='result-info'>
-                  <Text className='result-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.name}</Text>
-                  <Text className='result-brand' style={{ ...fs(13), color: t.textSecondary }}>{m.productCount ?? 0} 个在售{m.isVerified ? ' · 已认证' : ''}</Text>
+                  {/* 改动说明（v1.7.62 徽章统一）：名称行并排身份徽章与等级徽章，与型号详情、
+                      商家详情同一口径；互联网来源只出「互联网」一枚，不再写"· 已认证"文本 */}
+                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Text className='result-name' style={{ ...fs(15), color: t.textPrimary, flexShrink: 1 }} numberOfLines={1}>{m.name}</Text>
+                    {m.isVerified ? (
+                      <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
+                    ) : null}
+                    <MerchantBadge rank={merchantGradeNameToRank(m.grade)} isInternetSource={m.isInternetSource} />
+                  </View>
+                  <Text className='result-brand' style={{ ...fs(13), color: t.textSecondary }}>{m.productCount ?? 0} 个在售</Text>
                 </View>
                 <Icon name="chevron_right" size={18} color={t.textTertiary} />
               </View>
