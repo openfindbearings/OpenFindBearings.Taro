@@ -60,6 +60,31 @@ export const MERCHANT_GRADE_LABELS: Record<number, string> = {
 }
 
 /**
+ * 商家等级徽章（v1.7.62 统一口径）：对外展示的等级标签唯一来源。
+ * 互联网来源商家在库里同样是 Ordinary(1)，但它们没有账号、尚未入驻，
+ * 因此在这里覆盖为「互联网」描边标签（不是牌级档位，只是"还不是平台商家"的说明），
+ * 避免出现「普通 + 互联网数据」两枚并列造成的拥挤与语义混乱。
+ */
+export interface MerchantGradeBadge {
+  /** 徽章文案：互联网 / 普通 / 铜牌 / 银牌 / 金牌 */
+  label: string
+  /** 实心底色；描边样式时为空 */
+  bg?: string
+  /** 描边样式（仅边框 + 灰字）：互联网来源专用，与实心牌级区分 */
+  outlined?: boolean
+}
+
+/**
+ * 按牌级序数取等级徽章：rank 0（未定级）返回 null，调用方不渲染。
+ * isInternetSource 优先，直接返回「互联网」标签。
+ */
+export function getMerchantGradeBadge(rank: number, isInternetSource?: boolean): MerchantGradeBadge | null {
+  if (isInternetSource) return { label: '互联网', outlined: true }
+  if (!rank || rank < 1) return null
+  return { label: MERCHANT_GRADE_LABELS[rank] || getMerchantGradeBand(rank).band, bg: getMerchantGradeBand(rank).bg }
+}
+
+/**
  * 商家牌级图标（v2.19.0）：普通/铜/银/金四档，白金与钻石只预留命名；
  * 均取自 lucide 既有图标集，H5 与 RN 共用同一名称
  */

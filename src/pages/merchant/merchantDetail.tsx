@@ -23,8 +23,10 @@ import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type Merch
 import MediaImage from '../../components/MediaImage'
 // v2.1.0 成就子系统：商家勋章园（B2B 信任信号）
 import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
-// 改动说明（v2.13.2 配色统一）：等级徽章色统一走全局色带 getMerchantGradeBand
-import { getMerchantGradeBand, merchantGradeNameToRank, MERCHANT_GRADE_LABELS } from '../../utils/level'
+// 改动说明（v1.7.62 徽章统一）：等级徽章改由 MerchantBadge 统一渲染，
+//   本页只保留"枚举名 → 序数"的换算
+import { merchantGradeNameToRank } from '../../utils/level'
+import MerchantBadge from '../../components/MerchantBadge'
 import './merchantDetail.scss'
 
 export default function MerchantDetailPage() {
@@ -134,23 +136,11 @@ export default function MerchantDetailPage() {
           <View className='md-hero-info'>
             <View className='md-name-row'>
               <Text className='md-name' style={{ ...fs(18), color: t.textPrimary }} numberOfLines={1}>{detail?.name || '—'}</Text>
-              {/* 改动说明（v1.7.42 双徽章并列）：牌级徽章不再以"已认证"为展示门槛——
-                  认证是商家类型（独立徽章），牌级是经营等级（彩牌），两枚并列、互不覆盖。
-                  未认证商户只显示"未认证"徽章并引导认证（未认证不参与牌级阶梯） */}
-              {merchantRank >= 1 ? (
-                <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: getMerchantGradeBand(merchantRank).bg, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                  <Icon name="badge-check" size={11} color="#FFFFFF" />
-                  <Text style={{ ...fs(10), color: '#FFFFFF', fontWeight: 'bold', marginLeft: 3 }}>{detail?.gradeDisplay || MERCHANT_GRADE_LABELS[merchantRank]}</Text>
-                </View>
-              ) : null}
-              {detail ? (
-                // 改动说明（v1.7.60 互联网数据展示）：互联网来源商家直接标「互联网数据」，
-                //   比「未认证」更能说明数据性质（无账号、未与平台建立联系）
-                detail.isInternetSource ? (
-                  <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: t.bgInput }}>
-                    <Text style={{ ...fs(10), color: t.textTertiary, fontWeight: 'bold' }}>互联网数据</Text>
-                  </View>
-                ) : detail.isVerified ? (
+              {/* 改动说明（v1.7.62 徽章统一）：先身份（已认证/未认证）后等级，与列表行口径一致；
+                  互联网来源不再叠加身份徽章，只由 MerchantBadge 出「互联网」一枚
+                  （这类商家无账号、尚未入驻，库里虽是 Ordinary 但对外不称"普通"） */}
+              {detail && !detail.isInternetSource ? (
+                detail.isVerified ? (
                   <View style={{ marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 4, backgroundColor: t.primaryLight }}>
                     <Text style={{ ...fs(10), color: t.primary, fontWeight: 'bold' }}>已认证</Text>
                   </View>
@@ -160,6 +150,7 @@ export default function MerchantDetailPage() {
                   </View>
                 )
               ) : null}
+              <MerchantBadge rank={merchantRank} isInternetSource={detail?.isInternetSource} size={11} withIcon />
             </View>
             {detail?.companyName ? <Text className='md-sub' style={{ ...fs(13), color: t.textTertiary }} numberOfLines={1}>{detail.companyName}</Text> : null}
             {/* 改动说明：type 脏数据可能是 "0"/空，过滤掉避免眉部显示无意义的 "0" */}
