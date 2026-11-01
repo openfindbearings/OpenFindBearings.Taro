@@ -5,8 +5,11 @@
 import { useState } from 'react'
 import { View, Text, Input, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
-import NavBar from '../../components/NavBar'
+// 改动说明（2026-11-01）：PageLayout 先于 NavBar 引入，与其余页面保持一致。
+// 原顺序（NavBar 在前）会让 mini-css-extract-plugin 报 Conflicting order：
+// 该 chunk 的样式期望顺序与其它页面相反，weapp 构建出现警告。
 import PageLayout from '../../platforms/PageLayout'
+import NavBar from '../../components/NavBar'
 import LoginGuide from '../../components/LoginGuide'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
