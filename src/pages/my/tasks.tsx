@@ -1,4 +1,4 @@
-// 任务中心页（v1.7.18）：每日签到日期条 + 赚分任务列表
+﻿// 任务中心页（v1.7.18）：每日签到日期条 + 赚分任务列表
 // 设计：签到做成"今天居中、前后各 3 天"的 7 格日期条，一眼看到漏签/已签/未来；
 //       任务列表来自 API /points/tasks（规则+完成态）——daily 任务完成态只看今日流水，
 //       次日自动刷新回未完成；once 任务（注册/入驻）看历史，完成即永久完成。
@@ -25,12 +25,17 @@ definePageConfig({ disableScroll: true })
 /** 日期条窗口：今天前后各 3 天 */
 const STRIDE_DAYS = 3
 
-/** 业务日期串：后端日任务按业务日界切日（BusinessClock，偏移由 /points/account 的
- *  tzOffsetHours 下发，缺省 +8 北京），前端同口径换算——UTC 早上偏移前的动作归前一天
- *  会导致对勾/今日态错位 */
-function bizDateKey(d: Date, offsetHours: number): string {
-  const b = new Date(d.getTime() + offsetHours * 3600000)
-  return `${b.getUTCFullYear()}-${String(b.getUTCMonth() + 1).padStart(2, '0')}-${String(b.getUTCDate()).padStart(2, '0')}`
+/** 业务墙钟时刻：真实时刻按业务日界偏移（BusinessClock 的 tzOffsetHours，缺省 +8 北京）
+ *  换算一次，返回的 UTC 年月日字段即业务时区墙钟，供日期条取日号/星期与日期键共用 */
+function shiftBiz(ms: number, offsetHours: number): Date {
+  return new Date(ms + offsetHours * 3600000)
+}
+
+/** 业务日期串：取业务墙钟时刻的 UTC 年月日。改动说明（v1.7.51）：原先调用方先自行偏移
+ *  再传入本函数，函数内部又偏移一次，导致日期条键值整体后移一天、签到对勾左移一格
+ *  （今天的签到显示到昨天），现改为只偏移一次，键与流水同源 */
+function dateKeyOf(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
 }
 
 /** 星期短标（一二三四五六日） */
@@ -86,7 +91,7 @@ export default function TasksPage() {
     const paged = await getPointTransactions(1, 50)
     const set = new Set<string>()
     for (const it of paged?.items || []) {
-      if (it.grantType === 'daily_checkin') set.add(bizDateKey(new Date(it.createdAt), off))
+      if (it.grantType === 'daily_checkin') set.add(dateKeyOf(shiftBiz(new Date(it.createdAt).getTime(), off)))
     }
     setCheckedDates(set)
   }
@@ -142,13 +147,15 @@ export default function TasksPage() {
     }
   }
 
-  // 7 格日期条数据：今天居中，前后各 3 天（偏移按后端下发 tzOffsetHours，与 bizDateKey 同口径）
+  // 7 格日期条数据：今天居中，前后各 3 天（偏移按后端下发 tzOffsetHours，与签到流水同口径）
+  // 改动说明（v1.7.51）：日期条只做一次偏移——shiftBiz 得出业务墙钟供 label/日号与键共用，
+  //   修复此前墙钟被再偏移一次导致对勾整体左移一格的问题
   const tzOff = account.tzOffsetHours ?? 8
-  const today = new Date(Date.now() + tzOff * 3600000)
+  const nowMs = Date.now()
   const cells: { key: string; label: string; dayNum: number; state: 'done' | 'missed' | 'today' | 'future' }[] = []
   for (let offset = -STRIDE_DAYS; offset <= STRIDE_DAYS; offset++) {
-    const d = new Date(today.getTime() + offset * 86400000)
-    const key = bizDateKey(d, tzOff)
+    const d = shiftBiz(nowMs + offset * 86400000, tzOff)
+    const key = dateKeyOf(d)
     const done = checkedDates.has(key)
     cells.push({
       key,
