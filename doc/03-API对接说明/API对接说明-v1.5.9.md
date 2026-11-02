@@ -1,10 +1,15 @@
-﻿# Taro API 对接说明 v1.5.8
+﻿# Taro API 对接说明 v1.5.9
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.9 (2026-11-02)
+
+- **`GET /mobile/sourcing/merchant/demands` 新增 `canManage`**：`isMine` 保留为"当前用户是经办人"（展示"由我发布"），新增 `canManage` = 经办人本人或本店在职管理员。寻货发布页的删除、转公开、多选入口改按 `canManage` 出/藏；服务端取消/转公开/选定/批量删除同样接受管理员代办（返回 403 时文案提示无管理权限）。
+- **页面数据源调整（无接口变更）**：原寻货发布页的"为你匹配"数据源 `GET /mobile/sourcing/matched` 改由寻货应答页消费；寻货发布页只消费 `/merchant/demands`。
 
 ### v1.5.8 (2026-11-01)
 

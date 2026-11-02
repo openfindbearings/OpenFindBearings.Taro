@@ -221,14 +221,6 @@ export const DEMAND_STATUS_CHIPS = [
   { key: String(DEMAND_STATUS.takenDown), label: demandStatusText(DEMAND_STATUS.takenDown) },
 ]
 
-/** 应答状态筛选 chips（唯一来源，v2.13.2 收敛：全部/待处理/已选定/未选中） */
-export const RESPONSE_STATUS_CHIPS = [
-  { key: 'all', label: '全部' },
-  { key: String(RESPONSE_STATUS.pending), label: responseStatusText(RESPONSE_STATUS.pending) },
-  { key: String(RESPONSE_STATUS.adopted), label: responseStatusText(RESPONSE_STATUS.adopted) },
-  { key: String(RESPONSE_STATUS.notSelected), label: responseStatusText(RESPONSE_STATUS.notSelected) },
-]
-
 /** feed 分页选项（v1.7.29 大厅筛选）：brand/region 包含匹配、sort 发布时间升降序 */
 export interface SourcingFeedOptions {
   brand?: string
@@ -474,10 +466,12 @@ export interface SourcingMerchantDemand {
   expiryAt: string
   isPinned?: boolean
   pinnedUntil?: string | null
-  /** 经办人昵称（管理操作仅经办人本人，其他成员只读） */
+  /** 经办人昵称（管理操作限经办人或本店管理员，其他成员只读） */
   publisherName?: string | null
-  /** 当前用户是否经办人 */
+  /** 当前用户是否经办人（用于展示"由我发布"） */
   isMine?: boolean
+  /** 是否有管理权（经办人本人或本店在职管理员，v2.23.0；前端据此出/藏管理按钮） */
+  canManage?: boolean
   /** v1.8.0 公开/邀请：是否邀请单 */
   isPrivate?: boolean
   /** 邀请收件人家数 */
