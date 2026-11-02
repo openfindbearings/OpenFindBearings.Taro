@@ -1,28 +1,4 @@
-// 全局样式入口（v1.7.0 度量重构，纯 RN 基准）
-// 改动说明：
-//   1. 删除 page/text 标签选择器块——RN 忽略标签选择器且 font-size:28px（H5 rem 基准写法）
-//      会被 RN 端当作 28dp 污染默认字号、无单位 line-height:1.5 触发 stylelint 告警；
-//   2. 本轮 RN：页面底色由 PageLayout（$bg-page）、文字色由各页 token 提供，
-//      全局层不再兜底；第二阶段做 H5 时再按平台追加全局样式（rem 基准/系统字体栈/CSS 变量主题）。
-// 约束：本文件被 RN Metro 解析，禁止 var()/媒体查询/属性选择器/:root/无单位行高。
-
-/* ============ 跨端布局拉齐（v1.7.20）============ */
-/* 改动说明：RN 的 View 默认 flex column，而 H5(taro-view-core)/小程序(view) 默认 block——
-   子级 Text/图标是 inline，混排时图标与文字横向飘位（关于页/寻货页 H5 布局乱的根因）。
-   全局把 View 拉齐为 flex column，与 RN 基准一致（本项目"RN 优先"规则的样式层兑现）；
-   需要横向的既有页面均已显式声明 flex-direction: row（class 优先级高于标签选择器，正常覆盖）；
-   RN Metro 忽略标签选择器，本规则对 RN 端无副作用 */
-view,
-taro-view-core {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 改动说明（v1.7.23 H5 输入框修复）：H5 的 Input 宿主自定义元素拿到 height 后，
-   内部原生 input 不继承宿主高度（仍按行高收缩贴顶），登录框/搜索框文字上浮、
-   与垂直居中的图标错位。把内层拉满宿主高度——原生单行 input 自身垂直居中文字；
-   RN Metro 忽略标签选择器，本规则对 RN 端无副作用 */
-taro-input-core input,
-taro-textarea-core textarea {
-  height: 100%;
-}
+// 全局样式入口（Taro 约定文件，RN 构建会按入口编译本文件）
+// 改动说明：DOM 端（H5/小程序）的全局规则已迁到 app.dom.scss，由 app.tsx 引入；
+// 本文件保持不含任何 CSS 规则，避免 RN 构建把标签选择器/中文块注释判为无效语法刷告警。
+// 若将来需要真正跨端（含 RN）生效的全局样式，请用单类选择器写在本文件。
