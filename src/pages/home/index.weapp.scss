@@ -1,0 +1,19 @@
+// 首页 weapp 专属样式（仅微信小程序构建引入，见 index.tsx 的 TARO_ENV 条件 require）
+// 改动说明：这两类原先写在共享 index.scss 里，RN 构建也会解析整份样式，
+//   导致 display:block/inline-flex、white-space、vertical-align 被判为 RN 无效属性刷告警；
+//   抽到本文件后 RN/H5 不再解析，weapp 行为与原声明完全一致（同优先级、声明顺序不变）。
+
+// weapp 横滚适配（v1.7.19）：scroll-view 用 nowrap 让卡片排成一行，卡片 inline-flex 保持内部纵向布局
+// 改动说明：补 display:block 覆盖父类的 display:flex——weapp 未开 enable-flex 属性时 flex 声明不生效，
+// 基础库 3.17.4 会在控制台报警"设置 enable-flex 属性以使 flexbox 布局生效"；
+// 本类仅 weapp 追加且声明在父类之后（同优先级后者胜），横滚仍走 nowrap+inline-flex 方案，视觉无变化。
+.hot-bearings-scroll-wx {
+  display: block;
+  white-space: nowrap;
+}
+
+.bearing-card-wx {
+  display: inline-flex;
+  white-space: normal;
+  vertical-align: top;
+}

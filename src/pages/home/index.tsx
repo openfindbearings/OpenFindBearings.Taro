@@ -22,6 +22,9 @@ import CustomTabBar from '../../components/CustomTabBar'
 // 开源构建时 @ofb/taro-pro 被 alias 指向 src/ext/pro.ts 占位（三钮渲染空、智能模式提示暂未上线）
 import { ProQuickActions, ProSearchExtras, ProSmartHome } from '../../ext/pro'
 import './index.scss'
+// 改动说明：weapp 横滚适配类（display/white-space/vertical-align 等 RN 无效属性）按平台引入，
+//   仅微信小程序构建打包，RN/H5 不再解析该文件（与 ShareButton 同款条件 require 写法）
+if (process.env.TARO_ENV === 'weapp') require('./index.weapp.scss')
 
 const HISTORY_KEY = 'search_history'
 const SETTINGS_KEY = 'app_settings'
