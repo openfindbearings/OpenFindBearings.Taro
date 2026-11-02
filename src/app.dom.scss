@@ -1,0 +1,37 @@
+// DOM 端全局样式（H5 / 微信小程序），由 app.tsx 引入
+// 改动说明：原内容写在 app.scss 里，但 Taro RN 构建会按入口约定编译 app.scss，
+// 其中的标签选择器与中文块注释（触发 Sass 输出 @charset）会被判为 RN 无效语法、每次构建刷 9 条告警；
+// 拆到本文件后 RN 构建不再解析，H5/小程序仍由 app.tsx 引入，行为不变。
+// 本文件只允许 DOM 端语法（标签选择器/后代选择器/@charset），不要给 RN 端引用。
+
+// ============ 跨端布局拉齐（v1.7.20）============
+// 改动说明：RN 的 View 默认 flex column，而 H5(taro-view-core)/小程序(view) 默认 block——
+// 子级 Text/图标是 inline，混排时图标与文字横向飘位（关于页/寻货页 H5 布局乱的根因）。
+// 全局把 View 拉齐为 flex column，与 RN 基准一致（本项目"RN 优先"规则的样式层兑现）；
+// 需要横向的既有页面均已显式声明 flex-direction: row（class 优先级高于标签选择器，正常覆盖）。
+view,
+taro-view-core {
+  display: flex;
+  flex-direction: column;
+}
+
+// 改动说明（v1.7.23 H5 输入框修复）：H5 的 Input 宿主自定义元素拿到 height 后，
+// 内部原生 input 不继承宿主高度（仍按行高收缩贴顶），登录框/搜索框文字上浮、
+// 与垂直居中的图标错位。把内层拉满宿主高度——原生单行 input 自身垂直居中文字。
+taro-input-core input,
+taro-textarea-core textarea {
+  height: 100%;
+}
+
+// 改动说明：以下两条 weui-input 规则原写在 auth.scss / search.scss 里，
+// .weui-input 只存在于 Taro H5 渲染出的内部原生 input（weapp 无此节点），
+// 收拢到 DOM 端入口样式统一维护。
+.auth-input .weui-input {
+  height: 48px;
+  line-height: 48px;
+}
+
+.filter-range-input .weui-input {
+  height: 36px;
+  line-height: 36px;
+}

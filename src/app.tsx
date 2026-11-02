@@ -6,7 +6,9 @@ import { Component, PropsWithChildren } from 'react'
 import { bootOnce, preloadMerchantState } from './appShared'
 import ConfirmDialog from './components/ConfirmDialog'
 import PrivacyDialog from './components/PrivacyDialog'
-import './app.scss'
+// 改动说明：DOM 端全局样式（标签选择器/weui-input）从 app.scss 迁出到 app.dom.scss，
+// 该文件只被本入口（H5/小程序）引入，RN 构建不会解析
+import './app.dom.scss'
 
 class App extends Component<PropsWithChildren> {
   componentDidMount() {

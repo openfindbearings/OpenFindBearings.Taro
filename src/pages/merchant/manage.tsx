@@ -8,6 +8,9 @@
 //      列表右侧状态徽标由 reviewStatus + saleState 派生，支持对应页签筛选。
 import { useState } from 'react'
 import { View, Text, Input, Image } from '@tarojs/components'
+// 改动说明：补齐 Taro 与 useDidShow 引入——页面用到 Taro.showToast/showModal 与 useDidShow，
+// 但该 import 行早前被误删，运行到本页即抛 ReferenceError: Property 'useDidShow' doesn't exist
+import Taro, { useDidShow } from '@tarojs/taro'
 import { vibrateSuccess } from '../../utils/haptics'
 import Icon from '../../components/Icon'
 import MediaImage from '../../components/MediaImage'

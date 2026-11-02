@@ -261,10 +261,12 @@ export default function MyPage() {
 
       {/* 功能卡 - 横向四宫格（白卡样式，v1.7.11 调整到轴承币卡下方） */}
       <View className='menu-grid' style={{ backgroundColor: t.bgCard }}>
-        {menuItems.map((item) => (
+        {menuItems.map((item, idx) => (
           <View
             key={item.key}
-            className='grid-item'
+            // 改动说明：最后一行去掉底部间距（原由 nth-last-child 伪类实现，RN 不支持），
+            // 末行起点 = 总数 - (总数 % 4 || 4)，与四列栅格对齐
+            className={`grid-item${idx >= menuItems.length - (menuItems.length % 4 || 4) ? ' grid-item-last' : ''}`}
             onClick={() => handleMenuClick(item.key)}
           >
             <View className='grid-icon'>

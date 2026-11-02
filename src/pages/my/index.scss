@@ -141,10 +141,13 @@
   align-items: center;
   // 两行之间留呼吸感（RN 支持 row-gap，H5 原生支持）
   margin-bottom: $space-3;
+}
 
-  &:nth-last-child(-n+4) {
-    margin-bottom: 0;
-  }
+// 改动说明：原用 `.grid-item:nth-last-child(-n+4)` 去掉最后一行的底部间距，
+// 但 RN 不支持伪类（构建告警且 RN 端实际没生效）；改为由 tsx 按索引给末行加本类，
+// 三端（H5/小程序/RN）表现一致。
+.grid-item-last {
+  margin-bottom: 0;
 }
 
 .grid-icon {

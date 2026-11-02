@@ -272,11 +272,8 @@
   font-size: $font-size-md;
 }
 
-// 改动说明（H5 输入内容偏上修复，同 auth.scss）：内部 weui-input 默认 1.4rem 高悬顶，写到内部 input
-.filter-range-input .weui-input {
-  height: 36px;
-  line-height: 36px;
-}
+// 改动说明：`.filter-range-input .weui-input`（H5 内部原生 input 高度/行高）已迁到 app.scss，
+// 避免 RN 构建解析共享样式时把 DOM 后代选择器判为无效而刷告警。
 
 .filter-range-dash {
   margin-left: $space-2;
