@@ -2,7 +2,8 @@
 // 改动说明（v1.7.53）：货源口径收敛为"可成交货源"——接口默认只出认证商家的出售中商品，
 //   未认证与互联网来源数据只在型号详情的"参考在售"段出现，故空态需说明口径而非笼统"暂无货源"。
 // 信息架构：商城 Tab = 供给侧货源导购（对比 首页=工具查询、发现=需求侧寻货）。
-// 数据源：BFF /mobile/mall/feed（匿名可访问）；卡片进货源详情（轴承详情），商家行进店铺页。
+// 数据源：BFF /mobile/mall/feed（匿名可访问）；卡片图片与文字区进货源详情（轴承详情），商家行进店铺页，
+//   「联系商家」直接预填一对一邀请跳发布页（v1.8.5，未登录先引导登录）。
 // 权益兑换主体迁至"我的-积分"线（pages/my/redeem），本页顶部留小入口。
 // 本页只做货源导购展示，不含成交流程；后续增量经扩展点 ProProductAction 后插。
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight/fontSize 数值。
@@ -14,8 +15,11 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
 import ProductCard from '../../components/ProductCard'
+import { showConfirmDialog } from '../../components/ConfirmDialog'
+import { useAuthStore } from '../../stores/auth'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
+import { setObject } from '../../utils/storage'
 import { getMallFeed, type MallFeedItem, type MallFeedParams } from '../../services/mall'
 import { getHome, type HomeRef } from '../../services/home'
 
@@ -24,6 +28,9 @@ definePageConfig({ disableScroll: true })
 
 /** 每页条数 */
 const PAGE_SIZE = 20
+
+/** 发布页预填键（与首页搜索/型号详情共用同一 storage 键） */
+const PREFILL_KEY = 'sourcing_publish_prefill'
 
 /** 排序栏选项（对应 API sortBy） */
 const SORTS: { key: 'created' | 'price' | 'viewcount'; label: string }[] = [
@@ -39,6 +46,8 @@ interface SizeState { minIn?: number; maxIn?: number; minOut?: number; maxOut?: 
 export default function MallPage() {
   const t = useTheme()
   const fs = useFs()
+  // 改动说明（v1.8.5）：「联系商家」需登录态，未登录先去登录
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
 
   // 搜索
   const [input, setInput] = useState('')
@@ -158,6 +167,28 @@ export default function MallPage() {
 
   const goBearing = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })
   const goMerchant = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
+
+  /**
+   * 改动说明（v1.8.5）：「联系商家」直接带着该商家发起一对一邀请——
+   *   预填型号/品牌/bearingId + visibility=1（仅邀请）+ 该商家 ID，跳发布页补价格与说明即可发出；
+   *   卡片图片与文字区仍走详情页，商家行进店铺，三条路径互不重叠。
+   */
+  const contactMerchant = async (it: MallFeedItem) => {
+    if (!isLoggedIn) {
+      const ok = await showConfirmDialog({ title: '提示', content: '该功能需登录后使用', confirmText: '去登录' })
+      if (ok) Taro.navigateTo({ url: '/pages/auth/login' })
+      return
+    }
+    // 预填必须 await 完成再跳转：发布页 useDidShow 读 storage 与导航并发，否则读到空预填
+    await setObject(PREFILL_KEY, {
+      partNumber: it.bearingPartNumber,
+      brand: it.brandName || '',
+      bearingId: it.bearingId,
+      visibility: 1,
+      invitedMerchantIds: [it.merchantId],
+    })
+    Taro.navigateTo({ url: '/pages/discover/publish' })
+  }
 
   const hasFilter = !!(brand || type || size.minIn != null || size.maxIn != null || size.minOut != null || size.maxOut != null || size.minW != null || size.maxW != null)
 
@@ -292,7 +323,12 @@ export default function MallPage() {
             <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
               {items.map((it) => (
                 <View key={it.id} style={{ width: '48.5%' }}>
-                  <ProductCard item={it} onPress={() => goBearing(it.bearingId)} onMerchant={() => goMerchant(it.merchantId)} />
+                  <ProductCard
+                    item={it}
+                    onPress={() => goBearing(it.bearingId)}
+                    onMerchant={() => goMerchant(it.merchantId)}
+                    onContact={() => void contactMerchant(it)}
+                  />
                 </View>
               ))}
             </View>

@@ -1,11 +1,18 @@
 // 商品卡（v2.14.0 商城导购）：两列网格卡片——图 + 型号 + 品牌/尺寸 + 价格 + 商家 + 操作位。
 // 操作位走扩展点 ProProductAction（默认"联系商家"，实现由 ext/pro 覆盖；共享骨架、行为差异收敛在扩展点）。
 // RN 约束：仅 flex 布局、无 fixed/vh、Text 包裹、lineHeight/fontSize 数值。
+// 改动说明（v1.8.5 商城卡片收口）：
+//   1. 图区不再单独铺底色，整卡单一白面——原先图区与信息区各有一层背景，Android 上两者交界出现细缝，
+//      视觉上像两张并排白卡而不是一个商品；
+//   2. 图区与文字信息区都可点进货源详情，商家行进店铺，"联系商家"走一对一邀请（onContact），
+//      三者互为兄弟节点不嵌套，规避 RN 无 stopPropagation 的点击穿透问题；
+//   3. 价格文案统一经 formatPriceText 归一，纯数字描述也带货币符号（原先直接显示 "10" 看不出是价格）。
 import { View, Text } from '@tarojs/components'
 import MediaImage from '../MediaImage'
 import Icon from '../Icon'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
+import { formatPriceText } from '../../utils/format'
 import { ProProductAction } from '../../ext/pro'
 import type { MallFeedItem } from '../../services/mall'
 
@@ -16,29 +23,31 @@ interface ProductCardProps {
   onPress: () => void
   /** 商家行点击：进店铺页 */
   onMerchant: () => void
+  /** 改动说明（v1.8.5）：操作位点击——带着该商家直接发起一对一邀请 */
+  onContact: () => void
 }
 
-/** 价格文案：可见且有数值价→¥价；否则退价格描述；再否则"面议" */
+/** 价格文案：可见且有数值价→¥价；否则退价格描述（纯数字补 ¥）；再否则"面议" */
 function priceText(item: MallFeedItem): string {
   if (item.isPriceVisible && item.numericPrice != null) return `¥${item.numericPrice}`
-  if (item.priceDescription) return item.priceDescription
+  const desc = formatPriceText(item.priceDescription)
+  if (desc) return desc
   return '价格面议'
 }
 
 /** 商品卡：两列网格单元 */
-export default function ProductCard({ item, onPress, onMerchant }: ProductCardProps) {
+export default function ProductCard({ item, onPress, onMerchant, onContact }: ProductCardProps) {
   const t = useTheme()
   const fs = useFs()
 
   return (
     <View style={{ width: '100%', backgroundColor: t.bgCard, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
-      {/* 主图（点击进货源详情） */}
-      {/* 主图：v1.7.56 优先商家实拍图（认货），无商家图回退型号主图（认型号） */}
+      {/* 主图（点击进货源详情）：v1.7.56 优先商家实拍图（认货），无商家图回退型号主图（认型号） */}
       <View onClick={onPress} style={{ display: 'flex' }}>
         <MediaImage
           url={item.coverImageUrl || item.image3DUrl || item.image2DUrl}
           fallbacks={[item.image2DUrl, item.image3DUrl]}
-          style={{ width: '100%', height: 150, backgroundColor: t.bgInput }}
+          style={{ width: '100%', height: 150 }}
           mode='aspectFit'
           fallbackIcon='package'
           fallbackColor={t.textTertiary}
@@ -47,28 +56,31 @@ export default function ProductCard({ item, onPress, onMerchant }: ProductCardPr
       </View>
 
       <View style={{ padding: 10, display: 'flex', flexDirection: 'column' }}>
-        {/* 型号 + 在售/补货态 */}
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Text numberOfLines={1} style={{ ...fs(15, true), color: t.textPrimary, flex: 1 }}>{item.bearingPartNumber || '—'}</Text>
-          {item.saleState === 2 ? (
-            <View style={{ backgroundColor: t.warning || '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1, marginLeft: 4 }}>
-              <Text style={{ ...fs(10), color: '#FFFFFF' }}>补货中</Text>
-            </View>
+        {/* 文字信息区（型号/品牌/尺寸/价格）整块可点 → 货源详情 */}
+        <View onClick={onPress} style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* 型号 + 在售/补货态 */}
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            <Text numberOfLines={1} style={{ ...fs(15, true), color: t.textPrimary, flex: 1 }}>{item.bearingPartNumber || '—'}</Text>
+            {item.saleState === 2 ? (
+              <View style={{ backgroundColor: t.warning || '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1, marginLeft: 4 }}>
+                <Text style={{ ...fs(10), color: '#FFFFFF' }}>补货中</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* 品牌 · 类型 */}
+          <Text numberOfLines={1} style={{ ...fs(12), color: t.textSecondary, marginTop: 3 }}>
+            {(item.brandName || '未知品牌')}{item.bearingTypeName ? ` · ${item.bearingTypeName}` : ''}
+          </Text>
+          {/* 尺寸 d×D×B */}
+          {item.dimensions ? (
+            <Text numberOfLines={1} style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{item.dimensions}</Text>
           ) : null}
-        </View>
 
-        {/* 品牌 · 类型 */}
-        <Text numberOfLines={1} style={{ ...fs(12), color: t.textSecondary, marginTop: 3 }}>
-          {(item.brandName || '未知品牌')}{item.bearingTypeName ? ` · ${item.bearingTypeName}` : ''}
-        </Text>
-        {/* 尺寸 d×D×B */}
-        {item.dimensions ? (
-          <Text numberOfLines={1} style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>{item.dimensions}</Text>
-        ) : null}
-
-        {/* 价格 */}
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', marginTop: 6 }}>
-          <Text numberOfLines={1} style={{ ...fs(16, true), color: t.primary }}>{priceText(item)}</Text>
+          {/* 价格（带 ¥ 符号，避免裸数字看不出是价格） */}
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', marginTop: 6 }}>
+            <Text numberOfLines={1} style={{ ...fs(16, true), color: t.primary }}>{priceText(item)}</Text>
+          </View>
         </View>
 
         {/* 商家行（点击进店铺） */}
@@ -89,9 +101,9 @@ export default function ProductCard({ item, onPress, onMerchant }: ProductCardPr
           ) : null}
         </View>
 
-        {/* 操作位（扩展点：默认"联系商家"，实现由 ext/pro 覆盖） */}
+        {/* 操作位（扩展点：默认"联系商家"，点击走一对一邀请而非详情） */}
         <View style={{ marginTop: 8, display: 'flex', flexDirection: 'row', justifyContent: 'flex-end' }}>
-          <ProProductAction t={t} fs={fs} onPress={onPress} />
+          <ProProductAction t={t} fs={fs} onPress={onContact} />
         </View>
       </View>
     </View>

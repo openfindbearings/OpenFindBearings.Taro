@@ -47,8 +47,9 @@ export interface ProProductActionProps {
   onPress: () => void
 }
 
-/** 商品卡操作位（v2.14.0 商城导购）：默认渲染"联系商家"（落到货源详情，信息撮合闭环）；
- *  由扩展点覆盖（fork/自用版可在 ext/pro 内替换动作）；共享商品卡只 import 本导出，签名须对齐。 */
+/** 商品卡操作位（v2.14.0 商城导购）：默认渲染"联系商家"。
+ *  改动说明（v1.8.5）：点击语义由"进货源详情"改为"直接发起一对一邀请"（预填该商家跳发布页），
+ *   由扩展点覆盖（fork/自用版可在 ext/pro 内替换动作）；共享商品卡只 import 本导出，签名须对齐。 */
 export const ProProductAction: React.FC<ProProductActionProps> = ({ t, fs, onPress }: ProProductActionProps) => (
   <View
     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: t?.primary || '#2563EB', borderRadius: 14, paddingLeft: 12, paddingRight: 12, paddingTop: 5, paddingBottom: 5 }}
