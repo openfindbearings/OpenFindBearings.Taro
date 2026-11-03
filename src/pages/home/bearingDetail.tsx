@@ -4,6 +4,8 @@
 //   参数来源为互联网时标「仅供参考」；新增「分享货源」（分享"谁家真实有货"引流回平台）。
 // v1.8.0 公开/邀请：按钮统一「发布寻货」（公开/邀请在发布页二选一），在售认证家数改由说明行承载，
 //   未认证在售归"其他在售·仅供参考"段（只读不导流），让"在售"与"可邀请"的差别可见。
+// 改动说明（v1.8.5 详情页动作区重排）：商家卡内不再塞主按钮，底部独立动作卡按"主行动 + 次行动"分两层——
+//   通栏「寻这个型号」在上，收藏/分享货源/纠错三等分在下；互联网来源商家号码原样展示并可点击拨号。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
 import { View, Text } from '@tarojs/components'
@@ -28,6 +30,8 @@ import MediaImage from '../../components/MediaImage'
 //   本页不再直接引用牌级色带与中文名映射
 import MerchantBadge from '../../components/MerchantBadge'
 import { formatPriceText } from '../../utils/format'
+// 改动说明（v1.8.5）：互联网来源商家的公开号码支持一键拨号，平台/小程序/H5/RN 分支封装在 phone 工具里
+import { callPhone } from '../../utils/phone'
 import './bearingDetail.scss'
 
 /** 发布寻货预填 storage 键（轴承详情 → 发布页跨页传参，RN 兼容的异步存取对象） */
@@ -169,76 +173,87 @@ export default function BearingDetailPage() {
   )
 
   /**
-   * 商家行：认证商家带「已认证」徽标并可「询价」（定向寻货，行动门）；
-   * 未认证商家只展示、不导流（归"其他在售·仅供参考"后段）
+   * 商家行：认证商家带「已认证」徽标并可「邀请」（定向寻货，行动门）；
+   * 未认证商家只展示、不导流（归"其他在售·仅供参考"后段）。
+   * 改动说明（v1.8.5）：互联网来源商家的公开电话从行内文字改成独立可点药丸（一键拨号），
+   *   与左侧"进商家详情"区域拆成兄弟节点，规避 RN 无 stopPropagation 的嵌套点击问题。
    */
   const merchantRow = (m: BearingMerchant) => (
-    <View key={m.merchantId} className='bd-list-row'>
-      {/*
-        修 bug（v1.7.42）：原结构是"整行可点 + 内部邀请按钮 e.stopPropagation()"，
-        RN 端 Taro 的点击事件由 PanResponder 派发、事件对象没有 stopPropagation，
-        点邀请即抛 "undefined is not a function" 崩溃。改为结构与事件都不嵌套：
-        左侧可点区域（头像 + 主体 + 箭头）与右侧邀请按钮为兄弟节点，无需阻止冒泡
-      */}
-      <View
-        style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}
-        onClick={() => goMerchant(m.merchantId)}
-      >
-        {/* v1.7.56 商家实拍图：有图显示该商家自己的货（认货），无图保留店铺图标（型号主图已在页顶） */}
-        {m.coverImageUrl ? (
-          <MediaImage
-            url={m.coverImageUrl}
-            className='bd-list-avatar'
-            mode='aspectFill'
-            fallback={
-              <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
-                <Icon name="store" size={18} color={t.primary} />
-              </View>
-            }
-          />
-        ) : (
-          <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
-            <Icon name="store" size={18} color={t.primary} />
-          </View>
-        )}
-        <View className='bd-list-main'>
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
-            {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
-            {m.isVerified ? (
-              <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
-            ) : null}
-            {/* 改动说明（v1.7.62 徽章统一）：等级徽章统一走 MerchantBadge——
-                互联网来源出「互联网」一枚描边标签，其余按牌级出实心彩牌，
-                不再与「普通」并列（原「普通彩牌 + 互联网数据描边」两枚造成拥挤） */}
-            <MerchantBadge rank={m.grade ?? 0} isInternetSource={m.isInternetSource} />
-            {/* v2.3.0 商城置顶卡：置顶商家角标 */}
-            {m.isPinned ? (
-              <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
-            ) : null}
-            {m.saleState === 2 ? (
-              <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
-            ) : null}
-          </View>
-          {/* 改动说明（v1.7.50）：报价原本只显示商家填的自由文本，纯数字时是裸数字，补 ¥ 说明这是价格 */}
-          {/* 改动说明（v1.7.60）：互联网来源商家在报价后补公开电话，让"如实公布"真正可用 */}
-          {(m.price || m.contactPhone) ? (
-            <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary }}>
-              {[m.price ? formatPriceText(m.price) : '', m.contactPhone ? `电话 ${m.contactPhone}` : ''].filter(Boolean).join(' · ')}
-            </Text>
-          ) : null}
-        </View>
-        <Icon name="chevron_right" size={18} color={t.textTertiary} />
-      </View>
-      {/* 邀请（v1.8.0 公开/邀请，原"询价"）——仅认证商家开放（行动门）；非认证只展示不导流 */}
-      {/* 改动说明（v1.7.54 邀请候选口径）：改用服务端 invitable（认证 + 生效 + 未软删），
-          停用/软删商家的邀请必然被服务端拒绝，入口不再展示以免用户走到死路 */}
-      {m.isVerified && m.invitable !== false ? (
+    <View key={m.merchantId} className='bd-merchant'>
+      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        {/*
+          修 bug（v1.7.42）：原结构是"整行可点 + 内部邀请按钮 e.stopPropagation()"，
+          RN 端 Taro 的点击事件由 PanResponder 派发、事件对象没有 stopPropagation，
+          点邀请即抛 "undefined is not a function" 崩溃。改为结构与事件都不嵌套：
+          左侧可点区域（头像 + 主体 + 箭头）与右侧邀请按钮为兄弟节点，无需阻止冒泡
+        */}
         <View
-          style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
-          onClick={() => handleInvite(m)}
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 }}
+          onClick={() => goMerchant(m.merchantId)}
         >
-          <Text style={{ ...fs(12), color: t.primary }}>邀请</Text>
+          {/* v1.7.56 商家实拍图：有图显示该商家自己的货（认货），无图保留店铺图标（型号主图已在页顶） */}
+          {m.coverImageUrl ? (
+            <MediaImage
+              url={m.coverImageUrl}
+              className='bd-list-avatar'
+              mode='aspectFill'
+              fallback={
+                <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
+                  <Icon name="store" size={18} color={t.primary} />
+                </View>
+              }
+            />
+          ) : (
+            <View className='bd-list-avatar' style={{ backgroundColor: t.primaryLight }}>
+              <Icon name="store" size={18} color={t.primary} />
+            </View>
+          )}
+          <View className='bd-list-main'>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+              <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
+              {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
+              {m.isVerified ? (
+                <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
+              ) : null}
+              {/* 改动说明（v1.7.62 徽章统一）：等级徽章统一走 MerchantBadge——
+                  互联网来源出「互联网」一枚描边标签，其余按牌级出实心彩牌，
+                  不再与「普通」并列（原「普通彩牌 + 互联网数据描边」两枚造成拥挤） */}
+              <MerchantBadge rank={m.grade ?? 0} isInternetSource={m.isInternetSource} />
+              {/* v2.3.0 商城置顶卡：置顶商家角标 */}
+              {m.isPinned ? (
+                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
+              ) : null}
+              {m.saleState === 2 ? (
+                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
+              ) : null}
+            </View>
+          </View>
+          <Icon name="chevron_right" size={18} color={t.textTertiary} />
+        </View>
+        {/* 邀请（v1.8.0 公开/邀请，原"询价"）——仅认证商家开放（行动门）；非认证只展示不导流 */}
+        {/* 改动说明（v1.7.54 邀请候选口径）：改用服务端 invitable（认证 + 生效 + 未软删），
+            停用/软删商家的邀请必然被服务端拒绝，入口不再展示以免用户走到死路 */}
+        {m.isVerified && m.invitable !== false ? (
+          <View
+            style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, borderRadius: 14, backgroundColor: t.primaryLight, marginLeft: 8 }}
+            onClick={() => handleInvite(m)}
+          >
+            <Text style={{ ...fs(12), color: t.primary }}>邀请</Text>
+          </View>
+        ) : null}
+      </View>
+      {/* 改动说明（v1.8.5）：报价与电话单独成行——电话做成可点药丸，点一下直接唤起拨号 */}
+      {(m.price || m.contactPhone) ? (
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+          <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary, flex: 1 }}>
+            {m.price ? formatPriceText(m.price) : ''}
+          </Text>
+          {m.contactPhone ? (
+            <View className='bd-phone' style={{ backgroundColor: t.bgInput }} onClick={() => callPhone(m.contactPhone)}>
+              <Icon name="phone" size={12} color={t.primary} />
+              <Text style={{ ...fs(12), color: t.primary, marginLeft: 4 }}>{m.contactPhone}</Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -263,32 +278,8 @@ export default function BearingDetailPage() {
           {otherMerchants.map((m) => merchantRow(m))}
         </>
       ) : null}
-      {/* v1.6.0 搜索寻货联动：查到→进一步联系（发布寻货 / 分享真实货源），而非查完就结束 */}
-      {/* v1.8.0 公开/邀请：按钮统一"发布寻货"（公开/邀请在发布页选），在售认证家数改由下方说明行承载 */}
-      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-        <View
-          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, borderRadius: 20, backgroundColor: t.primary, marginRight: 10 }}
-          onClick={handleCreateDemand}
-        >
-          <Icon name="search" size={16} color={t.textOnPrimary} />
-          <Text style={{ ...fs(14), color: t.textOnPrimary, marginLeft: 6 }}>
-            {isLoggedIn ? '发布寻货' : '登录后发布寻货'}
-          </Text>
-        </View>
-        <ShareButton
-          title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台邀请报价`}
-          path={`/s/bearing/${id}?view=supply`}
-          label="分享货源"
-        />
-      </View>
-      {/* v1.8.0 路径说明：讲清发布后会发生什么（公开发布进大厅 / 只邀请认证商家），消解"在售≠可联系"的困惑 */}
-      <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>
-        {!isLoggedIn
-          ? '登录后可发布寻货、邀请认证商家报价'
-          : verifiedCount > 0
-            ? `当前 ${verifiedCount} 家认证商家有货：可公开发布（进大厅），也可只邀请他们报价`
-            : '暂无认证商家在售，公开后如有匹配商家会收到通知'}
-      </Text>
+      {/* 改动说明（v1.8.5 动作区重排）：原卡片内"发布寻货 + 分享货源"一行主次失衡，
+          主行动与分享一起挪到底部动作卡，本卡只保留商家列表与说明 */}
     </View>
   )
 
@@ -359,15 +350,42 @@ export default function BearingDetailPage() {
           </View>
         )}
 
-        {/* 操作：收藏（状态驱动，已收藏可取消） / 纠错（登录门槛） */}
-        <View className='bd-actions'>
-          <View className='bd-btn' style={{ backgroundColor: isFav ? t.danger : t.primary }} onClick={handleFavorite}>
-            <Icon name={isFav ? 'heart' : 'heart'} size={18} color={t.textOnPrimary} />
-            <Text className='bd-btn-text' style={{ ...fs(15), color: t.textOnPrimary }}>{isFav ? '已收藏' : '收藏'}</Text>
+        {/*
+          改动说明（v1.8.5 动作区重排）：主行动"寻这个型号"通栏置顶，
+          次行动收藏 / 分享货源 / 纠错三等分置于下行——分享是引流入口，保留独立位置与主题色，
+          不再与主按钮挤在同一行造成主次失衡；RN 不支持 fixed，仍在内容流末尾。
+        */}
+        <View className='bd-action-card' style={{ backgroundColor: t.bgCard }}>
+          <View className='bd-action-primary' style={{ backgroundColor: t.primary }} onClick={handleCreateDemand}>
+            <Icon name="search" size={16} color={t.textOnPrimary} />
+            <Text className='bd-action-primary-text' style={{ ...fs(15), color: t.textOnPrimary }}>
+              {isLoggedIn ? '寻这个型号' : '登录后寻这个型号'}
+            </Text>
           </View>
-          <View className='bd-btn-ghost' style={{ borderColor: t.border }} onClick={handleCorrect}>
-            <Icon name="edit" size={18} color={t.textSecondary} />
-            <Text className='bd-btn-ghost-text' style={{ ...fs(15), color: t.textSecondary }}>纠错</Text>
+          {/* 路径说明：讲清发布后会发生什么（公开发布进大厅 / 只邀请有货认证商家） */}
+          <Text className='bd-action-hint' style={{ ...fs(11), color: t.textTertiary }}>
+            {!isLoggedIn
+              ? '登录后可寻这个型号，认证商家会收到通知'
+              : verifiedCount > 0
+                ? `当前 ${verifiedCount} 家认证商家有货：可公开发布进大厅，也可只邀请他们报价`
+                : '暂无认证商家在售，公开后如有匹配商家会收到通知'}
+          </Text>
+          <View className='bd-action-row'>
+            <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={handleFavorite}>
+              <Icon name="heart" size={16} color={isFav ? t.danger : t.textSecondary} />
+              <Text className='bd-action-ghost-text' style={{ ...fs(14), color: isFav ? t.danger : t.textSecondary }}>{isFav ? '已收藏' : '收藏'}</Text>
+            </View>
+            <ShareButton
+              title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台邀请报价`}
+              path={`/s/bearing/${id}?view=supply`}
+              label="分享货源"
+              color={t.primary}
+              style={{ flex: 1, height: 44, borderRadius: 12, marginLeft: 8, marginRight: 8 }}
+            />
+            <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={handleCorrect}>
+              <Icon name="edit" size={16} color={t.textSecondary} />
+              <Text className='bd-action-ghost-text' style={{ ...fs(14), color: t.textSecondary }}>纠错</Text>
+            </View>
           </View>
         </View>
       </View>

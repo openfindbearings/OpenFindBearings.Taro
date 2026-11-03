@@ -1,6 +1,7 @@
-// 分享按钮（v1.6.0 搜索寻货联动）：三端统一入口。
+﻿// 分享按钮（v1.6.0 搜索寻货联动）：三端统一入口。
 // 小程序（微信/抖音）用 <Button open-type='share'> 走原生分享菜单（标题/路径由页面 useShareMessage 设置）；
 // H5/RN 用普通 View + 命令式 shareContent（Web Share / 复制链接 / RN 原生 Share）。
+import type { CSSProperties } from 'react'
 import { View, Text, Button } from '@tarojs/components'
 import Icon from '../Icon'
 import { useTheme } from '../../hooks/useTheme'
@@ -23,19 +24,25 @@ export interface ShareButtonProps {
   imageUrl?: string
   /** 文字标签（默认"分享"） */
   label?: string
+  /** 覆写外层样式（改动说明 v1.60.0：详情页底部次级按钮行需要 flex:1 让分享按钮占满一格） */
+  style?: CSSProperties
+  /** 图标与文字颜色（默认次要文字色；详情页用主题色强调分享是引流入口） */
+  color?: string
 }
 
 /** 分享按钮：小程序原生分享 / H5·RN 命令式分享 */
-export default function ShareButton({ title, path, imageUrl, label = '分享' }: ShareButtonProps) {
+export default function ShareButton({ title, path, imageUrl, label = '分享', style: outerStyle, color }: ShareButtonProps) {
   const t = useTheme()
   const fs = useFs()
   const env = process.env.TARO_ENV
   const nativeShare = env === 'weapp' || env === 'tt'
+  // 改动说明（v1.60.0）：颜色可覆写，未传时沿用原次要文字色，避免影响既有调用方
+  const fg = color || t.textSecondary
 
   const inner = (
     <>
-      <Icon name="share-2" size={16} color={t.textSecondary} />
-      <Text style={{ ...fs(14), color: t.textSecondary, marginLeft: 6 }}>{label}</Text>
+      <Icon name="share-2" size={16} color={fg} />
+      <Text style={{ ...fs(14), color: fg, marginLeft: 6 }}>{label}</Text>
     </>
   )
   const style = {
@@ -48,14 +55,14 @@ export default function ShareButton({ title, path, imageUrl, label = '分享' }:
   // 改动说明（v1.7.47）：加 className，供平台后缀样式清除微信/抖音原生 button 默认 ::after 边框
   if (nativeShare) {
     return (
-      <Button openType="share" className="share-btn" style={{ ...style, margin: 0, height: 'auto', lineHeight: 'normal' }}>
+      <Button openType="share" className="share-btn" style={{ ...style, ...outerStyle, margin: 0, height: 'auto', lineHeight: 'normal' }}>
         {inner}
       </Button>
     )
   }
   // H5/RN：命令式分享
   return (
-    <View style={style} onClick={() => void shareContent({ title, path, imageUrl })}>
+    <View style={{ ...style, ...outerStyle }} onClick={() => void shareContent({ title, path, imageUrl })}>
       {inner}
     </View>
   )
