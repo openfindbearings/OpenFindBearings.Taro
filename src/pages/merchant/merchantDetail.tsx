@@ -18,6 +18,8 @@ import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
 import { setObject } from '../../utils/storage'
 import { formatPriceText } from '../../utils/format'
+// 改动说明（v1.8.5）：互联网来源商家的公开号码原样展示，点击直接唤起拨号
+import { callPhone } from '../../utils/phone'
 import { checkFollow, toggleFollow, recordMerchantView } from '../../services/user'
 import { getMerchantDetail, getMerchantBearings, type MerchantDetail, type MerchantBearing } from '../../services/merchant'
 import MediaImage from '../../components/MediaImage'
@@ -232,13 +234,23 @@ export default function MerchantDetailPage() {
               <Text className='md-v' style={{ ...fs(13), color: t.textTertiary }}>你经营的商家</Text>
             </View>
           ) : detail?.isInternetSource ? (
-            // 改动说明（v1.7.60 互联网数据展示）：互联网来源商家按公开数据口径展示联系方式
-            //   （手机号已由服务端脱敏、固话原样），不再提示"暂不接收邀约"
+            // 改动说明（v1.8.5 公开口径）：互联网来源商家的号码原样展示且可直接拨打，
+            //   做成可点药丸（无手机/固话时回退邮箱；都没有显示"未公开"），与本页"暂不接收邀约"分支区分
             <View className='md-row'>
               <Text className='md-k' style={{ ...fs(13), color: t.textTertiary }}>联系方式</Text>
-              <Text className='md-v' style={{ ...fs(13), color: t.textPrimary }}>
-                {detail?.contact?.mobile || detail?.contact?.phone || detail?.contact?.email || '未公开'}
-              </Text>
+              <View className='md-v' style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
+                {(detail?.contact?.mobile || detail?.contact?.phone) ? (
+                  <View
+                    style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 12, backgroundColor: t.bgInput }}
+                    onClick={() => callPhone(detail?.contact?.mobile || detail?.contact?.phone)}
+                  >
+                    <Icon name="phone" size={12} color={t.primary} />
+                    <Text style={{ ...fs(12), color: t.primary, marginLeft: 4 }}>{detail?.contact?.mobile || detail?.contact?.phone}</Text>
+                  </View>
+                ) : (
+                  <Text style={{ ...fs(13), color: t.textPrimary }}>{detail?.contact?.email || '未公开'}</Text>
+                )}
+              </View>
             </View>
           ) : detail?.isVerified && (detail?.status ?? 'Active') === 'Active' ? (
             <View className='md-row' onClick={handleInquire}>
@@ -257,7 +269,7 @@ export default function MerchantDetailPage() {
               <Text className='md-v' style={{ ...fs(13), color: t.textTertiary }}>该商家暂不接收邀约</Text>
             </View>
           )}
-          {/* 改动说明（v1.7.60）：防骚扰提示只对平台认证商家成立；互联网数据已按脱敏口径公开 */}
+          {/* 改动说明（v1.8.5）：防骚扰提示只对平台认证商家成立；互联网数据已按公开口径原样展示 */}
           {!detail?.isInternetSource && (
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>为防骚扰，联系电话在寻货撮合达成后由双方互给</Text>
           )}

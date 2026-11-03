@@ -109,32 +109,61 @@
   margin-top: 2px;
 }
 
-// 操作按钮
-// 改动说明：补 display:flex——RN 下 View 默认即 flex，但 H5 的 div 默认 block，
-// 缺 display:flex 时 flex-direction/justify 全失效（按钮不横排、内容不居中）。
-.bd-actions {
-  display: flex;
-  flex-direction: row;
-  margin: $space-5 $space-4 0 $space-4;
+// 商家行
+// 改动说明（v1.8.5）：行内拆成"商家信息行 + 报价/电话行"，电话单独成可点药丸
+.bd-merchant {
+  padding-top: $space-3;
+  padding-bottom: $space-3;
 }
 
-.bd-btn {
+// 互联网来源商家的公开电话药丸（点击唤起拨号）
+.bd-phone {
   display: flex;
-  flex: 1;
-  height: 44px;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+// 底部动作区
+// 改动说明（v1.8.5 动作区重排）：主行动通栏一行、次行动三等分一行，主次分明；
+// RN 不支持 fixed，动作区仍在内容流末尾。
+.bd-action-card {
+  margin: $space-3 $space-4 0 $space-4;
   border-radius: $radius-lg;
+  padding: $space-4;
+}
+
+.bd-action-primary {
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  margin-right: $space-3;
+  height: 48px;
+  border-radius: $radius-lg;
 }
 
-.bd-btn-text {
+.bd-action-primary-text {
   font-weight: bold;
-  margin-left: $space-2;
+  margin-left: 6px;
 }
 
-.bd-btn-ghost {
+.bd-action-hint {
+  margin-top: $space-2;
+}
+
+.bd-action-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: $space-3;
+}
+
+.bd-action-ghost {
   display: flex;
   flex: 1;
   height: 44px;
@@ -146,6 +175,6 @@
   justify-content: center;
 }
 
-.bd-btn-ghost-text {
+.bd-action-ghost-text {
   margin-left: $space-2;
 }

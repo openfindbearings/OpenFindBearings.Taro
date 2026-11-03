@@ -1,10 +1,15 @@
-﻿# Taro API 对接说明 v1.5.9
+﻿# Taro API 对接说明 v1.5.10
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.10 (2026-11-03)
+
+- **互联网来源电话不再脱敏**：`MerchantDetail.contact.mobile` 与 `BearingMerchant.contactPhone` 现为完整号码（API v1.59.8 起去掉 `138****1234` 脱敏），型号详情「在售商家」行与商家详情页均改为可点药丸并调用 `utils/phone` 唤起拨号（H5 `tel:`、小程序 `Taro.makePhoneCall`、RN `Linking`）。
+- **轴承详情底部动作区重排（无接口变更）**：主行动「寻这个型号」通栏，收藏 / 分享货源 / 纠错三等分；分享仍走 `ShareButton`，行为不变。
 
 ### v1.5.9 (2026-11-02)
 
