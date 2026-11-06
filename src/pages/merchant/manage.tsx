@@ -502,7 +502,7 @@ export default function MerchantManagePage() {
 
   return (
     <PageLayout nav={<NavBar title="商品管理" showBack />}>
-      {/* 操作栏：添加商品（成员均可）——v1.7.3 替代原整行大按钮；改动说明：Excel 批量导入依赖外部 ETL 数据管线，本版本不提供该入口 */}
+      {/* 操作栏：添加商品（成员均可） */}
       <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 4 }}>
         <View
           style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
@@ -748,11 +748,6 @@ export default function MerchantManagePage() {
         >
           <Text style={{ ...fs(14), color: t.textSecondary }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
-      )}
-      {isAdmin && (
-        <Text style={{ ...fs(11), color: t.textTertiary, paddingLeft: 14, paddingRight: 14, marginBottom: 20 }}>
-          Excel 导入模板列：轴承型号 / 品牌 / 价格 / 库存数量 / 最小起订量；导入数据为商户自管，互联网数据不覆盖
-        </Text>
       )}
     </PageLayout>
   )

@@ -29,7 +29,7 @@ export function normalizeUploadRes(res: any): Promise<NormalizedUploadResult> {
 /**
  * Promise 风格上传（chooseImage 之后的临时路径 → multipart POST）。
  * 统一带 timeout（RN 默认 2 秒必超时）并归一化响应，resolve 标准形状。
- * 改动说明（v1.7.7）：加 fileName/fileType 可选参数（Excel 导入等场景携带真实文件名与 MIME）；
+ * 改动说明：fileName/fileType 为可选参数（携带真实文件名与 MIME）；
  *   H5/小程序端 Taro.uploadFile 不支持自定义文件名，忽略之（小程序路径自带扩展名，
  *   H5 blob 保留 File.type，后端 GetSafeExtension 有 MIME 兜底）。
  */
