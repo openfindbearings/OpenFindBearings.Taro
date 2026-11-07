@@ -15,6 +15,11 @@ interface PageLayoutProps {
   nav?: ReactNode
   /** 底部标签栏节点（CustomTabBar 元素），缺省则不渲染（设置/搜索等非 tab 页） */
   tabbar?: ReactNode
+  /**
+   * 底部操作条（v1.7.61 批量操作）：作为滚动区外末项钉底，天然固定；
+   * 仅在普通页（非 immersive）生效
+   */
+  footer?: ReactNode
   /** 导航栏下方的吸顶区（首页搜索框）：渲染在 ScrollView 外，天然固定不滚走 */
   subHeader?: ReactNode
   /** 页面内容（自动包在滚动区内） */
@@ -40,7 +45,7 @@ interface PageLayoutProps {
   overlay?: ReactNode
 }
 
-export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, footer, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
   // 页面底色随主题模式运行时切换
   const t = useTheme()
 
@@ -83,12 +88,14 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
           调用方只能按 100vh 估算高度，在 weapp 溢出并压住底栏上凸图标 */}
       {scrollY ? (
         <ScrollView className='pl-wx-scroll' {...({ scrollY, onScrollToLower: onEndReached } as any)}>
-          {/* 有底栏时内容底部留白（tabbar 高 56 + 余量），fixed 底栏会盖住最后内容 */}
-          <View style={{ paddingBottom: tabbar ? 64 : 0 }}>{children}</View>
+          {/* 有底栏时内容底部留白（tabbar 高 56 + 余量），fixed 底栏会盖住最后内容；
+              footer 可能带一行输入框，留白更多 */}
+          <View style={{ paddingBottom: footer ? 132 : tabbar ? 64 : 0 }}>{children}</View>
         </ScrollView>
       ) : (
         <View className='pl-wx-fill'>{children}</View>
       )}
+      {footer}
       {tabbar ? <View className='pl-wx-tabbar'>{tabbar}</View> : null}
       {overlay}
     </View>

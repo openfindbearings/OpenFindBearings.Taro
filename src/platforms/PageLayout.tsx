@@ -23,6 +23,11 @@ interface PageLayoutProps {
   subHeader?: ReactNode
   /** 底部标签栏节点（CustomTabBar 元素），缺省则不渲染（设置/搜索等非 tab 页） */
   tabbar?: ReactNode
+  /**
+   * 底部操作条（v1.7.61 批量操作）：fixed 钉在视口底部、位于内容之上，
+   * 仅在普通页（非 immersive）生效；有 footer 时内容区自动追加底部留白
+   */
+  footer?: ReactNode
   /** 页面内容（普通块级流，随文档滚动） */
   children: ReactNode
   /** 是否允许内容滚动（H5 文档默认可滚，此参数仅为与 RN 版接口对齐） */
@@ -44,7 +49,7 @@ interface PageLayoutProps {
   overlay?: ReactNode
 }
 
-export default function PageLayout({ nav, tabbar, children, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, footer, children, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
   // 页面底色随主题模式运行时切换
   const t = useTheme()
   // subHeader 吸顶偏移 = 状态栏高 + 导航基准高 44（$navbar-height，weapp 端状态栏非 0）
@@ -82,10 +87,12 @@ export default function PageLayout({ nav, tabbar, children, immersive, onScrollY
       {subHeader ? (
         <View className='pl-h5-subheader' style={{ top: top + 44, backgroundColor: t.bgPage }}>{subHeader}</View>
       ) : null}
-      {/* 有底栏时给内容底部留白，避免 fixed tabbar 遮住最后一条内容（tabbar 高 56 + 余量） */}
-      <View className='pl-h5-body' style={{ paddingBottom: tabbar ? 64 : 0 }}>
+      {/* 有底栏时给内容底部留白，避免 fixed tabbar 遮住最后一条内容（tabbar 高 56 + 余量）；
+          footer（批量操作条）可能带一行输入框，留白更多 */}
+      <View className='pl-h5-body' style={{ paddingBottom: footer ? 132 : tabbar ? 64 : 0 }}>
         {children}
       </View>
+      {footer ? <View className='pl-h5-footer'>{footer}</View> : null}
       {tabbar ? <View className='pl-h5-tabbar'>{tabbar}</View> : null}
       {overlay}
     </View>

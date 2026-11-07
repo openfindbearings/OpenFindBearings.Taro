@@ -5,14 +5,11 @@
 // 保留真实文件名；语义与 H5 版一致，resolve 标准 {statusCode,data}。
 import type { NormalizedUploadResult } from './index'
 
-/** 按扩展名给 MIME（图片为主，pdf/xlsx/xls 兜底） */
+/** 按扩展名给 MIME（图片为主，pdf 兜底） */
 function mimeFromName(name: string): string {
   const ext = name.toLowerCase().split('.').pop() || ''
   if (ext === 'png') return 'image/png'
   if (ext === 'pdf') return 'application/pdf'
-  // 改动说明（v1.7.7）：Excel 导入接入，补办公文档 MIME（后端 GetSafeExtension 同表）
-  if (ext === 'xlsx') return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  if (ext === 'xls') return 'application/vnd.ms-excel'
   return 'image/jpeg'
 }
 

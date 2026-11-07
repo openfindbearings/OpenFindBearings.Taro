@@ -1,10 +1,17 @@
-﻿# Taro API 对接说明 v1.5.10
+﻿# Taro API 对接说明 v1.5.11
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.11 (2026-11-06)
+
+- **新增商品批量维护**：`POST /mobile/merchant/bearings/batch`，请求体 `{ action, ids, percent?, restockEta? }`，`action` 取 `onshelf` / `offshelf` / `restock` / `pricePercent` / `delete`，单次最多 100 件。
+- **响应**：`{ succeeded, skipped, results[] }`，每项 `id` / `success` / `message` / `oldPriceDescription` / `newPriceDescription`；个别失败不回滚整批，前端按 `results` 展示跳过原因。
+- **前端封装**：`services/merchant.ts` 新增 `batchMyBearings()`；改价走 `pricePercent`，百分比范围 -80～200，先本地预览（同一文本规则）再提交。
+- **行为差异**：上架对未通过商品等价于提交审核；已通过商品改价后重新送审，通过前商城不展示。
 
 ### v1.5.10 (2026-11-03)
 

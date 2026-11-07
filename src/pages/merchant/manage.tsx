@@ -22,8 +22,8 @@ import { useMerchantStore } from '../../stores/merchant'
 import { formatPriceText } from '../../utils/format'
 import {
   getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing, deleteMyBearing,
-  uploadBearingImage, deleteBearingImage, reorderBearingImages,
-  type MerchantBearingItem
+  uploadBearingImage, deleteBearingImage, reorderBearingImages, batchMyBearings,
+  type MerchantBearingItem, type BatchBearingAction
 } from '../../services/merchant'
 // v1.7.56 商品实拍图：选图复用跨端 pickImagePath（RN 走 expo-image-picker）
 import { pickImagePath } from '../../services/pickImage'
@@ -109,6 +109,14 @@ export default function MerchantManagePage() {
   // 改动说明（v1.7.55 商品状态说明）：说明卡默认收起，只占一行，不打断列表浏览
   const [guideOpen, setGuideOpen] = useState(false)
 
+  // v1.7.61 批量操作：batchMode 进入多选，selected 存商品关联 id（只覆盖当前已加载的条目）
+  const [batchMode, setBatchMode] = useState(false)
+  const [selected, setSelected] = useState<string[]>([])
+  // 底部输入面板：改价填百分比、补货填到货时间；batchBusy 防连点
+  const [batchPanel, setBatchPanel] = useState<'price' | 'restock' | null>(null)
+  const [batchInput, setBatchInput] = useState('')
+  const [batchBusy, setBatchBusy] = useState(false)
+
   // 添加表单：null=收起；searchKw/搜索结果/已选型号
   const [adding, setAdding] = useState(false)
   const [searchKw, setSearchKw] = useState('')
@@ -148,6 +156,8 @@ export default function MerchantManagePage() {
   /** 切换筛选并重查 */
   const switchFilter = (f: Filter) => {
     if (f === filter) return
+    // 换页签后可见条目可能变化，批量选中一并清空，避免操作到看不见的商品
+    setSelected([])
     setFilter(f)
     setLoading(false)
     // 用新 filter 直接拉第一页（load 读 state 有滞后，这里显式传参重查）
@@ -500,17 +510,234 @@ export default function MerchantManagePage() {
     </View>
   )
 
+  // ============ v1.7.61 批量操作 ============
+
+  /** 进入/退出多选模式：退出时清空选择与输入面板 */
+  const toggleBatchMode = () => {
+    if (batchMode) {
+      setBatchMode(false)
+      setSelected([])
+      setBatchPanel(null)
+      setBatchInput('')
+      return
+    }
+    // 进入多选时收起添加/编辑表单，避免两套操作叠在一起
+    setAdding(false)
+    setEditingId(null)
+    setBatchMode(true)
+  }
+
+  /** 单选切换 */
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
+
+  /** 当前已加载条目是否全选 */
+  const allSelected = items.length > 0 && items.every((i) => selected.includes(i.id))
+
+  /** 全选/取消全选（只覆盖当前已加载的条目，不做跨页全选） */
+  const toggleSelectAll = () => {
+    setSelected(allSelected ? [] : items.map((i) => i.id))
+  }
+
+  /** 批量执行：逐件结果只展示失败明细，成功后刷新列表并清空选择 */
+  const runBatch = async (action: BatchBearingAction, extra?: { percent?: number; restockEta?: string }) => {
+    if (batchBusy) return
+    if (selected.length === 0) {
+      Taro.showToast({ title: '请先选择商品', icon: 'none' })
+      return
+    }
+    setBatchBusy(true)
+    try {
+      const r = await batchMyBearings({ action, ids: selected, ...extra })
+      const failures = (r?.results ?? []).filter((x) => !x.success)
+      if (failures.length > 0) {
+        // 失败条目最多列前 5 条，其余用条数带过，避免弹窗过长
+        const lines = failures.slice(0, 5).map((x) => `${x.partNumber || '商品'}：${x.message || '已跳过'}`)
+        if (failures.length > 5) lines.push(`…另有 ${failures.length - 5} 件未执行`)
+        await Taro.showModal({
+          title: `成功 ${r?.succeeded ?? 0} 件，跳过 ${r?.skipped ?? 0} 件`,
+          content: lines.join('\n'),
+          showCancel: false
+        })
+      } else {
+        Taro.showToast({ title: `已处理 ${r?.succeeded ?? 0} 件`, icon: 'success' })
+      }
+      void vibrateSuccess()
+      setSelected([])
+      setBatchPanel(null)
+      setBatchInput('')
+      load(1, false)
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '批量操作失败', icon: 'none' })
+    } finally {
+      setBatchBusy(false)
+    }
+  }
+
+  /** 批量上架/下架：确认后执行，文案说明跳过口径 */
+  const onBatchShelf = async (onShelf: boolean) => {
+    if (selected.length === 0) {
+      Taro.showToast({ title: '请先选择商品', icon: 'none' })
+      return
+    }
+    const ok = await showConfirmDialog({
+      title: onShelf ? '批量上架' : '批量下架',
+      content: onShelf
+        ? `对选中的 ${selected.length} 件商品执行上架：已通过审核的直接上架，仓库中/已驳回的提交审核；已在售或审核中的会跳过。`
+        : `对选中的 ${selected.length} 件商品执行下架，已下架的会跳过。`
+    })
+    if (!ok) return
+    await runBatch(onShelf ? 'onshelf' : 'offshelf')
+  }
+
+  /** 批量删除：出售中/补货中的会被跳过，二次确认 */
+  const onBatchDelete = async () => {
+    if (selected.length === 0) {
+      Taro.showToast({ title: '请先选择商品', icon: 'none' })
+      return
+    }
+    const ok = await showConfirmDialog({
+      title: '批量删除',
+      content: `确定删除选中的 ${selected.length} 件商品？出售中/补货中的会跳过，删除后不可恢复。`
+    })
+    if (!ok) return
+    await runBatch('delete')
+  }
+
+  /** 解析并校验调价幅度 */
+  const parsePercent = (): number | null => {
+    const value = Number(batchInput.trim())
+    if (!Number.isFinite(value) || value === 0) {
+      Taro.showToast({ title: '请输入非 0 的调价幅度', icon: 'none' })
+      return null
+    }
+    if (value < -80 || value > 200) {
+      Taro.showToast({ title: '调价幅度需在 -80% 到 200% 之间', icon: 'none' })
+      return null
+    }
+    return value
+  }
+
+  /**
+   * 批量改价预演：先让服务端算出调整前后文本，确认后才真正落库。
+   * 价格是自由文本，肯定存在 "电议" 这类改不了的行，预演用于提前看清会跳过哪些
+   */
+  const onPricePreview = async () => {
+    const percent = parsePercent()
+    if (percent === null || selected.length === 0) return
+    setBatchBusy(true)
+    try {
+      const r = await batchMyBearings({ action: 'pricePreview', ids: selected, percent })
+      const changed = (r?.results ?? []).filter((x) => x.success)
+      const failures = (r?.results ?? []).filter((x) => !x.success)
+      const lines = changed.slice(0, 5).map((x) => `${x.partNumber || '商品'}：${x.oldPriceDescription || '无报价'} → ${x.newPriceDescription || '无报价'}`)
+      if (failures.length > 0) lines.push(`另有 ${failures.length} 件无法按比例调整：${failures[0]?.message || '价格不是数字'}`)
+
+      const ok = await showConfirmDialog({
+        title: `按 ${percent > 0 ? '+' : ''}${percent}% 调价（可调整 ${changed.length} 件）`,
+        content: `${lines.join('\n')}\n\n已通过审核的商品改价后需重新审核，通过前商城不可见。`
+      })
+      if (!ok) return
+      await runBatch('pricePercent', { percent })
+    } catch (e: any) {
+      Taro.showToast({ title: e?.message || '预演失败', icon: 'none' })
+    } finally {
+      setBatchBusy(false)
+    }
+  }
+
+  /** 底部操作条按钮（选中为空或执行中置灰） */
+  const batchButton = (label: string, onPress: () => void, danger = false) => (
+    <View
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 8, paddingBottom: 8, backgroundColor: t.bgInput, borderRadius: 8, marginLeft: 6, opacity: selected.length === 0 || batchBusy ? 0.45 : 1 }}
+      onClick={() => { if (selected.length > 0 && !batchBusy) onPress() }}
+    >
+      <Text style={{ ...fs(13), color: danger ? '#EF4444' : t.textPrimary }}>{label}</Text>
+    </View>
+  )
+
+  /** 底部批量操作条（PageLayout footer 插槽）：全选行 + 五个动作；改价/补货先展开输入面板 */
+  const batchFooter = batchMode ? (
+    <View style={{ backgroundColor: t.bgCard, borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.border, paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 10 }}>
+      {batchPanel === 'price' ? (
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ ...fs(13), color: t.textSecondary, width: 64 }}>涨跌幅</Text>
+          <Input
+            style={{ ...fs(13), color: t.textPrimary, flex: 1, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6 }}
+            value={batchInput}
+            placeholder="如 5 表示涨 5%，-10 表示降 10%"
+            placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
+            onInput={(e) => setBatchInput(e.detail.value)}
+          />
+          <View style={{ backgroundColor: batchBusy ? t.textTertiary : t.primary, borderRadius: 8, paddingLeft: 12, paddingRight: 12, paddingTop: 7, paddingBottom: 7, marginLeft: 8 }} onClick={onPricePreview}>
+            <Text style={{ ...fs(13), color: t.textOnPrimary }}>预览</Text>
+          </View>
+          <View style={{ paddingLeft: 10, paddingTop: 7, paddingBottom: 7 }} onClick={() => { setBatchPanel(null); setBatchInput('') }}>
+            <Text style={{ ...fs(13), color: t.textTertiary }}>取消</Text>
+          </View>
+        </View>
+      ) : batchPanel === 'restock' ? (
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ ...fs(13), color: t.textSecondary, width: 64 }}>到货时间</Text>
+          <Input
+            style={{ ...fs(13), color: t.textPrimary, flex: 1, backgroundColor: t.bgInput, borderRadius: 8, paddingLeft: 10, paddingRight: 10, paddingTop: 6, paddingBottom: 6 }}
+            value={batchInput}
+            placeholder="可空，如：一周内"
+            placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
+            onInput={(e) => setBatchInput(e.detail.value)}
+          />
+          <View style={{ backgroundColor: batchBusy ? t.textTertiary : t.primary, borderRadius: 8, paddingLeft: 12, paddingRight: 12, paddingTop: 7, paddingBottom: 7, marginLeft: 8 }} onClick={() => runBatch('restock', { restockEta: batchInput.trim() || undefined })}>
+            <Text style={{ ...fs(13), color: t.textOnPrimary }}>确认</Text>
+          </View>
+          <View style={{ paddingLeft: 10, paddingTop: 7, paddingBottom: 7 }} onClick={() => { setBatchPanel(null); setBatchInput('') }}>
+            <Text style={{ ...fs(13), color: t.textTertiary }}>取消</Text>
+          </View>
+        </View>
+      ) : (
+        <>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }} onClick={toggleSelectAll}>
+              <View style={{ width: 18, height: 18, borderRadius: 4, borderWidth: 1, borderStyle: 'solid', borderColor: allSelected ? t.primary : t.border, backgroundColor: allSelected ? t.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                {allSelected ? <Icon name="check" size={12} color={t.textOnPrimary} /> : null}
+              </View>
+              <Text style={{ ...fs(13), color: t.textPrimary, marginLeft: 6 }}>{allSelected ? '取消全选' : '全选'}</Text>
+            </View>
+            <Text style={{ ...fs(13), color: t.textSecondary }}>已选 {selected.length} 件</Text>
+            <Text style={{ ...fs(13), color: t.primary }} onClick={toggleBatchMode}>完成</Text>
+          </View>
+          <View style={{ display: 'flex', flexDirection: 'row' }}>
+            <View style={{ flex: 1 }}>{batchButton('上架', () => onBatchShelf(true))}</View>
+            <View style={{ flex: 1 }}>{batchButton('下架', () => onBatchShelf(false))}</View>
+            <View style={{ flex: 1 }}>{batchButton('补货', () => { setBatchPanel('restock'); setBatchInput('') })}</View>
+            <View style={{ flex: 1 }}>{batchButton('改价', () => { setBatchPanel('price'); setBatchInput('') })}</View>
+            <View style={{ flex: 1 }}>{batchButton('删除', onBatchDelete, true)}</View>
+          </View>
+        </>
+      )}
+    </View>
+  ) : undefined
+
   return (
-    <PageLayout nav={<NavBar title="商品管理" showBack />}>
-      {/* 操作栏：添加商品（成员均可）——v1.7.3 替代原整行大按钮；改动说明：Excel 批量导入依赖外部 ETL 数据管线，本版本不提供该入口 */}
+    <PageLayout nav={<NavBar title="商品管理" showBack />} footer={batchFooter}>
+      {/* 操作栏：添加商品（成员均可）+ 右侧批量管理入口 */}
       <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 4 }}>
         <View
-          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7 }}
-          onClick={toggleAdd}
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: batchMode ? t.bgInput : t.primary, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 7, paddingBottom: 7, opacity: batchMode ? 0.5 : 1 }}
+          onClick={batchMode ? undefined : toggleAdd}
         >
-          <Icon name="plus" size={14} color={t.textOnPrimary} />
-          <Text style={{ ...fs(13), color: t.textOnPrimary, marginLeft: 4 }}>添加商品</Text>
+          <Icon name="plus" size={14} color={batchMode ? t.textTertiary : t.textOnPrimary} />
+          <Text style={{ ...fs(13), color: batchMode ? t.textTertiary : t.textOnPrimary, marginLeft: 4 }}>添加商品</Text>
         </View>
+        <View style={{ flex: 1 }} />
+        {(items.length > 0 || batchMode) && (
+          <View
+            style={{ borderStyle: 'solid', borderWidth: 1, borderColor: batchMode ? t.primary : t.border, borderRadius: 18, paddingLeft: 14, paddingRight: 14, paddingTop: 6, paddingBottom: 6 }}
+            onClick={toggleBatchMode}
+          >
+            <Text style={{ ...fs(13), color: batchMode ? t.primary : t.textSecondary }}>{batchMode ? '完成' : '批量管理'}</Text>
+          </View>
+        )}
       </View>
 
       {/* 改动说明（v1.7.55 商品状态说明）：商家不知道各状态区别与上架需审核，新增可折叠说明卡；
@@ -647,8 +874,15 @@ export default function MerchantManagePage() {
               <View
                 key={item.id}
                 style={{ backgroundColor: t.bgCard, padding: 12, borderStyle: 'solid', borderWidth: 0, borderBottomWidth: 1, borderBottomColor: t.border, opacity: busyId === item.id ? 0.5 : 1 }}
+                onClick={batchMode ? () => toggleSelect(item.id) : undefined}
               >
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                  {/* v1.7.61 批量模式：左侧勾选框，整行点击即可切换 */}
+                  {batchMode && (
+                    <View style={{ width: 18, height: 18, borderRadius: 4, borderWidth: 1, borderStyle: 'solid', borderColor: selected.includes(item.id) ? t.primary : t.border, backgroundColor: selected.includes(item.id) ? t.primary : 'transparent', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                      {selected.includes(item.id) ? <Icon name="check" size={12} color={t.textOnPrimary} /> : null}
+                    </View>
+                  )}
                   <Text style={{ ...fs(15), color: t.textPrimary, flex: 1 }} numberOfLines={1}>{item.bearingPartNumber}</Text>
                   {/* v2.15.0 状态统一：右侧状态徽标（审核位优先，其次销售态），替代原双徽标 */}
                   <View style={{ width: 60, height: 20, borderRadius: 10, backgroundColor: stateBadgeColor(item, t), alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -663,7 +897,9 @@ export default function MerchantManagePage() {
                 {item.reviewStatus === 3 && item.approvalComment ? (
                   <Text style={{ ...fs(12), color: '#EF4444', marginTop: 4 }}>驳回原因：{item.approvalComment}</Text>
                 ) : null}
-                {/* 行操作：置顶（商城权益） + 编辑 + 状态 */}
+                {/* v1.7.61 批量模式下隐藏行内操作与编辑表单，避免与底部操作条冲突 */}
+                {!batchMode && (
+                <View>
                 <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
                   {item.saleState === 1 && (
                     <View
@@ -735,6 +971,8 @@ export default function MerchantManagePage() {
                     {formActions(onUpdate, '保存修改')}
                   </View>
                 )}
+                </View>
+                )}
               </View>
             ))}
           </View>
@@ -748,11 +986,6 @@ export default function MerchantManagePage() {
         >
           <Text style={{ ...fs(14), color: t.textSecondary }}>{loading ? '加载中…' : '加载更多'}</Text>
         </View>
-      )}
-      {isAdmin && (
-        <Text style={{ ...fs(11), color: t.textTertiary, paddingLeft: 14, paddingRight: 14, marginBottom: 20 }}>
-          Excel 导入模板列：轴承型号 / 品牌 / 价格 / 库存数量 / 最小起订量；导入数据为商户自管，互联网数据不覆盖
-        </Text>
       )}
     </PageLayout>
   )

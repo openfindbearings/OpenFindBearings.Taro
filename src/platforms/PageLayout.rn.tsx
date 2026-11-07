@@ -14,6 +14,11 @@ interface PageLayoutProps {
   /** 底部标签栏节点（CustomTabBar 元素），缺省则不渲染（设置/搜索等非 tab 页） */
   tabbar?: ReactNode
   /**
+   * 底部操作条（v1.7.61 批量操作）：作为 ScrollView 之外的末位兄弟节点，天然固定；
+   * 仅在普通页（非 immersive）生效
+   */
+  footer?: ReactNode
+  /**
    * 导航栏下方的吸顶区（v1.7.19 首页改版）：渲染在 ScrollView 之外，
    * RN 无 sticky，滚动区外即天然固定，与 H5/小程序 sticky 表现一致
    */
@@ -39,7 +44,7 @@ interface PageLayoutProps {
   overlay?: ReactNode
 }
 
-export default function PageLayout({ nav, tabbar, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
+export default function PageLayout({ nav, tabbar, footer, children, scrollY = true, immersive, onScrollY, onEndReached, subHeader, overlay }: PageLayoutProps) {
   // RN 根节点显式高度 = windowHeight（dp，inline 不缩放）
   const h = getWindowHeight()
   // 页面底色随主题模式运行时切换，inline 覆盖 scss 静态 $bg-page
@@ -77,9 +82,11 @@ export default function PageLayout({ nav, tabbar, children, scrollY = true, imme
       {/* 改动说明（v1.7.19）：吸顶子区放 ScrollView 外（RN 无 sticky，滚动区外即固定） */}
       {subHeader}
       {/* 改动说明（v1.7.2）：scrollY 为 RN-only prop，Taro 类型未声明，spread as any 过 tsc 门禁 */}
-      <ScrollView className='page-layout-scroll' {...({ scrollY, onScrollToLower: onEndReached } as any)} contentContainerStyle={{ flexGrow: 1 }}>
+      {/* footer 可能带一行输入框，底部留白较 tabbar 多 */}
+      <ScrollView className='page-layout-scroll' {...({ scrollY, onScrollToLower: onEndReached } as any)} contentContainerStyle={{ flexGrow: 1, paddingBottom: footer ? 132 : 0 }}>
         {children}
       </ScrollView>
+      {footer}
       {tabbar}
       {/* overlay 浮层插槽：根 View 直下末位子节点，absolute 四向 0 即全屏（RN 无 fixed） */}
       {overlay}

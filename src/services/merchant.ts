@@ -485,6 +485,35 @@ export function deleteMyBearing(id: string) {
   return request<OpResult>(API.MERCHANT_BEARING_DELETE(id), { method: 'DELETE' })
 }
 
+/** 批量操作动作（v1.7.61）：pricePreview 只预演调价不落库 */
+export type BatchBearingAction = 'onshelf' | 'offshelf' | 'restock' | 'pricePercent' | 'pricePreview' | 'delete'
+
+/** 批量操作单件结果（对齐 BFF BatchBearingItemResult） */
+export interface BatchBearingItemResult {
+  id: string
+  partNumber?: string | null
+  success: boolean
+  message?: string | null
+  /** 调价前后文本（仅调价/预演返回） */
+  oldPriceDescription?: string | null
+  newPriceDescription?: string | null
+}
+
+/** 批量操作汇总结果（对齐 BFF BatchBearingResult） */
+export interface BatchBearingResult {
+  succeeded: number
+  skipped: number
+  results: BatchBearingItemResult[]
+}
+
+/**
+ * 批量操作商品（v1.7.61）
+ * 上架/下架/补货中/按百分比调价/删除，逐件返回成功或跳过原因；单次最多 100 件
+ */
+export function batchMyBearings(body: { action: BatchBearingAction; ids: string[]; percent?: number; restockEta?: string }) {
+  return request<BatchBearingResult>(API.MERCHANT_BEARING_BATCH, { method: 'POST', data: body })
+}
+
 /** 商品实拍图操作结果（v1.7.56，对齐 BFF 图片端点返回） */
 export interface BearingImageResult {
   success: boolean
