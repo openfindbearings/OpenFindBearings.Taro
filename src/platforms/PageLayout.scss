@@ -31,6 +31,15 @@
   z-index: 99;
 }
 
+// 底部操作条（v1.7.61 批量操作）：fixed 钉底、层级与 tabbar 一致
+.pl-h5-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
 // 底栏容器：fixed 钉底
 .pl-h5-tabbar {
   position: fixed;
