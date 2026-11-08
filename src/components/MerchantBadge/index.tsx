@@ -30,6 +30,9 @@ export default function MerchantBadge({ rank = 0, isInternetSource, size = 10, w
 
   const box = {
     marginLeft: 6,
+    // 改动说明（长名称重叠修复 v2）：徽章宽度固定，不参与所在 flex 行的收缩，
+    // 否则 H5/小程序的默认 flex-shrink:1 会把徽章压扁成两行
+    flexShrink: 0,
     paddingLeft: 5,
     paddingRight: 5,
     paddingTop: 2,
