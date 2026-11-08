@@ -88,13 +88,23 @@ function isAuthPath(url: string): boolean {
   return AUTH_PATHS.some((p) => url.indexOf(p) === 0)
 }
 
+/**
+ * 刷新结果三态。
+ * - ok：已换到新令牌，调用方可重放请求
+ * - expired：refresh token 真失效（过期/换设备/被吊销），必须清态重新登录
+ * - transient：临时故障（网络异常、超时、服务端 5xx/429，如 BFF 或 Identity 正在重启），
+ *   登录态仍然有效，不能清令牌
+ */
+type RefreshResult = 'ok' | 'expired' | 'transient'
+
 /** 刷新 single-flight：并发 401 只真正刷新一次，其余复用同一 Promise */
-let refreshPromise: Promise<boolean> | null = null
+let refreshPromise: Promise<RefreshResult> | null = null
 
 /** 实际刷新动作：用持久 refresh + device_id 换新的 access/refresh */
-async function doRefreshToken(): Promise<boolean> {
+async function doRefreshToken(): Promise<RefreshResult> {
   const refresh = await getRefreshToken()
-  if (!refresh) return false
+  // 没有持久 refresh token 说明本就未登录，按失效处理（不产生任何提示）
+  if (!refresh) return 'expired'
   const deviceId = await getDeviceId()
   try {
     const res = await Taro.request({
@@ -109,17 +119,24 @@ async function doRefreshToken(): Promise<boolean> {
       // 改动说明：BFF /auth/refresh 返回扁平 {accessToken,...}，直接读，不再取 body.data（旧写法恒判失败）
       if (body && body.accessToken) {
         await setTokens(body.accessToken, body.refreshToken)
-        return true
+        return 'ok'
       }
+      // 2xx 却无令牌属协议异常，按临时故障处理，宁可让用户重试也不误踢下线
+      return 'transient'
     }
+    // 改动说明（本次）：只有 4xx（429 除外）才是 refresh token 真失效；
+    //   5xx 与 429 是服务端暂时不可用（Pod 重启、限流），保留登录态等恢复后重试。
+    //   旧实现把一切非 2xx 都当失效，服务抖动一次就把用户踢下线。
+    if (res.statusCode >= 400 && res.statusCode < 500 && res.statusCode !== 429) return 'expired'
+    return 'transient'
   } catch {
-    /* 刷新请求异常，返回 false 由上层清态 */
+    // 改动说明（本次）：网络异常/超时代表"连不上"，不代表"登录失效"，返回临时故障而非清态
+    return 'transient'
   }
-  return false
 }
 
 /** 取得 single-flight 的刷新 Promise */
-function refreshOnce(): Promise<boolean> {
+function refreshOnce(): Promise<RefreshResult> {
   if (!refreshPromise) {
     refreshPromise = doRefreshToken().finally(() => {
       refreshPromise = null
@@ -136,8 +153,9 @@ function refreshOnce(): Promise<boolean> {
 export async function ensureAccessToken(): Promise<string | null> {
   const tk = getToken()
   if (tk) return tk
-  const ok = await refreshOnce()
-  return ok ? getToken() : null
+  const result = await refreshOnce()
+  // 改动说明（本次）：仅 'ok' 才算拿到令牌；'transient' 不清令牌（登录态保留），调用方按未取到处理
+  return result === 'ok' ? getToken() : null
 }
 
 /** 通用请求方法 */
@@ -198,14 +216,18 @@ export async function request<T = any>(  url: string,
     throw new ApiError(eb.message || `HTTP ${res.statusCode}`, eb.code, res.statusCode, eb)
   }
 
-  // 业务端点 401：尝试刷新一次并重放；刷新失败清态并抛未授权
+  // 业务端点 401：尝试刷新一次并重放；失效才清态，临时故障保留登录态
   if (res.statusCode === 401) {
-    const ok = await refreshOnce()
-    if (ok) {
+    const result = await refreshOnce()
+    if (result === 'ok') {
       res = await send()
-    } else {
+    } else if (result === 'expired') {
       await clearTokens()
       throw new ApiError('登录已过期，请重新登录', 'UNAUTHORIZED', 401)
+    } else {
+      // 改动说明（本次）：服务端临时不可用（BFF/Identity 重启、网络抖动）时不登出用户，
+      //   仅提示稍后重试，避免一次崩溃风暴把全端用户踢下线
+      throw new ApiError('网络不稳定，请稍后重试', 'NETWORK_ERROR', 0)
     }
   }
 
