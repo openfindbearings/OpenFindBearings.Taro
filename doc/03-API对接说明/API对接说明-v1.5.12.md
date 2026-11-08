@@ -1,10 +1,19 @@
-﻿# Taro API 对接说明 v1.5.11
+﻿# Taro API 对接说明 v1.5.12
 
 ## 概述
 
 Taro 前端通过 Mobile BFF（`<your-bff-domain>/mobile/*`）访问后端 API，不直连 API 或 Identity。本文档说明前端调用 BFF 的接口清单、请求/响应结构、错误处理。
 
 ## 变更日志
+
+### v1.5.12 (2026-11-07)
+
+- **令牌刷新失败分流**：`services/request.ts` 的刷新结果由布尔改为三态 `ok / expired / transient`。
+  - `2xx` 且拿到新令牌 = `ok`，照旧重放原请求。
+  - `4xx`（`429` 除外）= `expired`，即 refresh token 真失效（过期 / 换设备 / 被吊销），清本地令牌并抛 `UNAUTHORIZED` 提示重新登录。
+  - 网络异常、超时、`5xx`、`429` = `transient`，属于服务端临时不可用（BFF 或 Identity 正在重启、限流），**保留登录态**，抛 `ApiError('网络不稳定，请稍后重试', 'NETWORK_ERROR', 0)`，用户重试即可恢复。
+- **修复的行为**：此前任何一次刷新失败（含网络异常）都会 `clearTokens()`，服务重启抖动一次就把全端用户踢下线，表现为"App 老是莫名退出登录"。现仅真失效才登出。
+- **`ensureAccessToken()` 语义同步**：只有 `ok` 才返回令牌，`transient` 返回 `null` 但不清令牌。
 
 ### v1.5.11 (2026-11-06)
 
