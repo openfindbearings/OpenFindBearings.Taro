@@ -210,15 +210,16 @@ export default function BearingDetailPage() {
           )}
           <View className='bd-list-main'>
             {/*
-              改动说明（长名称重叠修复）：RN 的 flexShrink 默认为 0，原名称行不收缩也不换行，
-              商家名一长就撑破容器，右侧徽章与「邀请」按钮被挤到同一位置重叠。
-              名称改为可收缩单行省略、名称行允许换行，徽章放不下时换行而非溢出
+              改动说明（长名称重叠修复 v2）：上一版给名称行加了 flexWrap 并靠 flexShrink 收缩，
+              小程序（CSS flex）正常，RN 仍断两行且徽章溢出——Yoga 在换行容器里按子节点内容
+              宽度排线，不会按 flexShrink 重新测量文本，numberOfLines 也随之失效。
+              改为与搜索页商家行一致的 nowrap 行：名称收缩单行省略，徽章固定宽度不参与收缩
             */}
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary, flexShrink: 1 }} numberOfLines={1}>{m.merchantName}</Text>
               {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
               {m.isVerified ? (
-                <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
+                <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6, flexShrink: 0 }}>已认证</Text>
               ) : null}
               {/* 改动说明（v1.7.62 徽章统一）：等级徽章统一走 MerchantBadge——
                   互联网来源出「互联网」一枚描边标签，其余按牌级出实心彩牌，
@@ -226,10 +227,10 @@ export default function BearingDetailPage() {
               <MerchantBadge rank={m.grade ?? 0} isInternetSource={m.isInternetSource} />
               {/* v2.3.0 商城置顶卡：置顶商家角标 */}
               {m.isPinned ? (
-                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>置顶</Text>
+                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: '#F59E0B', borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6, flexShrink: 0 }}>置顶</Text>
               ) : null}
               {m.saleState === 2 ? (
-                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
+                <Text style={{ ...fs(10), color: '#FFFFFF', backgroundColor: t.warning, borderRadius: 4, paddingLeft: 5, paddingRight: 5, marginLeft: 6, flexShrink: 0 }}>{m.restockEta ? '补货中·' + m.restockEta : '补货中'}</Text>
               ) : null}
             </View>
           </View>
