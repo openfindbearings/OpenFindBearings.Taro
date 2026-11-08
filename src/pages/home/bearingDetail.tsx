@@ -209,8 +209,13 @@ export default function BearingDetailPage() {
             </View>
           )}
           <View className='bd-list-main'>
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-              <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary }}>{m.merchantName}</Text>
+            {/*
+              改动说明（长名称重叠修复）：RN 的 flexShrink 默认为 0，原名称行不收缩也不换行，
+              商家名一长就撑破容器，右侧徽章与「邀请」按钮被挤到同一位置重叠。
+              名称改为可收缩单行省略、名称行允许换行，徽章放不下时换行而非溢出
+            */}
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+              <Text className='bd-list-name' style={{ ...fs(15), color: t.textPrimary, flexShrink: 1 }} numberOfLines={1}>{m.merchantName}</Text>
               {/* v1.6.0 数据可信联动：认证商家徽标（可信信号；询价行动门依据） */}
               {m.isVerified ? (
                 <Text style={{ ...fs(10), color: t.primary, borderStyle: 'solid', borderWidth: 1, borderColor: t.primary, borderRadius: 4, paddingLeft: 4, paddingRight: 4, marginLeft: 6 }}>已认证</Text>
