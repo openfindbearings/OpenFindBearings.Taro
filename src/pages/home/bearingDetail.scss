@@ -167,6 +167,10 @@
   display: flex;
   flex: 1;
   height: 44px;
+  // 改动说明（v1.9 三钮统一）：水平内边距与分享按钮基准样式对齐（10），
+  // 三等分窄屏下四字标签不会被挤到换行
+  padding-left: 10px;
+  padding-right: 10px;
   border-radius: $radius-lg;
   border-width: 1px;
   border-style: solid;
