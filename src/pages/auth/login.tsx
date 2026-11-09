@@ -43,7 +43,12 @@ export default function LoginPage() {
     try {
       const sys = Taro.getSystemInfoSync()
       const navH = (sys.statusBarHeight || 0) + 44
-      if (sys.windowHeight && sys.windowHeight > navH) setScaffoldMin(sys.windowHeight - navH)
+      // 改动说明（v1.9 底部图标行贴边被裁）：脚手架靠 minHeight 把「其他登录方式」图标行钉底，
+      // 但 H5/微信小程序的 min-height 是内容盒高度，容器上下 padding（24+32）会额外撑高，
+      // 首屏就多出 56px、图标行被挤出可视区（标签被裁）；RN 默认 border-box 不额外撑高，
+      // 故仅非 RN 端从 minHeight 中扣掉内边距
+      const padVertical = process.env.TARO_ENV === 'rn' ? 0 : 24 + 32
+      if (sys.windowHeight && sys.windowHeight > navH) setScaffoldMin(sys.windowHeight - navH - padVertical)
     } catch { /* 取不到就退回自然流 */ }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])

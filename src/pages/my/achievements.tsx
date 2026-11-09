@@ -1,5 +1,8 @@
-// 我的勋章页（v2.6.0 改版，统一名词：成就/徽章→勋章）：勋章舞台（横向轮播+选中聚焦+获得日期）→ 荣誉摘要条（称号+勋章点）
+// 我的勋章页（v2.6.0 改版，统一名词：成就/徽章→勋章）：勋章舞台（已获得平铺+点选聚焦+获得日期）→ 荣誉摘要条（称号+勋章点）
 // → 分类分组列表（组头带进度，未获得灰态+进度条）。勋章视觉为占位双层环（后期换设计图片资源）。
+// 改动说明（v2.9.0 舞台平铺）：原横向轮播依赖 ScrollView 滚动偏移换算选中项，RN 的 pagingEnabled
+//   按视口宽翻页而非单枚宽度，多枚时必然错位；小程序下 96 高容器还会裁掉勋章 3px 描边。
+//   改为已获得勋章整排平铺、自动换行、整体居中，点击即选中，说明行跟随选中项。
 // RN 约束：仅 flex、无 fixed/vh/gradient、Text 数值 lineHeight
 import { useState } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
@@ -18,9 +21,6 @@ import MedalImage from '../../components/MedalImage'
 // 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
 definePageConfig({ disableScroll: true })
 
-// 舞台单枚勋章占位宽（96 环 + 左右间距），选中索引=滚动偏移/该宽
-const STAGE_ITEM_W = 112
-
 /** ISO UTC → 中文长日期（浏览器/WebView 按本地时区换算，符合展示层转换规则；失败回退日期截断） */
 function fmtEarnDate(iso?: string | null): string {
   if (!iso) return ''
@@ -31,10 +31,13 @@ function fmtEarnDate(iso?: string | null): string {
   }
 }
 
-/** 舞台勋章：MedalImage 统一渲染（v2.6.0 有图用后台勋章图，无图回退双环占位），选中实亮其余半透明 */
-function StageMedal({ item, active, isDark, primary }: { item: AchievementItem; active: boolean; isDark: boolean; primary: string }) {
+/**
+ * 舞台勋章：MedalImage 统一渲染（有图用后台勋章图，无图回退双环占位）。
+ * 改动说明（v2.9.0）：去掉固定 112 占位宽，改由外层 flexWrap 居中平铺，点击触发选中
+ */
+function StageMedal({ item, active, isDark, primary, onSelect }: { item: AchievementItem; active: boolean; isDark: boolean; primary: string; onSelect: () => void }) {
   return (
-    <View style={{ width: STAGE_ITEM_W, display: 'flex', alignItems: 'center' }}>
+    <View onClick={onSelect} style={{ margin: 6, display: 'flex', alignItems: 'center' }}>
       <MedalImage imageKey={item.imageKey} icon={item.icon || 'award'} rare={item.rare} variant='stage' primary={primary} isDark={isDark} active={active} />
     </View>
   )
@@ -113,43 +116,35 @@ export default function AchievementsPage() {
   // 按分类分组展示（保持目录原有顺序聚合）
   const categories = Array.from(new Set((wall?.items || []).map((i) => i.category)))
 
-  // 横滚选中检测：RN 走 nativeEvent.contentOffset，H5/小程序走 detail.scrollLeft
-  const onStageScroll = (e: any) => {
-    const x = e?.nativeEvent?.contentOffset?.x ?? e?.detail?.scrollLeft ?? 0
-    const idx = Math.max(0, Math.min(unlocked.length - 1, Math.round(x / STAGE_ITEM_W)))
-    if (idx !== sel) setSel(idx)
-  }
-
   return (
     <PageLayout nav={<NavBar title='我的勋章' showBack />}>
       {!isLoggedIn && <LoginGuide icon='award' text='登录后查看你的勋章' />}
       {isLoggedIn && (
         <View>
-          {/* 1. 勋章舞台：展台底色深浅双轨（深底近黑/浅底近白），横向轮播+获得日期与归属 */}
-          <View style={{ backgroundColor: t.isDark ? '#111827' : '#F8FAFC', margin: 12, borderRadius: 16, paddingTop: 18, paddingBottom: 14 }}>
+          {/* 1. 勋章舞台：展台底色深浅双轨（深底近黑/浅底近白），已获得勋章平铺居中+点选聚焦 */}
+          <View style={{ backgroundColor: t.isDark ? '#111827' : '#F8FAFC', margin: 12, borderRadius: 16, paddingTop: 12, paddingBottom: 14 }}>
             {unlocked.length > 0 ? (
               <>
-                <ScrollView
-                  scrollX
-                  showsHorizontalScrollIndicator={false}
-                  pagingEnabled={process.env.TARO_ENV === 'rn'}
-                  onScroll={onStageScroll}
-                  scrollEventThrottle={16}
-                  style={{ height: 96 }}
-                  contentContainerStyle={{ paddingHorizontal: (STAGE_ITEM_W - 96) / 2 }}
-                >
-                  <View style={{ display: 'flex', flexDirection: 'row' }}>
-                    {unlocked.map((m, i) => (
-                      <StageMedal key={m.key} item={m} active={Math.min(sel, unlocked.length - 1) === i} isDark={t.isDark} primary={t.primary} />
-                    ))}
-                  </View>
-                </ScrollView>
+                <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', paddingLeft: 8, paddingRight: 8 }}>
+                  {unlocked.map((m, i) => (
+                    <StageMedal
+                      key={m.key}
+                      item={m}
+                      active={Math.min(sel, unlocked.length - 1) === i}
+                      isDark={t.isDark}
+                      primary={t.primary}
+                      onSelect={() => setSel(i)}
+                    />
+                  ))}
+                </View>
                 {focus && (
-                  <View style={{ display: 'flex', alignItems: 'center', marginTop: 14 }}>
-                    <Text style={{ ...fs(14), color: '#E2E8F0' }}>
+                  <View style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
+                    {/* 改动说明（v2.9.0）：原日期/归属文字硬编码深底浅色（#E2E8F0/#94A3B8），
+                        浅色主题下几乎不可读，改为按主题取色 */}
+                    <Text style={{ ...fs(14), color: t.isDark ? '#E2E8F0' : t.textPrimary }}>
                       {fmtEarnDate(focus.unlockedAt)} 获得此勋章
                     </Text>
-                    <Text style={{ ...fs(12), color: '#94A3B8', marginTop: 4 }}>
+                    <Text style={{ ...fs(12), color: t.isDark ? '#94A3B8' : t.textSecondary, marginTop: 4 }}>
                       {focus.category} · {focus.name}
                     </Text>
                   </View>
@@ -157,8 +152,8 @@ export default function AchievementsPage() {
               </>
             ) : (
               <View style={{ display: 'flex', alignItems: 'center', paddingTop: 26, paddingBottom: 26 }}>
-                <Icon name='award' size={36} color='#475569' />
-                <Text style={{ ...fs(13), color: '#94A3B8', marginTop: 10 }}>
+                <Icon name='award' size={36} color={t.isDark ? '#475569' : '#94A3B8'} />
+                <Text style={{ ...fs(13), color: t.isDark ? '#94A3B8' : t.textSecondary, marginTop: 10 }}>
                   还没有点亮的勋章，完成下方任务即可获得
                 </Text>
               </View>

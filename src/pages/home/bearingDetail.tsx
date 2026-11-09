@@ -376,18 +376,23 @@ export default function BearingDetailPage() {
                 ? `当前 ${verifiedCount} 家认证商家有货：可公开发布进大厅，也可只邀请他们报价`
                 : '暂无认证商家在售，公开后如有匹配商家会收到通知'}
           </Text>
+          {/* 改动说明（v1.9 三钮对齐）：间距改由占位 View 提供，不再用 margin——
+              flex 等分下外边距会让三个按钮的实际宽度不等；分享按钮同步传入
+              高度/圆角，避免小程序原生 button 自适应高度导致高度参差 */}
           <View className='bd-action-row'>
             <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={handleFavorite}>
               <Icon name="heart" size={16} color={isFav ? t.danger : t.textSecondary} />
               <Text className='bd-action-ghost-text' style={{ ...fs(14), color: isFav ? t.danger : t.textSecondary }}>{isFav ? '已收藏' : '收藏'}</Text>
             </View>
+            <View style={{ width: 8 }} />
             <ShareButton
               title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台邀请报价`}
               path={`/s/bearing/${id}?view=supply`}
               label="分享货源"
               color={t.primary}
-              style={{ flex: 1, height: 44, borderRadius: 12, marginLeft: 8, marginRight: 8 }}
+              style={{ flex: 1, height: 44, borderRadius: 12 }}
             />
+            <View style={{ width: 8 }} />
             <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={handleCorrect}>
               <Icon name="edit" size={16} color={t.textSecondary} />
               <Text className='bd-action-ghost-text' style={{ ...fs(14), color: t.textSecondary }}>纠错</Text>

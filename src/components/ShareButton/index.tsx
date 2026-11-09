@@ -47,15 +47,18 @@ export default function ShareButton({ title, path, imageUrl, label = '分享', s
   )
   const style = {
     display: 'flex', flexDirection: 'row' as const, alignItems: 'center', justifyContent: 'center',
-    paddingLeft: 14, paddingRight: 14, paddingTop: 8, paddingBottom: 8,
+    paddingLeft: 10, paddingRight: 10, paddingTop: 8, paddingBottom: 8,
     borderRadius: 20, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, backgroundColor: 'transparent',
   }
 
   // 小程序：原生分享菜单（open-type=share），点按由平台接管；
   // 改动说明（v1.7.47）：加 className，供平台后缀样式清除微信/抖音原生 button 默认 ::after 边框
   if (nativeShare) {
+    // 改动说明（v1.9 底部三钮不对齐）：margin/lineHeight 原先写在 ...outerStyle 之后，
+    // 把调用方传的 height/margin 覆盖掉，小程序端按钮变成内容自适应高度、无外边距，
+    // 与并排的固定 44 高按钮不在一条线上；改为基础复位在前、调用方样式在后
     return (
-      <Button openType="share" className="share-btn" style={{ ...style, ...outerStyle, margin: 0, height: 'auto', lineHeight: 'normal' }}>
+      <Button openType="share" className="share-btn" style={{ ...style, margin: 0, lineHeight: 'normal', ...outerStyle }}>
         {inner}
       </Button>
     )
