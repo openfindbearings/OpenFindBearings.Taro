@@ -220,10 +220,12 @@ export default function MerchantMembersPage() {
                       : <Icon name={isInvited ? 'mail' : 'user'} size={20} color={t.textTertiary} />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                      <Text style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.nickname}</Text>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
+                      {/* 改动说明（v1.4.11 名称行收缩）：昵称 flexShrink:1 单行省略，同行「我」徽标 flexShrink:0，
+                          避免长昵称撑破行容器压住右侧 chevron 与徽标 */}
+                      <Text style={{ ...fs(15), color: t.textPrimary, flexShrink: 1, minWidth: 0 }} numberOfLines={1}>{m.nickname}</Text>
                       {isSelf && (
-                        <View style={{ marginLeft: 6, borderRadius: 4, backgroundColor: t.bgInput, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1 }}>
+                        <View style={{ marginLeft: 6, borderRadius: 4, backgroundColor: t.bgInput, paddingLeft: 5, paddingRight: 5, paddingTop: 1, paddingBottom: 1, flexShrink: 0 }}>
                           <Text style={{ ...fs(10), color: t.textTertiary }}>我</Text>
                         </View>
                       )}
@@ -245,7 +247,7 @@ export default function MerchantMembersPage() {
                     </View>
                   </View>
                   {/* 改动说明（v1.7.8）：所有行可点开详情（原仅管理员可点操作行），chevron 常显 */}
-                  <Icon name="chevron-right" size={16} color={t.textTertiary} />
+                  <Icon name="chevron-right" size={16} color={t.textTertiary} style={{ flexShrink: 0 }} />
                 </View>
               )
             })}
