@@ -52,6 +52,9 @@ export default function BearingDetailPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [isFav, setIsFav] = useState(false)
   const [correctVisible, setCorrectVisible] = useState(false)
+  // 改动说明（品牌与类型资料完善）：资料卡默认收起，点击标题行就地展开，避免长文本挤压正文
+  const [brandOpen, setBrandOpen] = useState(false)
+  const [typeOpen, setTypeOpen] = useState(false)
 
   /** 认证商家（可信数据：可询价、计入"真实有货"家数） */
   const verifiedMerchants = merchants.filter((m) => m.isVerified)
@@ -289,6 +292,40 @@ export default function BearingDetailPage() {
     </View>
   )
 
+  /**
+   * 资料行：有值才渲染（与基本参数同构），空字段不占位
+   */
+  const infoRow = (label: string, value?: string | null) => (
+    value ? (
+      <View className='bd-spec-row' key={label}>
+        <Text className='bd-spec-k' style={{ ...fs(13), color: t.textTertiary }}>{label}</Text>
+        <Text className='bd-spec-v' style={{ ...fs(13), color: t.textPrimary }}>{value}</Text>
+      </View>
+    ) : null
+  )
+
+  /**
+   * 可折叠资料卡：标题行点击展开/收起；所有行都为空时整卡不渲染
+   */
+  const profileCard = (title: string, open: boolean, onToggle: () => void, rows: (JSX.Element | null)[]) => {
+    if (!rows.some(Boolean)) return null
+    return (
+      <View className='bd-card' style={{ backgroundColor: t.bgCard }}>
+        <View
+          style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          onClick={onToggle}
+        >
+          <Text className='bd-card-title' style={{ ...fs(15), color: t.textPrimary }}>{title}</Text>
+          <Icon name={open ? 'chevron-up' : 'chevron-down'} size={16} color={t.textTertiary} />
+        </View>
+        {open && <View>{rows}</View>}
+      </View>
+    )
+  }
+
+  const brandProfile = detail?.brandProfile
+  const typeProfile = detail?.typeProfile
+
   return (
     <PageLayout nav={<NavBar title="轴承详情" showBack />}>
       <View className='bd'>
@@ -322,6 +359,30 @@ export default function BearingDetailPage() {
             {merchantsCard}
           </>
         )}
+
+        {/* 改动说明（品牌与类型资料完善）：平台人工维护的品牌资料与类型说明，默认收起 */}
+        {profileCard('品牌资料', brandOpen, () => setBrandOpen((v) => !v), [
+          infoRow('品牌', brandProfile?.name),
+          infoRow('产地', brandProfile?.country),
+          infoRow('成立年份', brandProfile?.foundedYear ? `${brandProfile.foundedYear} 年` : null),
+          infoRow('母公司', brandProfile?.parentCompany),
+          infoRow('官网', brandProfile?.website),
+          infoRow('品牌简介', brandProfile?.description),
+          infoRow('优势产品', brandProfile?.advantages),
+          infoRow('型号后缀', brandProfile?.suffixNotes),
+          infoRow('主要应用', brandProfile?.mainApplications),
+        ])}
+
+        {profileCard('类型说明', typeOpen, () => setTypeOpen((v) => !v), [
+          infoRow('类型', typeProfile?.name),
+          infoRow('英文名', typeProfile?.englishName),
+          infoRow('简介', typeProfile?.description),
+          infoRow('结构特点', typeProfile?.structureFeatures),
+          infoRow('载荷特性', typeProfile?.loadCharacteristics),
+          infoRow('典型前缀', typeProfile?.typicalPrefixes),
+          infoRow('主要应用', typeProfile?.mainApplications),
+          infoRow('结构', typeProfile?.isSeparable === true ? '可分离' : typeProfile?.isSeparable === false ? '不可分离' : null),
+        ])}
 
         {/* 替代品（v2.16.0 三级治理：标准等效替代 / 条件替代（需评估） / 仅供参考；含责任提示） */}
         {interchanges.length > 0 && (
