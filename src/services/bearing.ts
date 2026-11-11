@@ -38,6 +38,38 @@ export interface BearingDetail {
   favoriteCount: number
   /** v1.6.0 数据可信联动：参数来源（Internet/OcrExtract/SeedData=仅供参考） */
   dataSource?: string | null
+  /** 改动说明（品牌与类型资料完善）：所属品牌档案，为空时不显示「品牌资料」卡 */
+  brandProfile?: BrandProfile | null
+  /** 改动说明（品牌与类型资料完善）：所属类型档案，为空时不显示「类型说明」卡 */
+  typeProfile?: BearingTypeProfile | null
+}
+
+/** 品牌资料（对齐 BFF BrandProfileItem）：后端人工维护，字段均可空 */
+export interface BrandProfile {
+  id: string
+  name: string
+  country?: string | null
+  foundedYear?: number | null
+  parentCompany?: string | null
+  website?: string | null
+  description?: string | null
+  advantages?: string | null
+  suffixNotes?: string | null
+  mainApplications?: string | null
+}
+
+/** 类型资料（对齐 BFF BearingTypeProfileItem）：后端人工维护，字段均可空 */
+export interface BearingTypeProfile {
+  id: string
+  name: string
+  englishName?: string | null
+  description?: string | null
+  structureFeatures?: string | null
+  loadCharacteristics?: string | null
+  typicalPrefixes?: string | null
+  mainApplications?: string | null
+  isSeparable?: boolean | null
+  imageUrl?: string | null
 }
 
 /** v1.6.0 数据可信联动：判断参数来源是否"仅供参考"（互联网采集/OCR/种子三源） */
