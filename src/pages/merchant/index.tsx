@@ -47,7 +47,8 @@ function Badge({ status }: { status: string }) {
   const fs = useFs()
   const meta = statusMeta(t, status)
   return (
-    <View className='mch-badge' style={{ backgroundColor: t.bgBadge }}>
+    // 改动说明（v1.4.11）：状态徽标固定宽度，避免被同行长名称挤压变形
+    <View className='mch-badge' style={{ backgroundColor: t.bgBadge, flexShrink: 0 }}>
       <View className='mch-badge-dot' style={{ backgroundColor: meta.color }} />
       <Text className='mch-badge-text' style={{ ...fs(12), color: meta.color }}>{meta.label}</Text>
     </View>
@@ -171,12 +172,15 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
         </View>
         <View className='mch-mid'>
           {/* v1.7.2 认证徽标上移至名称旁（金色小标，主流电商店铺式）：替代卡底重复提示行 */}
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary }} numberOfLines={1}>{m.merchantName}</Text>
+          {/* 改动说明（v1.4.11 名称行收缩）：RN 的 Text 默认 flexShrink:0，长商户名会按内容宽度撑破
+              mch-mid 直接压住右侧状态徽标，导致「已认证」与「已生效」叠在同一处。名称必须 flexShrink:1
+              配 numberOfLines:1 单行省略，同行徽标 flexShrink:0 固定宽度，成对声明才不重叠 */}
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
+            <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary, flexShrink: 1, minWidth: 0 }} numberOfLines={1}>{m.merchantName}</Text>
             {isActive && m.isVerified && (
               // 改动说明（v2.13.2 认证徽标统一）：原固定橙底白字，与首页/商品卡/寻货详情（主题色浅底主色字）分叉，
               //   统一为主题色浅底 + 主色字，文案"已认证"
-              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.primaryLight }}>
+              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.primaryLight, flexShrink: 0 }}>
                 <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>已认证</Text>
               </View>
             )}
