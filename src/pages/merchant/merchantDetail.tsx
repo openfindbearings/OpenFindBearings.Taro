@@ -313,11 +313,20 @@ export default function MerchantDetailPage() {
         </View>
 
         {/* 操作：关注 / 纠错（登录门槛） */}
+        {/* 改动说明（禁止自关注）：自家店铺把关注按钮换成「本店 · 管理店铺」，
+            关注自家店铺无业务意义，会污染粉丝数与「我关注的商家」，服务端同样拒绝 */}
         <View className='md-actions'>
-          <View className='md-btn' style={{ backgroundColor: isFollowed ? t.danger : t.primary }} onClick={handleFollow}>
-            <Icon name={isFollowed ? 'user-check' : 'user-plus'} size={18} color={t.textOnPrimary} />
-            <Text className='md-btn-text' style={{ ...fs(15), color: t.textOnPrimary }}>{isFollowed ? '已关注' : '关注'}</Text>
-          </View>
+          {detail?.isMerchantMember ? (
+            <View className='md-btn' style={{ backgroundColor: t.primary }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/home' })}>
+              <Icon name='store' size={18} color={t.textOnPrimary} />
+              <Text className='md-btn-text' style={{ ...fs(15), color: t.textOnPrimary }}>本店 · 管理店铺</Text>
+            </View>
+          ) : (
+            <View className='md-btn' style={{ backgroundColor: isFollowed ? t.danger : t.primary }} onClick={handleFollow}>
+              <Icon name={isFollowed ? 'user-check' : 'user-plus'} size={18} color={t.textOnPrimary} />
+              <Text className='md-btn-text' style={{ ...fs(15), color: t.textOnPrimary }}>{isFollowed ? '已关注' : '关注'}</Text>
+            </View>
+          )}
           <View className='md-btn-ghost' style={{ borderColor: t.border }} onClick={handleCorrect}>
             <Icon name="edit" size={18} color={t.textSecondary} />
             <Text className='md-btn-ghost-text' style={{ ...fs(15), color: t.textSecondary }}>纠错</Text>

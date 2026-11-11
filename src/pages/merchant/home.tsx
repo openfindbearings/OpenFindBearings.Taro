@@ -27,7 +27,7 @@ import { getMerchantTasks, getMerchantBuff, getMerchantRanking, type MerchantTas
 // v2.13.0 等级玩法：头部商家等级彩牌（色带+序数名映射）
 import { getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 // v2.16.0 dashboard：待办/数据概览数据源（复用既有端点）
-import { getMyBearings, getMerchantStaff, getPendingStaffInvitations } from '../../services/merchant'
+import { getMyBearings, getMerchantStaff, getPendingStaffInvitations, getMerchantDetail } from '../../services/merchant'
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 内部统一提供
 definePageConfig({ disableScroll: true })
@@ -44,6 +44,8 @@ interface DashStats {
   staff: number
   /** 待确认成员邀请数 */
   invites: number
+  /** 粉丝数（改动说明：原概览缺该指标，店主看不到店铺被关注多少；数据取商家详情 followerCount） */
+  followers: number
 }
 
 export default function MerchantHomePage() {
@@ -59,7 +61,7 @@ export default function MerchantHomePage() {
   const [buff, setBuff] = useState<MerchantBuff | null>(null)
   const [ranking, setRanking] = useState<MerchantRanking | null>(null)
   // v2.16.0 dashboard 概览/待办
-  const [stats, setStats] = useState<DashStats>({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0 })
+  const [stats, setStats] = useState<DashStats>({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0, followers: 0 })
 
   const isAdmin = current?.role === 'MerchantAdmin'
 
@@ -67,7 +69,7 @@ export default function MerchantHomePage() {
     const mid = current?.merchantId
     if (!isLoggedIn || !mid) {
       setTreasury(null); setAch(null); setMtasks(null); setBuff(null); setRanking(null)
-      setStats({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0 })
+      setStats({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0, followers: 0 })
       return
     }
     // 金库仅管理员有权限（员工不渲染金额，接口也不请求）
@@ -93,6 +95,10 @@ export default function MerchantHomePage() {
       .catch(() => {})
     void getPendingStaffInvitations()
       .then((r) => setStats((s) => ({ ...s, invites: (r ?? []).length })))
+      .catch(() => {})
+    // 改动说明：粉丝数取商家详情（其余概览无该指标），失败降级为 0 不阻塞页面
+    void getMerchantDetail(mid)
+      .then((r) => setStats((s) => ({ ...s, followers: r?.followerCount ?? 0 })))
       .catch(() => {})
   })
 
@@ -135,9 +141,11 @@ export default function MerchantHomePage() {
     )
   }
 
-  // 概览指标（KPI 四宫格，v1.7.49）：每项带详情页地址，点击直达对应页
+  // 概览指标（KPI 宫格，v1.7.49）：每项带详情页地址，点击直达对应页
+  // 改动说明：新增「粉丝」一项（店主可看到被关注人数），5 项改为三列排布避免单个落单
   const kpis = [
     { label: '在售商品', value: `${stats.onSale}`, unit: '件', url: '/pages/merchant/manage' },
+    { label: '粉丝', value: `${stats.followers}`, unit: '人', url: '' },
     { label: '在职成员', value: `${stats.staff}`, unit: '人', url: '/pages/merchant/members' },
     { label: '商家金库', value: isAdmin ? `${treasury?.balance ?? 0}` : '—', unit: isAdmin ? '商家金' : '', url: isAdmin ? '/pages/merchant/treasury' : '' },
     { label: '商家牌级', value: buff && buff.rank > 0 ? (MERCHANT_GRADE_LABELS[buff.rank] ?? `Lv${buff.rank}`) : '未定级', unit: '', url: '/pages/merchant/level' },
@@ -193,7 +201,7 @@ export default function MerchantHomePage() {
             {kpis.map((k) => (
               <View
                 key={k.label}
-                style={{ width: '25%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4, paddingBottom: 4 }}
+                style={{ width: '33.33%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4, paddingBottom: 4 }}
                 onClick={k.url ? () => Taro.navigateTo({ url: k.url }) : undefined}
               >
                 <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}>
