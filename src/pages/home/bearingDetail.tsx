@@ -32,6 +32,7 @@ import MerchantBadge from '../../components/MerchantBadge'
 import { formatPriceText } from '../../utils/format'
 // 改动说明（v1.8.5）：互联网来源商家的公开号码支持一键拨号，平台/小程序/H5/RN 分支封装在 phone 工具里
 import { callPhone } from '../../utils/phone'
+import { openMerchant } from '../../utils/merchantNav'
 import './bearingDetail.scss'
 
 /** 发布寻货预填 storage 键（轴承详情 → 发布页跨页传参，RN 兼容的异步存取对象） */
@@ -102,7 +103,8 @@ export default function BearingDetailPage() {
     }
   }
   const handleCorrect = () => { if (!isLoggedIn) return requireLogin(); setCorrectVisible(true) }
-  const goMerchant = (mid: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${mid}` })
+  // 改动说明：商家行跳转统一走 openMerchant——自己名下商户直接进经营工作台，其他商家进公开主页
+  const goMerchant = (mid: string) => void openMerchant(mid)
   const goBearing = (bid: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${bid}` })
 
   /**

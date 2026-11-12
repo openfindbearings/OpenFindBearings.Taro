@@ -10,6 +10,7 @@ import Icon from '../../components/Icon'
 import MedalImage from '../../components/MedalImage'
 import ShareButton from '../../components/ShareButton'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
+import { openMerchant } from '../../utils/merchantNav'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useShareMessage } from '../../hooks/useShareMessage'
@@ -85,7 +86,11 @@ export default function MerchantDetailPage() {
       setIsFollowed(!isFollowed)
       Taro.showToast({ title: isFollowed ? '已取消关注' : '已关注', icon: 'none' })
     } else {
-      Taro.showToast({ title: res?.message || '操作失败，请稍后重试', icon: 'none' })
+      // 改动说明：服务端返回「已关注过该商家」说明本地状态过期，直接把按钮同步为已关注，
+      //   避免用户反复点击；其余失败（不能关注自己的商户 / 网络异常）原样提示 API 文案
+      const msg = res?.message || '操作失败，请稍后重试'
+      if (!isFollowed && msg.includes('已关注')) setIsFollowed(true)
+      Taro.showToast({ title: msg, icon: 'none' })
     }
   }
   // 改动说明（v1.7.14）：纠错从占位 toast 改为打开结构化纠错面板
@@ -317,7 +322,7 @@ export default function MerchantDetailPage() {
             关注自家店铺无业务意义，会污染粉丝数与「我关注的商家」，服务端同样拒绝 */}
         <View className='md-actions'>
           {detail?.isMerchantMember ? (
-            <View className='md-btn' style={{ backgroundColor: t.primary }} onClick={() => Taro.navigateTo({ url: '/pages/merchant/home' })}>
+            <View className='md-btn' style={{ backgroundColor: t.primary }} onClick={() => void openMerchant(id, 'workbench')}>
               <Icon name='store' size={18} color={t.textOnPrimary} />
               <Text className='md-btn-text' style={{ ...fs(15), color: t.textOnPrimary }}>本店 · 管理店铺</Text>
             </View>

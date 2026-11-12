@@ -19,6 +19,7 @@ import { useLongPressMenu } from '../../components/ListKit/useLongPressMenu'
 import { useAuthStore } from '../../stores/auth'
 import MediaImage from '../../components/MediaImage'
 import { getFollowedMerchants, toggleFollow, batchRemoveFollows, type FollowedItem } from '../../services/user'
+import { openMerchant } from '../../utils/merchantNav'
 
 definePageConfig({ disableScroll: true })
 
@@ -91,7 +92,8 @@ export default function FollowedPage() {
     ]
     : []
 
-  const goDetail = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
+  // 改动说明：自己名下商户直接进经营工作台，其他商家进公开主页
+  const goDetail = (id: string) => void openMerchant(id)
   const hasMore = items.length < total
 
   return (

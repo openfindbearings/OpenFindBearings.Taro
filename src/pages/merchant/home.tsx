@@ -175,6 +175,15 @@ export default function MerchantHomePage() {
           <View style={{ flex: 1, marginLeft: 10 }}>
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>{current.merchantName}</Text>
+              {/* 改动说明：搜索/商城点自家商户已直接进本页工作台，这里补反向入口，
+                  需要时仍可查看顾客视角的店铺主页（带关注/纠错等公开信息） */}
+              <View
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: 8, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+                onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${current.merchantId}` })}
+              >
+                <Icon name='eye' size={11} color={t.textSecondary} />
+                <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺主页</Text>
+              </View>
             </View>
             {/* v2.13.0 等级玩法真机调整：删冗余副标题"与成员共同经营"（角色已由彩牌表达，
                 共经营是默认事实无信息量）；第二行=角色文字 + 商家等级彩牌（独立成行不再挤名字行），

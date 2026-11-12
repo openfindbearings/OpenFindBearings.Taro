@@ -22,6 +22,7 @@ import {
   deleteBearingHistory, deleteMerchantHistory, clearHistory, batchDeleteHistory,
   type BearingHistoryItem, type MerchantHistoryItem
 } from '../../services/user'
+import { openMerchant } from '../../utils/merchantNav'
 
 definePageConfig({ disableScroll: true })
 
@@ -244,7 +245,7 @@ export default function HistoryPage() {
         title: item.merchantName,
         sub: `${item.companyName ? `${item.companyName} · ` : ''}浏览 ${item.viewCount} 次 · ${formatTime(item.viewedAt)}`,
         targetId: item.merchantId,
-        onPress: () => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${item.merchantId}` }),
+          onPress: () => void openMerchant(item.merchantId),
       }))}
       <BatchBar visible={sel.selectMode} count={sel.count} actionLabel="删除" onAction={() => void onBatchDelete()} onExit={sel.exit} />
       {isLoggedIn && hasMore && (

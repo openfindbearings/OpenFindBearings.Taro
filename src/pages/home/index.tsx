@@ -21,6 +21,7 @@ import CustomTabBar from '../../components/CustomTabBar'
 // 改动说明（pro 扩展缝）：首页快捷三钮（语音/拍/扫）与智能模式页面已迁往自用 pro 包——
 // 开源构建时 @ofb/taro-pro 被 alias 指向 src/ext/pro.ts 占位（三钮渲染空、智能模式提示暂未上线）
 import { ProQuickActions, ProSearchExtras, ProSmartHome } from '../../ext/pro'
+import { openMerchant } from '../../utils/merchantNav'
 import './index.scss'
 // 改动说明：weapp 横滚适配类（display/white-space/vertical-align 等 RN 无效属性）按平台引入，
 //   仅微信小程序构建打包，RN/H5 不再解析该文件（与 ShareButton 同款条件 require 写法）
@@ -242,7 +243,7 @@ export default function HomePage() {
             <View
               key={m.id}
               className='merchant-row'
-              onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${m.id}` })}
+              onClick={() => void openMerchant(m.id)}
             >
               <View className='merchant-avatar' style={{ backgroundColor: t.primaryLight }}>
                 <MediaImage url={m.logoUrl} className='merchant-avatar-img' mode='aspectFit' fallbackIcon="store" fallbackColor={t.primary} fallbackSize={20} />
