@@ -17,8 +17,12 @@ export async function openMerchant(merchantId: string, mode: MerchantOpenMode = 
   if (!merchantId) return
 
   const state = useMerchantStore.getState()
+  // 自己商户判定：优先用 Active 列表；冷启动尚未拉完时退回全量申请里状态为 Active 的行
   const isOwn = mode === 'workbench'
-    || (mode === 'auto' && state.merchants.some((m) => m.merchantId === merchantId))
+    || (mode === 'auto' && (
+      state.merchants.some((m) => m.merchantId === merchantId)
+      || state.applications.some((m) => m.merchantId === merchantId && m.status === 'Active')
+    ))
 
   if (!isOwn) {
     Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${merchantId}` })
