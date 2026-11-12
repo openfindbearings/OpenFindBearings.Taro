@@ -21,6 +21,7 @@ import { formatDate } from '../../utils/format'
 import { getLevelBand, getMerchantGradeBand, MERCHANT_GRADE_LABELS } from '../../utils/level'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
+import { openMerchant } from '../../utils/merchantNav'
 import { vibrateSuccess } from '../../utils/haptics'
 import {
   getSourcingDetail, selectResponse, cancelDemand, cancelMyResponse, publishDemandAsPublic,
@@ -263,7 +264,7 @@ export default function SourcingDetailPage() {
           {detail.publisherType === 'merchant' && detail.publisherMerchantId ? (
             <View
               style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 8 }}
-              onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${detail.publisherMerchantId}` })}
+              onClick={() => void openMerchant(detail.publisherMerchantId!)}
             >
               <View style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 8, backgroundColor: t.primaryLight, marginRight: 8 }}>
                 <Text style={{ ...fs(11), color: t.primary }}>商户发布</Text>
@@ -405,7 +406,7 @@ export default function SourcingDetailPage() {
                   <Text
                     style={{ ...fs(14), color: t.primary, fontWeight: '500', flex: 1 }}
                     numberOfLines={1}
-                    onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${r.merchantId}` })}
+                    onClick={() => void openMerchant(r.merchantId)}
                   >
                     {r.merchantName || '商户'}
                   </Text>

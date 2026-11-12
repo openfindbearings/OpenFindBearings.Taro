@@ -20,6 +20,7 @@ import MediaImage from '../../components/MediaImage'
 // 改动说明（v1.7.62 徽章统一）：商家 Tab 列表行复用统一等级徽章（含互联网来源口径）
 import MerchantBadge from '../../components/MerchantBadge'
 import { merchantGradeNameToRank } from '../../utils/level'
+import { openMerchant } from '../../utils/merchantNav'
 import './search.scss'
 
 /** 发布寻货跨页预填 storage 键（与轴承详情页、发布页共用同一口径） */
@@ -266,7 +267,8 @@ export default function SearchPage() {
   }
 
   const goBearing = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })
-  const goMerchant = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
+  // 改动说明：自己名下商户直接进经营工作台，其他商家进公开主页
+  const goMerchant = (id: string) => void openMerchant(id)
 
   /**
    * 搜索结果行直接发布寻货

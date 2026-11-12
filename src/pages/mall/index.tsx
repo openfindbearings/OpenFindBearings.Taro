@@ -22,6 +22,7 @@ import { useFs } from '../../hooks/useFontScale'
 import { setObject } from '../../utils/storage'
 import { getMallFeed, type MallFeedItem, type MallFeedParams } from '../../services/mall'
 import { getHome, type HomeRef } from '../../services/home'
+import { openMerchant } from '../../utils/merchantNav'
 
 // 编译期配置：禁用外层 ScrollView，滚动由 PageLayout 统一提供
 definePageConfig({ disableScroll: true })
@@ -166,7 +167,8 @@ export default function MallPage() {
   }
 
   const goBearing = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })
-  const goMerchant = (id: string) => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${id}` })
+  // 改动说明：自己名下商户直接进经营工作台，其他商家进公开主页
+  const goMerchant = (id: string) => void openMerchant(id)
 
   /**
    * 改动说明（v1.8.5）：「联系商家」直接带着该商家发起一对一邀请——
