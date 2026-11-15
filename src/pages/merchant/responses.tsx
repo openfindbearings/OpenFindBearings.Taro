@@ -12,7 +12,11 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import ListChips from '../../components/ListKit/ListChips'
+// 改动说明（v1.4.16）：未登录与未入驻分别给引导空态，不再出现空白页
+import LoginGuide from '../../components/LoginGuide'
+import MerchantGuide from '../../components/MerchantGuide'
 import { useMerchantStore } from '../../stores/merchant'
+import { useAuthStore } from '../../stores/auth'
 import {
   getMySourcingResponses, responseStatusText, getOpportunities, getMatchedDemands,
   RESPONSE_STATUS, type SourcingMerchantResponse, type OpportunityItem, type MatchedDemand,
@@ -35,6 +39,8 @@ export default function MerchantResponsesPage() {
   const t = useTheme()
   const fs = useFs()
   const currentMerchant = useMerchantStore((s) => s.currentMerchant())
+  // 登录态（v1.4.16）：未登录不请求接口，直接展示登录引导
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [tab, setTab] = useState<'todo' | 'mine'>('todo')
   const [items, setItems] = useState<SourcingMerchantResponse[]>([])
   // 需求信号（v1.7.21 反向导购）：在售型号中被寻货且未应答的聚合，失败静默隐藏
@@ -102,10 +108,9 @@ export default function MerchantResponsesPage() {
   return (
     <PageLayout nav={<NavBar title='寻货应答' onBack={() => Taro.navigateBack()} showBack />}>
       <View>
-        {!currentMerchant && (
-          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
-            <Text style={{ ...fs(14), color: t.textTertiary }}>请先在商家 Tab 选择当前商户</Text>
-          </View>
+        {!isLoggedIn && <LoginGuide icon='messages-square' text='登录后可查看本店寻货应答' />}
+        {isLoggedIn && !currentMerchant && (
+          <MerchantGuide icon='messages-square' text='你还没有入驻商家，入驻通过后可应答寻货' />
         )}
         {currentMerchant && <ListChips items={TABS} active={tab} onChange={(k) => setTab(k as 'todo' | 'mine')} />}
 

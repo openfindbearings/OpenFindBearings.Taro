@@ -23,6 +23,9 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PublishIdentitySheet from '../../components/PublishIdentitySheet'
 import { vibrateSuccess } from '../../utils/haptics'
 import { useMerchantStore } from '../../stores/merchant'
+// 改动说明（v1.4.16）：未登录不渲染发布表单，避免填完整张表提交才被 401 打回
+import { useAuthStore } from '../../stores/auth'
+import LoginGuide from '../../components/LoginGuide'
 import { publishDemand, genPublishIdempotencyKey, parseNeedPoints, getSourcingQuota, type PublishDemandBody, type SourcingQuota } from '../../services/sourcing'
 import { getAllBearingMerchants, searchBearings, type Bearing, type BearingMerchant } from '../../services/bearing'
 import { searchMerchants, type Merchant } from '../../services/merchant'
@@ -77,6 +80,8 @@ export default function PublishSourcingPage() {
   // v2.12.0 商户名义发布：提交时弹 sheet 选身份（表单不占行），可发布商户取自登录态 store
   const merchants = useMerchantStore((s) => s.merchants)
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
+  // 登录态（v1.4.16）：未登录只展示登录引导，表单与额度请求都不执行
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [sheetOpen, setSheetOpen] = useState(false)
 
   // v1.8.0 公开/邀请：bearingId 贯通（关联平台轴承）；发布方式与收件人勾选
@@ -487,6 +492,15 @@ export default function PublishSourcingPage() {
   const overFree = !!pq && pq.todayUsed >= pq.freeLimit
   const insufficient = overFree && !!quota && quota.balance < pq.pointsPrice
   const checkedList = checked.filter((id) => checkedMeta[id])
+
+  // 改动说明（v1.4.16）：未登录早退，避免用户填完整张表才发现要登录
+  if (!isLoggedIn) {
+    return (
+      <PageLayout nav={<NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />}>
+        <LoginGuide icon='file-text' text='登录后可发布寻货需求' />
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout nav={<NavBar title='发布寻货' onBack={() => Taro.navigateBack()} showBack />} overlay={

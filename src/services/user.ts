@@ -86,11 +86,6 @@ export interface ProfileUpdateBody {
   industry?: string
 }
 
-/** 获取用户配置（首页/我的页面） */
-export async function getHomeData() {
-  return request<any>(API.HOME, { auth: false })
-}
-
 /** 获取用户 profile（聚合） */
 export async function getProfile() {
   return request<ProfileInfo>(API.PROFILE)
