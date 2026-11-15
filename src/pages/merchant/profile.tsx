@@ -13,6 +13,10 @@ import NavBar from '../../components/NavBar'
 import { getMerchantProfile, updateMerchantProfile, uploadMerchantLogo, getMyDocuments, submitDocument, closeMerchant, MERCHANT_TYPES, type MerchantProfile, type MerchantDocumentItem } from '../../services/merchant'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useMerchantStore } from '../../stores/merchant'
+// 改动说明（v1.4.16）：未登录与未入驻分别给引导空态，不再渲染空表单
+import { useAuthStore } from '../../stores/auth'
+import LoginGuide from '../../components/LoginGuide'
+import MerchantGuide from '../../components/MerchantGuide'
 import { usableImage } from '../../services/config'
 
 definePageConfig({ disableScroll: true })
@@ -52,6 +56,10 @@ export default function MerchantProfilePage() {
   const t = useTheme()
   const fs = useFs()
 
+  // 登录态与当前商户（v1.4.16）：未通过门槛时不发请求，直接展示引导空态
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  const currentMerchant = useMerchantStore((s) => s.currentMerchant())
+
   const [form, setForm] = useState({ ...EMPTY })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -73,6 +81,8 @@ export default function MerchantProfilePage() {
 
   /** 首次显示拉取当前商户资料回填（走 X-Merchant-Id 上下文） */
   useDidShow(() => {
+    // 改动说明（v1.4.16）：未登录或未入驻时不拉取资料/材料，避免空表单与 401
+    if (!isLoggedIn || !currentMerchant) return
     // 改动说明（v1.7.0）：材料列表每次回页刷新（审核状态由平台变更，需最新视图）
     loadDocs()
     if (loaded) return
@@ -212,6 +222,22 @@ export default function MerchantProfilePage() {
   )
   const inputStyle = { ...fs(15), color: t.textPrimary, textAlign: 'right' as const, flex: 1 }
   const logoSrc = form.logoUrl && !logoFailed ? usableImage(form.logoUrl) : ''
+
+  // 改动说明（v1.4.16）：未登录/未入驻分别渲染引导空态
+  if (!isLoggedIn) {
+    return (
+      <PageLayout nav={<NavBar title="信息维护" showBack />}>
+        <LoginGuide icon="store" text="登录后可维护商户信息" />
+      </PageLayout>
+    )
+  }
+  if (!currentMerchant) {
+    return (
+      <PageLayout nav={<NavBar title="信息维护" showBack />}>
+        <MerchantGuide icon="store" text="你还没有入驻商家，入驻通过后可维护店铺资料" />
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout nav={<NavBar title="信息维护" showBack />}>

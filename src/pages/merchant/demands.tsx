@@ -11,6 +11,10 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
+// 改动说明（v1.4.16）：未登录与未入驻分别给引导空态，不再只显示"请先在商家 Tab 选择当前商户"或空白列表
+import LoginGuide from '../../components/LoginGuide'
+import MerchantGuide from '../../components/MerchantGuide'
+import { useAuthStore } from '../../stores/auth'
 import ListChips from '../../components/ListKit/ListChips'
 import ListActionSheet, { type ListSheetAction } from '../../components/ListKit/ListActionSheet'
 import BatchBar from '../../components/ListKit/BatchBar'
@@ -36,6 +40,8 @@ export default function MerchantDemandsPage() {
   const t = useTheme()
   const fs = useFs()
   const currentMerchant = useMerchantStore((s) => s.currentMerchant())
+  // 登录态（v1.4.16）：未登录时不请求接口，直接展示登录引导
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [items, setItems] = useState<SourcingMerchantDemand[]>([])
   const [filter, setFilter] = useState<'all' | 'mine'>('all')
   // 终态折叠区展开态：null 表示用户未操作过，按条数自动决定（<=3 条直接展开）
@@ -209,10 +215,9 @@ export default function MerchantDemandsPage() {
   return (
     <PageLayout nav={<NavBar title='寻货发布' onBack={() => Taro.navigateBack()} showBack />} overlay={<ListActionSheet visible={!!sheetFor} title={sheetFor ? `寻 ${sheetFor.partNumber}` : undefined} actions={sheetActions} onClose={() => setSheetFor(null)} />}>
       <View>
-        {!currentMerchant && (
-          <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 100 }}>
-            <Text style={{ ...fs(14), color: t.textTertiary }}>请先在商家 Tab 选择当前商户</Text>
-          </View>
+        {!isLoggedIn && <LoginGuide icon='clipboard-list' text='登录后可查看本店寻货' />}
+        {isLoggedIn && !currentMerchant && (
+          <MerchantGuide icon='clipboard-list' text='你还没有入驻商家，入驻通过后可发布与管理商户寻货' />
         )}
         {currentMerchant && <ListChips items={FILTER_CHIPS} active={filter} onChange={(k) => setFilter(k as 'all' | 'mine')} />}
         {currentMerchant && scoped.length === 0 && (

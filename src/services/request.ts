@@ -36,11 +36,6 @@ export function getToken(): string | null {
   return accessToken
 }
 
-/** 是否持有内存 access token */
-export function hasSession(): boolean {
-  return !!accessToken
-}
-
 /** 写入令牌：access 进内存，refresh 落盘 */
 export async function setTokens(access: string, refresh?: string): Promise<void> {
   // 改动说明：原写 memoryToken（不存在的变量，实际创建了幽灵全局），真正的 accessToken

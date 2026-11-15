@@ -9,6 +9,8 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { useAuthStore } from '../../stores/auth'
+// 改动说明（v1.4.16）：未登录不渲染空表单，统一走登录引导
+import LoginGuide from '../../components/LoginGuide'
 import { getProfile, updateProfile, uploadAvatar, type ProfileInfo } from '../../services/user'
 import { pickImagePath } from '../../services/pickImage'
 import { usableImage, PRESET_AVATAR_KEYS } from '../../services/config'
@@ -28,6 +30,8 @@ export default function ProfileEditPage() {
   const t = useTheme()
   const fs = useFs()
   const fetchProfile = useAuthStore((s) => s.fetchProfile)
+  // 登录态（v1.4.16）：未登录不拉资料、不渲染空表单
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
 
   const [form, setForm] = useState({ nickname: '', avatar: '', occupation: 0, companyName: '', industry: '' })
   const [phone, setPhone] = useState('')
@@ -62,6 +66,8 @@ export default function ProfileEditPage() {
 
   /** 拉取聚合资料回填表单（仅首次显示时） */
   useDidShow(() => {
+    // 改动说明（v1.4.16）：未登录不请求资料，避免 401 后留下可提交的空表单
+    if (!isLoggedIn) return
     if (loaded) return
     getProfile()
       .then((p: ProfileInfo) => {
@@ -125,6 +131,15 @@ export default function ProfileEditPage() {
   )
 
   const inputStyle = { ...fs(15), color: t.textPrimary, textAlign: 'right' as const, flex: 1 }
+
+  // 改动说明（v1.4.16）：未登录统一走登录引导空态，不再显示空表单
+  if (!isLoggedIn) {
+    return (
+      <PageLayout nav={<NavBar title="个人信息" showBack />}>
+        <LoginGuide icon="user" text="登录后可编辑个人信息" />
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout nav={<NavBar title="个人信息" showBack />}>

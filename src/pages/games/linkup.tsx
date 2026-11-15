@@ -17,6 +17,9 @@ import MediaImage from '../../components/MediaImage'
 import { usableImage } from '../../services/config'
 import { getGameBoard, reportGameResult, type LinkupTile } from '../../services/games'
 import { vibrateSuccess } from '../../utils/haptics'
+// 改动说明（v1.4.16）：出题与结算都需登录，页面自身补登录门槛（原仅靠游戏中心列表的引导间接拦截）
+import { useAuthStore } from '../../stores/auth'
+import LoginGuide from '../../components/LoginGuide'
 
 definePageConfig({ disableScroll: true })
 
@@ -144,6 +147,8 @@ function newGameId(): string {
 /** 轴承连连看页 */
 export default function LinkupPage() {
   const t = useTheme()
+  // 登录态（v1.4.16）：未登录不参与游戏与结算
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const fs = useFs()
 
   const [tiles, setTiles] = useState<LinkupTile[]>([])
@@ -172,6 +177,8 @@ export default function LinkupPage() {
 
   /** 开新局：拉题→铺盘→预加载图片→就绪后进场 */
   const startGame = useCallback(async () => {
+    // 改动说明（v1.4.16）：未登录不拉题、不铺盘
+    if (!isLoggedIn) return
     setStatus('loading')
     const board = await getGameBoard('linkup', PAIRS)
     if (board.length < 2) {
@@ -192,7 +199,8 @@ export default function LinkupPage() {
     setTimeLeft(TOTAL_TIME)
   }, [])
 
-  useEffect(() => { void startGame() }, [startGame])
+  // 改动说明（v1.4.16）：登录成功后重新拉题入场，避免未登录早退后页面停在加载态
+  useEffect(() => { if (isLoggedIn) void startGame() }, [startGame, isLoggedIn])
 
   // 图片预加载（跨端安全：屏幕外 1px 隐藏 Image 强制拉图进原生/浏览器缓存）
   // 全部 onLoad/onError 或 3 秒超时兜底后，标记就绪才真正开始读秒——
@@ -267,6 +275,15 @@ export default function LinkupPage() {
 
   const pct = Math.max(0, Math.round((timeLeft / TOTAL_TIME) * 100))
   const barColor = pct > 30 ? t.primary : '#EF4444'
+
+  // 改动说明（v1.4.16）：未登录直接给引导空态（深链/返回栈进入也不再空跑棋盘）
+  if (!isLoggedIn) {
+    return (
+      <PageLayout nav={<NavBar title='轴承连连看' showBack />}>
+        <LoginGuide icon='gamepad-2' text='登录后才能参与游戏并领取轴承币' />
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout nav={<NavBar title='轴承连连看' showBack />}>

@@ -19,6 +19,10 @@ import NavBar from '../../components/NavBar'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useMerchantStore } from '../../stores/merchant'
+// 改动说明（v1.4.16）：未登录与未入驻分别给引导空态，不再显示"暂无商品"假空态
+import { useAuthStore } from '../../stores/auth'
+import LoginGuide from '../../components/LoginGuide'
+import MerchantGuide from '../../components/MerchantGuide'
 import { formatPriceText } from '../../utils/format'
 import {
   getMyBearings, createMyBearing, updateMyBearing, putOnShelf, takeOffShelf, restockBearing, deleteMyBearing,
@@ -99,6 +103,8 @@ export default function MerchantManagePage() {
   // 改动说明 B5：按当前选中商户判定角色（原 merchants[0] 写死首个，多商户切换失效）
   const cur = useMerchantStore((s) => s.merchants.find((m) => m.merchantId === s.currentMerchantId) ?? s.merchants[0] ?? null)
   const isAdmin = cur?.role === 'MerchantAdmin'
+  // 登录态（v1.4.16）：未登录不请求商品列表，避免 401 被吞后显示"暂无商品"
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
 
   const [items, setItems] = useState<MerchantBearingItem[]>([])
   const [total, setTotal] = useState(0)
@@ -150,6 +156,8 @@ export default function MerchantManagePage() {
   }
 
   useDidShow(() => {
+    // 改动说明（v1.4.16）：未登录或未选中商户时不发请求，交给引导空态承接
+    if (!isLoggedIn || !cur) return
     load(1, false)
   })
 
@@ -717,6 +725,22 @@ export default function MerchantManagePage() {
       )}
     </View>
   ) : undefined
+
+  // 改动说明（v1.4.16）：未登录/未入驻分别渲染引导空态，不再进入商品列表渲染分支
+  if (!isLoggedIn) {
+    return (
+      <PageLayout nav={<NavBar title="商品管理" showBack />}>
+        <LoginGuide icon="package" text="登录后可管理你的商品" />
+      </PageLayout>
+    )
+  }
+  if (!cur) {
+    return (
+      <PageLayout nav={<NavBar title="商品管理" showBack />}>
+        <MerchantGuide icon="package" text="你还没有入驻商家，入驻通过后可上架与管理商品" />
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout nav={<NavBar title="商品管理" showBack />} footer={batchFooter}>
