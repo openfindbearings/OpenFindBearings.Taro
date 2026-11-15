@@ -12,7 +12,7 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import { searchBearings, type Bearing, type BearingSearchParams } from '../../services/bearing'
 import { searchMerchants, type Merchant } from '../../services/merchant'
-import { getHome, type HomeRef } from '../../services/home'
+import { getHome, type HomeRef, type BrandRef } from '../../services/home'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useAuthStore } from '../../stores/auth'
 import { setObject } from '../../utils/storage'
@@ -20,6 +20,8 @@ import MediaImage from '../../components/MediaImage'
 // 改动说明（v1.7.62 徽章统一）：商家 Tab 列表行复用统一等级徽章（含互联网来源口径）
 import MerchantBadge from '../../components/MerchantBadge'
 import { merchantGradeNameToRank } from '../../utils/level'
+// 改动说明（v1.4.14）：品牌 Tab 展示所属国家与档次，档次枚举名统一走工具函数映射中文
+import { getBrandLevelLabel } from '../../utils/brand'
 import { openMerchant } from '../../utils/merchantNav'
 import './search.scss'
 
@@ -60,7 +62,7 @@ export default function SearchPage() {
   const [tab, setTab] = useState<TabKey>('bearing')
   const [bearings, setBearings] = useState<Bearing[]>([])
   const [merchants, setMerchants] = useState<Merchant[]>([])
-  const [brands, setBrands] = useState<HomeRef[]>([])
+  const [brands, setBrands] = useState<BrandRef[]>([])
   const [types, setTypes] = useState<HomeRef[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
@@ -488,13 +490,26 @@ export default function SearchPage() {
       {/* ===== 品牌 Tab（点击挂品牌筛选） ===== */}
       {tab === 'brand' && (
         <View className='result-list'>
-          {brands.map((b) => (
-            <View key={b.id} className='ref-row' style={{ backgroundColor: t.bgCard }} onClick={() => applyBrand(b)}>
-              <Text className='ref-name' style={{ ...fs(15), color: t.textPrimary }}>{b.name}</Text>
-              <Text className='ref-hint' style={{ ...fs(12), color: t.textTertiary }}>看该品牌轴承</Text>
-              <Icon name="chevron_right" size={18} color={t.textTertiary} />
-            </View>
-          ))}
+          {brands.map((b) => {
+            // 副行信息：所属国家 + 档次中文（两者都缺则不占位）
+            const meta = [b.country, getBrandLevelLabel(b.level)].filter(Boolean).join(' · ')
+            return (
+              <View key={b.id} className='ref-row' style={{ backgroundColor: t.bgCard }} onClick={() => applyBrand(b)}>
+                {/* 改动说明（v1.4.14）：名称与副行信息成对声明收缩策略，长名称截断不挤压右侧图标 */}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Text className='ref-name' numberOfLines={1} style={{ ...fs(15), color: t.textPrimary, flexShrink: 1, minWidth: 0 }}>{b.name}</Text>
+                    {!!meta && <Text style={{ ...fs(11), color: t.textTertiary, marginLeft: 8, flexShrink: 0 }}>{meta}</Text>}
+                  </View>
+                  {/* 品牌简介一行（缺失不渲染，避免空行撑高） */}
+                  {!!b.description && (
+                    <Text numberOfLines={1} style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>{b.description}</Text>
+                  )}
+                </View>
+                <Icon name="chevron_right" size={18} color={t.textTertiary} />
+              </View>
+            )
+          })}
         </View>
       )}
 
