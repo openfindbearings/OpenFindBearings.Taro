@@ -6,6 +6,9 @@ import { useState } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
+// 改动说明：未登录统一走 LoginGuide 引导空态，避免一直停在"加载段位数据…"
+import LoginGuide from '../../components/LoginGuide'
+import { useAuthStore } from '../../stores/auth'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
@@ -26,18 +29,30 @@ interface PerkCell {
 export default function LevelPage() {
   const t = useTheme()
   const fs = useFs()
+  // 登录态：未登录不请求段位与商家 buff（接口需身份，未登录会一直空加载）
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [ladder, setLadder] = useState<PointLadder | null>(null)
   const [buff, setBuff] = useState<MerchantBuff | null>(null)
   // 选中查看的档位号（默认当前档；tab 条点击切换，大卡随选中档展示）
   const [selected, setSelected] = useState<number>(1)
 
   useDidShow(() => {
+    if (!isLoggedIn) return
     void getPointLadder().then((r) => {
       setLadder(r)
       if (r) setSelected(r.currentLevel)
     })
     void getMerchantBuff().then(setBuff).catch(() => setBuff(null))
   })
+
+  // 改动说明：未登录先于"加载中"分支返回，展示统一登录引导
+  if (!isLoggedIn) {
+    return (
+      <PageLayout nav={<NavBar title='我的段位' showBack onBack={() => Taro.navigateBack()} />}>
+        <LoginGuide icon='medal' text='登录后查看你的段位' />
+      </PageLayout>
+    )
+  }
 
   if (!ladder) {
     return (
