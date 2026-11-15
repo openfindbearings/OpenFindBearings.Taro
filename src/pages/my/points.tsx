@@ -9,6 +9,9 @@ import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import Icon from '../../components/Icon'
+// 改动说明：未登录统一走 LoginGuide 引导空态（与收藏/关注/任务中心一致），不再展示 0 币与空列表
+import LoginGuide from '../../components/LoginGuide'
+import { useAuthStore } from '../../stores/auth'
 import { getPointAccount, getPointTransactions, GRANT_TYPE_LABELS, type PointAccount, type PointTransaction } from '../../services/points'
 import { formatTime } from '../../utils/format'
 import { getLevelBand } from '../../utils/level'
@@ -22,14 +25,17 @@ definePageConfig({ disableScroll: true })
 export default function PointsPage() {
   const t = useTheme()
   const fs = useFs()
+  // 登录态：未登录不请求账户与流水，直接展示引导空态
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [account, setAccount] = useState<PointAccount>({ balance: 0, totalEarned: 0, totalSpent: 0, todayCheckedIn: false, consecutiveDays: 0 })
   const [items, setItems] = useState<PointTransaction[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  // 进入/返回刷新（签到后回本页余额同步）
+  // 进入/返回刷新（签到后回本页余额同步）；未登录跳过请求，避免 401 与 0 币假数据
   useDidShow(() => {
+    if (!isLoggedIn) return
     void getPointAccount().then(setAccount)
     void getPointTransactions(1, PAGE_SIZE).then((r) => {
       if (r) { setItems(r.items || []); setTotal(r.totalCount || 0); setPage(1) }
@@ -38,7 +44,7 @@ export default function PointsPage() {
 
   // 触底加载下一页（简单分页，无并发锁需求外的复杂逻辑）
   const loadMore = async () => {
-    if (loading || items.length >= total) return
+    if (!isLoggedIn || loading || items.length >= total) return
     setLoading(true)
     const next = page + 1
     const r = await getPointTransactions(next, PAGE_SIZE)
@@ -64,6 +70,8 @@ export default function PointsPage() {
     //   触底加载改走 PageLayout onEndReached 透传
     onEndReached={() => void loadMore()}
     >
+      {!isLoggedIn && <LoginGuide icon='coins' text='登录后可查看轴承币收支明细' />}
+      {isLoggedIn && (
       <View>
         {/* 余额概览卡 */}
         <View style={{ backgroundColor: t.bgCard, margin: 12, borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center' }}>
@@ -151,6 +159,7 @@ export default function PointsPage() {
         {/* 底部留白防内容贴边 */}
         <View style={{ height: 24 }} />
       </View>
+      )}
     </PageLayout>
   )
 }

@@ -33,11 +33,29 @@ export interface HomeRef {
   name: string
 }
 
+/**
+ * 品牌简项（扩展字段）
+ * 说明：BFF 首页与品牌接口直接下发 BrandDto 全字段（country/level/description 等），
+ * 品牌 Tab 据此展示所属国家、档次与一句简介，无需额外请求
+ */
+export interface BrandRef extends HomeRef {
+  /** 品牌代码（如 SKF） */
+  code?: string
+  /** 所属国家 */
+  country?: string | null
+  /** 品牌档次（枚举名，如 InternationalPremium） */
+  level?: string
+  /** 品牌简介/特点 */
+  description?: string | null
+  /** 在售型号数量 */
+  bearingCount?: number
+}
+
 /** 首页聚合响应 */
 export interface HomeData {
   hotBearings: HotBearing[]
   merchants: HomeMerchant[]
-  brands: HomeRef[]
+  brands: BrandRef[]
   bearingTypes: HomeRef[]
 }
 
