@@ -49,6 +49,13 @@ export interface BrandRef extends HomeRef {
   description?: string | null
   /** 在售型号数量 */
   bearingCount?: number
+  /**
+   * 品牌名全拼检索键（服务端计算下发）
+   * 改动说明（2026-11-20）：品牌 Tab 支持拼音搜索，避免中文输入法切换
+   */
+  searchPinyin?: string
+  /** 品牌名首字母检索键（服务端计算下发） */
+  searchInitials?: string
 }
 
 /** 首页聚合响应 */
