@@ -8,12 +8,10 @@
 //   通栏「寻这个型号」在上，收藏/分享货源/纠错三等分在下；互联网来源商家号码原样展示并可点击拨号。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
-import ShareImageSheet from '../../components/ShareImageSheet'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
 import ShareButton from '../../components/ShareButton'
-import { getShareQrUrl } from '../../utils/shareQr'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
@@ -55,8 +53,6 @@ export default function BearingDetailPage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const [isFav, setIsFav] = useState(false)
   const [correctVisible, setCorrectVisible] = useState(false)
-  // 分享二维码面板（v1.4.x P0-3）：展示指向 /s 落地页的二维码，可保存用于线下物料
-  const [qrVisible, setQrVisible] = useState(false)
   // 改动说明（品牌与类型资料完善）：资料卡默认收起，点击标题行就地展开，避免长文本挤压正文
   const [brandOpen, setBrandOpen] = useState(false)
   const [typeOpen, setTypeOpen] = useState(false)
@@ -460,10 +456,6 @@ export default function BearingDetailPage() {
               style={{ flex: 1, height: 44, borderRadius: 12 }}
             />
             <View style={{ width: 8 }} />
-            <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={() => setQrVisible(true)}>
-              <Icon name="qr-code" size={16} color={t.textSecondary} />
-            </View>
-            <View style={{ width: 8 }} />
             <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={handleCorrect}>
               <Icon name="edit" size={16} color={t.textSecondary} />
               <Text className='bd-action-ghost-text' style={{ ...fs(14), color: t.textSecondary }}>纠错</Text>
@@ -472,13 +464,6 @@ export default function BearingDetailPage() {
         </View>
       </View>
       <CorrectionSheet visible={correctVisible} targetType='Bearing' targetId={id} onClose={() => setCorrectVisible(false)} />
-      <ShareImageSheet
-        visible={qrVisible}
-        title={`分享 ${detail?.partNumber || '该型号'} 二维码`}
-        imageUrl={id ? getShareQrUrl('bearing', id, 'qr') : ''}
-        hint='微信扫一扫，或长按图片识别二维码'
-        onClose={() => setQrVisible(false)}
-      />
     </PageLayout>
   )
 }
