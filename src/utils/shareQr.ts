@@ -1,19 +1,20 @@
-// 分享二维码地址构造（扫码与分享需求 v0.1.0 P0-1/P0-3）。
-// 二维码由 BFF 端点 /s/qr 生成，内容指向 /s 落地页；H5 走同源（生产由 nginx 反代 /s/，
-// 开发由 devServer 代理），RN 与小程序走 BFF 绝对地址（与业务请求同一 base）。
-import { getBaseUrl } from '../services/config'
+// 分享素材地址构造（扫码与分享需求 v0.1.0）：
+// 二维码与海报均由 API 生成，BFF 提供 /mobile/share/* 匿名转发，移动端只依赖 BFF 一个域名。
+// H5 走同源（devServer 已代理 /mobile），RN 与小程序走 BFF 绝对地址（与业务请求同一 base）。
+import { getBaseUrl, API_PREFIX } from '../services/config'
 
-/** 分享来源白名单，与 BFF 侧保持一致 */
+/** 分享来源白名单，与 API 侧保持一致 */
 export type ShareSource = 'app' | 'h5' | 'weapp' | 'qr' | 'poster'
 
-/** 二维码目标类型 */
-export type ShareQrTarget = 'bearing' | 'merchant'
+/** 分享素材目标类型 */
+export type ShareTarget = 'bearing' | 'merchant'
 
-/**
- * 构造分享二维码图片地址。
- * type 决定落地页形态（轴承货源 / 商家店铺），src 用于后续来源统计。
- */
-export function getShareQrUrl(type: ShareQrTarget, id: string, src: ShareSource = 'qr'): string {
-  const base = getBaseUrl()
-  return `${base}/s/qr?type=${type}&id=${encodeURIComponent(id)}&src=${src}`
+/** 构造分享二维码图片地址 */
+export function getShareQrUrl(type: ShareTarget, id: string, src: ShareSource = 'qr'): string {
+  return `${getBaseUrl()}${API_PREFIX}/share/qr?type=${type}&id=${encodeURIComponent(id)}&src=${src}`
+}
+
+/** 构造分享海报图片地址（后端合成，三端只负责展示与保存） */
+export function getSharePosterUrl(type: ShareTarget, id: string, src: ShareSource = 'poster'): string {
+  return `${getBaseUrl()}${API_PREFIX}/share/poster?type=${type}&id=${encodeURIComponent(id)}&src=${src}`
 }

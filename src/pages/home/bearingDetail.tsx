@@ -8,7 +8,7 @@
 //   通栏「寻这个型号」在上，收藏/分享货源/纠错三等分在下；互联网来源商家号码原样展示并可点击拨号。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
-import ShareQrSheet from '../../components/ShareQrSheet'
+import ShareImageSheet from '../../components/ShareImageSheet'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
@@ -472,10 +472,11 @@ export default function BearingDetailPage() {
         </View>
       </View>
       <CorrectionSheet visible={correctVisible} targetType='Bearing' targetId={id} onClose={() => setCorrectVisible(false)} />
-      <ShareQrSheet
+      <ShareImageSheet
         visible={qrVisible}
         title={`分享 ${detail?.partNumber || '该型号'} 二维码`}
-        qrUrl={id ? getShareQrUrl('bearing', id, 'qr') : ''}
+        imageUrl={id ? getShareQrUrl('bearing', id, 'qr') : ''}
+        hint='微信扫一扫，或长按图片识别二维码'
         onClose={() => setQrVisible(false)}
       />
     </PageLayout>
