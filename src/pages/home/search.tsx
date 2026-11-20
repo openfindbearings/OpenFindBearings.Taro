@@ -68,6 +68,9 @@ export default function SearchPage() {
   const [searched, setSearched] = useState(false)
   const [searchError, setSearchError] = useState(false)
   const reqIdRef = useRef(0)
+  // 改动说明（v1.4.18）：useDidShow 与输入框 onConfirm 会重复触发同一关键词搜索，
+  //   落地时各切一次 Tab，表现为页面闪两下；这里按「关键词 + 时间窗」去重
+  const lastQueryRef = useRef<{ kw: string; at: number }>({ kw: '', at: 0 })
 
   // 轴承 Tab 的排序/筛选状态
   const [sortBy, setSortBy] = useState<NonNullable<BearingSearchParams['sortBy']>>('partnumber')
@@ -137,6 +140,11 @@ export default function SearchPage() {
   // 关键词搜索：并发取 轴承/商家/品牌/类型，完成后自动选命中最多的 Tab
   const runSearch = async (kw: string) => {
     if (!kw.trim()) return
+    // 改动说明（v1.4.18）：同一关键词 800ms 内只发一次，避免 useDidShow 与 onConfirm
+    //   双触发导致两次结果各自切 Tab，页面闪两下
+    const now = Date.now()
+    if (lastQueryRef.current.kw === kw.trim() && now - lastQueryRef.current.at < 800) return
+    lastQueryRef.current = { kw: kw.trim(), at: now }
     const myId = ++reqIdRef.current
     setLoading(true)
     setSearchError(false)
@@ -173,6 +181,8 @@ export default function SearchPage() {
         { key: 'brand', n: br.length },
         { key: 'type', n: ty.length }
       ]
+      // 改动说明（v1.4.18）：结果落地后一步跳到命中数最多的 Tab；
+      //   reduce 用严格大于比较且以「轴承」为初始值，因此各 Tab 数量相同时停留在轴承 Tab
       const best = counts.reduce((a, c) => (c.n > a.n ? c : a), counts[0])
       if (best.n > 0) setTab(best.key)
     }
@@ -327,7 +337,9 @@ export default function SearchPage() {
         {TABS.map((tb) => (
           <View key={tb.key} className='search-tab' onClick={() => setTab(tb.key)}>
             <Text className='search-tab-text' style={{ ...fs(15), color: tab === tb.key ? t.primaryText : t.textSecondary, fontWeight: tab === tb.key ? 'bold' : 'normal' }}>
-              {searched ? `${tb.label} ${tabCounts[tb.key]}` : tb.label}
+              {/* 改动说明（v1.4.18）：请求未返回前计数显示占位符，
+                  避免先闪「轴承 0」再跳到有结果的 Tab */}
+              {searched ? `${tb.label} ${loading ? '·' : tabCounts[tb.key]}` : tb.label}
             </Text>
             {tab === tb.key && <View className='search-tab-underline' style={{ backgroundColor: t.primary }} />}
           </View>
