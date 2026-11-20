@@ -41,6 +41,12 @@ module.exports = {
           target: 'http://localhost:16020',
           changeOrigin: true,
           secure: false
+        },
+        // 分享落地页与二维码：生产由 nginx 把 /s/ 反代到 BFF，开发期由本代理转发
+        '/s': {
+          target: 'http://localhost:16020',
+          changeOrigin: true,
+          secure: false
         }
       }
     }

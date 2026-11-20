@@ -18,6 +18,8 @@ import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import MediaImage from '../../components/MediaImage'
 import LoginGuide from '../../components/LoginGuide'
+import ShareImageSheet from '../../components/ShareImageSheet'
+import { getSharePosterUrl } from '../../utils/shareQr'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
 import { getTreasury, getGiftOrders, type TreasuryAccount } from '../../services/gifts'
@@ -62,6 +64,8 @@ export default function MerchantHomePage() {
   const [ranking, setRanking] = useState<MerchantRanking | null>(null)
   // v2.16.0 dashboard 概览/待办
   const [stats, setStats] = useState<DashStats>({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0, followers: 0 })
+  // 店铺海报面板（扫码与分享需求 P0-4）：后端合成图片，前端只负责展示与保存
+  const [posterVisible, setPosterVisible] = useState(false)
 
   const isAdmin = current?.role === 'MerchantAdmin'
 
@@ -136,8 +140,16 @@ export default function MerchantHomePage() {
         <View style={{ display: 'flex', alignItems: 'center', marginTop: 60 }}>
           <Icon name='store' size={40} color={t.textTertiary} />
           <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无生效中的商家，可在商家 tab 入驻或受聘</Text>
-        </View>
-      </PageLayout>
+</View>
+      <ShareImageSheet
+        visible={posterVisible}
+        title={`${current.merchantName} · 店铺海报`}
+        imageUrl={current.merchantId ? getSharePosterUrl('merchant', current.merchantId, 'poster') : ''}
+        hint='保存图片后可印发名片、包装与展台物料，扫码进入店铺'
+        imageSize={300}
+        onClose={() => setPosterVisible(false)}
+      />
+    </PageLayout>
     )
   }
 
@@ -177,12 +189,20 @@ export default function MerchantHomePage() {
               <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>{current.merchantName}</Text>
               {/* 改动说明：搜索/商城点自家商户已直接进本页工作台，这里补反向入口，
                   需要时仍可查看顾客视角的店铺主页（带关注/纠错等公开信息） */}
-              <View
+<View
                 style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: 8, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
                 onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${current.merchantId}` })}
               >
                 <Icon name='eye' size={11} color={t.textSecondary} />
                 <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺主页</Text>
+              </View>
+              {/* 店铺海报入口（P0-4）：后端合成含二维码的海报，用于名片/包装/展台物料 */}
+              <View
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+                onClick={() => setPosterVisible(true)}
+              >
+                <Icon name='image' size={11} color={t.textSecondary} />
+                <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺海报</Text>
               </View>
             </View>
             {/* v2.13.0 等级玩法真机调整：删冗余副标题"与成员共同经营"（角色已由彩牌表达，

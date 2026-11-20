@@ -18,8 +18,8 @@ import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
-// 改动说明（pro 扩展缝）：首页快捷三钮（语音/拍/扫）与智能模式页面已迁往自用 pro 包——
-// 开源构建时 @ofb/taro-pro 被 alias 指向 src/ext/pro.ts 占位（三钮渲染空、智能模式提示暂未上线）
+// 扩展点（src/ext/pro）：首页快捷入口、搜索框扩展图标与智能模式内容由本路径提供实现，
+// 默认实现不渲染快捷入口与扩展图标，智能模式显示提示
 import { ProQuickActions, ProSearchExtras, ProSmartHome } from '../../ext/pro'
 import { openMerchant } from '../../utils/merchantNav'
 import './index.scss'
@@ -87,8 +87,7 @@ export default function HomePage() {
     Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(keyword.trim())}` })
   }, [keyword, saveHistory])
 
-  // 改动说明（pro 扩展缝）：语音/拍/扫三钮实现移入 pro 包，此处直接渲染 pro 扩展组件；
-  // 开源版占位返回 null（三钮不显示），自用版显示三钮
+  // 首页快捷入口由扩展点组件渲染，默认实现返回 null（不显示）
   const quickActions = <ProQuickActions t={t} fs={fs} />
 
   const handleHistoryClick = useCallback((kw: string) => {
@@ -122,14 +121,14 @@ export default function HomePage() {
         confirmType='search'
       />
       <View className='search-actions'>
-        {/* 改动说明（pro 扩展缝）：搜索框内语音/拍照快捷图标移入 pro 包，开源版不显示 */}
+        {/* 搜索框内扩展图标由扩展点提供，默认实现不渲染 */}
         <ProSearchExtras t={t} />
       </View>
     </View>
   )
 
-  // 智能模式（pro 扩展缝）：页面骨架在主仓，内容由 pro 包渲染聊天窗；
-  // 开源版占位 ProSmartHome 渲染"智能模式暂未上线"提示（存量 homeMode=smart 数据的安全兜底）
+  // 智能模式：页面骨架在此，内容由扩展点渲染；
+  // 默认实现渲染"智能模式暂未上线"提示（存量 homeMode=smart 数据的安全兜底）
   if (effectiveMode === 'smart') {
     return (
       <PageLayout nav={<NavBar title="智能助手" />} tabbar={<CustomTabBar />} scrollY={false}>
