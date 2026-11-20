@@ -1,4 +1,4 @@
-﻿// 搜索结果页：单关键字查 轴承/商家/品牌/类型 四类（顶部 Tab）。
+// 搜索结果页：单关键字查 轴承/商家/品牌/类型 四类（顶部 Tab）。
 // 轴承 Tab 采用主流结果页范式：排序栏（综合/型号/内径/外径/宽度/热度，点击切换升降序）+ 尺寸筛选面板 + 已选筛选 chips。
 // 品牌/类型 Tab 点击 → 切到轴承 Tab 并挂上该品牌/类型筛选（chip 可清除），不另开页。
 // 数据：轴承/商家走 BFF 搜索；品牌/类型用 /home 全量列表前端过滤。
@@ -151,7 +151,11 @@ export default function SearchPage() {
     if (myId !== reqIdRef.current) return
     const b = bRes?.items || []
     const m = mRes?.items || []
-    const br = (hRes?.brands || []).filter((x) => x.name.toLowerCase().includes(lk))
+    const br = (hRes?.brands || []).filter((x) =>
+      x.name.toLowerCase().includes(lk) ||
+      (x.searchPinyin || '').includes(lk) ||
+      (x.searchInitials || '').includes(lk) ||
+      (x.searchPinyinFuzzy || '').includes(lk))
     const ty = (hRes?.bearingTypes || []).filter((x) => x.name.toLowerCase().includes(lk))
     setBearings(b)
     setMerchants(m)

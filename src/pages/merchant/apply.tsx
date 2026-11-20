@@ -728,7 +728,7 @@ export default function MerchantApplyPage() {
   const renderSearch = () => (
     <View>
       <Text style={{ ...fs(13), color: t.textSecondary, marginBottom: 10 }}>
-        输入商家名称关键字，查询商家全称
+        输入商家名称、全拼或首字母，查询商家全称
       </Text>
       {/* 描边胶囊 + 放大镜：让搜索框在浅灰卡片背景上足够醒目（修复：原无边框浅灰底不明显） */}
       <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border, paddingLeft: 12, paddingRight: 12 }}>
@@ -736,7 +736,7 @@ export default function MerchantApplyPage() {
         <Input
           style={{ flex: 1, ...fs(15), color: t.textPrimary, marginLeft: 8, paddingTop: 11, paddingBottom: 11, minHeight: 42 }}
           value={keyword}
-          placeholder="输入关键字，如：人本 / 光洋 / 轴承"
+          placeholder="如：人本 / rbzc / 轴承"
           placeholderClass="auth-ph" placeholderTextColor={t.textTertiary}
           onInput={(e) => onSearchInput(e.detail.value)}
           confirmType="search"
