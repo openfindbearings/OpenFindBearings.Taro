@@ -8,6 +8,7 @@ import OverlaySheet from '../OverlaySheet'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { showTip } from '../../utils/toast'
+import { saveImageToAlbum } from '../../utils/saveImage'
 
 interface Props {
   /** 是否可见（false 时整体不渲染，避免隐藏层拦截触摸） */
@@ -31,13 +32,14 @@ export default function ShareImageSheet({ visible, title, imageUrl, hint, imageS
   const t = useTheme()
   const fs = useFs()
 
-  // 预览图片：小程序与 H5 由 Taro 接管；RN 无原生预览能力，提示直接截图
-  const handlePreview = () => {
-    if (process.env.TARO_ENV === 'rn') {
-      showTip('长按图片或截图保存')
-      return
+  // 保存图片到相册：三端统一走 saveImageToAlbum（H5 下载、小程序相册、RN 原生写入）
+  const handleSave = async () => {
+    try {
+      await saveImageToAlbum(imageUrl)
+      showTip('已保存到相册')
+    } catch {
+      showTip('保存失败，请稍后重试')
     }
-    Taro.previewImage({ urls: [imageUrl], current: imageUrl })
   }
 
   return (
@@ -64,9 +66,9 @@ export default function ShareImageSheet({ visible, title, imageUrl, hint, imageS
 
       <View
         style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 12, backgroundColor: t.primary, marginTop: 8 }}
-        onClick={handlePreview}
+        onClick={() => void handleSave()}
       >
-        <Text style={{ ...fs(15, true), color: t.textOnPrimary }}>查看大图 / 保存</Text>
+        <Text style={{ ...fs(15, true), color: t.textOnPrimary }}>保存图片</Text>
       </View>
     </OverlaySheet>
   )
