@@ -1,4 +1,4 @@
-﻿// 商城服务（v2.3.0 商城虚拟权益）：目录 / 积分兑换 / 我的订单，走 BFF /mobile/mall/*
+// 商城服务（v2.3.0 商城虚拟权益）：目录 / 积分兑换 / 我的订单，走 BFF /mobile/mall/*
 // 一期实装置顶卡：兑换须带 targetRef=MerchantBearingId（商品管理页"置顶"入口）
 // 改动说明（v2.14.0 商城导购）：新增货源流 getMallFeed——商城 Tab 商品瀑布流数据源
 import { request } from './request'
@@ -143,6 +143,29 @@ export interface MallFeedItem {
   /** v2.15.0 状态统一：销售态 0=已下架/1=出售中/2=补货中 */
   saleState: number
   restockEta?: string | null
+}
+
+/** 商品详情里的商家摘要（对齐 BFF MallItemMerchant） */
+export interface MallItemMerchant {
+  id: string
+  name: string
+  logoUrl?: string | null
+  grade?: string | null
+  isVerified: boolean
+  phone?: string | null
+}
+
+/** 商城商品详情（对齐 BFF MallItemDetail）：商家 x 商品维度单品 */
+export interface MallItemDetail {
+  item: MallFeedItem
+  merchant: MallItemMerchant
+  bearingDescription?: string | null
+  brandDescription?: string | null
+}
+
+/** 拉取商城商品详情（匿名可访问） */
+export function getMallItemDetail(id: string) {
+  return request.get<MallItemDetail>(`${API}/mall/items/${id}`)
 }
 
 /** 货源流查询参数（品牌/类型/尺寸/类别过滤 + 排序分页） */

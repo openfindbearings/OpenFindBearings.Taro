@@ -13,6 +13,8 @@ export default defineAppConfig({
     'pages/merchant/demands',
     'pages/merchant/index',
     'pages/mall/index',
+    // v1.4.26 批次一：商城商品详情（商家 x 商品维度）
+    'pages/mall/product',
     'pages/merchant/apply',
     'pages/merchant/members',
     'pages/merchant/manage',
