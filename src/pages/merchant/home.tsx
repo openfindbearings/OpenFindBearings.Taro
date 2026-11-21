@@ -56,6 +56,8 @@ export default function MerchantHomePage() {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   // 管理对象=当前商家上下文（多商家切换走商家 tab，本页跟随 currentMerchant）
   const current = useMerchantStore((s) => s.currentMerchant())
+  // 改动说明（v1.4.28）：多商户时头部提供切换入口，跳商户列表页（列表内可切换/设默认）
+  const merchants = useMerchantStore((s) => s.merchants)
   const [treasury, setTreasury] = useState<TreasuryAccount | null>(null)
   const [ach, setAch] = useState<AchievementWall | null>(null)
   const [mtasks, setMtasks] = useState<MerchantTasksResult | null>(null)
@@ -204,6 +206,15 @@ export default function MerchantHomePage() {
                 <Icon name='image' size={11} color={t.textSecondary} />
                 <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺海报</Text>
               </View>
+              {merchants.length > 1 && (
+                <View
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/index' })}
+                >
+                  <Icon name='repeat' size={11} color={t.textSecondary} />
+                  <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>切换商户</Text>
+                </View>
+              )}
             </View>
             {/* v2.13.0 等级玩法真机调整：删冗余副标题"与成员共同经营"（角色已由彩牌表达，
                 共经营是默认事实无信息量）；第二行=角色文字 + 商家等级彩牌（独立成行不再挤名字行），

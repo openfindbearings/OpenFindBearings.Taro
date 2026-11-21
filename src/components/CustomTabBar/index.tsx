@@ -3,7 +3,7 @@
 // 商家已入驻时中间 tab 换 56dp 大圆 + 48dp logo（无 logo 用 28dp store 图标）。
 // 改动说明（多商户）：中间商家 tab 改为直接订阅 useMerchantStore（merchants/currentMerchantId），
 //   实时反映"当前商户"的 logo/名称，不再读会漂移的 merchant_logo/merchant_name 单值 storage 镜像；
-//   多商户时点击中间 tab 弹 MerchantSwitchSheet 切换（等价 GitHub Mobile 账户切换器）。
+//   改动说明（v1.4.28 批次二）：已入驻时点中间 tab 直达当前/默认商户工作台，切换入口移到工作台头部。
 import { useState, useEffect } from 'react'
 import Icon from '../Icon'
 import { View, Text, Image } from '@tarojs/components'
@@ -13,7 +13,6 @@ import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { useMerchantStore } from '../../stores/merchant'
 import { useNotificationStore } from '../../stores/notification'
-import { showMerchantSwitchSheet, MerchantSwitchItem } from '../MerchantSwitchSheet'
 import { usableImage } from '../../services/config'
 import './index.scss'
 
@@ -34,7 +33,6 @@ export default function CustomTabBar() {
   // 订阅商户 store（真实事实源）：多商户列表 + 当前选中 + 切换动作
   const merchants = useMerchantStore((s) => s.merchants)
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
-  const switchMerchant = useMerchantStore((s) => s.switchMerchant)
   const pendingCount = useMerchantStore((s) => s.pendingCount)
   // 改动说明：站内信未读角标——订阅 notification store；CustomTabBar 随页面切换重挂载，
   //   故 mount 时拉一次未读数即可实现"切 tab 自动刷新"，无需轮询
@@ -63,69 +61,18 @@ export default function CustomTabBar() {
     }
   }, [])
 
-  /** 中间商家 tab 点击：多商户弹切换 sheet（切换/申请新商户），单/零商户正常进商户页 */
-  const onMerchantTap = async () => {
-    if (merchants.length > 1) {
-      const items: MerchantSwitchItem[] = merchants.map((m) => ({
-        id: m.merchantId, name: m.merchantName, logoUrl: m.logoUrl, role: m.role
-      }))
-      const r = await showMerchantSwitchSheet(items, currentMerchantId)
-      if (r.action === 'switch' && r.merchantId) {
-        await switchMerchant(r.merchantId)
-      } else if (r.action === 'add') {
-        Taro.navigateTo({ url: '/pages/merchant/apply' })
-        return
-      }
-      // 改动说明（v1.7.12）：多商户点中间 tab = "切换器 + 进商户页"二合一——无论切了商户、
-      //   取消选择还是维持原商户，都要落到商户页（tab 基本语义，取消弹窗不能把切 tab 也吞了）；
-      //   已在商户页时不重复跳转，仅随 store 刷新
-      if (selected !== 2) Taro.redirectTo({ url: '/pages/merchant/index' })
+  /**
+   * 中间商家 tab 点击（v1.4.28 批次二）：已入驻直达当前/默认商户工作台，
+   * 不再进商户列表；切换入口在工作台头部「切换商户」。零商户仍进入驻页。
+   */
+  const onMerchantTap = () => {
+    if (selected === 2) return
+    if (approved) {
+      Taro.redirectTo({ url: '/pages/merchant/home' })
       return
     }
-    if (selected !== 2) Taro.redirectTo({ url: '/pages/merchant/index' })
+    Taro.redirectTo({ url: '/pages/merchant/index' })
   }
-
-  const handleSwitch = (index: number, path: string) => {
-    // 改动说明（v1.7.5）：五格改造后商家 tab 下标 1→2
-    if (index === 2) { void onMerchantTap(); return }
-    if (index === selected) return
-    // 自绘 TabBar 无原生 switchTab，用 redirectTo（H5/RN 均为 replace 语义）切换
-    Taro.redirectTo({ url: path })
-  }
-
-  /** TabBar key 到 Icon name 的映射（跨端统一用 Icon 抽象层；v1.7.5 加 discover/mall） */
-  function getIconName(key: string): string {
-    if (key === 'home') return 'home'
-    if (key === 'discover') return 'compass'
-    if (key === 'merchant') return 'store'
-    if (key === 'mall') return 'gift'
-    return 'user'
-  }
-
-  // 商家 tab 文案：固定"商家"（改动说明 v1.7.2：原已生效显示商户名，长名称把 tab 撑爆，
-  //   tab 是导航入口不是身份位，商户名由商户页头部承载；仅审核中提示状态；否则"入驻"）
-  const getMerchantText = () => {
-    if (approved) return '商家'
-    if (pendingCount > 0) return '审核中'
-    return '入驻'
-  }
-
-  // 底部安全区内嵌（手势条/Home Indicator），标准 useSafeAreaInserts
-  const { bottom } = useSafeArea()
-  // 主题色板（栏底/边框/选中态/大圆）+ 全局字号
-  const t = useTheme()
-  const fs = useFs()
-
-  // 大圆阴影双端写法：iOS 走 shadow 四件套，Android 走 elevation（Taro 不自动转换）。
-  const highlightStyle = {
-    backgroundColor: t.primary,
-    shadowColor: 'rgba(15, 23, 42, 0.2)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
-    shadowOpacity: 1,
-    elevation: 4
-  } as any
-
   return (
     <View className='tab-bar' style={{ paddingBottom: bottom, backgroundColor: t.tabBarBg, borderTopColor: t.tabBarBorder }}>
       {tabs.map((tab, idx) => {
