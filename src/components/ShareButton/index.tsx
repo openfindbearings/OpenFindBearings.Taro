@@ -1,4 +1,4 @@
-﻿// 分享按钮（三端统一入口）：点按打开分享面板，按端展示可用渠道。
+// 分享按钮（三端统一入口）：点按打开分享面板，按端展示可用渠道。
 // 小程序：使用原生 open-type=share 的按钮发卡片（标题/路径由页面 useShareMessage 设置），
 //   复制链接、二维码、海报同样在面板内提供（站外分享与线下物料走这几个）。
 // H5/RN：系统分享（Web Share / RN Share）、复制链接、二维码、海报。
@@ -8,6 +8,7 @@ import { View, Text, Button } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import Icon from '../Icon'
 import ShareImageSheet from '../ShareImageSheet'
+import OverlaySheet from '../OverlaySheet'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import { shareContent, toShareUrl } from '../../utils/share'
@@ -106,68 +107,60 @@ export default function ShareButton({ title, path, imageUrl, label = '分享', s
         </View>
       )}
 
-      {panelVisible && (
-        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', zIndex: 100 }} onClick={() => setPanelVisible(false)}>
-          <View
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.bgCard, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, zIndex: 101 }}
-            onClick={env === 'rn' ? undefined : (e) => e?.stopPropagation?.()}
-          >
-            <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ ...fs(17), fontWeight: 'bold', color: t.textPrimary, flexShrink: 1 }} numberOfLines={1}>分享</Text>
-              <Icon name="x" size={20} color={t.textTertiary} onClick={() => setPanelVisible(false)} />
-            </View>
-
-            <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
-              {nativeShare && (
-                <Button openType="share" className="share-btn" style={{ width: 72, margin: 0, padding: 0, backgroundColor: 'transparent', lineHeight: 'normal', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="message-circle" size={22} color={t.primary} />
-                  </View>
-                  <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>发送给朋友</Text>
-                </Button>
-              )}
-              {!nativeShare && (
-                <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => void handleSystemShare()}>
-                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="share-2" size={22} color={t.primary} />
-                  </View>
-                  <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>系统分享</Text>
-                </View>
-              )}
-              <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => void handleCopy()}>
-                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="link" size={22} color={t.primary} />
-                </View>
-                <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>复制链接</Text>
-              </View>
-              {target && targetId && (
-                <>
-                  <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => openAsset('qr')}>
-                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon name="qr-code" size={22} color={t.primary} />
-                    </View>
-                    <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>二维码</Text>
-                  </View>
-                  <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => openAsset('poster')}>
-                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon name="image" size={22} color={t.primary} />
-                    </View>
-                    <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>海报</Text>
-                  </View>
-                </>
-              )}
-            </View>
-
-            <View
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 12, backgroundColor: t.bgInput, marginTop: 16 }}
-              onClick={() => setPanelVisible(false)}
-            >
-              <Text style={{ ...fs(15), color: t.textSecondary }}>取消</Text>
-            </View>
-          </View>
+      <OverlaySheet visible={panelVisible} onClose={() => setPanelVisible(false)}>
+        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <Text style={{ ...fs(17), fontWeight: 'bold', color: t.textPrimary, flexShrink: 1 }} numberOfLines={1}>分享</Text>
+          <Icon name="x" size={20} color={t.textTertiary} onClick={() => setPanelVisible(false)} />
         </View>
-      )}
 
+        <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
+          {nativeShare && (
+            <Button openType="share" className="share-btn" style={{ width: 72, margin: 0, padding: 0, backgroundColor: 'transparent', lineHeight: 'normal', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="message-circle" size={22} color={t.primary} />
+              </View>
+              <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>发送给朋友</Text>
+            </Button>
+          )}
+          {!nativeShare && (
+            <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => void handleSystemShare()}>
+              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="share-2" size={22} color={t.primary} />
+              </View>
+              <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>系统分享</Text>
+            </View>
+          )}
+          <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => void handleCopy()}>
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="link" size={22} color={t.primary} />
+            </View>
+            <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>复制链接</Text>
+          </View>
+          {target && targetId && (
+            <>
+              <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => openAsset('qr')}>
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="qr-code" size={22} color={t.primary} />
+                </View>
+                <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>二维码</Text>
+              </View>
+              <View style={{ width: 72, display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={() => openAsset('poster')}>
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="image" size={22} color={t.primary} />
+                </View>
+                <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 6 }}>海报</Text>
+              </View>
+            </>
+          )}
+        </View>
+
+        <View
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 12, backgroundColor: t.bgInput, marginTop: 16 }}
+          onClick={() => setPanelVisible(false)}
+        >
+          <Text style={{ ...fs(15), color: t.textSecondary }}>取消</Text>
+        </View>
+      </OverlaySheet>
       <ShareImageSheet
         visible={!!sheet}
         title={sheet?.title ?? ''}
