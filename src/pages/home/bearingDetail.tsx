@@ -328,8 +328,54 @@ export default function BearingDetailPage() {
   const brandProfile = detail?.brandProfile
   const typeProfile = detail?.typeProfile
 
+  /**
+   * 底部常驻操作条（v1.4.26）：收藏 / 分享 / 纠错三个竖排图标 + 主按钮「寻这个型号」。
+   * 改成常驻后，在售商家或替代品再多也不用滚到页尾才能操作；页面内容顺序不变。
+   * 路径说明文案放在条内顶部一行，随主按钮一起常驻。
+   */
+  const actionFooter = (
+    <View style={{ backgroundColor: t.bgCard, borderTopWidth: 1, borderTopColor: t.border }}>
+      <Text
+        numberOfLines={1}
+        style={{ ...fs(11), color: t.textTertiary, paddingLeft: 12, paddingRight: 12, paddingTop: 6 }}
+      >
+        {!isLoggedIn
+          ? '登录后可寻这个型号，认证商家会收到通知'
+          : verifiedCount > 0
+            ? `当前 ${verifiedCount} 家认证商家有货：可公开发布，也可只邀请他们报价`
+            : '暂无认证商家在售，公开后如有匹配商家会收到通知'}
+      </Text>
+      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 6, paddingRight: 12, paddingTop: 2, paddingBottom: 8 }}>
+        <View style={{ width: 52, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 4, paddingBottom: 4 }} onClick={handleFavorite}>
+          <Icon name="heart" size={20} color={isFav ? t.danger : t.textSecondary} />
+          <Text style={{ ...fs(11), color: isFav ? t.danger : t.textSecondary, marginTop: 4 }}>{isFav ? '已收藏' : '收藏'}</Text>
+        </View>
+        <ShareButton
+          title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台邀请报价`}
+          path={`/s/bearing/${id}?view=supply`}
+          label="分享"
+          color={t.textSecondary}
+          column
+        />
+        <View style={{ width: 52, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 4, paddingBottom: 4 }} onClick={handleCorrect}>
+          <Icon name="edit" size={20} color={t.textSecondary} />
+          <Text style={{ ...fs(11), color: t.textSecondary, marginTop: 4 }}>纠错</Text>
+        </View>
+        <View
+          style={{ flex: 1, marginLeft: 8, height: 44, borderRadius: 22, backgroundColor: t.primary, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
+          onClick={handleCreateDemand}
+        >
+          <Icon name="search" size={16} color={t.textOnPrimary} />
+          <Text style={{ ...fs(15), fontWeight: 'bold', color: t.textOnPrimary, marginLeft: 6 }}>
+            {isLoggedIn ? '寻这个型号' : '登录后寻这个型号'}
+          </Text>
+        </View>
+      </View>
+    </View>
+  )
+
   return (
-    <PageLayout nav={<NavBar title="轴承详情" showBack />}>
+    <PageLayout nav={<NavBar title="轴承详情" showBack />} footer={actionFooter}>
       <View className='bd'>
         {/* 头部：图片 + 型号 + 品牌类型 */}
         <View className='bd-hero' style={{ backgroundColor: t.bgCard }}>
@@ -419,49 +465,6 @@ export default function BearingDetailPage() {
           </View>
         )}
 
-        {/*
-          改动说明（v1.8.5 动作区重排）：主行动"寻这个型号"通栏置顶，
-          次行动收藏 / 分享货源 / 纠错三等分置于下行——分享是引流入口，保留独立位置与主题色，
-          不再与主按钮挤在同一行造成主次失衡；RN 不支持 fixed，仍在内容流末尾。
-        */}
-        <View className='bd-action-card' style={{ backgroundColor: t.bgCard }}>
-          <View className='bd-action-primary' style={{ backgroundColor: t.primary }} onClick={handleCreateDemand}>
-            <Icon name="search" size={16} color={t.textOnPrimary} />
-            <Text className='bd-action-primary-text' style={{ ...fs(15), color: t.textOnPrimary }}>
-              {isLoggedIn ? '寻这个型号' : '登录后寻这个型号'}
-            </Text>
-          </View>
-          {/* 路径说明：讲清发布后会发生什么（公开发布进大厅 / 只邀请有货认证商家） */}
-          <Text className='bd-action-hint' style={{ ...fs(11), color: t.textTertiary }}>
-            {!isLoggedIn
-              ? '登录后可寻这个型号，认证商家会收到通知'
-              : verifiedCount > 0
-                ? `当前 ${verifiedCount} 家认证商家有货：可公开发布进大厅，也可只邀请他们报价`
-                : '暂无认证商家在售，公开后如有匹配商家会收到通知'}
-          </Text>
-          {/* 改动说明（v1.9 三钮对齐）：间距改由占位 View 提供，不再用 margin——
-              flex 等分下外边距会让三个按钮的实际宽度不等；分享按钮同步传入
-              高度/圆角，避免小程序原生 button 自适应高度导致高度参差 */}
-          <View className='bd-action-row'>
-            <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={handleFavorite}>
-              <Icon name="heart" size={16} color={isFav ? t.danger : t.textSecondary} />
-              <Text className='bd-action-ghost-text' style={{ ...fs(14), color: isFav ? t.danger : t.textSecondary }}>{isFav ? '已收藏' : '收藏'}</Text>
-            </View>
-            <View style={{ width: 8 }} />
-            <ShareButton
-              title={`${detail?.partNumber || ''}${detail?.brandName ? ' · ' + detail.brandName : ''} · ${verifiedCount}家认证商家真实有货，来平台邀请报价`}
-              path={`/s/bearing/${id}?view=supply`}
-              label="分享货源"
-              color={t.primary}
-              style={{ flex: 1, height: 44, borderRadius: 12 }}
-            />
-            <View style={{ width: 8 }} />
-            <View className='bd-action-ghost' style={{ borderColor: t.border }} onClick={handleCorrect}>
-              <Icon name="edit" size={16} color={t.textSecondary} />
-              <Text className='bd-action-ghost-text' style={{ ...fs(14), color: t.textSecondary }}>纠错</Text>
-            </View>
-          </View>
-        </View>
       </View>
       <CorrectionSheet visible={correctVisible} targetType='Bearing' targetId={id} onClose={() => setCorrectVisible(false)} />
     </PageLayout>

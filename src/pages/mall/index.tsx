@@ -327,7 +327,7 @@ export default function MallPage() {
                 <View key={it.id} style={{ width: '48.5%' }}>
                   <ProductCard
                     item={it}
-                    onPress={() => goBearing(it.bearingId)}
+                    onPress={() => goProduct(it.id)}
                     onMerchant={() => goMerchant(it.merchantId)}
                     onContact={() => void contactMerchant(it)}
                   />

@@ -43,6 +43,7 @@
   "dependencies": {
     "@babel/runtime": "^7.7.7",
     "@react-native-async-storage/async-storage": "1.18.2",
+    "@react-native-camera-roll/camera-roll": "^7.10.2",
     "@tarojs/components": "3.6.40",
     "@tarojs/components-rn": "3.6.40",
     "@tarojs/helper": "3.6.40",
@@ -67,6 +68,7 @@
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-native": "^0.70.1",
+    "react-native-blob-util": "0.19.6",
     "react-native-device-info": "^15.0.2",
     "react-native-document-picker": "^9.3.1",
     "react-native-gesture-handler": "^2.16.2",
