@@ -28,7 +28,8 @@ export default class Icon extends Component<IconProps> {
     const pascalName = toPascal(name)
     const Comp: any = (Lucide as any)[pascalName]
     if (Comp) {
-      return <Comp size={size} color={color} style={style} />
+      // 改动说明（v1.4.25）：RN 的 lucide 组件不认 onClick，此前直接丢弃该属性，导致所有带 onClick 的图标（面板关闭等）点了没反应；改传 onPress
+      return <Comp size={size} color={color} style={style} onPress={onClick} />
     }
     // 找不到图标：渲染空 Text 占位（保持视觉一致）
     return (

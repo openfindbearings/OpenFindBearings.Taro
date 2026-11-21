@@ -7,6 +7,7 @@ import Icon from '../Icon'
 import OverlaySheet from '../OverlaySheet'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
+import { showTip } from '../../utils/toast'
 
 interface Props {
   /** 是否可见（false 时整体不渲染，避免隐藏层拦截触摸） */
@@ -33,7 +34,7 @@ export default function ShareImageSheet({ visible, title, imageUrl, hint, imageS
   // 预览图片：小程序与 H5 由 Taro 接管；RN 无原生预览能力，提示直接截图
   const handlePreview = () => {
     if (process.env.TARO_ENV === 'rn') {
-      Taro.showToast({ title: '长按图片或截图保存', icon: 'none' })
+      showTip('长按图片或截图保存')
       return
     }
     Taro.previewImage({ urls: [imageUrl], current: imageUrl })

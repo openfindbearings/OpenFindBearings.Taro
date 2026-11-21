@@ -14,6 +14,7 @@ import { useFs } from '../../hooks/useFontScale'
 import { shareContent, toShareUrl } from '../../utils/share'
 import { getShareQrUrl, getSharePosterUrl, type ShareTarget } from '../../utils/shareQr'
 import { copyText } from '../../utils/clipboard'
+import { showTip } from '../../utils/toast'
 
 // 改动说明（v1.7.47）：微信/抖音小程序原生 button 自带 ::after 伪元素边框，
 // 与组件内联圆角描边叠加会露出错位直线；按平台条件引入覆盖样式，
@@ -86,7 +87,7 @@ export default function ShareButton({ title, path, imageUrl, label = '分享', s
   const handleCopy = async () => {
     await copyText(toShareUrl(path))
     setPanelVisible(false)
-    Taro.showToast({ title: '链接已复制', icon: 'none' })
+    showTip('链接已复制')
   }
 
   /** H5/RN 调起系统分享面板 */
