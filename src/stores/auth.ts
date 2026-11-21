@@ -125,6 +125,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (profile) {
         set({ user: profile })
         await persistProfileFields(profile)
+        // 改动说明（v1.4.28）：默认商户以服务端为准，拉到 profile 后同步给商户 store
+        await useMerchantStore.getState().setDefaultFromServer(profile.defaultMerchantId ?? null)
       }
     } catch {
       // profile 失败不在此登出（401 已由 request 拦截处理）；保留当前登录态判断

@@ -74,7 +74,10 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const currentMerchantId = useMerchantStore((s) => s.currentMerchantId)
   const fetchApplications = useMerchantStore((s) => s.fetchApplications)
-  const switchMerchant = useMerchantStore((s) => s.switchMerchant)
+  // 改动说明（v1.4.28 批次二）：列表页是唯一切换入口——「切换」立即进该商户工作台，
+  //   「设为默认」只改后端偏好，下次冷启动/TabBar 用它
+  const defaultMerchantId = useMerchantStore((s) => s.defaultMerchantId)
+  const setDefaultMerchant = useMerchantStore((s) => s.setDefaultMerchant)
 
   const isCurrent = m.merchantId === currentMerchantId
   const isActive = m.status === 'Active'
@@ -93,6 +96,18 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
 
   // 改动说明（v2.6.0）：Suspended 卡点击已改为带 merchantId 进编辑页，原卡内 goApply（跳空白向导）移除
 
+  /** 切换商户（v1.4.28）：更新当前上下文并进入该商户工作台 */
+  const handleSwitch = async (item: MerchantApplication) => {
+    await switchMerchant(item.merchantId)
+    Taro.navigateTo({ url: '/pages/merchant/home' })
+  }
+
+  /** 设为默认商户（v1.4.28）：调后端更新账号偏好，成功后给轻提示 */
+  const handleSetDefault = async (item: MerchantApplication) => {
+    const ok = await setDefaultMerchant(item.merchantId)
+    Taro.showToast({ title: ok ? '已设为默认商户' : '设置失败，请重试', icon: 'none' })
+  }
+
   /** 删除被驳回申请：二次确认后调 BFF，成功后刷新列表（self 卡消失 / claim 退回公共池） */
   const onDelete = () => {
     showConfirmDialog({
@@ -105,7 +120,7 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
         try {
           const r = await deleteApplication(m.merchantId)
           Taro.showToast({ title: r?.message || '已删除', icon: 'none' })
-          void fetchApplications()
+  void fetchApplications()
         } catch (e) {
           Taro.showToast({ title: (e as { message?: string })?.message || '删除失败', icon: 'none' })
         }
@@ -202,8 +217,42 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             </Text>
           )}
         </View>
+        {isActive && isCurrent && (
+          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.primaryLight, flexShrink: 0 }}>
+            <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>当前</Text>
+          </View>
+        )}
+        {isActive && !isCurrent && m.merchantId === defaultMerchantId && (
+          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.bgInput, flexShrink: 0 }}>
+            <Text style={{ ...fs(10), color: t.textSecondary, fontWeight: '600' }}>默认</Text>
+          </View>
+        )}
         <Badge status={m.status} />
       </View>
+
+      {/* 切换 / 设为默认（v1.4.28 批次二）：仅 Active 商户可操作 */}
+      {isActive && (
+        <View className='mch-actions' style={{ borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.borderLight }}>
+          {!isCurrent && (
+            <View
+              className='mch-action'
+              style={{ backgroundColor: t.primaryLight }}
+              onClick={(e: any) => { e?.stopPropagation?.(); void handleSwitch(m) }}
+            >
+              <Text style={{ ...fs(13), color: t.primary }}>切换</Text>
+            </View>
+          )}
+          {m.merchantId !== defaultMerchantId && (
+            <View
+              className='mch-action'
+              style={{ backgroundColor: t.bgInput }}
+              onClick={(e: any) => { e?.stopPropagation?.(); void handleSetDefault(m) }}
+            >
+              <Text style={{ ...fs(13), color: t.textSecondary }}>设为默认</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* 未通过：给出驳回原因条 */}
       {m.status === 'Suspended' && m.rejectReason && (
@@ -273,6 +322,11 @@ export default function MerchantPage() {
   const applications = useMerchantStore((s) => s.applications)
   const pendingCount = useMerchantStore((s) => s.pendingCount)
   const fetchApplications = useMerchantStore((s) => s.fetchApplications)
+  // 改动说明（v1.4.28 批次二）：列表页是唯一切换入口——「切换」立即进该商户工作台，
+  //   「设为默认」只改后端偏好，下次冷启动/TabBar 用它
+  const switchMerchant = useMerchantStore((s) => s.switchMerchant)
+  const defaultMerchantId = useMerchantStore((s) => s.defaultMerchantId)
+  const setDefaultMerchant = useMerchantStore((s) => s.setDefaultMerchant)
 
   // 左滑互斥：全页同时只允许一张卡处于展开态，记录展开卡的 merchantId
   const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null)

@@ -4,10 +4,13 @@
 // 请求层从 merchantContext 读取并注入 X-Merchant-Id，实现多商户切换
 import { create } from 'zustand'
 import { getMerchantApplication, type MerchantApplication } from '../services/merchant'
+import { setDefaultMerchant as apiSetDefaultMerchant } from '../services/user'
 import { setCurrentMerchantId } from '../services/merchantContext'
 import { getItem, setItem, removeItem } from '../utils/storage'
 
 const CURRENT_KEY = 'current_merchant_id'
+// v1.4.28 批次二：默认商户来自后端档案，本地仅作首帧缓存
+const DEFAULT_KEY = 'default_merchant_id'
 
 /** 商户入驻状态与动作 */
 interface MerchantState {
@@ -21,11 +24,17 @@ interface MerchantState {
   pendingCount: number
   /** 当前选中商户ID（多商户操作上下文） */
   currentMerchantId: string | null
+  /** 默认商户ID（后端账号偏好，本地缓存一份供冷启动首帧） */
+  defaultMerchantId: string | null
   loading: boolean
   /** 拉取入驻状态（需登录） */
   fetchApplications: () => Promise<void>
-  /** 切换当前商户（商户切换器调用） */
+  /** 切换当前商户（商户列表「切换」按钮调用） */
   switchMerchant: (merchantId: string) => Promise<void>
+  /** 用服务端 profile 的默认商户刷新本地状态（登录/刷新资料后调用） */
+  setDefaultFromServer: (merchantId: string | null) => Promise<void>
+  /** 设为默认商户（调后端接口成功后更新本地） */
+  setDefaultMerchant: (merchantId: string) => Promise<boolean>
   /** 当前商户对象（无则 null） */
   currentMerchant: () => MerchantApplication | null
   /** 退出登录时清空 */
@@ -38,6 +47,7 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
   approved: false,
   pendingCount: 0,
   currentMerchantId: null,
+  defaultMerchantId: null,
   loading: false,
 
   fetchApplications: async () => {
@@ -53,7 +63,11 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
       // 当前选中失效（不在列表/未选）时回退首个，并同步到请求上下文模块
       const stored = await getItem(CURRENT_KEY)
       const valid = active.some((m) => m.merchantId === stored) ? stored : null
-      const current = valid ?? active[0]?.merchantId ?? null
+      // 改动说明（v1.4.28）：优先级改为 本地上次 -> 服务端默认 -> 列表首个；
+      //   服务端默认尚未拉到时先用本地缓存，保证冷启动不闪烁
+      const cachedDefault = get().defaultMerchantId ?? (await getItem(DEFAULT_KEY))
+      const defaultValid = active.some((m) => m.merchantId === cachedDefault) ? cachedDefault : null
+      const current = valid ?? defaultValid ?? active[0]?.merchantId ?? null
       setCurrentMerchantId(current)
       if (current) await setItem(CURRENT_KEY, current)
       // 改动说明 G1：merchant_approved/merchant_name/merchant_logo 降级为"真实状态的派生缓存"，
@@ -87,6 +101,23 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
     await setItem('merchant_name', target.merchantName)
     await setItem('merchant_logo', target.logoUrl || '')
     set({ currentMerchantId: merchantId })
+  },
+
+  setDefaultFromServer: async (merchantId: string | null) => {
+    set({ defaultMerchantId: merchantId })
+    if (merchantId) await setItem(DEFAULT_KEY, merchantId)
+    else await removeItem(DEFAULT_KEY)
+  },
+
+  setDefaultMerchant: async (merchantId: string) => {
+    try {
+      await apiSetDefaultMerchant(merchantId)
+      set({ defaultMerchantId: merchantId })
+      await setItem(DEFAULT_KEY, merchantId)
+      return true
+    } catch {
+      return false
+    }
   },
 
   currentMerchant: () => {

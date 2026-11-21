@@ -70,6 +70,8 @@ export interface ProfileInfo {
   industry?: string
   // 改动说明：移除 merchantId/merchantName —— 后端已废弃并删除 User.MerchantId 单值列，
   //   profile 不再返回所属商户；商户身份/列表经成员表接口获取
+  /** 默认商户 Id（v1.4.28）：商户 Tab 直达与冷启动优先级 */
+  defaultMerchantId?: string | null
   favoriteCount: number
   followCount: number
   isActive: boolean
@@ -89,6 +91,11 @@ export interface ProfileUpdateBody {
 /** 获取用户 profile（聚合） */
 export async function getProfile() {
   return request<ProfileInfo>(API.PROFILE)
+}
+
+/** 设置默认商户（v1.4.28）：账号级偏好，服务端校验在职成员关系 */
+export async function setDefaultMerchant(merchantId: string) {
+  return request<OpResult>(API.DEFAULT_MERCHANT, { method: 'PUT', data: { merchantId } })
 }
 
 /** 更新个人信息（BFF 双写 Identity + 业务库） */
