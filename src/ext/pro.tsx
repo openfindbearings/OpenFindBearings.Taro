@@ -24,14 +24,7 @@ export interface ProHomeProps {
 export const ProQuickActions: React.FC<ProHomeProps> = () => null
 
 /** 搜索框内右侧扩展图标：默认实现渲染为空 */
-export const ProSearchExtras: React.FC<ProHomeProps> = ({ t }: ProHomeProps) => (
-  <View
-    onClick={() => Taro.showToast({ title: '扫码（开发中）', icon: 'none' })}
-    style={{ width: 32, height: 32, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-  >
-    <Icon name="scan-line" size={22} color={t?.textSecondary || '#64748B'} />
-  </View>
-)
+export const ProSearchExtras: React.FC<ProHomeProps> = () => null
 
 /** 智能模式页面内容：默认实现渲染"暂未上线"提示（存量 homeMode=smart 数据的安全兜底） */
 export const ProSmartHome: React.FC<ProHomeProps> = ({ t }: ProHomeProps) => (
