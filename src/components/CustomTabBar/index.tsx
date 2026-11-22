@@ -73,6 +73,47 @@ export default function CustomTabBar() {
     }
     Taro.redirectTo({ url: '/pages/merchant/index' })
   }
+  const handleSwitch = (index: number, path: string) => {
+    // 改动说明（v1.7.5）：五格改造后商家 tab 下标 1→2
+    if (index === 2) { void onMerchantTap(); return }
+    if (index === selected) return
+    // 自绘 TabBar 无原生 switchTab，用 redirectTo（H5/RN 均为 replace 语义）切换
+    Taro.redirectTo({ url: path })
+  }
+
+  /** TabBar key 到 Icon name 的映射（跨端统一用 Icon 抽象层；v1.7.5 加 discover/mall） */
+  function getIconName(key: string): string {
+    if (key === 'home') return 'home'
+    if (key === 'discover') return 'compass'
+    if (key === 'merchant') return 'store'
+    if (key === 'mall') return 'gift'
+    return 'user'
+  }
+
+  // 商家 tab 文案：固定"商家"（改动说明 v1.7.2：原已生效显示商户名，长名称把 tab 撑爆，
+  //   tab 是导航入口不是身份位，商户名由商户页头部承载；仅审核中提示状态；否则"入驻"）
+  const getMerchantText = () => {
+    if (approved) return '商家'
+    if (pendingCount > 0) return '审核中'
+    return '入驻'
+  }
+
+  // 底部安全区内嵌（手势条/Home Indicator），标准 useSafeAreaInserts
+  const { bottom } = useSafeArea()
+  // 主题色板（栏底/边框/选中态/大圆）+ 全局字号
+  const t = useTheme()
+  const fs = useFs()
+
+  // 大圆阴影双端写法：iOS 走 shadow 四件套，Android 走 elevation（Taro 不自动转换）。
+  const highlightStyle = {
+    backgroundColor: t.primary,
+    shadowColor: 'rgba(15, 23, 42, 0.2)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    shadowOpacity: 1,
+    elevation: 4
+  } as any
+
   return (
     <View className='tab-bar' style={{ paddingBottom: bottom, backgroundColor: t.tabBarBg, borderTopColor: t.tabBarBorder }}>
       {tabs.map((tab, idx) => {

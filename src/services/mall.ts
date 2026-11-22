@@ -165,7 +165,7 @@ export interface MallItemDetail {
 
 /** 拉取商城商品详情（匿名可访问） */
 export function getMallItemDetail(id: string) {
-  return request.get<MallItemDetail>(`${API}/mall/items/${id}`)
+  return request<MallItemDetail>(API.MALL_MERCHANT_ITEM(id), { auth: false })
 }
 
 /** 货源流查询参数（品牌/类型/尺寸/类别过滤 + 排序分页） */
