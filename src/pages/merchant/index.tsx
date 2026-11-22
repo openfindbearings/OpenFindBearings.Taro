@@ -46,15 +46,6 @@ function Badge({ status }: { status: string }) {
   const t = useTheme()
   const fs = useFs()
   const meta = statusMeta(t, status)
-  /** 新增商户入口（v1.4.34）：列表页导航栏右侧「+」，进入驻申请页 */
-  const newMerchantBtn = (
-    <View
-      onClick={() => Taro.navigateTo({ url: '/pages/merchant/apply' })}
-      style={{ width: 30, height: 30, borderRadius: 15, borderStyle: 'solid', borderWidth: 1.5, borderColor: t.border, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-    >
-      <Icon name='plus' size={16} color={t.textSecondary} />
-    </View>
-  )
   return (
     // 改动说明（v1.4.11）：状态徽标固定宽度，避免被同行长名称挤压变形
     <View className='mch-badge' style={{ backgroundColor: t.bgBadge, flexShrink: 0 }}>
@@ -395,6 +386,16 @@ export default function MerchantPage() {
   // 改动说明（v1.7.19）：页面标题随入驻状态动态化，与 CustomTabBar 中间格文案同规则
   // （已入驻=商家 / 有审核中申请=审核中 / 其余=入驻），TabBar 与页面字样保持一致
   const merchantTitle = merchants.length > 0 ? '商家' : pendingCount > 0 ? '审核中' : '入驻'
+
+  /** 新增商户入口（v1.4.34）：列表页导航栏右侧「+」，进入驻申请页 */
+  const newMerchantBtn = (
+    <View
+      onClick={() => Taro.navigateTo({ url: '/pages/merchant/apply' })}
+      style={{ width: 30, height: 30, borderRadius: 15, borderStyle: 'solid', borderWidth: 1.5, borderColor: t.border, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+    >
+      <Icon name='plus' size={16} color={t.textSecondary} />
+    </View>
+  )
 
   return (
     <PageLayout nav={<NavBar title={merchantTitle} rightSlot={newMerchantBtn} />} tabbar={<CustomTabBar />}>
