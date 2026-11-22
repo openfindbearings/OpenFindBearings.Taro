@@ -130,19 +130,10 @@ export default function MerchantHomePage() {
       : []),
   ]
 
-  /** 新增商户入口（v1.4.34）：导航栏右侧圆形「+」，进入驻申请页 */
-  const newMerchantBtn = (
-    <View
-      onClick={() => Taro.navigateTo({ url: '/pages/merchant/apply' })}
-      style={{ width: 30, height: 30, borderRadius: 15, borderStyle: 'solid', borderWidth: 1.5, borderColor: t.border, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-    >
-      <Icon name='plus' size={16} color={t.textSecondary} />
-    </View>
-  )
 
   if (!isLoggedIn) {
     return (
-      <PageLayout nav={<NavBar title='商家中心' showBack rightSlot={newMerchantBtn} />}>
+      <PageLayout nav={<NavBar title='商家中心' showBack />}>
         <LoginGuide icon='store' text='登录后查看商家中心' />
       </PageLayout>
     )
@@ -150,7 +141,7 @@ export default function MerchantHomePage() {
 
   if (!current?.merchantId) {
     return (
-      <PageLayout nav={<NavBar title='商家中心' showBack rightSlot={newMerchantBtn} />}>
+      <PageLayout nav={<NavBar title='商家中心' showBack />}>
         <View style={{ display: 'flex', alignItems: 'center', marginTop: 60 }}>
           <Icon name='store' size={40} color={t.textTertiary} />
           <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无生效中的商家，可在商家 tab 入驻或受聘</Text>
@@ -177,7 +168,7 @@ export default function MerchantHomePage() {
   ].filter((x) => x.count > 0)
 
   return (
-    <PageLayout nav={<NavBar title='商家中心' showBack rightSlot={newMerchantBtn} />}>
+    <PageLayout nav={<NavBar title='商家中心' showBack />}>
       <View>
         {/* 头部：店铺概况——Logo + 名称 + 角色 + 等级彩牌 */}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
