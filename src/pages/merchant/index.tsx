@@ -170,69 +170,63 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
   }
 
   const card = (
-    <View      className='mch-card'
+    <View className='mch-card'
       // 改动说明：swipeable 时阴影/下边距上移到 SwipeCell 容器（容器 overflow:hidden 会裁掉卡片自身阴影），
       //   卡片自身置 marginBottom:0 防撑高容器导致操作条底部漏出
       style={{ backgroundColor: t.bgCard, ...(swipeable ? { marginBottom: 0 } : cardShadow) }}
       onClick={onCardTap}
     >
-      {/* 改动说明（v1.4.36）：参考户号管理卡片，生效商户首行统一为主题色色带，白字承载名称与状态 */}
-      <View className='mch-card-row' style={{ paddingTop: 12, paddingBottom: 12, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: isActive ? t.primary : t.bgCard }}>
-        <View className='mch-avatar' style={{ backgroundColor: t.primary }}>
+      {/* 顶部色带（v1.4.38）：头像 + 名称 + 认证，右下角当前/默认胶囊；信息区与操作区分层，避免全部挤在色带里 */}
+      <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 14, paddingTop: 12, paddingBottom: 12, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: isActive ? t.primary : t.bgInput }}>
+        <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : t.bgCard, overflow: 'hidden' }}>
           {src
-            // 改动说明（v1.7.4）：aspectFill 会把非正方形 logo 裁切导致视觉偏心，改 aspectFit+白底
-            //   （主流店铺头像做法：完整展示商标，留白由白底吸收），首字占位仍用主题色圆
-            // 改动说明（v1.7.8）：尺寸改走 .mch-avatar-img 类（100%），原内联 44 与 scss 换算不同步致偏心
-            ? <Image className='mch-avatar-img' src={src} mode='aspectFit' />
-            : <Text style={{ ...fs(18), color: t.textOnPrimary, fontWeight: '600' }}>{(m.merchantName || '商').slice(0, 1)}</Text>}
+            ? <Image className='mch-avatar-img' src={src} mode='aspectFit' style={{ width: 40, height: 40 }} />
+            : <Text style={{ ...fs(17), color: isActive ? t.textOnPrimary : t.primary, fontWeight: '600' }}>{(m.merchantName || '商').slice(0, 1)}</Text>}
         </View>
-        <View className='mch-mid'>
-          {/* v1.7.2 认证徽标上移至名称旁（金色小标，主流电商店铺式）：替代卡底重复提示行 */}
-          {/* 改动说明（v1.4.11 名称行收缩）：RN 的 Text 默认 flexShrink:0，长商户名会按内容宽度撑破
-              mch-mid 直接压住右侧状态徽标，导致「已认证」与「已生效」叠在同一处。名称必须 flexShrink:1
-              配 numberOfLines:1 单行省略，同行徽标 flexShrink:0 固定宽度，成对声明才不重叠 */}
+        <View style={{ flex: 1, marginLeft: 10, minWidth: 0 }}>
           <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
-            <Text className='mch-name' style={{ ...fs(15), color: t.textPrimary, flexShrink: 1, minWidth: 0 }} numberOfLines={1}>{m.merchantName}</Text>
+            <Text style={{ ...fs(15), color: isActive ? t.textOnPrimary : t.textPrimary, fontWeight: '600', flexShrink: 1, minWidth: 0 }} numberOfLines={1}>{m.merchantName}</Text>
             {isActive && m.isVerified && (
-              // 改动说明（v2.13.2 认证徽标统一）：原固定橙底白字，与首页/商品卡/寻货详情（主题色浅底主色字）分叉，
-              //   统一为主题色浅底 + 主色字，文案"已认证"
-              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : t.primaryLight, flexShrink: 0 }}>
-                <Text style={{ ...fs(10), color: isActive ? t.textOnPrimary : t.primary, fontWeight: '600' }}>已认证</Text>
+              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.22)', flexShrink: 0 }}>
+                <Text style={{ ...fs(10), color: t.textOnPrimary, fontWeight: '600' }}>已认证</Text>
               </View>
             )}
           </View>
-          {/* Pending 副标题两行（用户确认的版式）：首行状态+左滑提示、次行审核时长；
-              用两个 Text 叠放而非 \n+pre-line（RN 不支持 white-space，flex column 三端一致） */}
-          {m.status === 'Pending' ? (
-            <>
-              <Text className='mch-sub' style={{ ...fs(12), color: isActive ? 'rgba(255,255,255,0.85)' : t.textTertiary }}>已提交，左滑可撤回</Text>
-              <Text className='mch-sub' style={{ ...fs(12), color: isActive ? 'rgba(255,255,255,0.85)' : t.textTertiary }}>预计 1–3 个工作日完成审核</Text>
-            </>
-          ) : (
-            // 改动说明（v1.7.3）：副标题只标"我的角色"——认证状态由名称旁金色徽标唯一承载，
-            //   原"管理员 · 未认证"把角色与商户状态混在一句里，易误读成"管理员未认证"
-            <Text className='mch-sub' style={{ ...fs(12), color: isActive ? 'rgba(255,255,255,0.85)' : t.textTertiary }}>
-              {isActive
-                ? (roleLabel(m.role) || '商户成员')
-                : '审核未通过，点击修改重新提交，左滑可删除'}
-            </Text>
-          )}
+          <Text style={{ ...fs(12), color: isActive ? 'rgba(255,255,255,0.85)' : t.textTertiary, marginTop: 2 }} numberOfLines={1}>
+            {isActive ? (roleLabel(m.role) || '商户成员') : '审核未通过，点击修改重新提交'}
+          </Text>
         </View>
         {isActive && isCurrent && (
-          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.primaryLight, flexShrink: 0 }}>
-            <Text style={{ ...fs(10), color: isActive ? t.primary : t.primary, fontWeight: '600' }}>当前</Text>
+          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 10, backgroundColor: '#FFFFFF', flexShrink: 0 }}>
+            <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>当前</Text>
           </View>
         )}
         {isActive && !isCurrent && m.merchantId === defaultMerchantId && (
-          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.9)', flexShrink: 0 }}>
+          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 2, paddingBottom: 2, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.9)', flexShrink: 0 }}>
             <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>默认</Text>
           </View>
         )}
-        <Badge status={m.status} />
       </View>
 
-      {/* 切换 / 设为默认（v1.4.28 批次二）：仅 Active 商户可操作 */}
-      {isActive && (
+      {/* 信息区：状态徽标 + 审核提示 / 驳回原因（白底，与色带分离） */}
+      <View style={{ paddingLeft: 14, paddingRight: 14, paddingTop: 10, paddingBottom: 10 }}>
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ ...fs(12), color: t.textTertiary, flex: 1 }}>状态</Text>
+          <Badge status={m.status} />
+        </View>
+        {m.status === 'Pending' && (
+          <View style={{ marginTop: 6 }}>
+            <Text style={{ ...fs(12), color: t.textTertiary }}>已提交，左滑可撤回</Text>
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 2 }}>预计 1–3 个工作日完成审核</Text>
+          </View>
+        )}
+        {m.status === 'Suspended' && m.rejectReason && (
+          <Text style={{ ...fs(12), color: t.danger, marginTop: 6 }} numberOfLines={2}>驳回原因：{m.rejectReason}</Text>
+        )}
+      </View>
+
+      {/* 操作区：切换 / 设为默认 / 申请认证，等分文字按钮 */}
+      {isActive && ((!isCurrent) || m.merchantId !== defaultMerchantId || (isCurrent && m.role === 'MerchantAdmin' && !m.isVerified)) && (
         <View className='mch-actions' style={{ borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.borderLight }}>
           {!isCurrent && (
             <View
@@ -252,42 +246,21 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
               <Text style={{ ...fs(13), color: t.textSecondary }}>设为默认</Text>
             </View>
           )}
-        </View>
-      )}
-
-      {/* 未通过：给出驳回原因条 */}
-      {m.status === 'Suspended' && m.rejectReason && (
-        <View className='mch-reason' style={{ backgroundColor: t.bgInput }}>
-          <Text style={{ ...fs(12), color: t.danger }}>驳回原因：{m.rejectReason}</Text>
-        </View>
-      )}
-
-      {/* 当前生效商户：内联操作区
-          改动说明（v2.6.0 用户定案）：整卡点击已直进商家管理页（onCardTap），"商家管理"按钮删除；
-          仅剩申请认证业务动作（非跳转保留原位），stopPropagation 防冒泡触发卡片进管理页 */}
-      {isActive && isCurrent && m.role === 'MerchantAdmin' && !m.isVerified && (
-        <View className='mch-actions' style={{ borderStyle: 'solid', borderWidth: 0, borderTopWidth: 1, borderTopColor: t.borderLight }}>
-          <View
-            className='mch-action'
-            style={{ backgroundColor: t.bgInput }}
-            onClick={(e: any) => {
-              e?.stopPropagation?.()
-              if (m.verifyRequested) Taro.showToast({ title: '认证申请已提交，平台将优先审核', icon: 'none' })
-              else onRequestVerify()
-            }}
-          >
-            <Text style={{ ...fs(13), color: m.verifyRequested ? t.textTertiary : t.primary }}>
-              {m.verifyRequested ? '已申请认证' : '申请认证'}
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* 非当前的生效商户：引导切换 */}
-      {isActive && !isCurrent && (
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
-          <Text style={{ ...fs(12), color: t.primaryText }}>点击设为当前商户</Text>
-          <Icon name='chevron-right' size={14} color={t.primaryText} />
+          {isCurrent && m.role === 'MerchantAdmin' && !m.isVerified && (
+            <View
+              className='mch-action'
+              style={{ backgroundColor: t.bgInput }}
+              onClick={(e: any) => {
+                e?.stopPropagation?.()
+                if (m.verifyRequested) Taro.showToast({ title: '认证申请已提交，平台将优先审核', icon: 'none' })
+                else onRequestVerify()
+              }}
+            >
+              <Text style={{ ...fs(13), color: m.verifyRequested ? t.textTertiary : t.primary }}>
+                {m.verifyRequested ? '已申请认证' : '申请认证'}
+              </Text>
+            </View>
+          )}
         </View>
       )}
     </View>
