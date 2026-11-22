@@ -3,6 +3,7 @@
 // 仓库其余代码零改动（消费方只 import 本路径）。新增导出需保持签名一致，否则消费方 import 失败。
 import { View, Text } from '@tarojs/components'
 import Icon from '../components/Icon'
+import Taro from '@tarojs/taro'
 
 /** pro 扩展组件统一 props（主题色板 + 字号缩放，由主仓传入） */
 export interface ProHomeProps {
