@@ -68,6 +68,8 @@ export default function MerchantHomePage() {
   const [stats, setStats] = useState<DashStats>({ onSale: 0, pendingReview: 0, toShip: 0, staff: 0, invites: 0, followers: 0 })
   // 店铺海报面板（扫码与分享需求 P0-4）：后端合成图片，前端只负责展示与保存
   const [posterVisible, setPosterVisible] = useState(false)
+  // 改动说明（v1.4.33）：海报地址带时间戳，绕开 RN Image 缓存，后端改版后能立刻看到新图
+  const [posterTs, setPosterTs] = useState(0)
 
   const isAdmin = current?.role === 'MerchantAdmin'
 
@@ -205,7 +207,7 @@ export default function MerchantHomePage() {
               </View>
               <View
                 style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
-                onClick={() => setPosterVisible(true)}
+                onClick={() => { setPosterTs(Date.now()); setPosterVisible(true) }}
               >
                 <Icon name='image' size={11} color={t.textSecondary} />
                 <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺海报</Text>
@@ -453,7 +455,7 @@ export default function MerchantHomePage() {
         <ShareImageSheet
           visible={posterVisible}
           title={`${current.merchantName} · 店铺海报`}
-          imageUrl={getSharePosterUrl('merchant', current.merchantId, 'poster')}
+          imageUrl={`${getSharePosterUrl('merchant', current.merchantId, 'poster')}&t=${posterTs}`}
           hint='保存图片后可印发名片、包装与展台物料，扫码进入店铺'
           imageSize={300}
           onClose={() => setPosterVisible(false)}
