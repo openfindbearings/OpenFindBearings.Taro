@@ -130,8 +130,7 @@ export default function MerchantHomePage() {
       : []),
   ]
 
-  if (!isLoggedIn) {
-    /** 新增商户入口（v1.4.34）：导航栏右侧圆形「+」，进入驻申请页 */
+  /** 新增商户入口（v1.4.34）：导航栏右侧圆形「+」，进入驻申请页 */
   const newMerchantBtn = (
     <View
       onClick={() => Taro.navigateTo({ url: '/pages/merchant/apply' })}
@@ -140,7 +139,9 @@ export default function MerchantHomePage() {
       <Icon name='plus' size={16} color={t.textSecondary} />
     </View>
   )
-  return (
+
+  if (!isLoggedIn) {
+    return (
       <PageLayout nav={<NavBar title='商家中心' showBack rightSlot={newMerchantBtn} />}>
         <LoginGuide icon='store' text='登录后查看商家中心' />
       </PageLayout>
@@ -206,7 +207,8 @@ export default function MerchantHomePage() {
               )}
             </View>
             {/* 改动说明（v1.4.32）：店铺主页 / 店铺海报 / 切换商户 单独成行，可换行，不挤压名称 */}
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>              {/* 改动说明（v1.4.34）：仅一家时也保留切换入口，用户可由此进列表新增或设置默认 */}
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+              {/* 改动说明（v1.4.34）：仅一家时也保留切换入口，用户可由此进列表新增或设置默认 */}
               {merchants.length > 0 && (
                 <View
                   style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
