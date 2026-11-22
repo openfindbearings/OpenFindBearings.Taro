@@ -131,8 +131,17 @@ export default function MerchantHomePage() {
   ]
 
   if (!isLoggedIn) {
-    return (
-      <PageLayout nav={<NavBar title='商家中心' showBack />}>
+    /** 新增商户入口（v1.4.34）：导航栏右侧圆形「+」，进入驻申请页 */
+  const newMerchantBtn = (
+    <View
+      onClick={() => Taro.navigateTo({ url: '/pages/merchant/apply' })}
+      style={{ width: 30, height: 30, borderRadius: 15, borderStyle: 'solid', borderWidth: 1.5, borderColor: t.border, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+    >
+      <Icon name='plus' size={16} color={t.textSecondary} />
+    </View>
+  )
+  return (
+      <PageLayout nav={<NavBar title='商家中心' showBack rightSlot={newMerchantBtn} />}>
         <LoginGuide icon='store' text='登录后查看商家中心' />
       </PageLayout>
     )
@@ -140,7 +149,7 @@ export default function MerchantHomePage() {
 
   if (!current?.merchantId) {
     return (
-      <PageLayout nav={<NavBar title='商家中心' showBack />}>
+      <PageLayout nav={<NavBar title='商家中心' showBack rightSlot={newMerchantBtn} />}>
         <View style={{ display: 'flex', alignItems: 'center', marginTop: 60 }}>
           <Icon name='store' size={40} color={t.textTertiary} />
           <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无生效中的商家，可在商家 tab 入驻或受聘</Text>
@@ -167,7 +176,7 @@ export default function MerchantHomePage() {
   ].filter((x) => x.count > 0)
 
   return (
-    <PageLayout nav={<NavBar title='商家中心' showBack />}>
+    <PageLayout nav={<NavBar title='商家中心' showBack rightSlot={newMerchantBtn} />}>
       <View>
         {/* 头部：店铺概况——Logo + 名称 + 角色 + 等级彩牌 */}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
@@ -182,7 +191,7 @@ export default function MerchantHomePage() {
           />
           <View style={{ flex: 1, marginLeft: 10 }}>
             {/* 改动说明（v1.4.32）：名称独占一行，右侧入口按钮下移到下方整行，长名称不再被挤成省略号 */}
-            <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600' }} numberOfLines={1}>{current.merchantName}</Text>
+            <Text style={{ ...fs(17), color: t.textPrimary, fontWeight: '600', marginTop: 2 }} numberOfLines={1}>{current.merchantName}</Text>
             {/* v2.13.0 等级玩法：第二行=角色文字 + 商家等级彩牌，彩牌点击进等级详情页 */}
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
               <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 8 }}>{isAdmin ? '管理员' : '员工'}</Text>
@@ -197,7 +206,17 @@ export default function MerchantHomePage() {
               )}
             </View>
             {/* 改动说明（v1.4.32）：店铺主页 / 店铺海报 / 切换商户 单独成行，可换行，不挤压名称 */}
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>              {/* 改动说明（v1.4.34）：仅一家时也保留切换入口，用户可由此进列表新增或设置默认 */}
+              {merchants.length > 0 && (
+                <View
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/index' })}
+                >
+                  <Icon name='repeat' size={11} color={t.textSecondary} />
+                  <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>切换商户</Text>
+                </View>
+              )}
+
               <View
                 style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
                 onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${current.merchantId}` })}
@@ -212,17 +231,9 @@ export default function MerchantHomePage() {
                 <Icon name='image' size={11} color={t.textSecondary} />
                 <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺海报</Text>
               </View>
-              {merchants.length > 1 && (
-                <View
-                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
-                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/index' })}
-                >
-                  <Icon name='repeat' size={11} color={t.textSecondary} />
-                  <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>切换商户</Text>
-                </View>
-              )}
             </View>
-          </View>        </View>
+          </View>
+        </View>
 
         {/* 1. 数据概览（KPI 四宫格，v2.16.0 dashboard）：一眼看清经营基本盘 */}
         <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
