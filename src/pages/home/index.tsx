@@ -121,8 +121,15 @@ export default function HomePage() {
         confirmType='search'
       />
       <View className='search-actions'>
-        {/* 搜索框内扩展图标由扩展点提供，默认实现不渲染 */}
+        {/* 改动说明（扩展点）：右侧扩展图标由 src/ext/pro 提供（闭源为拍照），开源版为空 */}
         <ProSearchExtras t={t} />
+        {/* 改动说明（v1.4.36）：右侧固定「搜索」按钮，颜色取主题 t.primary，不写死色值 */}
+        <View
+          onClick={handleSearch}
+          style={{ height: 28, paddingLeft: 12, paddingRight: 12, borderRadius: 14, backgroundColor: t.primary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 6 }}
+        >
+          <Text style={{ ...fs(13), color: t.textOnPrimary, fontWeight: '600' }}>搜索</Text>
+        </View>
       </View>
     </View>
   )

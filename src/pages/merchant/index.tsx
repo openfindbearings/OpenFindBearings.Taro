@@ -176,7 +176,8 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
       style={{ backgroundColor: t.bgCard, ...(swipeable ? { marginBottom: 0 } : cardShadow) }}
       onClick={onCardTap}
     >
-      <View className='mch-card-row'>
+      {/* 改动说明（v1.4.36）：参考户号管理卡片，生效商户首行统一为主题色色带，白字承载名称与状态 */}
+      <View className='mch-card-row' style={{ paddingTop: 12, paddingBottom: 12, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: isActive ? t.primary : t.bgCard }}>
         <View className='mch-avatar' style={{ backgroundColor: t.primary }}>
           {src
             // 改动说明（v1.7.4）：aspectFill 会把非正方形 logo 裁切导致视觉偏心，改 aspectFit+白底
@@ -195,8 +196,8 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
             {isActive && m.isVerified && (
               // 改动说明（v2.13.2 认证徽标统一）：原固定橙底白字，与首页/商品卡/寻货详情（主题色浅底主色字）分叉，
               //   统一为主题色浅底 + 主色字，文案"已认证"
-              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.primaryLight, flexShrink: 0 }}>
-                <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>已认证</Text>
+              <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : t.primaryLight, flexShrink: 0 }}>
+                <Text style={{ ...fs(10), color: isActive ? t.textOnPrimary : t.primary, fontWeight: '600' }}>已认证</Text>
               </View>
             )}
           </View>
@@ -204,13 +205,13 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
               用两个 Text 叠放而非 \n+pre-line（RN 不支持 white-space，flex column 三端一致） */}
           {m.status === 'Pending' ? (
             <>
-              <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>已提交，左滑可撤回</Text>
-              <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>预计 1–3 个工作日完成审核</Text>
+              <Text className='mch-sub' style={{ ...fs(12), color: isActive ? 'rgba(255,255,255,0.85)' : t.textTertiary }}>已提交，左滑可撤回</Text>
+              <Text className='mch-sub' style={{ ...fs(12), color: isActive ? 'rgba(255,255,255,0.85)' : t.textTertiary }}>预计 1–3 个工作日完成审核</Text>
             </>
           ) : (
             // 改动说明（v1.7.3）：副标题只标"我的角色"——认证状态由名称旁金色徽标唯一承载，
             //   原"管理员 · 未认证"把角色与商户状态混在一句里，易误读成"管理员未认证"
-            <Text className='mch-sub' style={{ ...fs(12), color: t.textTertiary }}>
+            <Text className='mch-sub' style={{ ...fs(12), color: isActive ? 'rgba(255,255,255,0.85)' : t.textTertiary }}>
               {isActive
                 ? (roleLabel(m.role) || '商户成员')
                 : '审核未通过，点击修改重新提交，左滑可删除'}
@@ -219,12 +220,12 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
         </View>
         {isActive && isCurrent && (
           <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.primaryLight, flexShrink: 0 }}>
-            <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>当前</Text>
+            <Text style={{ ...fs(10), color: isActive ? t.primary : t.primary, fontWeight: '600' }}>当前</Text>
           </View>
         )}
         {isActive && !isCurrent && m.merchantId === defaultMerchantId && (
-          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: t.bgInput, flexShrink: 0 }}>
-            <Text style={{ ...fs(10), color: t.textSecondary, fontWeight: '600' }}>默认</Text>
+          <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, paddingLeft: 6, paddingRight: 6, paddingTop: 1, paddingBottom: 1, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.9)', flexShrink: 0 }}>
+            <Text style={{ ...fs(10), color: t.primary, fontWeight: '600' }}>默认</Text>
           </View>
         )}
         <Badge status={m.status} />
@@ -397,7 +398,7 @@ export default function MerchantPage() {
           </View>
           <View style={{ flex: 1 }}>
             <Text className='mch-hero-title' style={{ ...fs(17), color: t.textPrimary }}>
-              {applications.length > 0 ? '我的商户' : '开设轴承店铺'}
+              {applications.length > 0 ? '所有商户' : '开设轴承店铺'}
             </Text>
             <Text className='mch-hero-desc' style={{ ...fs(13), color: t.textTertiary }}>
               {applications.length > 0 ? '一个账号可管理多家商户' : '提交入驻申请，审核通过即可上架经营'}
@@ -447,7 +448,7 @@ export default function MerchantPage() {
         ) : applications.length > 0 ? (
           <>
             <View className='mch-section'>
-              <Text className='mch-section-title' style={{ ...fs(14), color: t.textPrimary }}>我的商户</Text>
+              <Text className='mch-section-title' style={{ ...fs(14), color: t.textPrimary }}>所有商户</Text>
               <Text className='mch-section-count' style={{ ...fs(12), color: t.textTertiary }}>
                 {merchants.length} 家已生效{pendingCount > 0 ? ` · ${pendingCount} 家审核中` : ''}
               </Text>
