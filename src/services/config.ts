@@ -254,6 +254,8 @@ NOTIFICATION_PREFERENCES: `${API_PREFIX}/notifications/preferences`,
   MALL_ORDERS: `${API_PREFIX}/mall/orders`,
   // v2.14.0 商城导购：全站在售货源流（商品瀑布流），走 BFF /mobile/mall/feed
   MALL_FEED: `${API_PREFIX}/mall/feed`,
+  // v1.4.26 批次一：商家商品单品详情（商城卡片点图片/文字区）
+  MALL_MERCHANT_ITEM: (id: string) => `${API_PREFIX}/mall/items/${id}`,
   // v2.4.0 商家经济：礼品兑换/收货 + 商家金库/挂礼/礼品订单
   MALL_REDEEM_GIFT: `${API_PREFIX}/mall/redeem-gift`,
   MALL_CONFIRM_RECEIPT: (id: string) => `${API_PREFIX}/mall/orders/${id}/confirm-receipt`,

@@ -168,6 +168,8 @@ export default function MallPage() {
 
   const goBearing = (id: string) => Taro.navigateTo({ url: `/pages/home/bearingDetail?id=${id}` })
   // 改动说明：自己名下商户直接进经营工作台，其他商家进公开主页
+  /** 商品详情（v1.4.26 批次一）：商城卡片图片/文字区进入商家商品页 */
+  const goProduct = (id: string) => Taro.navigateTo({ url: `/pages/mall/product?id=${id}` })
   const goMerchant = (id: string) => void openMerchant(id)
 
   /**
