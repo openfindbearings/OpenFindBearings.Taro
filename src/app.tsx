@@ -5,6 +5,7 @@
 import { Component, PropsWithChildren } from 'react'
 import { bootOnce, preloadMerchantState } from './appShared'
 import ConfirmDialog from './components/ConfirmDialog'
+import ErrorBoundary from './components/ErrorBoundary'
 import PrivacyDialog from './components/PrivacyDialog'
 // 改动说明：DOM 端全局样式（标签选择器/weui-input）从 app.scss 迁出到 app.dom.scss，
 // 该文件只被本入口（H5/小程序）引入，RN 构建不会解析
@@ -21,7 +22,8 @@ class App extends Component<PropsWithChildren> {
 
   render() {
     // 改动说明：挂载全局自绘弹窗宿主（确认框 + 隐私同意，H5 端响应显隐总线，与 app.rn.tsx 对齐）
-    return <>{this.props.children}<PrivacyDialog /><ConfirmDialog /></>
+    // 改动说明（v1.4.31）：整棵子树包 ErrorBoundary，渲染异常不再纯白屏
+    return <ErrorBoundary>{this.props.children}<PrivacyDialog /><ConfirmDialog /></ErrorBoundary>
   }
 }
 export default App

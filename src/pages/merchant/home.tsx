@@ -143,14 +143,6 @@ export default function MerchantHomePage() {
           <Icon name='store' size={40} color={t.textTertiary} />
           <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无生效中的商家，可在商家 tab 入驻或受聘</Text>
 </View>
-      <ShareImageSheet
-        visible={posterVisible}
-        title={`${current.merchantName} · 店铺海报`}
-        imageUrl={current.merchantId ? getSharePosterUrl('merchant', current.merchantId, 'poster') : ''}
-        hint='保存图片后可印发名片、包装与展台物料，扫码进入店铺'
-        imageSize={300}
-        onClose={() => setPosterVisible(false)}
-      />
     </PageLayout>
     )
   }
@@ -187,38 +179,9 @@ export default function MerchantHomePage() {
             }
           />
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600', flex: 1 }} numberOfLines={1}>{current.merchantName}</Text>
-              {/* 改动说明：搜索/商城点自家商户已直接进本页工作台，这里补反向入口，
-                  需要时仍可查看顾客视角的店铺主页（带关注/纠错等公开信息） */}
-<View
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: 8, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
-                onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${current.merchantId}` })}
-              >
-                <Icon name='eye' size={11} color={t.textSecondary} />
-                <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺主页</Text>
-              </View>
-              {/* 店铺海报入口（P0-4）：后端合成含二维码的海报，用于名片/包装/展台物料 */}
-              <View
-                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
-                onClick={() => setPosterVisible(true)}
-              >
-                <Icon name='image' size={11} color={t.textSecondary} />
-                <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺海报</Text>
-              </View>
-              {merchants.length > 1 && (
-                <View
-                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginLeft: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
-                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/index' })}
-                >
-                  <Icon name='repeat' size={11} color={t.textSecondary} />
-                  <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>切换商户</Text>
-                </View>
-              )}
-            </View>
-            {/* v2.13.0 等级玩法真机调整：删冗余副标题"与成员共同经营"（角色已由彩牌表达，
-                共经营是默认事实无信息量）；第二行=角色文字 + 商家等级彩牌（独立成行不再挤名字行），
-                彩牌点击进等级详情页；原右侧 gradeDisplay/认证徽章撤除防双份 */}
+            {/* 改动说明（v1.4.32）：名称独占一行，右侧入口按钮下移到下方整行，长名称不再被挤成省略号 */}
+            <Text style={{ ...fs(16), color: t.textPrimary, fontWeight: '600' }} numberOfLines={1}>{current.merchantName}</Text>
+            {/* v2.13.0 等级玩法：第二行=角色文字 + 商家等级彩牌，彩牌点击进等级详情页 */}
             <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
               <Text style={{ ...fs(12), color: t.textTertiary, marginRight: 8 }}>{isAdmin ? '管理员' : '员工'}</Text>
               {buff && buff.rank > 0 && (
@@ -231,8 +194,33 @@ export default function MerchantHomePage() {
                 </View>
               )}
             </View>
-          </View>
-        </View>
+            {/* 改动说明（v1.4.32）：店铺主页 / 店铺海报 / 切换商户 单独成行，可换行，不挤压名称 */}
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+              <View
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+                onClick={() => Taro.navigateTo({ url: `/pages/merchant/merchantDetail?id=${current.merchantId}` })}
+              >
+                <Icon name='eye' size={11} color={t.textSecondary} />
+                <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺主页</Text>
+              </View>
+              <View
+                style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+                onClick={() => setPosterVisible(true)}
+              >
+                <Icon name='image' size={11} color={t.textSecondary} />
+                <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>店铺海报</Text>
+              </View>
+              {merchants.length > 1 && (
+                <View
+                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexShrink: 0, marginRight: 6, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3, borderRadius: 10, borderStyle: 'solid', borderWidth: 1, borderColor: t.border }}
+                  onClick={() => Taro.navigateTo({ url: '/pages/merchant/index' })}
+                >
+                  <Icon name='repeat' size={11} color={t.textSecondary} />
+                  <Text style={{ ...fs(11), color: t.textSecondary, marginLeft: 3 }}>切换商户</Text>
+                </View>
+              )}
+            </View>
+          </View>        </View>
 
         {/* 1. 数据概览（KPI 四宫格，v2.16.0 dashboard）：一眼看清经营基本盘 */}
         <View style={{ margin: 16, marginTop: 12, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
@@ -462,7 +450,14 @@ export default function MerchantHomePage() {
         <Text style={{ ...fs(11), color: t.textTertiary, textAlign: 'center', marginTop: 4, marginBottom: 24 }}>
               商家金不可充值、不可提现、不可转让
         </Text>
-      </View>
+        <ShareImageSheet
+          visible={posterVisible}
+          title={`${current.merchantName} · 店铺海报`}
+          imageUrl={getSharePosterUrl('merchant', current.merchantId, 'poster')}
+          hint='保存图片后可印发名片、包装与展台物料，扫码进入店铺'
+          imageSize={300}
+          onClose={() => setPosterVisible(false)}
+        />      </View>
     </PageLayout>
   )
 }
