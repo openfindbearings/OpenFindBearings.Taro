@@ -54,13 +54,19 @@ export default function NavBar({
   contentColor,
   showBorder = true
 }: NavBarProps) {
-  // 默认返回行为：调用 Taro.navigateBack()
+  // 默认返回行为：有历史则返回，无历史（自绘 TabBar 用 redirectTo 进入）回首页
+  // 改动说明（v1.4.32）：redirectTo 替换栈顶后 navigateBack 静默失败，按钮看起来像坏的
   const handleBack = () => {
     if (onBack) {
       onBack()
-    } else {
-      Taro.navigateBack()
+      return
     }
+    const pages = Taro.getCurrentPages ? Taro.getCurrentPages() : []
+    if (pages.length > 1) {
+      Taro.navigateBack()
+      return
+    }
+    Taro.reLaunch({ url: '/pages/home/index' })
   }
 
   // 标准安全区：外层吃顶部内缩，内层固定基准高
