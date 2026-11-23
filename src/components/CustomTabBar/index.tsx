@@ -68,17 +68,17 @@ export default function CustomTabBar() {
   const onMerchantTap = () => {
     if (selected === 2) return
     if (approved) {
-      Taro.redirectTo({ url: '/pages/merchant/home' })
+      Taro.reLaunch({ url: '/pages/merchant/home' })
       return
     }
-    Taro.redirectTo({ url: '/pages/merchant/index' })
+    Taro.reLaunch({ url: '/pages/merchant/index' })
   }
   const handleSwitch = (index: number, path: string) => {
     // 改动说明（v1.7.5）：五格改造后商家 tab 下标 1→2
     if (index === 2) { void onMerchantTap(); return }
     if (index === selected) return
-    // 自绘 TabBar 无原生 switchTab，用 redirectTo（H5/RN 均为 replace 语义）切换
-    Taro.redirectTo({ url: path })
+    // 改动说明（v1.4.39）：改 reLaunch 清空路由栈——tab 页作为栈根，返回时回首页而不是退回上一个 tab 的深层页
+    Taro.reLaunch({ url: path })
   }
 
   /** TabBar key 到 Icon name 的映射（跨端统一用 Icon 抽象层；v1.7.5 加 discover/mall） */
