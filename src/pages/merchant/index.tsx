@@ -364,20 +364,6 @@ export default function MerchantPage() {
   return (
     <PageLayout nav={<NavBar title={merchantTitle} showBack />} tabbar={<CustomTabBar />}>
       <View className='mch-body'>
-        {/* 顶部品牌区 */}
-        <View className='mch-hero'>
-          <View className='mch-hero-icon' style={{ backgroundColor: t.primaryLight }}>
-            <Icon name='store' size={26} color={t.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text className='mch-hero-title' style={{ ...fs(17), color: t.textPrimary }}>
-              {applications.length > 0 ? '所有商户' : '开设轴承店铺'}
-            </Text>
-            <Text className='mch-hero-desc' style={{ ...fs(13), color: t.textTertiary }}>
-              {applications.length > 0 ? '一个账号可管理多家商户' : '提交入驻申请，审核通过即可上架经营'}
-            </Text>
-          </View>
-        </View>
 
         {/* 待确认商户邀请横幅（v1.7.4 邀请确认制） */}
         {invitations.length > 0 && (

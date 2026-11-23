@@ -2,11 +2,11 @@
 // v1.7.0 度量重构：接入 PageLayout 统一骨架（删 rnHeight/padding-bottom hack），
 // 尺寸全部走 dp token；快捷入口改"实心圆 + 白图标"（更明快）；
 // 简洁模式：nav=null 无顶栏，搜索框+三钮在滚动区内垂直居中，隐藏历史/热门，保留 TabBar。
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import Icon from '../../components/Icon'
-import { View, Input, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { getItem, setItem, removeItem } from '../../utils/storage'
+import { getItem } from '../../utils/storage'
 import { getHome, type HomeData } from '../../services/home'
 import MediaImage from '../../components/MediaImage'
 import { useFs } from '../../hooks/useFontScale'
@@ -14,22 +14,20 @@ import { useTheme } from '../../hooks/useTheme'
 // 改动说明：补 useAuthStore 导入——上一轮加"未登录降级普通模式"时只写了使用处漏了 import，
 // 导致 loggedIn 抛 ReferenceError、整段降级逻辑从未生效（tsc TS2304 抓出）
 import { useAuthStore } from '../../stores/auth'
-import { showConfirmDialog } from '../../components/ConfirmDialog'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import CustomTabBar from '../../components/CustomTabBar'
-// 扩展点（src/ext/pro）：首页快捷入口、搜索框扩展图标与智能模式内容由本路径提供实现，
-// 默认实现不渲染快捷入口与扩展图标，智能模式显示提示
+// 改动说明（扩展点）：首页快捷三钮（语音/拍/扫）与智能模式页面由 src/ext/pro 闭源实现提供——
+// 开源基座仓库在相同路径提供占位空实现（三钮渲染空、无智能模式选项），本闭源仓库此处即真实实现
 import { ProQuickActions, ProSearchExtras, ProSmartHome } from '../../ext/pro'
 import { openMerchant } from '../../utils/merchantNav'
+import { parseScanResult, scanTargetUrl } from '../../utils/scanRoute'
 import './index.scss'
 // 改动说明：weapp 横滚适配类（display/white-space/vertical-align 等 RN 无效属性）按平台引入，
 //   仅微信小程序构建打包，RN/H5 不再解析该文件（与 ShareButton 同款条件 require 写法）
 if (process.env.TARO_ENV === 'weapp') require('./index.weapp.scss')
 
-const HISTORY_KEY = 'search_history'
 const SETTINGS_KEY = 'app_settings'
-const MAX_HISTORY = 10
 
 interface AppSettings {
   /** 首页模式：normal 普通 / simple 简洁 / smart 智能。缺省时由旧字段 simpleHome 迁移 */
@@ -41,8 +39,6 @@ interface AppSettings {
 definePageConfig({ disableScroll: true })
 
 export default function HomePage() {
-  const [keyword, setKeyword] = useState('')
-  const [history, setHistory] = useState<string[]>([])
   const [homeMode, setHomeMode] = useState<'normal' | 'simple' | 'smart'>('normal')
   // 改动说明：简洁模式有登录门槛（设置页只拦"切换"，拦不住"存量设置"）——
   // 未登录时显示级降级为普通模式，不改持久设置，重新登录后自动恢复简洁
@@ -57,10 +53,7 @@ export default function HomePage() {
   const t = useTheme()
 
   useDidShow(() => {
-    Promise.all([getItem(HISTORY_KEY), getItem(SETTINGS_KEY)]).then(([savedHist, savedSettings]) => {
-      if (savedHist) {
-        try { setHistory(JSON.parse(savedHist)) } catch { /* 忽略坏数据 */ }
-      }
+    getItem(SETTINGS_KEY).then((savedSettings) => {
       if (savedSettings) {
         try {
           const s = JSON.parse(savedSettings) as AppSettings
@@ -74,68 +67,53 @@ export default function HomePage() {
     getHome().then(setHome).catch(() => { /* 离线/后端未就绪时隐藏热门轴承/推荐商家 */ })
   })
 
-  const saveHistory = useCallback((kw: string) => {
-    if (!kw.trim()) return
-    const updated = [kw, ...history.filter(h => h !== kw)].slice(0, MAX_HISTORY)
-    setHistory(updated)
-    setItem(HISTORY_KEY, JSON.stringify(updated))
-  }, [history])
 
-  const handleSearch = useCallback(() => {
-    if (!keyword.trim()) return
-    saveHistory(keyword.trim())
-    Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(keyword.trim())}` })
-  }, [keyword, saveHistory])
+  /**
+   * 扫码入口（v1.4.41）：仅支持平台分享二维码——扫到 /s/bearing|merchant/{id} 直接进对应详情，
+   * 非平台码提示无法识别；H5 端无扫码能力，提示改用 App 或小程序。
+   */
+  const handleScan = () => {
+    if (process.env.TARO_ENV === 'h5') {
+      Taro.showToast({ title: '请在 App 或小程序内使用扫码', icon: 'none' })
+      return
+    }
+    Taro.scanCode({ onlyFromCamera: false })
+      .then((res) => {
+        const target = parseScanResult(res.result)
+        if (!target) {
+          Taro.showToast({ title: '未识别到平台二维码', icon: 'none' })
+          return
+        }
+        Taro.navigateTo({ url: scanTargetUrl(target) })
+      })
+      .catch(() => { /* 用户取消或无权限：静默 */ })
+  }
 
-  // 首页快捷入口由扩展点组件渲染，默认实现返回 null（不显示）
-  const quickActions = <ProQuickActions t={t} fs={fs} />
-
-  const handleHistoryClick = useCallback((kw: string) => {
-    setKeyword(kw)
-    saveHistory(kw)
-    Taro.navigateTo({ url: `/pages/home/search?keyword=${encodeURIComponent(kw)}` })
-  }, [saveHistory])
-
-  const clearHistory = useCallback(() => {
-    showConfirmDialog({ title: '提示', content: '确定清空搜索历史？' }).then((ok) => {
-      if (ok) {
-        setHistory([])
-        removeItem(HISTORY_KEY)
-      }
-    })
-  }, [])
-
-  // 搜索框（普通模式放 NavBar 中间；简洁模式放内容区居中处）
+  // 搜索框（v1.4.36 仿电商）：本页只作入口，点击进入搜索页；搜索历史与热词统一在搜索页展示
   const searchBox = (
-    <View className='search-input-wrap' style={{ backgroundColor: t.bgInput }}>
-      <Icon name="scan_line" size={20} color={t.textSecondary} />
-      <Input
-        className='search-input'
-        style={{ color: t.textPrimary }}
-        type='text'
-        placeholder='搜索轴承型号、品牌...'
-        placeholderTextColor={t.textTertiary}
-        value={keyword}
-        onInput={(e) => setKeyword(e.detail.value)}
-        onConfirm={handleSearch}
-        confirmType='search'
-      />
+    <View
+      className='search-input-wrap'
+      style={{ backgroundColor: t.bgInput }}
+      onClick={() => Taro.navigateTo({ url: '/pages/home/searchEntry' })}
+    >
+      <View onClick={handleScan} style={{ width: 24, height: 24, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Icon name="scan_line" size={20} color={t.textSecondary} />
+      </View>
+      <View style={{ flex: 1, marginLeft: 8 }}>
+        <Text style={{ ...fs(14), color: t.textTertiary }}>搜索轴承型号、品牌...</Text>
+      </View>
       <View className='search-actions'>
-        {/* 改动说明（扩展点）：右侧扩展图标由 src/ext/pro 提供（闭源为拍照），开源版为空 */}
+        {/* 改动说明（扩展点）：右侧语音/拍照图标由 src/ext/pro 提供，开源版为空 */}
         <ProSearchExtras t={t} />
-        {/* 改动说明（v1.4.36）：右侧固定「搜索」按钮，颜色取主题 t.primary，不写死色值 */}
-        <View
-          onClick={handleSearch}
-          style={{ height: 28, paddingLeft: 12, paddingRight: 12, borderRadius: 14, backgroundColor: t.primary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginLeft: 6 }}
-        >
-          <Text style={{ ...fs(13), color: t.textOnPrimary, fontWeight: '600' }}>搜索</Text>
-        </View>
       </View>
     </View>
   )
 
-  // 智能模式：页面骨架在此，内容由扩展点渲染；
-  // 默认实现渲染"智能模式暂未上线"提示（存量 homeMode=smart 数据的安全兜底）
+  // 快捷入口（扩展点）：闭源实现三钮（语音/拍照/扫码），开源版渲染为空
+  const quickActions = <ProQuickActions t={t} fs={fs} />
+
+  // 智能模式（扩展点）：页面骨架在主仓，内容由 src/ext/pro 渲染聊天窗；
+  // 开源版占位 ProSmartHome 渲染"智能模式暂未上线"提示（存量 homeMode=smart 数据的安全兜底）
   if (effectiveMode === 'smart') {
     return (
       <PageLayout nav={<NavBar title="智能助手" />} tabbar={<CustomTabBar />} scrollY={false}>
@@ -168,45 +146,9 @@ export default function HomePage() {
     >
       {quickActions}
 
-      {history.length > 0 && (
-        <View className='history-section' style={{ backgroundColor: t.bgCard }}>
-          <View className='section-header'>
-            <View className='section-title'>
-              <Icon name="clock" size={16} color={t.textTertiary} />
-              <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>搜索历史</Text>
-            </View>
-            <View className='clear-btn' onClick={clearHistory}>
-              <Icon name="trash" size={14} color={t.textTertiary} />
-              <Text className='clear-btn-text' style={{ ...fs(13), color: t.textTertiary }}>清空</Text>
-            </View>
-          </View>
-          <View className='history-tags'>
-            {history.map((item, idx) => (
-              <View key={idx} className='history-tag' style={{ backgroundColor: t.bgInput }} onClick={() => handleHistoryClick(item)}>
-                <Text className='history-tag-text' style={{ ...fs(14, true), color: t.textSecondary }}>{item}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
 
-      <View className='hot-section' style={{ backgroundColor: t.bgCard }}>
-        <View className='section-header'>
-          <View className='section-title'>
-            <Icon name="flame" size={16} color={t.textTertiary} />
-            <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>热门搜索</Text>
-          </View>
-        </View>
-        <View className='history-tags'>
-          {['SKF', 'NSK', '6205', '6308', '轴承型号查询', '深沟球轴承'].map((item, idx) => (
-            <View key={idx} className='history-tag' style={{ backgroundColor: t.bgInput }} onClick={() => handleHistoryClick(item)}>
-              <Text className='history-tag-text' style={{ ...fs(14, true), color: t.textSecondary }}>{item}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
 
-      {/* 热门轴承（BFF /home 数据，public）：横向卡片，点击按型号进搜索 */}
+      {/* 热门轴承（BFF /home 数据，public）：横向卡片，点击进型号详情 */}
       {home && home.hotBearings.length > 0 && (
         <View className='hot-bearings-section'>
           <View className='section-header'>
@@ -215,10 +157,6 @@ export default function HomePage() {
               <Text className='section-title-text' style={{ ...fs(15), color: t.textPrimary }}>热门轴承</Text>
             </View>
           </View>
-          {/* 改动说明（v1.7.2）：scrollX/showsHorizontalScrollIndicator 为 RN-only props，
-              Taro ScrollView 类型未声明（RN 端运行时支持），spread as any 过 tsc 门禁 */}
-          {/* 改动说明（weapp 适配）：小程序 scroll-view 横滚不吃"scroll-view 本身 display:flex"，
-              需 white-space:nowrap + 卡片 inline-flex（weapp 专属类，RN/H5 不加保持原样） */}
           <ScrollView className={`hot-bearings-scroll${process.env.TARO_ENV === 'weapp' ? ' hot-bearings-scroll-wx' : ''}`} {...({ scrollX: true, showsHorizontalScrollIndicator: false } as any)}>
             {home.hotBearings.map((b) => (
               <View
@@ -235,7 +173,6 @@ export default function HomePage() {
           </ScrollView>
         </View>
       )}
-
       {/* 推荐商家（BFF /home 数据，public）：竖向卡片，点击进商家详情（详情页待建，先提示） */}
       {home && home.merchants.length > 0 && (
         <View className='merchant-section' style={{ backgroundColor: t.bgCard }}>
