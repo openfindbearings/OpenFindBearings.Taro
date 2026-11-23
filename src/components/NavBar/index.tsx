@@ -6,6 +6,7 @@ import { View, Text } from '@tarojs/components'
 import Icon from '../Icon'
 import Taro from '@tarojs/taro'
 import { useSafeArea } from '../../utils/use-safe-area'
+import { backOrHome } from '../../utils/navBack'
 // 改动说明（weapp 适配）：小程序自定义导航下右上胶囊悬浮于页面之上，
 //   搜索框/右侧图标需为胶囊预留右边界，否则被压住（H5/RN 该值恒为 0）
 import { capsuleRightReserve } from '../../utils/capsule'
@@ -61,12 +62,8 @@ export default function NavBar({
       onBack()
       return
     }
-    const pages = Taro.getCurrentPages ? Taro.getCurrentPages() : []
-    if (pages.length > 1) {
-      Taro.navigateBack()
-      return
-    }
-    Taro.reLaunch({ url: '/pages/home/index' })
+    // 改动说明（v1.4.39）：统一走 navBack 工具——栈内有上一页回上一页，栈底回首页
+    backOrHome()
   }
 
   // 标准安全区：外层吃顶部内缩，内层固定基准高

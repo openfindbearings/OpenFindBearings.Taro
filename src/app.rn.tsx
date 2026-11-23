@@ -12,6 +12,7 @@ import PrivacyDialog from './components/PrivacyDialog'
 import ConfirmDialog from './components/ConfirmDialog'
 import MerchantSwitchSheet from './components/MerchantSwitchSheet'
 import ErrorBoundary from './components/ErrorBoundary'
+import GlobalBackGuard from './components/GlobalBackGuard'
 // 改动说明：不再引入 app.scss——该文件只有 H5/小程序的 DOM 标签选择器（view/taro-input-core 等）
 // 与 @charset 输出，RN 端全部被忽略，反而在 RN 构建时刷 stylelint 告警
 
