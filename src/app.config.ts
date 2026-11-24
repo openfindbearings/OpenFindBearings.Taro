@@ -1,6 +1,7 @@
 export default defineAppConfig({
   pages: [
     'pages/home/index',
+    'pages/common/scan/index',
     'pages/discover/index',
     // v1.7.19 寻货：详情/发布 + 我的寻货 + 商家应答；v1.5.0 应答独立页
     'pages/discover/detail',
