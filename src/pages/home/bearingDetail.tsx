@@ -282,10 +282,10 @@ export default function BearingDetailPage() {
       {merchants.length === 0 && <Text className='bd-empty' style={{ ...fs(13), color: t.textTertiary }}>暂无在售商家</Text>}
       {verifiedMerchants.map((m) => merchantRow(m))}
           {/* v1.7.0 数据可信联动：未认证在售归"仅供参考"分段（标灰口径、不提供询价），与认证商家可信段分开 */}
-          {/* 改动说明（v1.7.60 互联网数据展示）：段标题点明"互联网数据"，行内再给来源标记与脱敏电话 */}
+          {/* 改动说明（v1.7.60 互联网数据展示）：段标题点明"互联网数据"，行内给来源标记与可拨号码 */}
           {otherMerchants.length > 0 ? (
             <>
-              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家；标「互联网数据」的为公开抓取信息，暂不提供邀请报价）</Text>
+              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家；标「互联网数据」的为互联网公开数据，未经平台核实）</Text>
           {otherMerchants.map((m) => merchantRow(m))}
         </>
       ) : null}

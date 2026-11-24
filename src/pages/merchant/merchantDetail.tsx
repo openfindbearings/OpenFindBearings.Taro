@@ -166,7 +166,7 @@ export default function MerchantDetailPage() {
           </View>
         </View>
 
-        {/* 改动说明（v1.7.60 互联网数据展示）：互联网来源商家（无账号、未认证）属公开抓取数据，
+        {/* 改动说明（v1.7.60 互联网数据展示）：互联网来源商家（无账号、未认证）属互联网公开数据，
             明确标注"未经平台核实"，避免被误认为平台认证商家 */}
         {detail?.isInternetSource && (
           <View

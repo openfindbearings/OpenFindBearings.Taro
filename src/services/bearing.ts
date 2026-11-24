@@ -100,7 +100,7 @@ export interface BearingMerchant {
   invitable?: boolean
   /** v1.7.56 该商家此型号的实拍首图（平台主图已在页面顶部，此处只显示商家自己的图） */
   coverImageUrl?: string | null
-  /** v1.7.60 互联网数据展示：无账号的抓取商家（前端标「互联网数据」、不提供邀请） */
+  /** v1.7.60 互联网数据展示：无账号的互联网来源商家（前端标「互联网数据」、不提供邀请） */
   isInternetSource?: boolean
   /** v1.7.60 互联网来源商家的可公开电话（手机已由服务端脱敏、固话原样） */
   contactPhone?: string | null
