@@ -10,6 +10,7 @@ overrides:
 patchedDependencies:
   '@tarojs/rn-runner@3.6.40': 0568be8917fa00415cc709cc3b50ea05365e71a9260147406725e1355460a6a5
   babel-plugin-global-define@1.0.3: 341eef286208f619c2f3765f70760aacef29cb35a24d8c91a139eb67ee4641df
+  react-native-camera-kit@14.0.0: 1904066c895ee7009994c5aa7c74168ce7ecf2ef55896d7e4db5756f76e2b0bf
   react-native-image-picker@7.0.3: ccaae5d7d780d90af63d423e8dd1eaff02fb35d769f215c4905ba632af53ad52
 
 importers:
@@ -100,6 +101,9 @@ importers:
       react-native-blob-util:
         specifier: 0.19.6
         version: 0.19.6(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(react@18.3.1)
+      react-native-camera-kit:
+        specifier: 14.0.0
+        version: 14.0.0(patch_hash=1904066c895ee7009994c5aa7c74168ce7ecf2ef55896d7e4db5756f76e2b0bf)(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(react@18.3.1)
       react-native-device-info:
         specifier: ^15.0.2
         version: 15.0.2(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))
@@ -8314,6 +8318,13 @@ packages:
 
   react-native-blob-util@0.19.6:
     resolution: {integrity: sha512-62yMJdgOMEu2Ir9V177FbvOYZskFu92XkT/hUWMMdu3G7UhqnetwtyVwqo4jfNrr+Y3Lp0gXYx60vxjMaov1pQ==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
+  react-native-camera-kit@14.0.0:
+    resolution: {integrity: sha512-0xt1XU6iDm9do7dYldTH01zeWY1zcz9B9bCsFb575DoGtu7PaC+i2aL48nNDqaSlsRCXp2DP6hYZ0ESGJO2Rhw==}
+    engines: {node: '>=18'}
     peerDependencies:
       react: '*'
       react-native: '*'
@@ -20408,6 +20419,11 @@ snapshots:
     dependencies:
       base-64: 0.1.0
       glob: 10.5.0
+      react: 18.3.1
+      react-native: 0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1)
+
+  react-native-camera-kit@14.0.0(patch_hash=1904066c895ee7009994c5aa7c74168ce7ecf2ef55896d7e4db5756f76e2b0bf)(react-native@0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1))(react@18.3.1):
+    dependencies:
       react: 18.3.1
       react-native: 0.70.15(@babel/core@7.29.7(supports-color@8.1.1))(@babel/preset-env@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@18.3.1)(supports-color@8.1.1)
 
