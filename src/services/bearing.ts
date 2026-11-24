@@ -1,4 +1,4 @@
-﻿// 轴承服务：搜索、详情、在售商家、替代品（均调 BFF public 端点，auth:false）
+// 轴承服务：搜索、详情、在售商家、替代品（均调 BFF public 端点，auth:false）
 import { request } from './request'
 import { API, buildQuery } from './config'
 import { DEFAULT_PAGE_SIZE } from '../utils/paging'
@@ -104,6 +104,12 @@ export interface BearingMerchant {
   isInternetSource?: boolean
   /** v1.7.60 互联网来源商家的可公开电话（手机已由服务端脱敏、固话原样） */
   contactPhone?: string | null
+  /** v1.59.22 对比视图：库存描述原文（现货/期货 30 天等） */
+  stockDescription?: string | null
+  /** v1.59.22 对比视图：最小起订量原文 */
+  minOrderDescription?: string | null
+  /** v1.59.22 对比视图：报价最后变更时间（UTC），仅价格文本变化时刷新 */
+  priceUpdatedAt?: string | null
 }
 
 /** 轴承替代品项（对齐 BFF InterchangeItem，v2.16.0 三级治理：含类型标签与责任提示字段） */
