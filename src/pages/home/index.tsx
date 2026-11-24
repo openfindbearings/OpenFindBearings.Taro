@@ -21,7 +21,7 @@ import CustomTabBar from '../../components/CustomTabBar'
 // 开源基座仓库在相同路径提供占位空实现（三钮渲染空、无智能模式选项），本闭源仓库此处即真实实现
 import { ProQuickActions, ProSearchExtras, ProSmartHome } from '../../ext/pro'
 import { openMerchant } from '../../utils/merchantNav'
-import { parseScanResult, scanTargetUrl } from '../../utils/scanRoute'
+import { scanAndOpen } from '../../utils/scanRoute'
 import './index.scss'
 // 改动说明：weapp 横滚适配类（display/white-space/vertical-align 等 RN 无效属性）按平台引入，
 //   仅微信小程序构建打包，RN/H5 不再解析该文件（与 ShareButton 同款条件 require 写法）
@@ -69,26 +69,10 @@ export default function HomePage() {
 
 
   /**
-   * 扫码入口（v1.4.41）：仅支持平台分享二维码——扫到 /s/bearing|merchant/{id} 直接进对应详情，
-   * 非平台码提示无法识别；H5 端无扫码能力，提示改用 App 或小程序。
+   * 扫码入口（v1.4.41）：统一走 utils/scanRoute 的 scanAndOpen——内部已做平台能力探测，
+   * H5 与 RN 端不会因 Taro.scanCode 缺失而崩溃（v1.4.44 修闪退）。
    */
-  const handleScan = () => {
-    if (process.env.TARO_ENV === 'h5') {
-      Taro.showToast({ title: '请在 App 或小程序内使用扫码', icon: 'none' })
-      return
-    }
-    Taro.scanCode({ onlyFromCamera: false })
-      .then((res) => {
-        const target = parseScanResult(res.result)
-        if (!target) {
-          Taro.showToast({ title: '未识别到平台二维码', icon: 'none' })
-          return
-        }
-        Taro.navigateTo({ url: scanTargetUrl(target) })
-      })
-      .catch(() => { /* 用户取消或无权限：静默 */ })
-  }
-
+  const handleScan = () => scanAndOpen()
   // 搜索框（v1.4.36 仿电商）：本页只作入口，点击进入搜索页；搜索历史与热词统一在搜索页展示
   const searchBox = (
     <View
