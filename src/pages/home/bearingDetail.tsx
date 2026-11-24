@@ -38,10 +38,24 @@ import './bearingDetail.scss'
 /** 发布寻货预填 storage 键（轴承详情 → 发布页跨页传参，RN 兼容的异步存取对象） */
 const PREFILL_KEY = 'sourcing_publish_prefill'
 
+// 报价新鲜度（v1.59.22）：UTC 时间转「今天/昨天/N 天前」，超过 30 天显示月日，避免长英文日期占位
+function priceAge(utc?: string | null): string {
+  if (!utc) return ''
+  const diff = Date.now() - new Date(utc).getTime()
+  if (!isFinite(diff) || diff < 0) return '刚刚'
+  const days = Math.floor(diff / 86400000)
+  if (days <= 0) return '今天'
+  if (days === 1) return '昨天'
+  if (days < 30) return `${days} 天前`
+  const d = new Date(utc)
+  return `${d.getMonth() + 1} 月 ${d.getDate()} 日`
+}
+
 export default function BearingDetailPage() {
   const router = useRouter()
   const id = router.params.id || ''
   // v1.6.0 分享落地：view=supply 时"货源视角"——在售认证商家置顶、参数退居次位
+
   const supplyView = router.params.view === 'supply'
   const t = useTheme()
   const fs = useFs()
@@ -253,21 +267,35 @@ export default function BearingDetailPage() {
           </View>
         ) : null}
       </View>
-      {/* 改动说明（v1.8.5）：报价与电话单独成行——电话做成可点药丸，点一下直接唤起拨号 */}
-      {(m.price || m.contactPhone) ? (
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-          <Text className='bd-list-sub' style={{ ...fs(12), color: t.textSecondary, flex: 1 }}>
-            {m.price ? formatPriceText(m.price) : ''}
+      {/* 改动说明（v1.59.22 对比视图）：报价/库存/起订量三列等宽并列，便于同型号跨商家横向比较；空值显示破折号 */}
+      {(m.price || m.stockDescription || m.minOrderDescription) ? (
+        <View style={{ display: 'flex', flexDirection: 'row', marginTop: 6 }}>
+          {[
+            { label: '报价', value: m.price ? formatPriceText(m.price) : '—' },
+            { label: '库存', value: m.stockDescription || '—' },
+            { label: '起订', value: m.minOrderDescription || '—' }
+          ].map((col) => (
+            <View key={col.label} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <Text style={{ ...fs(11), color: t.textTertiary }}>{col.label}</Text>
+              <Text style={{ ...fs(12), color: t.textSecondary, marginTop: 2 }} numberOfLines={1}>{col.value}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      {/* 改动说明（v1.59.22）：报价更新时间与电话同排——电话仍只对互联网来源下发 */}
+      {(m.priceUpdatedAt || m.contactPhone) ? (
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+          <Text style={{ ...fs(11), color: t.textTertiary, flex: 1 }}>
+            {m.priceUpdatedAt ? `报价更新于 ${priceAge(m.priceUpdatedAt)}` : ''}
           </Text>
           {m.contactPhone ? (
-            <View className='bd-phone' style={{ backgroundColor: t.bgInput }} onClick={() => callPhone(m.contactPhone)}>
+            <View className='bd-phone' style={{ backgroundColor: t.bgInput }} onClick={() => callPhone(m.contactPhone!)}>
               <Icon name="phone" size={12} color={t.primary} />
               <Text style={{ ...fs(12), color: t.primary, marginLeft: 4 }}>{m.contactPhone}</Text>
             </View>
           ) : null}
         </View>
-      ) : null}
-    </View>
+      ) : null}    </View>
   )
 
   /**
@@ -282,12 +310,18 @@ export default function BearingDetailPage() {
       {merchants.length === 0 && <Text className='bd-empty' style={{ ...fs(13), color: t.textTertiary }}>暂无在售商家</Text>}
       {verifiedMerchants.map((m) => merchantRow(m))}
           {/* v1.7.0 数据可信联动：未认证在售归"仅供参考"分段（标灰口径、不提供询价），与认证商家可信段分开 */}
-          {/* 改动说明（v1.7.60 互联网数据展示）：段标题点明"互联网数据"，行内再给来源标记与脱敏电话 */}
+          {/* 改动说明（v1.7.60 互联网数据展示）：段标题点明"互联网数据"，行内给来源标记与可拨号码 */}
           {otherMerchants.length > 0 ? (
             <>
-              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家；标「互联网数据」的为公开抓取信息，暂不提供邀请报价）</Text>
+              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>其他在售 · 仅供参考（未认证商家；标「互联网数据」的为互联网公开数据，未经平台核实）</Text>
           {otherMerchants.map((m) => merchantRow(m))}
         </>
+      ) : null}
+      {/* 改动说明（v1.59.22）：报价为商家自填文本，统一免责提示，避免被当作平台背书价 */}
+      {merchants.length > 0 ? (
+        <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 10 }}>
+          报价由商家自填，仅供参考，以电话确认为准
+        </Text>
       ) : null}
       {/* 改动说明（v1.8.5 动作区重排）：原卡片内"发布寻货 + 分享货源"一行主次失衡，
           主行动与分享一起挪到底部动作卡，本卡只保留商家列表与说明 */}

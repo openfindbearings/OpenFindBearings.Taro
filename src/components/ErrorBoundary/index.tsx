@@ -24,7 +24,7 @@ export default class ErrorBoundary extends Component<PropsWithChildren, ErrorBou
     return { error }
   }
 
-  /** 异常日志：仅打印到控制台，便于开发与线上日志抓取 */
+  /** 异常日志：仅打印到控制台，便于开发与线上日志采集 */
   componentDidCatch(error: Error) {
     // eslint-disable-next-line no-console
     console.error('[ErrorBoundary]', error)

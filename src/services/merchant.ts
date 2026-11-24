@@ -36,7 +36,7 @@ export interface Merchant {
   status?: string | null
   productCount?: number | null
   logoUrl?: string | null
-  /** v1.7.60 互联网数据展示：无账号的抓取商家（与平台认证商家区分） */
+  /** v1.7.60 互联网数据展示：无账号的互联网来源商家（与平台认证商家区分） */
   isInternetSource?: boolean
   /** v1.7.62 徽章统一：商家牌级（枚举名 Ordinary/Bronze/Silver/Gold），搜索列表展示等级徽章用 */
   grade?: string | null
