@@ -2,9 +2,10 @@
 // 与型号详情页的区别：型号详情是「找货」（聚合多家商家，主按钮寻货）；
 // 本页供给唯一，主按钮是对这家商家一对一询价；底部常驻条为 店铺 / 分享 / 询价邀请。
 import { useEffect, useState } from 'react'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import MediaImage from '../../components/MediaImage'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import ShareButton from '../../components/ShareButton'
@@ -132,9 +133,13 @@ export default function MallProductPage() {
             {/* 图片区：商家实拍图优先，可点缩略图切换 */}
             <View style={{ backgroundColor: t.bgCard, paddingTop: 12, paddingBottom: 8 }}>
               {images.length > 0 ? (
-                <Image
-                  src={images[Math.min(activeImage, images.length - 1)]}
+                <MediaImage
+                  url={images[Math.min(activeImage, images.length - 1)]}
+                  fallbacks={images}
                   mode='aspectFit'
+                  fallbackIcon='image'
+                  fallbackColor={t.textTertiary}
+                  fallbackSize={44}
                   style={{ width: '100%', height: 300, backgroundColor: '#FFFFFF' }}
                 />
               ) : (
@@ -146,7 +151,7 @@ export default function MallProductPage() {
                 <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 12, paddingRight: 12, marginTop: 8 }}>
                   {images.map((url, idx) => (
                     <View key={url + idx} onClick={() => setActiveImage(idx)} style={{ marginRight: 8, borderWidth: 2, borderColor: idx === activeImage ? t.primary : 'transparent', borderRadius: 6 }}>
-                      <Image src={url} mode='aspectFill' style={{ width: 56, height: 56, borderRadius: 4, backgroundColor: t.bgInput }} />
+                      <MediaImage url={url} mode='aspectFill' fallbackIcon='image' fallbackColor={t.textTertiary} fallbackSize={20} style={{ width: 56, height: 56, borderRadius: 4, backgroundColor: t.bgInput }} />
                     </View>
                   ))}
                 </View>
@@ -185,7 +190,7 @@ export default function MallProductPage() {
               onClick={() => void openMerchant(merchant.id)}
             >
               {merchant.logoUrl ? (
-                <Image src={merchant.logoUrl} mode='aspectFill' style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.bgInput }} />
+                <MediaImage url={merchant.logoUrl} mode='aspectFill' fallbackIcon='store' fallbackColor={t.primary} fallbackSize={20} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.bgInput }} />
               ) : (
                 <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ ...fs(18), fontWeight: 'bold', color: t.primary }}>{merchant.name.slice(0, 1)}</Text>
