@@ -1,97 +1,39 @@
-// 我的勋章页（v2.6.0 改版，统一名词：成就/徽章→勋章）：勋章舞台（已获得平铺+点选聚焦+获得日期）→ 荣誉摘要条（称号+勋章点）
-// → 分类分组列表（组头带进度，未获得灰态+进度条）。勋章视觉为占位双层环（后期换设计图片资源）。
-// 改动说明（v2.9.0 舞台平铺）：原横向轮播依赖 ScrollView 滚动偏移换算选中项，RN 的 pagingEnabled
-//   按视口宽翻页而非单枚宽度，多枚时必然错位；小程序下 96 高容器还会裁掉勋章 3px 描边。
-//   改为已获得勋章整排平铺、自动换行、整体居中，点击即选中，说明行跟随选中项。
-// RN 约束：仅 flex、无 fixed/vh/gradient、Text 数值 lineHeight
-import { useState } from 'react'
+// 我的勋章页（v1.4.47 蜜雪式改版）：深色 hero（头像 + 已点亮 N/M）→ 弧形分类页签 →
+// 整页图鉴网格（已获得彩色带日期、未获得灰度带进度）→ 点任意一枚弹详情；
+// 功能区（当前称号与勋章点摘要、佩戴称号选择）保留，下移到图鉴之后。
+// 改动说明：原「大圆盘舞台 + 分类行列表」把同一批勋章展示两遍，且 5 枚时排成 3+2 显得散；
+//   改版后上半静态只交代身份与总量，动效全部收敛在下半的弧面切页，同时把未解锁勋章纳入视野。
+// 平台差异由 MedalGallery 内部按 .rn.tsx / index.tsx 分文件处理，本页三端写法一致。
+// RN 约束：仅 flex、无 fixed/vh/gradient、Text 包裹文本
+import { useMemo, useState } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import { useDidShow } from '@tarojs/taro'
 import { useTheme } from '../../hooks/useTheme'
-import { formatDate } from '../../utils/format'
 import { useFs } from '../../hooks/useFontScale'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import Icon from '../../components/Icon'
 import LoginGuide from '../../components/LoginGuide'
+import MedalGallery from '../../components/MedalGallery'
 import { useAuthStore } from '../../stores/auth'
-import { getAchievementWall, getMyTitles, equipTitle, type AchievementWall, type AchievementItem, type MyTitles } from '../../services/achievements'
-import MedalImage from '../../components/MedalImage'
+import { usableImage } from '../../services/config'
+import { maskMobile } from '../../components/MedalGallery/types'
+import {
+  getAchievementWall,
+  getMyTitles,
+  equipTitle,
+  type AchievementWall,
+  type MyTitles,
+} from '../../services/achievements'
 
-// 编译期配置：禁用外层 ScrollView，滚动由页内 ScrollView 统一提供
+// 编译期配置：与全站一致，滚动由 PageLayout 统一提供
 definePageConfig({ disableScroll: true })
-
-/** ISO UTC → 中文长日期（浏览器/WebView 按本地时区换算，符合展示层转换规则；失败回退日期截断） */
-function fmtEarnDate(iso?: string | null): string {
-  if (!iso) return ''
-  try {
-    return formatDate(iso)
-  } catch {
-    return iso.slice(0, 10)
-  }
-}
-
-/**
- * 舞台勋章：MedalImage 统一渲染（有图用后台勋章图，无图回退双环占位）。
- * 改动说明（v2.9.0）：去掉固定 112 占位宽，改由外层 flexWrap 居中平铺，点击触发选中
- */
-function StageMedal({ item, active, isDark, primary, onSelect }: { item: AchievementItem; active: boolean; isDark: boolean; primary: string; onSelect: () => void }) {
-  return (
-    <View onClick={onSelect} style={{ margin: 6, display: 'flex', alignItems: 'center' }}>
-      <MedalImage imageKey={item.imageKey} icon={item.icon || 'award'} rare={item.rare} variant='stage' primary={primary} isDark={isDark} active={active} />
-    </View>
-  )
-}
-
-/** 单个成就卡：已解锁点亮主题色、未解锁灰显+进度条+如何获得提示 */
-function AchievementCard({ item, t, fs }: { item: AchievementItem; t: any; fs: (n: number) => any }) {
-  const pct = item.target > 0 ? Math.min(100, Math.round((item.progress / item.target) * 100)) : 0
-  return (
-    <View style={{
-      backgroundColor: item.unlocked ? t.bgCard : t.bgMain,
-      borderRadius: 12, padding: 12, marginBottom: 10,
-      borderStyle: 'solid', borderWidth: 1, borderColor: item.unlocked ? t.primary : t.borderColor,
-      opacity: item.unlocked || item.hidden ? 1 : 0.75,
-      display: 'flex', flexDirection: 'row', alignItems: 'center'
-    }}>
-      <View style={{
-        width: 44, height: 44, borderRadius: 22, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        backgroundColor: item.unlocked ? t.primary : t.borderColor
-      }}>
-        {item.unlocked && item.imageKey ? (
-          <MedalImage imageKey={item.imageKey} icon={item.icon || 'award'} rare={item.rare} variant='card' primary={t.primary} size={44} />
-        ) : (
-          <Icon name={item.icon || 'award'} size={22} color={item.unlocked ? '#FFFFFF' : t.textTertiary} />
-        )}
-      </View>
-      <View style={{ flex: 1, marginLeft: 10, display: 'flex', flexDirection: 'column' }}>
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ ...fs(15), color: item.unlocked ? t.textPrimary : t.textSecondary, fontWeight: '600' }}>{item.name}</Text>
-          {item.rare && <Text style={{ ...fs(11), color: t.warning, marginLeft: 6 }}>稀有</Text>}
-          {item.unlocked && item.titleReward && <Text style={{ ...fs(11), color: t.primary, marginLeft: 6 }}>称号·{item.titleReward}</Text>}
-        </View>
-        <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>
-          {item.unlocked ? item.description : `${item.description}（${item.progress}/${item.target}）`}
-        </Text>
-        {!item.unlocked && (
-          <View style={{ height: 4, borderRadius: 2, backgroundColor: t.borderColor, marginTop: 6 }}>
-            <View style={{ height: 4, borderRadius: 2, backgroundColor: t.primary, width: `${pct}%` }} />
-          </View>
-        )}
-      </View>
-      <Text style={{ ...fs(12), color: item.unlocked ? t.primary : t.textTertiary }}>+{item.metaPoints}</Text>
-    </View>
-  )
-}
 
 export default function AchievementsPage() {
   const t = useTheme()
   const fs = useFs()
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
+  const authUser = useAuthStore((s) => s.user)
   const [wall, setWall] = useState<AchievementWall | null>(null)
-  // 舞台选中索引（onScroll 换算）
-  const [sel, setSel] = useState(0)
-  // v2.8.0 称号系统：我的称号与当前佩戴（选择器数据）
   const [titles, setTitles] = useState<MyTitles | null>(null)
 
   useDidShow(() => {
@@ -101,129 +43,83 @@ export default function AchievementsPage() {
     }
   })
 
-  // v2.8.0 称号佩戴：点称号胶囊=佩戴（点当前=卸下），成功后回写本地态
+  /** 佩戴/卸下称号（点当前佩戴=卸下），成功后回写本地态 */
   const onEquip = async (title: string | null) => {
     const r = await equipTitle(title ?? '')
-    if (r) setTitles((prev) => prev ? { ...prev, equippedTitle: title } : prev)
+    if (r) setTitles((prev) => (prev ? { ...prev, equippedTitle: title } : prev))
   }
 
-  // 已解锁勋章：最近获得排前（unlockedAt ISO 串字典序即时间序）
-  const unlocked = (wall?.items || [])
-    .filter((i) => i.unlocked)
-    .sort((a, b) => (b.unlockedAt ?? '').localeCompare(a.unlockedAt ?? ''))
-  const focus = unlocked.length > 0 ? unlocked[Math.min(sel, unlocked.length - 1)] : null
+  // 分类分页：按目录出现顺序聚合，每类一页，页内保留未解锁项
+  const pages = useMemo(() => {
+    const items = wall?.items || []
+    const cats = Array.from(new Set(items.map((i) => i.category)))
+    return cats.map((cat) => {
+      const inCat = items.filter((i) => i.category === cat)
+      return { label: cat, items: inCat, unlockedCount: inCat.filter((i) => i.unlocked).length }
+    })
+  }, [wall])
 
-  // 按分类分组展示（保持目录原有顺序聚合）
-  const categories = Array.from(new Set((wall?.items || []).map((i) => i.category)))
+  /** 图鉴下方功能区：荣誉摘要 + 佩戴称号 */
+  const footer = (
+    <View>
+      <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ ...fs(12), color: t.textTertiary }}>当前称号</Text>
+          <Text style={{ ...fs(16), color: wall?.currentTitle ? '#F59E0B' : t.textTertiary, fontWeight: '700', marginTop: 2 }}>
+            {wall?.currentTitle || '暂未获得'}
+          </Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={{ ...fs(22), color: t.primary, fontWeight: '700' }}>{wall?.totalMetaPoints ?? 0}</Text>
+          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>勋章点 · 荣誉不花</Text>
+        </View>
+      </View>
+
+      {titles && titles.titles.length > 0 && (
+        <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
+          <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>佩戴称号</Text>
+          <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
+            <View style={{ flexDirection: 'row' }}>
+              {titles.titles.map((tt) => {
+                const active = titles.equippedTitle === tt
+                return (
+                  <View
+                    key={tt}
+                    onClick={() => void onEquip(active ? null : tt)}
+                    style={{
+                      marginRight: 8, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
+                      backgroundColor: active ? t.primary : t.bgMain, borderStyle: 'solid', borderWidth: 1,
+                      borderColor: active ? t.primary : t.borderColor,
+                    }}
+                  >
+                    <Text style={{ ...fs(12), color: active ? '#FFFFFF' : t.textSecondary, fontWeight: active ? '600' : '400' }}>
+                      {tt}{active ? ' ✓' : ''}
+                    </Text>
+                  </View>
+                )
+              })}
+            </View>
+          </ScrollView>
+          <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>点选已解锁称号佩戴，点当前佩戴可卸下</Text>
+        </View>
+      )}
+      <View style={{ height: 40 }} />
+    </View>
+  )
 
   return (
     <PageLayout nav={<NavBar title='我的勋章' showBack />}>
       {!isLoggedIn && <LoginGuide icon='award' text='登录后查看你的勋章' />}
-      {isLoggedIn && (
-        <View>
-          {/* 1. 勋章舞台：展台底色深浅双轨（深底近黑/浅底近白），已获得勋章平铺居中+点选聚焦 */}
-          <View style={{ backgroundColor: t.isDark ? '#111827' : '#F8FAFC', margin: 12, borderRadius: 16, paddingTop: 12, paddingBottom: 14 }}>
-            {unlocked.length > 0 ? (
-              <>
-                <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', paddingLeft: 8, paddingRight: 8 }}>
-                  {unlocked.map((m, i) => (
-                    <StageMedal
-                      key={m.key}
-                      item={m}
-                      active={Math.min(sel, unlocked.length - 1) === i}
-                      isDark={t.isDark}
-                      primary={t.primary}
-                      onSelect={() => setSel(i)}
-                    />
-                  ))}
-                </View>
-                {focus && (
-                  <View style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}>
-                    {/* 改动说明（v2.9.0）：原日期/归属文字硬编码深底浅色（#E2E8F0/#94A3B8），
-                        浅色主题下几乎不可读，改为按主题取色 */}
-                    <Text style={{ ...fs(14), color: t.isDark ? '#E2E8F0' : t.textPrimary }}>
-                      {fmtEarnDate(focus.unlockedAt)} 获得此勋章
-                    </Text>
-                    <Text style={{ ...fs(12), color: t.isDark ? '#94A3B8' : t.textSecondary, marginTop: 4 }}>
-                      {focus.category} · {focus.name}
-                    </Text>
-                  </View>
-                )}
-              </>
-            ) : (
-              <View style={{ display: 'flex', alignItems: 'center', paddingTop: 26, paddingBottom: 26 }}>
-                <Icon name='award' size={36} color={t.isDark ? '#475569' : '#94A3B8'} />
-                <Text style={{ ...fs(13), color: t.isDark ? '#94A3B8' : t.textSecondary, marginTop: 10 }}>
-                  还没有点亮的勋章，完成下方任务即可获得
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* 2. 荣誉摘要条：称号为叙事主角（金色），勋章点为数值佐证 */}
-          <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ ...fs(12), color: t.textTertiary }}>当前称号</Text>
-              <Text style={{ ...fs(16), color: wall?.currentTitle ? '#F59E0B' : t.textTertiary, fontWeight: '700', marginTop: 2 }}>
-                {wall?.currentTitle || '暂未获得'}
-              </Text>
-            </View>
-            <View style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Text style={{ ...fs(22), color: t.primary, fontWeight: '700' }}>{wall?.totalMetaPoints ?? 0}</Text>
-              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>勋章点 · 荣誉不花</Text>
-            </View>
-          </View>
-
-          {/* v2.8.0 称号佩戴选择：已解锁称号横向胶囊，点选佩戴/卸下 */}
-          {titles && titles.titles.length > 0 && (
-            <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14 }}>
-              <Text style={{ ...fs(13), color: t.textPrimary, fontWeight: '600' }}>佩戴称号</Text>
-              <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
-                <View style={{ display: 'flex', flexDirection: 'row' }}>
-                  {titles.titles.map((tt) => {
-                    const active = titles.equippedTitle === tt
-                    return (
-                      <View
-                        key={tt}
-                        onClick={() => void onEquip(active ? null : tt)}
-                        style={{
-                          marginRight: 8, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
-                          backgroundColor: active ? t.primary : t.bgMain, borderStyle: 'solid', borderWidth: 1,
-                          borderColor: active ? t.primary : t.borderColor
-                        }}
-                      >
-                        <Text style={{ ...fs(12), color: active ? '#FFFFFF' : t.textSecondary, fontWeight: active ? '600' : '400' }}>
-                          {tt}{active ? ' ✓' : ''}
-                        </Text>
-                      </View>
-                    )
-                  })}
-                </View>
-              </ScrollView>
-              <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>点选已解锁称号佩戴，点当前佩戴可卸下</Text>
-            </View>
-          )}
-
-          {/* 3. 分类分组列表：组头带 已点亮/总数 进度 */}
-          <View style={{ marginLeft: 12, marginRight: 12, marginTop: 16 }}>
-            {categories.map((cat) => {
-              const inCat = (wall?.items || []).filter((i) => i.category === cat)
-              const doneInCat = inCat.filter((i) => i.unlocked).length
-              return (
-                <View key={cat} style={{ marginBottom: 6 }}>
-                  <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', marginTop: 8, marginBottom: 8 }}>
-                    <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '600' }}>{cat}</Text>
-                    <Text style={{ ...fs(12), color: t.textTertiary, marginLeft: 6 }}>{doneInCat}/{inCat.length}</Text>
-                  </View>
-                  {inCat.map((item) => (
-                    <AchievementCard key={item.key} item={item} t={t} fs={fs} />
-                  ))}
-                </View>
-              )
-            })}
-          </View>
-          <View style={{ height: 80 }} />
-        </View>
+      {isLoggedIn && wall && (
+        <MedalGallery
+          pages={pages}
+          avatarUrl={usableImage(authUser?.avatar)}
+          name={authUser?.nickname || authUser?.userName || '我'}
+          subtitle={maskMobile(authUser?.phoneNumber)}
+          unlockedCount={wall.unlockedCount ?? 0}
+          totalCount={wall.items?.length ?? 0}
+          footer={footer}
+        />
       )}
     </PageLayout>
   )
