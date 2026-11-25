@@ -2,9 +2,10 @@
 // 与型号详情页的区别：型号详情是「找货」（聚合多家商家，主按钮寻货）；
 // 本页供给唯一，主按钮是对这家商家一对一询价；底部常驻条为 店铺 / 分享 / 询价邀请。
 import { useEffect, useState } from 'react'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import Icon from '../../components/Icon'
+import MediaImage from '../../components/MediaImage'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
 import ShareButton from '../../components/ShareButton'
@@ -16,6 +17,7 @@ import { setObject } from '../../utils/storage'
 import { openMerchant } from '../../utils/merchantNav'
 import { showTip } from '../../utils/toast'
 import { getMallItemDetail, type MallItemDetail } from '../../services/mall'
+import { ApiError } from '../../services/request'
 
 const PREFILL_KEY = 'sourcing_publish_prefill'
 
@@ -38,19 +40,32 @@ export default function MallProductPage() {
   const [detail, setDetail] = useState<MallItemDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeImage, setActiveImage] = useState(0)
+  // 改动说明（v1.4.46）：加载失败分两类——404 是商品真不存在/已下架，其余（网络、5xx 等）是临时故障需可重试；
+  //   原先一律显示「商品不存在或已下架」，把服务端故障误报成业务结论。
+  const [errorKind, setErrorKind] = useState<'notfound' | 'failed' | null>(null)
 
-  useEffect(() => {
+  /** 拉取商品详情；重试按钮复用同一入口 */
+  const load = () => {
     if (!id) {
       setLoading(false)
+      setErrorKind('notfound')
       return
     }
     let alive = true
+    setLoading(true)
+    setErrorKind(null)
     getMallItemDetail(id)
       .then((d) => { if (alive) setDetail(d) })
-      .catch(() => { if (alive) setDetail(null) })
+      .catch((e) => {
+        if (!alive) return
+        setDetail(null)
+        setErrorKind(e instanceof ApiError && e.statusCode === 404 ? 'notfound' : 'failed')
+      })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
-  }, [id])
+  }
+
+  useEffect(load, [id])
 
   const item = detail?.item
   const merchant = detail?.merchant
@@ -119,11 +134,24 @@ export default function MallProductPage() {
           </View>
         )}
 
-        {!loading && !detail && (
+        {!loading && !detail && errorKind === 'notfound' && (
           <View style={{ paddingTop: 60, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Icon name="package-x" size={40} color={t.textTertiary} />
+            <Icon name='package-x' size={40} color={t.textTertiary} />
             <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 10 }}>商品不存在或已下架</Text>
             <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 4 }}>可能已被商家下架或尚未通过审核</Text>
+          </View>
+        )}
+
+        {!loading && !detail && errorKind === 'failed' && (
+          <View style={{ paddingTop: 60, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Icon name='wifi-off' size={40} color={t.textTertiary} />
+            <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 10 }}>加载失败，请稍后重试</Text>
+            <View
+              style={{ marginTop: 14, paddingLeft: 18, paddingRight: 18, height: 36, borderRadius: 18, borderWidth: 1, borderColor: t.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={() => load()}
+            >
+              <Text style={{ ...fs(13), color: t.primary }}>重试</Text>
+            </View>
           </View>
         )}
 
@@ -132,9 +160,13 @@ export default function MallProductPage() {
             {/* 图片区：商家实拍图优先，可点缩略图切换 */}
             <View style={{ backgroundColor: t.bgCard, paddingTop: 12, paddingBottom: 8 }}>
               {images.length > 0 ? (
-                <Image
-                  src={images[Math.min(activeImage, images.length - 1)]}
+                <MediaImage
+                  url={images[Math.min(activeImage, images.length - 1)]}
+                  fallbacks={images}
                   mode='aspectFit'
+                  fallbackIcon='image'
+                  fallbackColor={t.textTertiary}
+                  fallbackSize={44}
                   style={{ width: '100%', height: 300, backgroundColor: '#FFFFFF' }}
                 />
               ) : (
@@ -146,7 +178,7 @@ export default function MallProductPage() {
                 <View style={{ display: 'flex', flexDirection: 'row', paddingLeft: 12, paddingRight: 12, marginTop: 8 }}>
                   {images.map((url, idx) => (
                     <View key={url + idx} onClick={() => setActiveImage(idx)} style={{ marginRight: 8, borderWidth: 2, borderColor: idx === activeImage ? t.primary : 'transparent', borderRadius: 6 }}>
-                      <Image src={url} mode='aspectFill' style={{ width: 56, height: 56, borderRadius: 4, backgroundColor: t.bgInput }} />
+                      <MediaImage url={url} mode='aspectFill' fallbackIcon='image' fallbackColor={t.textTertiary} fallbackSize={20} style={{ width: 56, height: 56, borderRadius: 4, backgroundColor: t.bgInput }} />
                     </View>
                   ))}
                 </View>
@@ -185,7 +217,7 @@ export default function MallProductPage() {
               onClick={() => void openMerchant(merchant.id)}
             >
               {merchant.logoUrl ? (
-                <Image src={merchant.logoUrl} mode='aspectFill' style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.bgInput }} />
+                <MediaImage url={merchant.logoUrl} mode='aspectFill' fallbackIcon='store' fallbackColor={t.primary} fallbackSize={20} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.bgInput }} />
               ) : (
                 <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: t.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ ...fs(18), fontWeight: 'bold', color: t.primary }}>{merchant.name.slice(0, 1)}</Text>

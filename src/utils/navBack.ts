@@ -35,6 +35,10 @@ export function isTabRoot(): boolean {
  * - 栈内有上一页 → 返回上一页
  * - 栈底且不是首页 → 回首页
  * - 栈底且就是首页 → 不做跳转（由 RN 硬件返回交还系统，触发退出）
+ *
+ * 改动说明（v1.4.46）：栈底回首页由 reLaunch 改为 switchTab。
+ *   reLaunch 是「替换」语义，旧页直接销毁、新页从右侧顶入，观感像「当前页往左消失」；
+ *   switchTab 无滑动动画，与「返回」的心理预期一致，也不会给首页叠一层返回栈。
  */
 export function backOrHome(): void {
   if (currentStackDepth() > 1) {
@@ -42,5 +46,5 @@ export function backOrHome(): void {
     return
   }
   if (currentPagePath() === 'pages/home/index') return
-  Taro.reLaunch({ url: '/pages/home/index' })
+  Taro.switchTab({ url: '/pages/home/index' })
 }
