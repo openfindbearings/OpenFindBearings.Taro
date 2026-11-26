@@ -20,7 +20,6 @@ import { useMerchantStore } from '../../stores/merchant'
 import { useNotificationStore } from '../../stores/notification'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
 import { withdrawApplication, deleteApplication, requestVerifyMerchant, getPendingStaffInvitations, acceptStaffInvitation, declineStaffInvitation, merchantRoleLabel, type MerchantApplication, type PendingStaffInvitation } from '../../services/merchant'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
@@ -99,9 +98,11 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
   /** 切换商户（v1.4.28）：更新当前上下文并进入该商户工作台 */
   const handleSwitch = async (item: MerchantApplication) => {
     await switchMerchant(item.merchantId)
-    Taro.navigateTo({ url: '/pages/merchant/home' })
-  }
+    // 改动说明（v1.4.51）：商家中心是 tab 主页，切换后用 redirectTo 顶掉列表页，
+    //   使其重新成为栈根（返回->首页、无转场动画），而不是叠在列表之上
+    Taro.redirectTo({ url: '/pages/merchant/home' })
 
+  }
   /** 设为默认商户（v1.4.28）：调后端更新账号偏好，成功后给轻提示 */
   const handleSetDefault = async (item: MerchantApplication) => {
     const res = await setDefaultMerchant(item.merchantId)
@@ -366,7 +367,7 @@ export default function MerchantPage() {
 
 
   return (
-    <PageLayout nav={<NavBar title={merchantTitle} showBack />} tabbar={<CustomTabBar />}>
+    <PageLayout nav={<NavBar title={merchantTitle} showBack />}>
       <View className='mch-body'>
 
         {/* 待确认商户邀请横幅（v1.7.4 邀请确认制） */}
