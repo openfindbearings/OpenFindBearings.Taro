@@ -218,26 +218,28 @@ export default function MallPage() {
           <Icon name='chevron-right' size={16} color={t.textTertiary} />
         </View>
 
-        {/* 搜索输入行 */}
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgInput, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 20, paddingLeft: 12, paddingRight: 12 }}>
-          <Icon name='search' size={18} color={t.textTertiary} />
-          <Input
-            style={{ ...fs(15), color: t.textPrimary, flex: 1, marginLeft: 8, paddingTop: 8, paddingBottom: 8 }}
-            type='text'
-            placeholder='搜型号、品牌、类型...'
-            placeholderTextColor={t.textTertiary}
-            value={input}
-            onInput={(e: any) => setInput(e.detail.value)}
-            onConfirm={doSearch}
-            confirmType='search'
-          />
-          {input.length > 0 && (
-            <View onClick={doSearch} style={{ paddingLeft: 8 }}>
-              <Text style={{ ...fs(13), color: t.primary }}>搜索</Text>
-            </View>
-          )}
+        {/* 搜索输入行（v1.4.51）：对齐发现页——38 高胶囊 + 左侧放大镜 + 右侧常显文字「搜索」 */}
+        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginLeft: 12, marginRight: 12, marginTop: 12 }}>
+          <View style={{ flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', height: 38, borderRadius: 19, backgroundColor: t.bgInput, paddingLeft: 12, paddingRight: 12 }}>
+            <Icon name='search' size={16} color={t.textTertiary} />
+            <Input
+              style={{ ...fs(15), flex: 1, marginLeft: 6, marginRight: 6, color: t.textPrimary }}
+              type='text'
+              placeholder='搜型号、品牌、类型...'
+              placeholderTextColor={t.textTertiary}
+              value={input}
+              onInput={(e: any) => setInput(e.detail.value)}
+              onConfirm={doSearch}
+              confirmType='search'
+            />
+          </View>
+          <Text
+            onClick={doSearch}
+            style={{ ...fs(14), color: t.primary, marginLeft: 10, paddingTop: 9, paddingBottom: 9 }}
+          >
+            搜索
+          </Text>
         </View>
-
         {/* 排序栏 + 筛选开关 */}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 10, paddingBottom: 10 }}>
           {SORTS.map((s) => (

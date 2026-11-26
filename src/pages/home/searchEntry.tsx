@@ -81,12 +81,13 @@ export default function SearchEntryPage() {
               </View>
             ) : null}
           </View>
-          <View
+          {/* 改动说明（v1.4.51）：实心主题色按钮过重，改为与发现页一致的纯文字「搜索」 */}
+          <Text
             onClick={() => submit(keyword)}
-            style={{ height: 40, marginLeft: 10, paddingLeft: 18, paddingRight: 18, borderRadius: 20, backgroundColor: t.primary, alignItems: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+            style={{ ...fs(14), color: t.primary, marginLeft: 10, paddingTop: 9, paddingBottom: 9, paddingLeft: 4, paddingRight: 4 }}
           >
-            <Text style={{ ...fs(14), color: t.textOnPrimary, fontWeight: '600' }}>搜索</Text>
-          </View>
+            搜索
+          </Text>
         </View>
 
         {/* 搜索历史 */}

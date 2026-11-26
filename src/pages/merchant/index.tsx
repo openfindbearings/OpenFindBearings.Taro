@@ -20,7 +20,6 @@ import { useMerchantStore } from '../../stores/merchant'
 import { useNotificationStore } from '../../stores/notification'
 import PageLayout from '../../platforms/PageLayout'
 import NavBar from '../../components/NavBar'
-import CustomTabBar from '../../components/CustomTabBar'
 import SwipeCell, { type SwipeCellAction } from '../../components/SwipeCell'
 import { withdrawApplication, deleteApplication, requestVerifyMerchant, getPendingStaffInvitations, acceptStaffInvitation, declineStaffInvitation, merchantRoleLabel, type MerchantApplication, type PendingStaffInvitation } from '../../services/merchant'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
@@ -99,13 +98,16 @@ function MerchantCard({ m, swipeOpenId, onSwipeOpenChange }: MerchantCardProps) 
   /** 切换商户（v1.4.28）：更新当前上下文并进入该商户工作台 */
   const handleSwitch = async (item: MerchantApplication) => {
     await switchMerchant(item.merchantId)
-    Taro.navigateTo({ url: '/pages/merchant/home' })
-  }
+    // 改动说明（v1.4.51）：商家中心是 tab 主页，切换后用 redirectTo 顶掉列表页，
+    //   使其重新成为栈根（返回->首页、无转场动画），而不是叠在列表之上
+    Taro.redirectTo({ url: '/pages/merchant/home' })
 
+  }
   /** 设为默认商户（v1.4.28）：调后端更新账号偏好，成功后给轻提示 */
   const handleSetDefault = async (item: MerchantApplication) => {
-    const ok = await setDefaultMerchant(item.merchantId)
-    Taro.showToast({ title: ok ? '已设为默认商户' : '设置失败，请重试', icon: 'none' })
+    const res = await setDefaultMerchant(item.merchantId)
+    // 改动说明（v1.4.50）：成功/已是默认都按成功提示；失败时透出后端原因，便于定位
+    Taro.showToast({ title: res.ok ? (res.message || '已设为默认商户') : (res.message || '设置失败，请重试'), icon: 'none' })
   }
 
   /** 删除被驳回申请：二次确认后调 BFF，成功后刷新列表（self 卡消失 / claim 退回公共池） */
@@ -312,6 +314,9 @@ export default function MerchantPage() {
   useDidShow(() => {
     if (isLoggedIn) {
       fetchApplications().catch(() => { /* 拉取失败保持当前状态 */ })
+      // 改动说明（v1.4.50）：同步刷新 profile，用服务端 defaultMerchantId 校正「默认」标记与按钮；
+      //   否则换机/他端改过默认后本机仍按旧值渲染，出现「已是默认却还能点设为默认」
+      useAuthStore.getState().fetchProfile().catch(() => { /* 忽略 */ })
       // 邀请列表拉取失败静默（横幅属增强信息，不打扰主流程）
       getPendingStaffInvitations().then(setInvitations).catch(() => { /* 忽略 */ })
     }
@@ -362,7 +367,7 @@ export default function MerchantPage() {
 
 
   return (
-    <PageLayout nav={<NavBar title={merchantTitle} showBack />} tabbar={<CustomTabBar />}>
+    <PageLayout nav={<NavBar title={merchantTitle} showBack />}>
       <View className='mch-body'>
 
         {/* 待确认商户邀请横幅（v1.7.4 邀请确认制） */}

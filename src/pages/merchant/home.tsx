@@ -134,7 +134,7 @@ export default function MerchantHomePage() {
 
   if (!isLoggedIn) {
     return (
-      <PageLayout nav={<NavBar title='商家中心' showBack />} tabbar={<CustomTabBar />}>
+      <PageLayout nav={<NavBar title='商家中心' />} tabbar={<CustomTabBar />}>
         <LoginGuide icon='store' text='登录后查看商家中心' />
       </PageLayout>
     )
@@ -142,7 +142,7 @@ export default function MerchantHomePage() {
 
   if (!current?.merchantId) {
     return (
-      <PageLayout nav={<NavBar title='商家中心' showBack />} tabbar={<CustomTabBar />}>
+      <PageLayout nav={<NavBar title='商家中心' />} tabbar={<CustomTabBar />}>
         <View style={{ display: 'flex', alignItems: 'center', marginTop: 60 }}>
           <Icon name='store' size={40} color={t.textTertiary} />
           <Text style={{ ...fs(14), color: t.textTertiary, marginTop: 12 }}>暂无生效中的商家，可在商家 tab 入驻或受聘</Text>
@@ -169,7 +169,7 @@ export default function MerchantHomePage() {
   ].filter((x) => x.count > 0)
 
   return (
-    <PageLayout nav={<NavBar title='商家中心' showBack />} tabbar={<CustomTabBar />}>
+    <PageLayout nav={<NavBar title='商家中心' />} tabbar={<CustomTabBar />}>
       <View>
         {/* 头部：店铺概况——Logo + 名称 + 角色 + 等级彩牌 */}
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, padding: 14, backgroundColor: t.bgCard, borderRadius: 12 }}>
