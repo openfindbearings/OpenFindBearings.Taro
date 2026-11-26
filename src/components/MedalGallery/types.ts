@@ -2,7 +2,6 @@
 // 上半静态 hero（身份 + 已点亮总数），下半弧形分类页签 + 整页图鉴网格切换。
 // 本文件只放跨端纯逻辑，不含任何平台样式，供 index.tsx（H5/小程序）与 index.rn.tsx 共用。
 import type { ReactNode } from 'react'
-import Taro from '@tarojs/taro'
 import type { AchievementItem } from '../../services/achievements'
 
 /** 图鉴数据源：一个分类一页 */
@@ -50,25 +49,14 @@ export interface ArcParams {
 export function arcParams(offset: number): ArcParams {
   const abs = Math.abs(offset)
   return {
-    rotateDeg: Math.max(-30, Math.min(30, offset * 13)),
-    translateY: Math.min(18, abs * 7),
-    scale: offset === 0 ? 1.14 : 0.9,
-    opacity: abs === 0 ? 1 : abs === 1 ? 0.6 : 0.3,
+    rotateDeg: Math.max(-12, Math.min(12, offset * 6)),
+    translateY: Math.min(10, abs * 5),
+    scale: offset === 0 ? 1.1 : 0.92,
+    opacity: abs === 0 ? 1 : abs === 1 ? 0.65 : 0.35,
   }
 }
 
-/**
- * 单页宽度：视口宽减去左右 12 外边距。
- * 改动说明：整页位移需要确定像素宽度做 translateX，用视口宽而非百分比，
- *   三端一致且 RN 的 transform 数值可直接参与动画。
- */
-export function pageWidth(): number {
-  try {
-    return Taro.getSystemInfoSync().windowWidth - 24
-  } catch {
-    return 351
-  }
-}
+
 
 /** 手机号脱敏（hero 副标题用）：138****8000 */
 export function maskMobile(phone?: string | null): string {

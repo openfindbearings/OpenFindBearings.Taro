@@ -53,7 +53,11 @@ export default function CustomTabBar() {
       const pages = Taro.getCurrentPages()
       if (pages.length > 0) {
         const currentPath = '/' + pages[pages.length - 1].route
-        const idx = tabs.findIndex(t => currentPath.includes(t.pagePath.replace('/pages/', '')))
+        // 改动说明（v1.4.48）：商家中心（merchant/home）不是独立 tab 路由，但它是中间 tab 的落地页，
+        //   需点亮「商家」这一格；否则进工作台后底栏高亮回落首页，看起来像跳错了 tab。
+        const idx = currentPath.includes('merchant/home')
+          ? 2
+          : tabs.findIndex(t => currentPath.includes(t.pagePath.replace('/pages/', '')))
         if (idx >= 0) setSelected(idx)
       }
     } catch {

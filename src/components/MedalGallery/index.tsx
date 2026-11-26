@@ -1,16 +1,18 @@
-// 勋章图鉴（H5 / 小程序入口，v1.4.47 蜜雪式改版）。
+// 勋章图鉴（H5 / 小程序入口，v1.4.47 蜜雪式改版；v1.4.48 改百分比布局）。
 // 结构：深色 hero + 弧形分类页签 → 浅色卡片内的整页图鉴网格（左右滑动或点页签切页）→ 点击弹详情。
 // 改动说明：原「大圆盘舞台平铺」在 5 枚时排成 3+2 显得散，且与下方分类列表重复展示同一批勋章；
 //   现改为上半静态 hero（只交代身份与总量）、下半承担全部动效（弧面切页 + 全图鉴含未解锁进度）。
-// 平台差异：本文件用 CSS transition 做位移与姿态过渡；RN 端见 index.rn.tsx（Animated + transform 数组）。
+// 改动说明（v1.4.48）：位移由「像素宽度 + translateX」改为百分比（条带 N×100%、移动 100/N%），
+//   避免 windowWidth 在 H5(px)/小程序(rpx 换算) 与样式单位不一致导致每行只排下 2 列；
+//   RN 端无法用百分比位移，另见 index.rn.tsx（onLayout 实测宽度）。
 import { useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { View } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import type { AchievementItem } from '../../services/achievements'
 import { ArcTabs, HeroBlock, MedalDetailSheet, MedalPage } from './parts'
-import { arcParams, pageWidth, type MedalGalleryProps } from './types'
+import { arcParams, type MedalGalleryProps } from './types'
 
 /** 切页与弧形过渡时长 */
 const TRANSITION = 'transform 320ms ease, opacity 320ms ease'
@@ -26,7 +28,7 @@ export default function MedalGallery({ pages, avatarUrl, avatarIcon, name, subti
   const [index, setIndex] = useState(0)
   const [openItem, setOpenItem] = useState<AchievementItem | null>(null)
   const startX = useRef(0)
-  const width = pageWidth()
+  const count = Math.max(1, pages.length)
 
   /** 弧形页签姿态：CSS transform 字符串 + 过渡（偏移 = 序号 - 当前页） */
   const styleFor = (i: number, activeIndex: number): CSSProperties => {
@@ -66,19 +68,20 @@ export default function MedalGallery({ pages, avatarUrl, avatarIcon, name, subti
         <ArcTabs pages={pages} index={index} onSelect={setIndex} fs={fs} styleFor={styleFor} t={t} />
       </View>
 
-      {/* 2. 图鉴区：整页横向位移，overflow hidden 裁掉相邻页 */}
+      {/* 2. 图鉴区：整页按百分比位移，overflow hidden 裁掉相邻页 */}
       <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 16, paddingTop: 14, overflow: 'hidden' }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
         <View style={{
+          display: 'flex',
           flexDirection: 'row',
-          width: width * Math.max(1, pages.length),
-          transform: `translateX(${-index * width}px)`,
+          width: `${count * 100}%`,
+          transform: `translateX(-${(index * 100) / count}%)`,
           transition: TRANSITION,
         }}>
           {pages.map((p) => (
-            <MedalPage key={p.label} page={p} width={width} onOpen={setOpenItem} fs={fs} t={t} />
+            <MedalPage key={p.label} page={p} width={`${100 / count}%`} onOpen={setOpenItem} fs={fs} t={t} />
           ))}
         </View>
 

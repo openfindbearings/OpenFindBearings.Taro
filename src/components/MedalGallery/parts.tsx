@@ -66,8 +66,8 @@ export function ArcTabs(props: {
   index: number
   onSelect: (i: number) => void
   fs: (n: number) => CSSProperties
-  /** 由平台入口注入：把「页签序号 + 当前页」变成该端可用的 transform 样式（RN 需连续插值，故传序号） */
-  styleFor: (i: number, activeIndex: number) => CSSProperties
+  /** 由平台入口注入：把「页签序号 + 当前页」变成该端可用的 transform 样式（H5 为字符串、RN 为数组，故用 any） */
+  styleFor: (i: number, activeIndex: number) => any
   t: any
 }) {
   const { pages, index, onSelect, fs, styleFor, t } = props
@@ -81,9 +81,9 @@ export function ArcTabs(props: {
           <View
             key={p.label}
             onClick={() => onSelect(i)}
-            style={{ marginLeft: 10, marginRight: 10, paddingLeft: 6, paddingRight: 6, ...styleFor(i, index) }}
+            style={{ flexGrow: 1, flexBasis: 0, alignItems: 'center', paddingLeft: 2, paddingRight: 2, ...(styleFor(i, index) as any) }}
           >
-            <Text style={{ ...fs(active ? 15 : 13), color: active ? HERO_GOLD : HERO_SUB, fontWeight: active ? '700' : '400' }}>
+            <Text numberOfLines={1} style={{ ...fs(active ? 15 : 13), color: active ? HERO_GOLD : HERO_SUB, fontWeight: active ? '700' : '400', textAlign: 'center' }}>
               {p.label}
             </Text>
             <Text style={{ ...fs(10), color: active ? HERO_GOLD : t.textTertiary, marginTop: 2, textAlign: 'center' }}>
@@ -96,20 +96,21 @@ export function ArcTabs(props: {
   )
 }
 
-/** 图鉴单元：已获得彩色 + 日期，未获得灰度 + 进度。宽度由外层按像素传入，规避 H5 content-box 溢出 */
+/** 图鉴单元：已获得彩色 + 日期，未获得灰度 + 进度。
+ *  宽度一律 33.33% 且不加横向 padding——RN 无 box-sizing，padding 会撑破 1/3 槽位导致每行只排 2 个；
+ *  间距靠单元格内部居中留白实现，三端一致。 */
 export function MedalCell(props: {
   item: AchievementItem
-  cellWidth: number
   onOpen: (item: AchievementItem) => void
   fs: (n: number) => CSSProperties
   t: any
 }) {
-  const { item, cellWidth, onOpen, fs, t } = props
+  const { item, onOpen, fs, t } = props
   const date = item.unlockedAt ? String(item.unlockedAt).slice(0, 10) : ''
   return (
     <View
       onClick={() => onOpen(item)}
-      style={{ width: cellWidth, marginBottom: 14, alignItems: 'center' }}
+      style={{ width: '33.33%', marginBottom: 14, alignItems: 'center' }}
     >
       <View style={{ opacity: item.unlocked ? 1 : 0.45 }}>
         <MedalImage
@@ -134,19 +135,20 @@ export function MedalCell(props: {
   )
 }
 
-/** 单页内容：该分类全部勋章的三列网格 */
+/** 单页内容：该分类全部勋章的三列网格。
+ *  width 为百分比字符串（H5/小程序按 100/页数 等分；RN 传 100%，一次只渲染当前页）。 */
 export function MedalPage(props: {
   page: MedalCategoryPage
-  width: number
+  width: string
   onOpen: (item: AchievementItem) => void
   fs: (n: number) => CSSProperties
   t: any
 }) {
   const { page, width, onOpen, fs, t } = props
   return (
-    <View style={{ width, flexDirection: 'row', flexWrap: 'wrap', paddingLeft: 6, paddingRight: 6 }}>
+    <View style={{ width: width as any, flexDirection: 'row', flexWrap: 'wrap' }}>
       {page.items.map((item) => (
-        <MedalCell key={item.key} item={item} cellWidth={(width - 12) / 3} onOpen={onOpen} fs={fs} t={t} />
+        <MedalCell key={item.key} item={item} onOpen={onOpen} fs={fs} t={t} />
       ))}
     </View>
   )
