@@ -34,7 +34,7 @@ interface MerchantState {
   /** 用服务端 profile 的默认商户刷新本地状态（登录/刷新资料后调用） */
   setDefaultFromServer: (merchantId: string | null) => Promise<void>
   /** 设为默认商户（调后端接口成功后更新本地） */
-  setDefaultMerchant: (merchantId: string) => Promise<boolean>
+  setDefaultMerchant: (merchantId: string) => Promise<{ ok: boolean; message?: string }>
   /** 当前商户对象（无则 null） */
   currentMerchant: () => MerchantApplication | null
   /** 退出登录时清空 */
@@ -110,16 +110,18 @@ export const useMerchantStore = create<MerchantState>((set, get) => ({
   },
 
   setDefaultMerchant: async (merchantId: string) => {
+    // 改动说明（v1.4.50）：已是默认商户时直接返回成功，不发请求——避免后端/网络异常时报「设置失败」
+    if (get().defaultMerchantId === merchantId) return { ok: true, message: '已是默认商户' }
     try {
       await apiSetDefaultMerchant(merchantId)
       set({ defaultMerchantId: merchantId })
       await setItem(DEFAULT_KEY, merchantId)
-      return true
-    } catch {
-      return false
+      return { ok: true }
+    } catch (e: any) {
+      // 改动说明（v1.4.50）：把后端原因透出（如「只能把自己在职的商户设为默认」），不再统一吞成失败
+      return { ok: false, message: e?.message }
     }
   },
-
   currentMerchant: () => {
     const { merchants, currentMerchantId } = get()
     return merchants.find((m) => m.merchantId === currentMerchantId) ?? merchants[0] ?? null
