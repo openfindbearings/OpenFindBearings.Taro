@@ -69,20 +69,37 @@ export default function CustomTabBar() {
    * 中间商家 tab 点击（v1.4.28 批次二）：已入驻直达当前/默认商户工作台，
    * 不再进商户列表；切换入口在工作台头部「切换商户」。零商户仍进入驻页。
    */
+  /**
+   * 切换落地方式（v1.4.49）：已在栈底时用 redirectTo——RN 的 redirectTo 会关闭本次转场动画再做 replace，
+   * 观感与淘宝/京东切 tab 一致（无滑动）；处于深层页时仍用 reLaunch 清空路由栈，
+   * 保证 tab 页成为栈根、返回时回首页而不是退回上一个 tab 的深层页。
+   */
+  const jumpTab = (url: string) => {
+    try {
+      const depth = Taro.getCurrentPages?.()?.length ?? 1
+      if (depth > 1) {
+        Taro.reLaunch({ url })
+        return
+      }
+    } catch {
+      // 取不到路由栈时按栈底处理，走无动画替换
+    }
+    Taro.redirectTo({ url })
+  }
+
   const onMerchantTap = () => {
     if (selected === 2) return
     if (approved) {
-      Taro.reLaunch({ url: '/pages/merchant/home' })
+      jumpTab('/pages/merchant/home')
       return
     }
-    Taro.reLaunch({ url: '/pages/merchant/index' })
+    jumpTab('/pages/merchant/index')
   }
   const handleSwitch = (index: number, path: string) => {
     // 改动说明（v1.7.5）：五格改造后商家 tab 下标 1→2
     if (index === 2) { void onMerchantTap(); return }
     if (index === selected) return
-    // 改动说明（v1.4.39）：改 reLaunch 清空路由栈——tab 页作为栈根，返回时回首页而不是退回上一个 tab 的深层页
-    Taro.reLaunch({ url: path })
+    jumpTab(path)
   }
 
   /** TabBar key 到 Icon name 的映射（跨端统一用 Icon 抽象层；v1.7.5 加 discover/mall） */

@@ -36,11 +36,10 @@ export function isTabRoot(): boolean {
  * - 栈底且不是首页 → 回首页
  * - 栈底且就是首页 → 不做跳转（由 RN 硬件返回交还系统，触发退出）
  *
- * 改动说明（v1.4.48）：栈底回首页改回 reLaunch。
- *   v1.4.46 曾用 switchTab 消除「往左消失」的观感，但本项目未在 app.config 声明原生 tabBar
- *   （底栏是 CustomTabBar 组件），Taro RN 的 switchTab 需要根路由 tabNav 存在，
- *   实际会走 StackActions.replace('tabNav') 抛错并被内部 catch，表现为「点了完全没反应」。
- *   三端一致可用的只有 reLaunch（重置路由栈到首页）；观感问题改为接受「替换式」切换。
+ * 改动说明（v1.4.49）：栈底回首页改用 redirectTo。
+ *   reLaunch 在 RN 走 StackActions.replace 但保留转场动画（观感像「替换滑入」）；
+ *   redirectTo 会先关掉本次跳转动画再做 replace，符合「tab 层返回首页不滑动」的预期。
+ *   v1.4.46 曾用 switchTab，但本项目未声明原生 tabBar（底栏是组件），RN 无 tabNav 根路由会静默失败。
  */
 export function backOrHome(): void {
   if (currentStackDepth() > 1) {
@@ -48,5 +47,5 @@ export function backOrHome(): void {
     return
   }
   if (currentPagePath() === 'pages/home/index') return
-  Taro.reLaunch({ url: '/pages/home/index' })
+  Taro.redirectTo({ url: '/pages/home/index' })
 }
