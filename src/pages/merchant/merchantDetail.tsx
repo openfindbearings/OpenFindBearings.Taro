@@ -4,10 +4,10 @@
 // 关注/纠错为登录门槛（未登录提示）。
 import { useState } from 'react'
 import CorrectionSheet from '../../components/CorrectionSheet'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import Icon from '../../components/Icon'
-import MedalImage from '../../components/MedalImage'
+import MedalSummary from '../../components/MedalSummary'
 import ShareButton from '../../components/ShareButton'
 import { showConfirmDialog } from '../../components/ConfirmDialog'
 import { openMerchant } from '../../utils/merchantNav'
@@ -183,26 +183,11 @@ export default function MerchantDetailPage() {
             勋章双环占位排（rare 金环/主题色环，与个人勋章卡同款），
             底部集体任务累计达成次数（帮派"通关史"信任信号） */}
         <View className='md-card' style={{ backgroundColor: t.bgCard }}>
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>商家勋章园</Text>
-            <Text style={{ ...fs(13), color: t.textTertiary }}>共 {mAch?.unlockedCount ?? 0} 枚</Text>
-          </View>
-          {medalItems.length === 0 ? (
-            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>商家完成签到纠错、上架供给、集体任务等都能点亮勋章</Text>
-          ) : (
-            <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
-              <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-                {medalItems.map((b) => {
-                  return (
-                    <View key={b.key} style={{ width: 64, display: 'flex', alignItems: 'center', marginRight: 6 }}>
-                      <MedalImage imageKey={b.imageKey} icon={b.icon || 'award'} rare={b.rare} variant='card' primary={t.primary} primaryLight={t.primaryLight} />
-                      <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }} numberOfLines={1}>{b.name}</Text>
-                    </View>
-                  )
-                })}
-              </View>
-            </ScrollView>
-          )}
+          <MedalSummary
+            title='商家勋章园'
+            items={medalItems}
+            total={mAch?.unlockedCount ?? 0}
+          />
           {(detail?.completedTaskCount ?? 0) > 0 && (
             <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 8 }}>集体任务累计达成 {detail?.completedTaskCount} 次</Text>
           )}

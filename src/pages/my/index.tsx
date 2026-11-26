@@ -4,8 +4,8 @@
 // NavBar：标题居中"我的"，右侧 Bell（消息中心）+ Settings（设置入口）
 // 内容：用户信息区 + 会员卡 + 功能卡（收藏/关注/历史/全部功能 四横钮）
 import Icon from '../../components/Icon'
-import MedalImage from '../../components/MedalImage'
-import { View, Text, Image, ScrollView } from '@tarojs/components'
+import MedalSummary from '../../components/MedalSummary'
+import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 // 改动说明（v1.7.11 沉浸式渐变头部）：useState 管滚动浮现度；useSafeArea 供渐变内容避让状态栏
 import { useState } from 'react'
@@ -286,30 +286,15 @@ export default function MyPage() {
         style={{ backgroundColor: t.bgCard, marginLeft: 16, marginRight: 16, marginTop: 12, marginBottom: 16, borderRadius: 12, padding: 14 }}
         onClick={() => Taro.navigateTo({ url: '/pages/my/achievements' })}
       >
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ ...fs(15), color: t.textPrimary, fontWeight: '600', flex: 1 }}>我的勋章</Text>
-          <Text style={{ ...fs(13), color: t.textTertiary }}>共 {myAch?.unlockedCount ?? 0} 枚 ›</Text>
-        </View>
         {medalItems.length === 0 ? (
-          <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>
-            {isLoggedIn ? '签到、纠错、寻货都能点亮勋章，从第一枚开始攒' : '登录后查看你的勋章墙'}
-          </Text>
-        ) : (
-        <ScrollView scrollX showsHorizontalScrollIndicator={false} style={{ height: 84, marginTop: 10 }}>
-          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-            {medalItems.map((b) => {
-              return (
-                <View key={b.key} style={{ width: 64, display: 'flex', alignItems: 'center', marginRight: 6 }}>
-                  {/* 勋章图组件统一渲染：无图回退双环占位（rare 金环/主题环） */}
-                  <MedalImage imageKey={b.imageKey} icon={b.icon || 'award'} rare={b.rare} variant='card' primary={t.primary} primaryLight={t.primaryLight} />
-                  <Text style={{ ...fs(10), color: t.textTertiary, marginTop: 4 }} numberOfLines={1}>
-                    {b.name}
-                  </Text>
-                </View>
-              )
-            })}
+          <View>
+            <MedalSummary title='成就勋章' items={medalItems} total={myAch?.unlockedCount ?? 0} />
+            <Text style={{ ...fs(12), color: t.textTertiary, marginTop: 8 }}>
+              {isLoggedIn ? '签到、纠错、寻货都能点亮勋章，从第一枚开始攒' : '登录后查看你的勋章墙'}
+            </Text>
           </View>
-        </ScrollView>
+        ) : (
+          <MedalSummary title='成就勋章' items={medalItems} total={myAch?.unlockedCount ?? 0} />
         )}
       </View>
     </PageLayout>
