@@ -1,20 +1,22 @@
-// 勋章图鉴（RN 入口，v1.4.47 蜜雪式改版）。
-// 与 H5/小程序版结构一致，只替换两处平台差异：
-//   1. 位移与弧形姿态改用 Animated.Value 插值（RN 不支持 CSS transition，transform 需数组写法）；
-//   2. 手势改用 PanResponder（RN 的 onTouchEnd 拿不到 touches 坐标）。
-// 不引入 reanimated / pager-view：本页只需整页位移与少量插值，RN 内置 Animated 足够，
-//   且避免 babel 插件链与原生模块变更（改动说明见设计文档 v1.4.47）。
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Animated, PanResponder } from 'react-native'
-import { View } from '@tarojs/components'
+// 勋章图鉴（RN 入口，v1.4.47 蜜雪式改版；v1.4.48 修白屏）。
+// 与 H5/小程序版结构一致，差异只在两处平台写法：
+//   1. transform 必须用数组形式（RN 不支持 CSS transform 字符串，也不支持 CSS transition）；
+//   2. 手势用 PanResponder（RN 的 View 拿不到 touches 坐标）。
+// 改动说明（v1.4.48 白屏修复）：原实现用 Animated.Value 插值做过渡，Hermes 下
+//   Animated.View 构造时抛 "TypeError: cannot add a new property"，整页被 ErrorBoundary 兜成白屏；
+//   改为 requestAnimationFrame 推进一个连续的浮动页码 pos，样式全部由 pos 现算，
+//   不依赖 Animated / reanimated / pager-view，纯 JS，无需重编 APK。
+import { useEffect, useRef, useState } from 'react'
+import { PanResponder } from 'react-native'
+import { View, Text } from '@tarojs/components'
 import { useTheme } from '../../hooks/useTheme'
 import { useFs } from '../../hooks/useFontScale'
 import type { AchievementItem } from '../../services/achievements'
 import { ArcTabs, HeroBlock, MedalDetailSheet, MedalPage } from './parts'
-import { pageWidth, type MedalGalleryProps } from './types'
+import { arcParams, type MedalGalleryProps } from './types'
 
-/** 切页动画时长（与 H5 版保持一致） */
-const DURATION = 320
+/** 切页过渡时长（与 H5 版保持一致） */
+const DURATION = 280
 /** 判定为一次滑动的最小水平位移 */
 const SWIPE_THRESHOLD = 40
 
@@ -25,36 +27,45 @@ export default function MedalGallery({ pages, avatarUrl, avatarIcon, name, subti
   const t = useTheme()
   const fs = useFs()
   const [index, setIndex] = useState(0)
+  // 连续页码（可为小数）：切页时由 rAF 从旧值缓动到新值，弧形姿态与整页位移都读它
+  const [pos, setPos] = useState(0)
+  const posRef = useRef(0)
   const [openItem, setOpenItem] = useState<AchievementItem | null>(null)
-  const width = pageWidth()
+
   const max = Math.max(0, pages.length - 1)
 
-  // 连续页位置：0..max，切页时用 timing 过渡，弧形姿态与整页位移都由它插值，天然同步
-  const pos = useRef(new Animated.Value(0)).current
+  // 页码变化时用 rAF 缓动：easeOutCubic，约 280ms 停到目标页
   useEffect(() => {
-    Animated.timing(pos, { toValue: index, duration: DURATION, useNativeDriver: true }).start()
-  }, [index, pos])
-
-  /** 整页横向位移 */
-  const stripTranslateX = useMemo(
-    () => pos.interpolate({ inputRange: [0, Math.max(1, max)], outputRange: [0, -width * max] }),
-    [pos, width, max]
-  )
+    const from = posRef.current
+    const to = index
+    if (from === to) return
+    const start = Date.now()
+    let raf = 0
+    const tick = () => {
+      const p = Math.min(1, (Date.now() - start) / DURATION)
+      const eased = 1 - Math.pow(1 - p, 3)
+      const v = from + (to - from) * eased
+      posRef.current = v
+      setPos(v)
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [index])
 
   /**
-   * 弧形页签姿态生成器：把「与当前页的偏移」插值成 rotate/translateY/scale/opacity。
-   * 偏移 = 页签序号 - 连续位置，故对 pos 做反向插值；超过 ±2 页按端点钳制。
+   * 弧形页签姿态：把「序号 - 连续页码」的偏移现算成 transform 数组。
+   * RN 的 rotate 需要带 deg 的字符串，translateY/scale 用数值。
    */
-  const styleFor = (i: number, _activeIndex: number) => {
-    const input = [i - 2, i - 1, i, i + 1, i + 2]
-    const rotate = pos.interpolate({ inputRange: input, outputRange: ['-26deg', '-13deg', '0deg', '13deg', '26deg'], extrapolate: 'clamp' })
-    const translateY = pos.interpolate({ inputRange: input, outputRange: [14, 7, 0, 7, 14], extrapolate: 'clamp' })
-    const scale = pos.interpolate({ inputRange: input, outputRange: [0.86, 0.9, 1.14, 0.9, 0.86], extrapolate: 'clamp' })
-    const opacity = pos.interpolate({ inputRange: input, outputRange: [0.3, 0.6, 1, 0.6, 0.3], extrapolate: 'clamp' })
-    return { transform: [{ translateY }, { rotate }, { scale }], opacity }
+  const styleFor = (i: number) => {
+    const p = arcParams(i - posRef.current)
+    return {
+      transform: [{ translateY: p.translateY }, { rotate: `${p.rotateDeg}deg` }, { scale: p.scale }],
+      opacity: p.opacity,
+    }
   }
 
-  // 手势：松手时按位移方向翻页；纵向交给外层 ScrollView
+  // 手势：横向滑动超过阈值即翻页；纵向交给外层 ScrollView
   const pan = useRef<ReturnType<typeof PanResponder.create> | null>(null)
   if (!pan.current) {
     pan.current = PanResponder.create({
@@ -87,18 +98,19 @@ export default function MedalGallery({ pages, avatarUrl, avatarIcon, name, subti
       {/* 2. 图鉴区：整页位移，overflow hidden 裁掉相邻页 */}
       <View
         style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 16, paddingTop: 14, overflow: 'hidden' }}
+
         {...pan.current.panHandlers}
       >
-        <Animated.View style={{ flexDirection: 'row', width: width * Math.max(1, pages.length), transform: [{ translateX: stripTranslateX }] }}>
-          {pages.map((p) => (
-            <MedalPage key={p.label} page={p} width={width} onOpen={setOpenItem} fs={fs} t={t} />
-          ))}
-        </Animated.View>
+        {/* RN 只能渲染当前页：Taro 在 RN 下会把样式数值按设计稿缩放，按像素整页位移无法与百分比布局对齐，
+            故不横向滑动（页签切换仍带弧面缓动），避免出现每行只排 2 列或错位 */}
+        {pages[index] ? (
+          <MedalPage key={pages[index].label} page={pages[index]} width='100%' onOpen={setOpenItem} fs={fs} t={t} />
+        ) : null}
 
         {pages.length > 1 && (
           <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 4, marginBottom: 10 }}>
             {pages.map((p, i) => (
-              <View key={p.label} style={{ width: 6, height: 6, borderRadius: 3, marginLeft: 3, marginRight: 3, backgroundColor: i === index ? t.primary : t.borderColor }} />
+              <View key={p.label} style={{ width: 6, height: 6, borderRadius: 3, marginLeft: 3, marginRight: 3, backgroundColor: i === Math.round(pos) ? t.primary : t.borderColor }} />
             ))}
           </View>
         )}

@@ -59,6 +59,15 @@ export default function AchievementsPage() {
     })
   }, [wall])
 
+  // hero 文案：昵称缺失时用户名就是手机号，此时不再重复显示脱敏手机号（改动说明 v1.4.48）
+  const rawPhone = authUser?.phoneNumber || ''
+  const nickname = authUser?.nickname || ''
+  const hasRealNickname = !!nickname && nickname !== rawPhone
+  const heroName = hasRealNickname ? nickname : (authUser?.userName || '我')
+  const maskedPhone = maskMobile(authUser?.phoneNumber)
+  // 只有填了昵称才补一行脱敏手机号；未填昵称时用户名本就是手机号，再显一遍是重复
+  const heroSubtitle = hasRealNickname && maskedPhone ? maskedPhone : null
+
   /** 图鉴下方功能区：荣誉摘要 + 佩戴称号 */
   const footer = (
     <View>
@@ -114,8 +123,8 @@ export default function AchievementsPage() {
         <MedalGallery
           pages={pages}
           avatarUrl={usableImage(authUser?.avatar)}
-          name={authUser?.nickname || authUser?.userName || '我'}
-          subtitle={maskMobile(authUser?.phoneNumber)}
+          name={heroName}
+          subtitle={heroSubtitle}
           unlockedCount={wall.unlockedCount ?? 0}
           totalCount={wall.items?.length ?? 0}
           footer={footer}
