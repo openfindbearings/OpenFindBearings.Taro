@@ -2,7 +2,7 @@
 // 深色 hero（商户名 + 已点亮 N/M）→ 弧形分类页签 → 整页图鉴网格 → 点击弹详情；下方保留荣誉摘要条。
 // 改动说明：原「大圆盘舞台 + 分类行列表」与个人页同病（同批勋章展示两遍、枚数少时排版散），
 //   现统一到同一组件，两页只差数据源与 hero 文案。
-// 数据源=getMerchantAchievements(当前商家)（scope=Merchant），与公开主页（merchantDetail）互不混用。
+// 数据源=getMerchantAchievementsWall（scope=Merchant 全目录 + 本店进度，仅在职成员）；公开详情页仍用已解锁徽章排。
 // RN 约束：仅 flex、无 fixed/vh/gradient、Text 数值 lineHeight
 import { useMemo, useState } from 'react'
 import { View, Text } from '@tarojs/components'
@@ -16,7 +16,7 @@ import LoginGuide from '../../components/LoginGuide'
 import MedalGallery from '../../components/MedalGallery'
 import { useAuthStore } from '../../stores/auth'
 import { useMerchantStore } from '../../stores/merchant'
-import { getMerchantAchievements, type AchievementWall } from '../../services/achievements'
+import { getMerchantAchievementsWall, type AchievementWall } from '../../services/achievements'
 
 // 编译期配置：与全站一致，滚动由 PageLayout 统一提供
 definePageConfig({ disableScroll: true })
@@ -30,7 +30,7 @@ export default function MerchantMedalsPage() {
   const current = useMerchantStore((s) => s.currentMerchant())
 
   useDidShow(() => {
-    if (isLoggedIn && current?.merchantId) void getMerchantAchievements(current.merchantId).then((r) => setWall(r || null))
+    if (isLoggedIn && current?.merchantId) void getMerchantAchievementsWall(current.merchantId).then((r) => setWall(r || null))
   })
 
   // 分类分页：按目录出现顺序聚合，每类一页，页内保留未解锁项
@@ -43,13 +43,26 @@ export default function MerchantMedalsPage() {
     })
   }, [wall])
 
-  /** 图鉴下方功能区：商户称号与勋章点摘要 */
+  /** 图鉴下方功能区（v1.4.53）：商家没有佩戴称号的通道，称号是个人侧概念（User.EquippedTitle），
+   *  因此这里不再展示"当前称号"，改为"下一个目标"引导 + 勋章点摘要 */
+  const nextGoal = useMemo(() => {
+    const locked = (wall?.items || []).filter((i) => !i.unlocked)
+    if (locked.length === 0) return null
+    // 取进度比例最高的一枚：距离点亮最近，提示最有用
+    return locked
+      .slice()
+      .sort((a, b) => (b.progress / Math.max(1, b.target)) - (a.progress / Math.max(1, a.target)))[0]
+  }, [wall])
+
   const footer = (
     <View style={{ backgroundColor: t.bgCard, marginLeft: 12, marginRight: 12, marginTop: 12, borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center' }}>
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...fs(12), color: t.textTertiary }}>当前称号</Text>
-        <Text style={{ ...fs(16), color: wall?.currentTitle ? '#F59E0B' : t.textTertiary, fontWeight: '700', marginTop: 2 }}>
-          {wall?.currentTitle || '暂未获得'}
+      <View style={{ flex: 1, marginRight: 8 }}>
+        <Text style={{ ...fs(12), color: t.textTertiary }}>下一个目标</Text>
+        <Text style={{ ...fs(14), color: t.textPrimary, fontWeight: '700', marginTop: 2 }}>
+          {nextGoal ? nextGoal.name : '已全部点亮'}
+        </Text>
+        <Text style={{ ...fs(11), color: t.textTertiary, marginTop: 2 }}>
+          {nextGoal ? `${nextGoal.description}（${nextGoal.progress}/${nextGoal.target}）` : '荣誉已收齐，继续保持'}
         </Text>
       </View>
       <View style={{ alignItems: 'flex-end' }}>

@@ -50,6 +50,11 @@ export function getMerchantAchievements(merchantId: string) {
   return request<AchievementWall>(API.ACHIEVEMENTS_MERCHANT(merchantId))
 }
 
+/** 商家成就墙（v1.4.53）：全目录 + 本店进度，仅本店在职成员可读；商家勋章页用它算 N/M 与未解锁项 */
+export function getMerchantAchievementsWall(merchantId: string) {
+  return request<AchievementWall>(API.ACHIEVEMENTS_MERCHANT_WALL(merchantId))
+}
+
 /** 我的称号列表与当前佩戴（v2.8.0 称号系统） */
 export interface MyTitles {
   titles: string[]
