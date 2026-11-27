@@ -245,6 +245,8 @@ NOTIFICATION_PREFERENCES: `${API_PREFIX}/notifications/preferences`,
   ACHIEVEMENTS_WALL: `${API_PREFIX}/achievements/wall`,
   ACHIEVEMENTS_ME: `${API_PREFIX}/achievements/me`,
   ACHIEVEMENTS_MERCHANT: (id: string) => `${API_PREFIX}/achievements/merchants/${id}`,
+  // v1.4.53 商家成就墙：全目录 + 本店进度（仅在职成员），商家勋章页 N/M 与未解锁项数据源
+  ACHIEVEMENTS_MERCHANT_WALL: (merchantId: string) => `${API_PREFIX}/achievements/merchant-wall?merchantId=${merchantId}`,
   // v2.8.0 称号系统：我的称号列表/佩戴（代理 BFF /mobile/achievements/titles|title）
   ACHIEVEMENTS_TITLES: `${API_PREFIX}/achievements/titles`,
   ACHIEVEMENTS_TITLE: `${API_PREFIX}/achievements/title`,
